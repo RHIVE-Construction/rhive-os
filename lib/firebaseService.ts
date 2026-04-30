@@ -675,6 +675,59 @@ export const customerService = {
     addCustomer: (data: any) => contactService.create(data),
 };
 
+// ============================================
+// DEALS SERVICE
+// ============================================
+// The 'deals' collection holds quote-stage CRM records.
+// Each deal is associated to a contact via the `contact_id` field.
+
+export const dealService = {
+    getAll: () => firestoreService.getAllDocuments('deals'),
+    subscribe: (callback: (data: any[]) => void) =>
+        firestoreService.subscribeToDocuments('deals', callback),
+    getById: (id: string) => firestoreService.getDocument('deals', id),
+    create: (data: any) => firestoreService.addDocument('deals', data),
+    update: (id: string, data: any) => firestoreService.updateDocument('deals', id, data),
+    delete: (id: string) => firestoreService.deleteDocument('deals', id),
+    createBatch: (dataArray: any[]) => firestoreService.createBatch('deals', dataArray),
+
+    /** Fetch all deals linked to a specific contact. */
+    getByContactId: async (contactId: string) => {
+        try {
+            const q = query(collection(db, 'deals'), where('contact_id', '==', contactId));
+            const snapshot = await getDocs(q);
+            return { success: true, data: snapshot.docs.map(mapDoc) };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    },
+
+    /** Fetch all deals at the Quote stage (Stage 3). */
+    subscribeToQuoteStage: (callback: (data: any[]) => void) => {
+        return onSnapshot(
+            collection(db, 'deals'),
+            (snapshot) => {
+                const data = snapshot.docs
+                    .map(mapDoc)
+                    .filter((d) => {
+                        const stage = (d.current_stage || d.stage || '').toLowerCase();
+                        return stage.includes('quote') || stage.includes('stage 3');
+                    })
+                    .sort((a, b) => {
+                        const aVal = a.created_at || a.createdTime || '';
+                        const bVal = b.created_at || b.createdTime || '';
+                        return bVal > aVal ? 1 : bVal < aVal ? -1 : 0;
+                    });
+                callback(data);
+            },
+            (error) => {
+                console.error(`🔥 Firestore [deals] error:`, error.code, error.message);
+                callback([]);
+            }
+        );
+    },
+};
+
 export const propertyService = {
     getAll: () => firestoreService.getAllDocuments('properties'),
     subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('properties', callback),

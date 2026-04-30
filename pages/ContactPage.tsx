@@ -6,6 +6,8 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { MapPinIcon, UserIcon, RhiveLogo, ShareIcon } from '../components/icons';
 
+const MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
+
 const ContactPage: React.FC = () => {
     return (
         <PageContainer 
@@ -83,7 +85,7 @@ const ContactPage: React.FC = () => {
                             <div className="h-48 bg-gray-900 rounded-xl overflow-hidden border border-gray-800 relative group">
                                 {/* Map Placeholder */}
                                 <img 
-                                    src={`https://maps.googleapis.com/maps/api/staticmap?center=41.7766,-111.8211&zoom=15&size=400x300&maptype=roadmap&markers=color:0xec028b%7C41.7766,-111.8211&key=AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA`} 
+                                    src={`https://maps.googleapis.com/maps/api/staticmap?center=41.7766,-111.8211&zoom=15&size=400x300&maptype=roadmap&markers=color:0xec028b%7C41.7766,-111.8211&key=${MAPS_API_KEY}`} 
                                     className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
                                     alt="RHIVE HQ Map"
                                 />
