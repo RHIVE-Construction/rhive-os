@@ -16,9 +16,11 @@ import {
     PhoneIcon,
     LockIcon
 } from '../components/icons';
-import { userService } from '../lib/firebaseService';
+import { userService, authService } from '../lib/firebaseService';
 import { User, UserType } from '../types';
 import { cn, hashPassword } from '../lib/utils';
+
+const INTERNAL_ROLES: UserType[] = ['Employee', 'Admin', 'Super Admin'];
 
 const UserManagementPage: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
@@ -26,6 +28,8 @@ const UserManagementPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [submitError, setSubmitError] = useState('');
+    const [submitting, setSubmitting] = useState(false);
     
     // Form state
     const [formData, setFormData] = useState({
@@ -52,12 +56,14 @@ const UserManagementPage: React.FC = () => {
 
     const handleOpenAdd = () => {
         setEditingUser(null);
+        setSubmitError('');
         setFormData({ name: '', role: 'Employee', email: '', phone: '', password: '' });
         setIsModalOpen(true);
     };
 
     const handleOpenEdit = (user: User) => {
         setEditingUser(user);
+        setSubmitError('');
         setFormData({ 
             name: user.name, 
             role: user.role, 
@@ -76,30 +82,78 @@ const UserManagementPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setSubmitError('');
+        setSubmitting(true);
         
-        const payload: any = {
-            name: formData.name,
-            role: formData.role,
-            email: formData.email,
-            phone: formData.phone,
-            updated_at: new Date().toISOString()
-        };
+        try {
+            const isInternalRole = INTERNAL_ROLES.includes(formData.role);
 
-        if (formData.password) {
-            payload.password_hash = await hashPassword(formData.password);
+            if (editingUser) {
+                // Update existing user in Firestore
+                const payload: any = {
+                    name: formData.name,
+                    role: formData.role,
+                    email: formData.email,
+                    phone: formData.phone,
+                    updated_at: new Date().toISOString()
+                };
+                if (formData.password) {
+                    payload.password_hash = await hashPassword(formData.password);
+                }
+                await userService.update(editingUser.id, payload);
+            } else {
+                // --- Create new user ---
+                if (isInternalRole) {
+                    // For Employee/Admin/Super Admin: create Firebase Auth account + Firestore doc
+                    if (!formData.email || !formData.password) {
+                        setSubmitError('Email and password are required for internal accounts.');
+                        setSubmitting(false);
+                        return;
+                    }
+                    try {
+                        const credential = await authService.signUp(formData.email.trim().toLowerCase(), formData.password);
+                        const uid = credential.user.uid;
+                        const passwordHash = await hashPassword(formData.password);
+                        await userService.createWithId(uid, {
+                            name: formData.name,
+                            role: formData.role,
+                            email: formData.email.trim().toLowerCase(),
+                            phone: formData.phone,
+                            password_hash: passwordHash,
+                            auth_uid: uid,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    } catch (authErr: any) {
+                        // If Firebase Auth fails (e.g. email already in use), surface the error
+                        const msg = authErr?.code === 'auth/email-already-in-use'
+                            ? 'An account with this email already exists.'
+                            : authErr?.message || 'Failed to create account.';
+                        setSubmitError(msg);
+                        setSubmitting(false);
+                        return;
+                    }
+                } else {
+                    // For external roles (Customer, Contractor, Supplier): Firestore only
+                    const passwordHash = formData.password ? await hashPassword(formData.password) : undefined;
+                    await userService.create({
+                        name: formData.name,
+                        role: formData.role,
+                        email: formData.email.trim().toLowerCase(),
+                        phone: formData.phone,
+                        ...(passwordHash ? { password_hash: passwordHash } : {}),
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                }
+            }
+
+            setIsModalOpen(false);
+        } catch (err: any) {
+            setSubmitError(err?.message || 'An unexpected error occurred.');
+        } finally {
+            setSubmitting(false);
         }
-
-        if (editingUser) {
-            await userService.update(editingUser.id, payload);
-        } else {
-            // Generate a simple ID if none exists, though Firebase addDocument might handle it
-            await userService.create({
-                ...payload,
-                created_at: new Date().toISOString()
-            });
-        }
-
-        setIsModalOpen(false);
     };
 
     const getRoleBadgeColor = (role: string) => {
@@ -234,19 +288,30 @@ const UserManagementPage: React.FC = () => {
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Role Type</label>
+                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Account Type</label>
                                     <select 
                                         value={formData.role}
                                         onChange={(e) => setFormData({...formData, role: e.target.value as UserType})}
                                         className="w-full bg-black/60 border border-gray-800 focus:border-[#ec028b] rounded-xl px-4 py-3 text-sm text-white outline-none transition-all appearance-none"
                                     >
-                                        <option value="Employee">Employee</option>
-                                        <option value="Admin">Admin</option>
-                                        <option value="Super Admin">Super Admin</option>
-                                        <option value="Customer">Customer</option>
-                                        <option value="Contractor">Contractor</option>
-                                        <option value="Supplier">Supplier</option>
+                                        <optgroup label="— Internal (Firebase Auth)">
+                                            <option value="Employee">Employee</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="Super Admin">Super Admin</option>
+                                        </optgroup>
+                                        <optgroup label="— External (Portal)">
+                                            <option value="Customer">Customer</option>
+                                            <option value="Contractor">Contractor</option>
+                                            <option value="Supplier">Supplier</option>
+                                        </optgroup>
                                     </select>
+                                    {!editingUser && (
+                                        <p className="text-[9px] text-gray-600 ml-1">
+                                            {INTERNAL_ROLES.includes(formData.role)
+                                                ? '⚡ Internal account — registers in Firebase Auth for secure login'
+                                                : '🔗 External portal account — stored in Firestore only'}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -274,7 +339,7 @@ const UserManagementPage: React.FC = () => {
 
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                                    {editingUser ? 'Reset Security Key (Empty to keep)' : 'Station Security Key'}
+                                    {editingUser ? 'Reset Password (Leave empty to keep)' : 'Password'}
                                 </label>
                                 <div className="relative">
                                     <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
@@ -283,25 +348,34 @@ const UserManagementPage: React.FC = () => {
                                         value={formData.password}
                                         onChange={(e) => setFormData({...formData, password: e.target.value})}
                                         className="w-full bg-black/60 border border-gray-800 focus:border-[#ec028b] rounded-xl pl-12 pr-4 py-3 text-sm text-white outline-none transition-all"
-                                        placeholder="••••••••••••"
+                                        placeholder="Min. 6 characters"
                                         required={!editingUser}
+                                        minLength={6}
                                     />
                                 </div>
                             </div>
+
+                            {submitError && (
+                                <div className="px-4 py-3 rounded-xl bg-red-900/20 border border-red-500/30">
+                                    <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest">{submitError}</p>
+                                </div>
+                            )}
 
                             <div className="pt-4 flex gap-4">
                                 <Button 
                                     type="button" 
                                     onClick={() => setIsModalOpen(false)}
                                     className="flex-1 bg-gray-900 border-gray-800 text-gray-500 hover:text-white"
+                                    disabled={submitting}
                                 >
                                     Abort
                                 </Button>
                                 <Button 
                                     type="submit"
-                                    className="flex-[2] bg-[#ec028b] hover:bg-[#ff039a] text-white"
+                                    className="flex-[2] bg-[#ec028b] hover:bg-[#ff039a] text-white disabled:opacity-50"
+                                    disabled={submitting}
                                 >
-                                    Confirm Update
+                                    {submitting ? 'Registering…' : editingUser ? 'Save Changes' : 'Register User'}
                                 </Button>
                             </div>
                         </form>

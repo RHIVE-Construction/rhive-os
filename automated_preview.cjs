@@ -8,7 +8,7 @@ async function runCapture() {
 
     console.log('Capturing Debug Info...');
     try {
-        await page.goto('http://localhost:3000/');
+        await page.goto('http://localhost:3002/');
         await page.waitForTimeout(5000);
 
         const html = await page.evaluate(() => document.body.innerHTML);

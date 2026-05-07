@@ -47,7 +47,7 @@ import { WeatherReport } from '../components/WeatherReport';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, ProjectStage } from '../types';
 import { createProject as createProjectApi } from '../lib/api';
 
-const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+const MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
 
 // --- Reusable UI Components ---
 

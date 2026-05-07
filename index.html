@@ -1,37 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 
 <head>
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('rhive-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M50 2.5 L95.5 26.25 V73.75 L50 97.5 L4.5 73.75 V26.25 Z%22 fill=%22%23ec028b%22/></svg>">
+  <link rel="icon" href="https://i.imgur.com/t0VcSgJ.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RHIVE - Instant Estimator</title>
+  <title>RHIVE - Home</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
     rel="stylesheet">
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
             'rhive-pink': '#ec028b',
             'rhive-gold': '#e2ab49',
             'rhive-blue': '#08137C',
+            'rhive-obsidian': '#050505',
+            'rhive-dark-card': 'rgba(20, 20, 20, 0.8)',
+            'rhive-light-card': 'rgba(255, 255, 255, 0.9)',
           },
           fontFamily: {
             sans: ['Rubik', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
             serif: ['"EB Garamond"', 'serif'],
             mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
           },
           boxShadow: {
             'pink-glow': '0 0 15px rgba(236, 2, 139, 0.4)',
             'pink-glow-sm': '0 0 8px rgba(236, 2, 139, 0.3)',
+          },
+          backgroundImage: {
+            'circuit-pattern': "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMWgydjJIMXoiIGZpbGw9InJnYmEoMjM2LCAyLCAxMzksIDAuMikiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvc3ZnPg==')",
           },
           keyframes: {
             fadeIn: {
@@ -47,28 +64,166 @@
     }
   </script>
   <style>
-    body {
-      background-color: #000000;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+    :root {
+      --rhive-bg: #050505;
+      --rhive-text: #ffffff;
+      --rhive-text-muted: #9ca3af;
+      --rhive-border: rgba(255, 255, 255, 0.05);
+      --rhive-glass: rgba(5, 5, 5, 0.65);
     }
 
+    .light-mode-active {
+      --rhive-bg: #f3f4f6;
+      --rhive-text: #050505;
+      --rhive-text-muted: #4b5563;
+      --rhive-border: rgba(0, 0, 0, 0.05);
+      --rhive-glass: rgba(255, 255, 255, 0.8);
+    }
+
+    body {
+      background-color: var(--rhive-bg);
+      color: var(--rhive-text);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .glass-dark {
+      background: var(--rhive-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(236, 2, 139, 0.15);
+    }
+
+    .light-mode-active .glass-dark {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Scroll Progress Bar */
+    .progress-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: #ec028b;
+      width: 0%;
+      box-shadow: 0 0 10px #ec028b;
+    }
+
+    /* Glitch Effect */
+    .glitch-wrapper {
+      position: relative;
+    }
+
+    .glitch-text::before,
+    .glitch-text::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+
+    .glitch-text::before {
+      left: 2px;
+      text-shadow: -1px 0 red;
+      animation: glitch-anim-1 2s infinite linear alternate-reverse;
+    }
+
+    .glitch-text::after {
+      left: -2px;
+      text-shadow: -1px 0 blue;
+      animation: glitch-anim-2 3s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitch-anim-1 {
+      0% {
+        clip-path: inset(20% 0 80% 0);
+      }
+
+      20% {
+        clip-path: inset(60% 0 10% 0);
+      }
+
+      40% {
+        clip-path: inset(40% 0 50% 0);
+      }
+
+      60% {
+        clip-path: inset(80% 0 5% 0);
+      }
+
+      80% {
+        clip-path: inset(10% 0 70% 0);
+      }
+
+      100% {
+        clip-path: inset(30% 0 50% 0);
+      }
+    }
+
+    @keyframes glitch-anim-2 {
+      0% {
+        clip-path: inset(10% 0 60% 0);
+      }
+
+      20% {
+        clip-path: inset(30% 0 20% 0);
+      }
+
+      40% {
+        clip-path: inset(70% 0 10% 0);
+      }
+
+      60% {
+        clip-path: inset(20% 0 50% 0);
+      }
+
+      80% {
+        clip-path: inset(50% 0 30% 0);
+      }
+
+      100% {
+        clip-path: inset(5% 0 80% 0);
+      }
+    }
+
+    .neon-border {
+      box-shadow: 0 0 15px rgba(236, 2, 139, 0.4);
+      border: 1px solid rgba(236, 2, 139, 0.6);
+    }
+
+    /* Process Stage Lines */
+    .process-line {
+      width: 2px;
+      background: linear-gradient(to bottom, #ec028b, #08137C);
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      transform: translateX(-50%);
+      z-index: 0;
+    }
+
+    /* Google Places Autocomplete Styling */
     .pac-container {
       z-index: 10000 !important;
       background-color: #0a0a0a;
       border: 1px solid #374151;
       font-family: 'Rubik', sans-serif;
-      border-radius: 0;
-      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.8);
     }
 
     .pac-item {
       color: #e5e7eb;
       border-top: 1px solid #1f2937;
       padding: 10px 15px;
-      cursor: pointer;
-      font-size: 14px;
     }
 
     .pac-item:hover {
@@ -82,17 +237,25 @@
 
     .pac-icon {
       filter: invert(1) hue-rotate(300deg) saturate(5);
-      /* Colorize toward pink */
     }
 
-    /* Hide scrollbars but keep functionality */
-    .scrollbar-hide::-webkit-scrollbar {
-      display: none;
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
     }
 
-    .scrollbar-hide {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ec028b;
+      box-shadow: 0 0 10px #ec028b;
     }
   </style>
   <script>
@@ -101,35 +264,25 @@
       window.googleMapsApiLoaded = true;
       window.dispatchEvent(new Event('google-maps-api-ready'));
     }
+    // Key is injected by Vite at build time from VITE_GOOGLE_MAPS_API_KEY in .env
+    // It is NOT hardcoded here — never commit your .env file.
+    (function () {
+      var key = typeof __VITE_GOOGLE_MAPS_API_KEY__ !== 'undefined'
+        ? __VITE_GOOGLE_MAPS_API_KEY__
+        : (typeof process !== 'undefined' && process.env && process.env.VITE_GOOGLE_MAPS_API_KEY)
+          ? process.env.VITE_GOOGLE_MAPS_API_KEY
+          : '';
+      if (!key) { console.warn('[RHIVE] VITE_GOOGLE_MAPS_API_KEY is not set — Maps features disabled.'); return; }
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady';
+      document.head.appendChild(s);
+    })();
   </script>
-  <script async
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady"></script>
-  <!-- 
-    <script type="importmap">
-    {
-      "imports": {
-        "react/": "https://aistudiocdn.com/react@^19.1.1/",
-        "react": "https://aistudiocdn.com/react@^19.1.1",
-        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0",
-        "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
-        "class-variance-authority": "https://aistudiocdn.com/class-variance-authority@^0.7.1",
-        "@radix-ui/react-slot": "https://aistudiocdn.com/@radix-ui/react-slot@^1.2.3",
-        "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
-        "tailwind-merge": "https://aistudiocdn.com/tailwind-merge@^3.3.1",
-        "@radix-ui/react-accordion": "https://aistudiocdn.com/@radix-ui/react-accordion@^1.2.12",
-        "path": "https://aistudiocdn.com/path@^0.12.7",
-        "vite": "https://aistudiocdn.com/vite@^7.2.4",
-        "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-        "url": "https://aistudiocdn.com/url@^0.11.4",
-        "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
-      }
-    }
-    </script>
-    -->
   <link rel="stylesheet" href="/index.css">
 </head>
 
-<body class="bg-black text-gray-200 overflow-hidden selection:bg-rhive-pink/30 selection:text-white">
+<body class="text-gray-200 selection:bg-rhive-pink/30 selection:text-white">
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

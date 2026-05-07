@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '../lib/utils';
 
 interface CardProps {
   title?: string;
@@ -24,17 +25,18 @@ const Card: React.FC<CardProps> = ({ title, children, footer, className = '', on
       <div className="absolute bottom-0 right-0 w-8 h-[1px] bg-[#ec028b]/30"></div>
       <div className="absolute bottom-0 right-0 h-8 w-[1px] bg-[#ec028b]/30"></div>
 
+      {/* 4. Card Content */}
       {title && (
-        <div className="px-6 py-4 border-b border-gray-700/50 flex justify-between items-center bg-black/20">
-          <h3 className="text-lg font-bold text-white tracking-wide uppercase">{title}</h3>
-          <div className="h-2 w-2 rounded-full bg-[#ec028b] animate-pulse shadow-[0_0_10px_#ec028b]"></div>
+        <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-black/20">
+          <h3 className="text-sm font-bold text-white dark:text-white tracking-widest uppercase">{title}</h3>
+          <div className="h-1.5 w-1.5 rounded-full bg-[#ec028b] animate-pulse shadow-[0_0_10px_#ec028b]"></div>
         </div>
       )}
-      <div className="p-6">
+      <div className="p-6 flex-grow">
         {children}
       </div>
       {footer && (
-        <div className="px-6 py-4 border-t border-gray-700/50 bg-black/40">
+        <div className="px-6 py-4 border-t border-white/5 bg-black/40">
           {footer}
         </div>
       )}

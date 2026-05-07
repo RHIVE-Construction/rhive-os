@@ -1,0 +1,52 @@
+# Settings for Backend (on Cloud Run).
+# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
+runConfig:
+  minInstances: 0
+
+# Environment variables and secrets.
+env:
+  - variable: VITE_FIREBASE_API_KEY
+    value: AIzaSyBI7Ae41_JcMtHLuAzit3ajoTRHjETtCt8
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: VITE_FIREBASE_AUTH_DOMAIN
+    value: rhive-os.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: VITE_FIREBASE_PROJECT_ID
+    value: rhive-os
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: VITE_FIREBASE_STORAGE_BUCKET
+    value: rhive-os.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: VITE_FIREBASE_MESSAGING_SENDER_ID
+    value: "672274474306"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: VITE_FIREBASE_APP_ID
+    value: 1:672274474306:web:226d0a7064e8ae894e14db
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: VITE_FIREBASE_MEASUREMENT_ID
+    value: G-T8H6BQPK3H
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: VITE_GOOGLE_WEATHER_API_KEY
+    value: AIzaSyCOTpHodVEPLC3G96KwFnX8JF-0DOpgBBI
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: VITE_OPENWEATHER_API_KEY
+    value: 2da7006fc5394b3bbdbfe8171b048768
+    availability:
+      - BUILD
+      - RUNTIME

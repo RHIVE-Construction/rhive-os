@@ -33,10 +33,18 @@ export const PROJECT_STAGES: ProjectStage[] = [
 
 export const PAGE_GROUPS: PageGroup[] = [
     {
-        userType: 'Public',
+        userType: 'All',
         pages: [
             { id: 'P-01', name: 'About Us', userType: 'Public', description: 'Mission, Vision & Values' },
             { id: 'P-02', name: 'Our Services', userType: 'Public', description: 'Residential & Commercial Solutions' },
+            { id: 'P-02a', name: 'Asphalt Roofing', userType: 'Public', description: 'Service Detail', parentId: 'P-02' },
+            { id: 'P-02a-1', name: 'O.C. DURATION Package', userType: 'Public', description: 'Package Detail', parentId: 'P-02a' },
+            { id: 'P-02a-2', name: 'O.C. FLEX Package', userType: 'Public', description: 'Package Detail', parentId: 'P-02a' },
+            { id: 'P-02a-3', name: 'DESIGNER Package', userType: 'Public', description: 'Package Detail', parentId: 'P-02a' },
+            { id: 'P-02a-4', name: 'PREMIUM DESIGNER Package', userType: 'Public', description: 'Package Detail', parentId: 'P-02a' },
+            { id: 'P-02b', name: 'Membrane Roofing', userType: 'Public', description: 'Service Detail', parentId: 'P-02' },
+            { id: 'P-02c', name: 'Roof Upgrades', userType: 'Public', description: 'Service Detail', parentId: 'P-02' },
+            { id: 'P-02e', name: 'Additional Trades', userType: 'Public', description: 'Service Detail', parentId: 'P-02' },
             { id: 'P-03', name: 'Our Process', userType: 'Public', description: 'The 10-Stage Journey' },
             { id: 'P-04', name: 'Financing', userType: 'Public', description: 'RPSP & Payment Options' },
             { id: 'P-05', name: 'Contact', userType: 'Public', description: 'Directory & Lead Gen' },
@@ -45,6 +53,8 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'P-10', name: 'PUBLIC CAREERS', userType: 'Public', description: 'Recruitment & Brand Manifesto' },
             { id: 'P-11', name: 'JOB APPLICATION', userType: 'Public', description: 'Candidate Intake Wizard' },
             { id: 'P-12', name: 'ESTIMATE TOOL', userType: 'Public', description: 'Instant Pricing Engine' },
+            { id: 'P-00', name: 'Home', userType: 'Public', description: 'RHIVE Main Gateway' },
+            { id: 'P-00a', name: 'LIVE WEBSITE', userType: 'Public', description: 'Production Environment' },
         ]
     },
     {

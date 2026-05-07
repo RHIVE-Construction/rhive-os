@@ -1,0 +1,13 @@
+{
+  "[project]/App.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/App.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/components_88d0f953._.js",
+      "static/chunks/pages_CustomerInputPage_tsx_b5907bb0._.js",
+      "static/chunks/pages_48efb2ee._.js",
+      "static/chunks/_cd557178._.js",
+      "static/chunks/node_modules_485b8a3b._.js",
+      "static/chunks/App_tsx_4e3a65f0._.js"
+    ]
+  }
+}

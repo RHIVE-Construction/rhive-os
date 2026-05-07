@@ -3,15 +3,25 @@ import React, { useEffect } from 'react';
 import { PricingProvider } from './contexts/PricingContext';
 import { MockDatabaseProvider, useMockDB } from './contexts/MockDatabaseContext';
 import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { Sidebar } from './components/Sidebar';
 import LoginPage from './pages/LoginPage';
+import { GlobalHeader } from './components/GlobalHeader';
 import { pageComponentMap } from './pageRegistry';
 import { CircuitryBackground } from './components/CircuitryBackground';
-import { RhiveLogo } from './components/icons';
+import { FloatingEstimator } from './components/FloatingEstimator';
+import { cn } from './lib/utils';
 
 const AppContentAuthenticated: React.FC = () => {
     const { activePageId, setActivePageId } = useNavigation();
     const { currentUser } = useMockDB();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
+    useEffect(() => {
+        console.log('App: activePageId changed to:', activePageId);
+    }, [activePageId]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -19,6 +29,12 @@ const AppContentAuthenticated: React.FC = () => {
         if (pageCode && pageCode !== activePageId) {
             setActivePageId(pageCode);
         }
+
+        const handleCustomNav = (e: any) => {
+            if (e.detail) setActivePageId(e.detail);
+        };
+        window.addEventListener('nav-page', handleCustomNav);
+        return () => window.removeEventListener('nav-page', handleCustomNav);
     }, [activePageId, setActivePageId]);
 
     useEffect(() => {
@@ -30,51 +46,79 @@ const AppContentAuthenticated: React.FC = () => {
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
                 case 'Supplier': setActivePageId('S-01'); break;
-                case 'Public': setActivePageId('P-01'); break;
+                case 'Public': setActivePageId('P-00'); break;
             }
         }
     }, [currentUser, setActivePageId, activePageId]);
 
     const CurrentPage = pageComponentMap[activePageId] || (() => <div className="p-10 text-gray-400">Select a page from the menu.</div>);
 
-    return (
-        <div className="flex h-screen w-screen bg-black text-white overflow-hidden relative font-sans">
-            <CircuitryBackground />
+    if (activePageId === 'P-00' || activePageId === 'P-00a') {
+        return (
+            <div className={cn(
+                "fixed inset-0 w-screen h-screen overflow-y-auto font-sans transition-colors duration-500",
+                isDark ? "bg-black text-white" : "bg-white text-black"
+            )}>
+                <CurrentPage />
+                <FloatingEstimator />
+            </div>
+        );
+    }
 
-            <header className="fixed top-0 left-0 w-full h-12 bg-black/40 backdrop-blur-xl border-b border-gray-800 z-[100] flex items-center justify-between px-6 select-none">
-                <div className="flex items-center gap-4">
-                    <RhiveLogo className="h-6" />
-                    <div className="h-4 w-[1px] bg-gray-700" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Quantum Operating System 1.2.5</span>
-                </div>
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[8px] font-bold text-green-500/80 uppercase tracking-widest">System Link Active</span>
-                    </div>
-                </div>
-            </header>
+    return (
+        <div className={cn(
+            "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
+            isDark ? "bg-black text-white" : "bg-[#F8F9FA] text-black"
+        )}>
+            <CircuitryBackground
+                backgroundColor={isDark ? "#000000" : "#F8F9FA"}
+                dotColor={isDark ? "#ec028b" : "#ec028b"}
+                lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
+            />
+            <GlobalHeader />
 
             <div className="relative z-10 flex h-full w-full pt-12">
                 <Sidebar />
-                <main className="flex-1 h-full overflow-hidden bg-black/20 relative border-l border-gray-800/50">
+                <main className={cn(
+                    "flex-1 h-full overflow-y-auto relative border-l transition-colors duration-500",
+                    isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-black/5"
+                )}>
                     <CurrentPage />
                 </main>
             </div>
+            <FloatingEstimator />
         </div>
     );
 };
 
 const LoginBridge: React.FC = () => {
     const { currentUser, login } = useMockDB();
+    const { setActivePageId } = useNavigation();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
+    useEffect(() => {
+        if (!currentUser) {
+            setActivePageId('');
+        }
+    }, [currentUser, setActivePageId]);
 
     if (!currentUser) {
         return (
-            <div className="relative h-screen w-screen bg-black text-white overflow-hidden">
-                <CircuitryBackground />
-                <div className="relative z-10 h-full">
+            <div className={cn(
+                "fixed inset-0 w-screen h-screen overflow-hidden transition-colors duration-500",
+                isDark ? "bg-black text-white" : "bg-[#F8F9FA] text-black"
+            )}>
+                <CircuitryBackground
+                    backgroundColor={isDark ? "#000000" : "#F8F9FA"}
+                    dotColor={isDark ? "#ec028b" : "#ec028b"}
+                    lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
+                />
+                <GlobalHeader />
+                <main className="relative z-10 w-full h-full pt-12 flex items-center justify-center overflow-auto px-4">
                     <LoginPage onLogin={login} />
-                </div>
+                </main>
+                <FloatingEstimator />
             </div>
         );
     }
@@ -84,12 +128,16 @@ const LoginBridge: React.FC = () => {
 
 export default function App() {
     return (
-        <MockDatabaseProvider>
-            <PricingProvider>
-                <NavigationProvider>
-                    <LoginBridge />
-                </NavigationProvider>
-            </PricingProvider>
-        </MockDatabaseProvider>
+        <ThemeProvider>
+            <LanguageProvider>
+                <MockDatabaseProvider>
+                    <PricingProvider>
+                        <NavigationProvider>
+                            <LoginBridge />
+                        </NavigationProvider>
+                    </PricingProvider>
+                </MockDatabaseProvider>
+            </LanguageProvider>
+        </ThemeProvider>
     );
 }

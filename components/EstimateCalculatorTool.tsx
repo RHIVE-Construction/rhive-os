@@ -10,7 +10,7 @@ import { formatCurrency } from '../lib/utils';
 import { Separator } from './ui/separator';
 import { Select, SelectItem } from './ui/select';
 import { Button } from './ui/button';
-import { Checkbox } from './ui/checkbox';
+import { Switch } from './ui/switch';
 import { XIcon } from './icons';
 import { SQ_FEET_PER_SQUARE, SQ_METERS_TO_SQ_FEET } from '../lib/constants';
 
@@ -53,7 +53,7 @@ export const EstimateCalculatorTool: React.FC = () => {
         heatTrace: { ...INITIAL_SURVEY_STATE.heatTrace },
     });
 
-    const buildingData = useMemo(() => 
+    const buildingData = useMemo(() =>
         mockCalculatorBuildingData(testInputs.pitchAreas),
         [testInputs.pitchAreas]
     );
@@ -108,7 +108,7 @@ export const EstimateCalculatorTool: React.FC = () => {
             }
         }));
     };
-    
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="bg-gray-800/50">
@@ -134,20 +134,20 @@ export const EstimateCalculatorTool: React.FC = () => {
                         </div>
                         <div>
                             <Label htmlFor="layers">Layers</Label>
-                            <Select id="layers" value={testInputs.layers} onChange={e => setTestInputs(p => ({...p, layers: e.target.value as RoofLayers}))}>
-                               {['1', '2', '3', '4', 'IDK', 'Other'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                            <Select id="layers" value={testInputs.layers} onChange={e => setTestInputs(p => ({ ...p, layers: e.target.value as RoofLayers }))}>
+                                {['1', '2', '3', '4', 'IDK', 'Other'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                             </Select>
                         </div>
                         <div className="grid grid-cols-3 gap-4">
-                           <InputGroup label="Chimneys" id="chimneys" type="number" value={testInputs.features.chimneys} onChange={e => handleNestedInputChange('features', 'chimneys', e.target.value)} />
-                           <InputGroup label="Swamp Coolers" id="swampCoolers" type="number" value={testInputs.features.swampCoolers} onChange={e => handleNestedInputChange('features', 'swampCoolers', e.target.value)} />
-                           <InputGroup label="Skylights" id="skylights" type="number" value={testInputs.features.skylights} onChange={e => handleNestedInputChange('features', 'skylights', e.target.value)} />
+                            <InputGroup label="Chimneys" id="chimneys" type="number" value={testInputs.features.chimneys} onChange={e => handleNestedInputChange('features', 'chimneys', e.target.value)} />
+                            <InputGroup label="Swamp Coolers" id="swampCoolers" type="number" value={testInputs.features.swampCoolers} onChange={e => handleNestedInputChange('features', 'swampCoolers', e.target.value)} />
+                            <InputGroup label="Skylights" id="skylights" type="number" value={testInputs.features.skylights} onChange={e => handleNestedInputChange('features', 'skylights', e.target.value)} />
                         </div>
                     </div>
                     {/* Gutter Inputs */}
                     <div className="space-y-4 p-4 border border-gray-700 rounded-lg">
-                         <div className="flex items-center space-x-2">
-                            <Checkbox id="guttersEnabled" checked={testInputs.gutters.enabled} onCheckedChange={c => handleNestedInputChange('gutters', 'enabled', !!c)} />
+                        <div className="flex items-center space-x-2">
+                            <Switch id="guttersEnabled" checked={testInputs.gutters.enabled} onCheckedChange={c => handleNestedInputChange('gutters', 'enabled', !!c)} />
                             <Label htmlFor="guttersEnabled" className="font-semibold cursor-pointer">Gutter Inputs</Label>
                         </div>
                         {testInputs.gutters.enabled && <div className="space-y-4 animate-fade-in">
@@ -155,17 +155,17 @@ export const EstimateCalculatorTool: React.FC = () => {
                             <InputGroup label="Miters (corners)" id="gutterMiters" type="number" value={testInputs.gutters.miters} onChange={e => handleNestedInputChange('gutters', 'miters', e.target.value)} />
                             <Label>Downspouts (by story)</Label>
                             <div className="grid grid-cols-2 gap-4">
-                               <InputGroup label="1-Story" id="ds1" type="number" value={testInputs.gutters.downspouts1Story} onChange={e => handleNestedInputChange('gutters', 'downspouts1Story', e.target.value)} />
-                               <InputGroup label="2-Story" id="ds2" type="number" value={testInputs.gutters.downspouts2Story} onChange={e => handleNestedInputChange('gutters', 'downspouts2Story', e.target.value)} />
-                               <InputGroup label="3-Story" id="ds3" type="number" value={testInputs.gutters.downspouts3Story} onChange={e => handleNestedInputChange('gutters', 'downspouts3Story', e.target.value)} />
-                               <InputGroup label="4-Story" id="ds4" type="number" value={testInputs.gutters.downspouts4Story} onChange={e => handleNestedInputChange('gutters', 'downspouts4Story', e.target.value)} />
+                                <InputGroup label="1-Story" id="ds1" type="number" value={testInputs.gutters.downspouts1Story} onChange={e => handleNestedInputChange('gutters', 'downspouts1Story', e.target.value)} />
+                                <InputGroup label="2-Story" id="ds2" type="number" value={testInputs.gutters.downspouts2Story} onChange={e => handleNestedInputChange('gutters', 'downspouts2Story', e.target.value)} />
+                                <InputGroup label="3-Story" id="ds3" type="number" value={testInputs.gutters.downspouts3Story} onChange={e => handleNestedInputChange('gutters', 'downspouts3Story', e.target.value)} />
+                                <InputGroup label="4-Story" id="ds4" type="number" value={testInputs.gutters.downspouts4Story} onChange={e => handleNestedInputChange('gutters', 'downspouts4Story', e.target.value)} />
                             </div>
                         </div>}
                     </div>
                     {/* Heat Trace Inputs */}
                     <div className="space-y-4 p-4 border border-gray-700 rounded-lg">
-                         <div className="flex items-center space-x-2">
-                            <Checkbox id="heatTraceEnabled" checked={testInputs.heatTrace.enabled} onCheckedChange={c => handleNestedInputChange('heatTrace', 'enabled', !!c)} />
+                        <div className="flex items-center space-x-2">
+                            <Switch id="heatTraceEnabled" checked={testInputs.heatTrace.enabled} onCheckedChange={c => handleNestedInputChange('heatTrace', 'enabled', !!c)} />
                             <Label htmlFor="heatTraceEnabled" className="font-semibold cursor-pointer">Heat Trace Inputs</Label>
                         </div>
                         {testInputs.heatTrace.enabled && <div className="space-y-4 animate-fade-in">
@@ -177,18 +177,18 @@ export const EstimateCalculatorTool: React.FC = () => {
                                 <InputGroup label="3-Story" id="ht-ds3" type="number" value={testInputs.heatTrace.downspouts3Story} onChange={e => handleNestedInputChange('heatTrace', 'downspouts3Story', e.target.value)} />
                                 <InputGroup label="4-Story" id="ht-ds4" type="number" value={testInputs.heatTrace.downspouts4Story} onChange={e => handleNestedInputChange('heatTrace', 'downspouts4Story', e.target.value)} />
                             </div>
-                             <div>
+                            <div>
                                 <Label htmlFor="eave">Eave Overhang</Label>
                                 <Select id="eave" value={testInputs.heatTrace.eaveOverhang} onChange={e => handleNestedInputChange('heatTrace', 'eaveOverhang', e.target.value)}>
-                                   {['None', 'Small', 'Medium', 'Large'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                                    {['None', 'Small', 'Medium', 'Large'].map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                                 </Select>
-                             </div>
+                            </div>
                         </div>}
                     </div>
                 </CardContent>
             </Card>
 
-             <Card className="bg-gray-800/50 sticky top-8">
+            <Card className="bg-gray-800/50 sticky top-8">
                 <CardHeader><CardTitle>Calculation Result</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
                     <h3 className="text-2xl font-bold text-pink-400">Total Estimate: {formatCurrency(calcResult.liveTotal)}</h3>
@@ -209,15 +209,15 @@ export const EstimateCalculatorTool: React.FC = () => {
     );
 };
 
-const InputGroup: React.FC<{label: string, id: string, value: any, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void, type?: string}> = 
-({ label, id, ...props }) => (
-    <div>
-        <Label htmlFor={id} className="text-sm text-gray-300">{label}</Label>
-        <Input id={id} className="mt-1" {...props} />
-    </div>
-);
+const InputGroup: React.FC<{ label: string, id: string, value: any, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void, type?: string }> =
+    ({ label, id, ...props }) => (
+        <div>
+            <Label htmlFor={id} className="text-sm text-gray-300">{label}</Label>
+            <Input id={id} className="mt-1" {...props} />
+        </div>
+    );
 
-const BreakdownRow: React.FC<{label: string, value: number, isBold?: boolean}> = ({label, value, isBold}) => (
+const BreakdownRow: React.FC<{ label: string, value: number, isBold?: boolean }> = ({ label, value, isBold }) => (
     <div className={`flex justify-between text-sm ${isBold ? 'font-bold text-white' : 'text-gray-300'}`}>
         <span>{label}</span>
         <span>{formatCurrency(value)}</span>

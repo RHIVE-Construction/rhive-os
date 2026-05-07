@@ -71,7 +71,7 @@ export const SpeakerWaveIcon = I;
 export const VideoCameraIcon = I;
 export const MicrophoneIcon = I;
 export const MusicalNoteIcon = I;
-export const PhoneIcon = I;
+export const PhoneIcon = createIcon("M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.7 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z");
 export const EnvelopeIcon = MailIcon;
 export const Squares2x2Icon = createIcon("M3 3h7v7H3V3z M14 3h7v7h-7V3z M3 14h7v7H3v-7z M14 14h7v7h-7v-7z");
 export const SatelliteIcon = DefaultIcon;
@@ -241,7 +241,6 @@ export const EnvelopeIcon2 = I;
 export const ShareIcon2 = I;
 export const PaperAirplane = I;
 export const LinkIcon2 = I;
-export const GlobeAlt = I;
 export const Sparkles2 = I;
 export const FireIcon2 = I;
 export const LightBulb = I;
@@ -289,3 +288,10 @@ export const FingerPrintIcon = createIcon("M2 12a10 10 0 0 1 10-10 M7 12a5 5 0 0
 export const Layers = createIcon("M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5");
 export const ChatBubbleLeftRightIcon = createIcon("M8 9h8 M8 13h6 M18 4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5l-5 5v-5H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14z");
 export const ZohoIcon = createIcon("M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5"); // Use Layers for Zoho for now as specialized
+
+// Additional required exports
+export const SunIcon2 = createIcon("M12 2v2 M12 20v2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M2 12h2 M20 12h2 M4.93 19.07l1.41-1.41 M17.66 6.34l1.41-1.41 M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z");
+export const MoonIcon2 = createIcon("M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z");
+export const GlobeAlt = createIcon("M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z");
+export const CpuChipIcon = createIcon("M9 3H5a2 2 0 0 0-2 2v4m6-6h6m-6 0v18m6-18h4a2 2 0 0 1 2 2v4m-6-6v18m0 0H9m6 0h4a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18m-18 0V9m18 6V9m0 0H3");
+export const BuildingOfficeIcon = createIcon("M3 21h18 M5 21V7l8-4v18 M19 21V11l-6-4 M9 9v.01 M9 12v.01 M9 15v.01 M9 18v.01");

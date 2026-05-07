@@ -9,7 +9,7 @@ import { propertyService, contactService, projectService } from '../lib/firebase
 import { cn } from '../lib/utils';
 import PropertyPage from './PropertyPage';
 
-const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+const MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
 
 const stageBadgeColor = (stage?: string) => {
     const s = (stage || '').toLowerCase();

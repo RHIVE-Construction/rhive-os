@@ -13,7 +13,7 @@ import { db } from '../lib/firebase';
 import { MapPinIcon } from '../components/icons';
 import ContactsListPage from './ContactsListPage';
 
-const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+const MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
 
 const ContactVendorProfilePage: React.FC = () => {
     const page = PAGE_GROUPS.flatMap(g => g.pages).find(p => p.id === 'E-10');

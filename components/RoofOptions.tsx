@@ -10,11 +10,11 @@ import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from './ui/t
 
 
 interface RoofOptionsProps {
-  buildingData: BuildingData;
-  surveyState: SurveyState;
-  onSurveyChange: React.Dispatch<React.SetStateAction<SurveyState>>;
-  onContinue: () => void;
-  onStartOver: () => void;
+    buildingData: BuildingData;
+    surveyState: SurveyState;
+    onSurveyChange: React.Dispatch<React.SetStateAction<SurveyState>>;
+    onContinue: () => void;
+    onStartOver: () => void;
 }
 
 const roofFeatures: (keyof SurveyState['roofFeatures'])[] = ['chimneys', 'swampCoolers', 'skylights'];
@@ -89,168 +89,168 @@ const LayerSelector: React.FC<{ value: RoofLayers; onChange: (newValue: RoofLaye
 
 
 export const RoofOptions: React.FC<RoofOptionsProps> = ({
-  buildingData,
-  surveyState,
-  onSurveyChange,
-  onContinue,
-  onStartOver
+    buildingData,
+    surveyState,
+    onSurveyChange,
+    onContinue,
+    onStartOver
 }) => {
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+    const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
-  const handleBuildingToggle = (buildingId: string) => {
-    onSurveyChange(prev => {
-      const isIncluded = prev.includedBuildingIds.includes(buildingId);
-      const newIds = isIncluded
-        ? prev.includedBuildingIds.filter(id => id !== buildingId)
-        : [...prev.includedBuildingIds, buildingId];
-      return { ...prev, includedBuildingIds: newIds };
-    });
-  };
+    const handleBuildingToggle = (buildingId: string) => {
+        onSurveyChange(prev => {
+            const isIncluded = prev.includedBuildingIds.includes(buildingId);
+            const newIds = isIncluded
+                ? prev.includedBuildingIds.filter(id => id !== buildingId)
+                : [...prev.includedBuildingIds, buildingId];
+            return { ...prev, includedBuildingIds: newIds };
+        });
+    };
 
-  const handleLayerChange = (value: RoofLayers) => {
-    onSurveyChange(prev => ({...prev, roofLayers: value}));
-  };
+    const handleLayerChange = (value: RoofLayers) => {
+        onSurveyChange(prev => ({ ...prev, roofLayers: value }));
+    };
 
-  const handleFeatureChange = (feature: keyof SurveyState['roofFeatures'], value: number) => {
-    onSurveyChange(prev => ({
-        ...prev,
-        roofFeatures: { ...prev.roofFeatures, [feature]: Math.max(0, value) }
-    }));
-  };
+    const handleFeatureChange = (feature: keyof SurveyState['roofFeatures'], value: number) => {
+        onSurveyChange(prev => ({
+            ...prev,
+            roofFeatures: { ...prev.roofFeatures, [feature]: Math.max(0, value) }
+        }));
+    };
 
-  return (
-    <TooltipProvider>
-    <div className="relative h-screen w-screen flex flex-col bg-black">
-      <CircuitryBackground />
-      <header className="relative z-10 w-full bg-black/50 backdrop-blur-sm border-b border-gray-800">
-        <div className="container mx-auto px-4 h-16 flex justify-between items-center">
-            <RhiveLogo className="h-7" />
-            <Button variant="ghost" onClick={onStartOver}>Start New Estimate</Button>
-        </div>
-      </header>
-      <main className="relative z-10 flex-grow overflow-y-auto p-4 md:p-8 flex justify-center">
-        <div className="w-full max-w-xl text-white">
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-lg font-medium text-gray-300 mb-3">Select buildings to include in estimate:</h2>
-               <div className="flex flex-wrap gap-4">
-                {buildingData.buildings.map(building => {
-                  const sqValue = (building.totalAreaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE).toFixed(2);
-                  const areaSqFt = (building.totalAreaMeters * SQ_METERS_TO_SQ_FEET).toFixed(0);
-                  const isSelected = surveyState.includedBuildingIds.includes(building.id);
-                  return (
-                    <Tooltip key={building.id}>
-                        <TooltipTrigger asChild>
-                            <div
-                                onClick={() => handleBuildingToggle(building.id)}
-                                role="checkbox"
-                                aria-checked={isSelected}
-                                tabIndex={0}
-                                onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && handleBuildingToggle(building.id)}
-                                className={cn(
-                                    "flex items-center justify-between p-3 rounded-xl bg-black/50 border cursor-pointer transition-all focus:outline-none min-w-[180px]",
-                                    isSelected
-                                        ? 'border-pink-500/70 bg-pink-900/20'
-                                        : 'border-gray-700 hover:bg-gray-500/10'
-                                )}
-                            >
-                                <span className="capitalize font-medium text-white whitespace-nowrap">{building.id.replace(/_/g, ' ')}</span>
-                                 <span className="font-mono whitespace-nowrap">
-                                    <span className="text-white">{sqValue}</span>
-                                    <span className="text-white/70 ml-1">SQ</span>
-                                 </span>
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p className="font-semibold">1 SQ (roofing square) = 100 sq ft.</p>
-                            <p>This building is approx. {areaSqFt} sq ft.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="p-6 rounded-lg bg-black/50 border border-gray-800">
-              <div className="flex items-center text-2xl font-bold mb-6">
-                <div className="p-2 bg-pink-500/20 rounded-md mr-4">
-                  <RoofIcon className="h-6 w-6 text-pink-400" />
-                </div>
-                Roof Options
-              </div>
-
-              <div className="space-y-6">
-                  <div>
-                      <label className="font-medium text-gray-300 flex items-center">
-                          How many layers are on your project?*
-                          <button onClick={() => setIsVideoModalOpen(true)} className="ml-2 text-gray-500 hover:text-pink-400" aria-label="More info on roof layers">
-                            <Info className="h-4 w-4" />
-                          </button>
-                      </label>
-                      <div className="mt-3">
-                        <LayerSelector value={surveyState.roofLayers} onChange={handleLayerChange} />
-                      </div>
-                  </div>
-                  
-                  <div className="border-t border-gray-800 pt-6">
-                      <div className="flex justify-between items-end mb-3">
-                          <label className="font-medium text-gray-300">Indicate the quantity of each feature:</label>
-                      </div>
-                      <div className="space-y-3">
-                          {roofFeatures.map(feature => (
-                            <div key={feature} className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <span className="capitalize text-gray-300">{feature.replace(/([A-Z])/g, ' $1')}</span>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <span className="ml-2 text-gray-500 cursor-help"><Info className="h-4 w-4" /></span>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="p-2 max-w-sm">
-                                            <div className="grid grid-cols-2 gap-2 mb-2">
-                                                {featureTooltips[feature].images.map((img, index) => (
-                                                    <img key={index} src={img} alt={`${feature} example ${index + 1}`} className="rounded-md object-cover aspect-[4/3]" />
-                                                ))}
-                                            </div>
-                                            <p className="text-xs">{featureTooltips[feature].description}</p>
-                                        </TooltipContent>
-                                    </Tooltip>
+    return (
+        <TooltipProvider>
+            <div className="relative h-screen w-screen flex flex-col bg-black">
+                <CircuitryBackground />
+                <header className="relative z-10 w-full bg-black/50 backdrop-blur-sm border-b border-gray-800">
+                    <div className="container mx-auto px-4 h-16 flex justify-between items-center">
+                        <RhiveLogo className="h-7" />
+                        <Button variant="ghost" onClick={onStartOver}>Start New Estimate</Button>
+                    </div>
+                </header>
+                <main className="relative z-10 flex-grow overflow-y-auto p-4 md:p-8 flex justify-center">
+                    <div className="w-full max-w-xl text-white">
+                        <div className="space-y-8">
+                            <div>
+                                <h2 className="text-lg font-medium text-gray-300 mb-3">Select buildings to include in estimate:</h2>
+                                <div className="flex flex-wrap gap-4">
+                                    {buildingData.buildings.map(building => {
+                                        const sqValue = (building.totalAreaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE).toFixed(2);
+                                        const areaSqFt = (building.totalAreaMeters * SQ_METERS_TO_SQ_FEET).toFixed(0);
+                                        const isSelected = surveyState.includedBuildingIds.includes(building.id);
+                                        return (
+                                            <Tooltip key={building.id}>
+                                                <TooltipTrigger asChild>
+                                                    <div
+                                                        onClick={() => handleBuildingToggle(building.id)}
+                                                        role="button"
+                                                        aria-pressed={isSelected}
+                                                        tabIndex={0}
+                                                        onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && handleBuildingToggle(building.id)}
+                                                        className={cn(
+                                                            "flex items-center justify-between p-3 rounded-xl bg-black/50 border cursor-pointer transition-all focus:outline-none min-w-[180px]",
+                                                            isSelected
+                                                                ? 'border-pink-500/70 bg-pink-900/20'
+                                                                : 'border-gray-700 hover:bg-gray-500/10'
+                                                        )}
+                                                    >
+                                                        <span className="capitalize font-medium text-white whitespace-nowrap">{building.id.replace(/_/g, ' ')}</span>
+                                                        <span className="font-mono whitespace-nowrap">
+                                                            <span className="text-white">{sqValue}</span>
+                                                            <span className="text-white/70 ml-1">SQ</span>
+                                                        </span>
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p className="font-semibold">1 SQ (roofing square) = 100 sq ft.</p>
+                                                    <p>This building is approx. {areaSqFt} sq ft.</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        )
+                                    })}
                                 </div>
-                                <QuantitySelector 
-                                    value={surveyState.roofFeatures[feature]}
-                                    onChange={(value) => handleFeatureChange(feature, value)}
-                                />
                             </div>
-                          ))}
-                      </div>
-                  </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="mt-8 text-center">
-              <Button size="lg" onClick={onContinue}>
-                  Continue
-              </Button>
-          </div>
-        </div>
-      </main>
-       <Modal open={isVideoModalOpen} onClose={() => setIsVideoModalOpen(false)} title="Understanding Roof Layers">
-            <div className="space-y-4">
-                <div className="aspect-video w-full rounded-md overflow-hidden border border-gray-700">
-                    <iframe
-                        className="w-full h-full"
-                        src="https://imgur.com/a/5OqFk2G/embed?pub=true"
-                        frameBorder="0"
-                        allowFullScreen
-                        title="Understanding Roof Layers">
-                    </iframe>
-                </div>
-                <p className="text-sm text-gray-300">
-                    The number of existing shingle layers significantly impacts the project's cost. Each additional layer requires more labor to remove and increases the weight, leading to higher disposal (dump) fees. In the upcoming video, we'll show you how to quickly spot signs of multiple layers from the ground.
-                </p>
+                            <div className="p-6 rounded-lg bg-black/50 border border-gray-800">
+                                <div className="flex items-center text-2xl font-bold mb-6">
+                                    <div className="p-2 bg-pink-500/20 rounded-md mr-4">
+                                        <RoofIcon className="h-6 w-6 text-pink-400" />
+                                    </div>
+                                    Roof Options
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="font-medium text-gray-300 flex items-center">
+                                            How many layers are on your project?*
+                                            <button onClick={() => setIsVideoModalOpen(true)} className="ml-2 text-gray-500 hover:text-pink-400" aria-label="More info on roof layers">
+                                                <Info className="h-4 w-4" />
+                                            </button>
+                                        </label>
+                                        <div className="mt-3">
+                                            <LayerSelector value={surveyState.roofLayers} onChange={handleLayerChange} />
+                                        </div>
+                                    </div>
+
+                                    <div className="border-t border-gray-800 pt-6">
+                                        <div className="flex justify-between items-end mb-3">
+                                            <label className="font-medium text-gray-300">Indicate the quantity of each feature:</label>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {roofFeatures.map(feature => (
+                                                <div key={feature} className="flex items-center justify-between">
+                                                    <div className="flex items-center">
+                                                        <span className="capitalize text-gray-300">{feature.replace(/([A-Z])/g, ' $1')}</span>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <span className="ml-2 text-gray-500 cursor-help"><Info className="h-4 w-4" /></span>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent className="p-2 max-w-sm">
+                                                                <div className="grid grid-cols-2 gap-2 mb-2">
+                                                                    {featureTooltips[feature].images.map((img, index) => (
+                                                                        <img key={index} src={img} alt={`${feature} example ${index + 1}`} className="rounded-md object-cover aspect-[4/3]" />
+                                                                    ))}
+                                                                </div>
+                                                                <p className="text-xs">{featureTooltips[feature].description}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </div>
+                                                    <QuantitySelector
+                                                        value={surveyState.roofFeatures[feature]}
+                                                        onChange={(value) => handleFeatureChange(feature, value)}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 text-center">
+                            <Button size="lg" onClick={onContinue}>
+                                Continue
+                            </Button>
+                        </div>
+                    </div>
+                </main>
+                <Modal open={isVideoModalOpen} onClose={() => setIsVideoModalOpen(false)} title="Understanding Roof Layers">
+                    <div className="space-y-4">
+                        <div className="aspect-video w-full rounded-md overflow-hidden border border-gray-700">
+                            <iframe
+                                className="w-full h-full"
+                                src="https://imgur.com/a/5OqFk2G/embed?pub=true"
+                                frameBorder="0"
+                                allowFullScreen
+                                title="Understanding Roof Layers">
+                            </iframe>
+                        </div>
+                        <p className="text-sm text-gray-300">
+                            The number of existing shingle layers significantly impacts the project's cost. Each additional layer requires more labor to remove and increases the weight, leading to higher disposal (dump) fees. In the upcoming video, we'll show you how to quickly spot signs of multiple layers from the ground.
+                        </p>
+                    </div>
+                </Modal>
             </div>
-        </Modal>
-    </div>
-    </TooltipProvider>
-  );
+        </TooltipProvider>
+    );
 };

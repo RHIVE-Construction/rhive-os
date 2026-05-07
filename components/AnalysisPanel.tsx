@@ -21,7 +21,7 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ buildingData, surv
             const newIds = isIncluded
                 ? prev.includedBuildingIds.filter(id => id !== buildingId)
                 : [...prev.includedBuildingIds, buildingId];
-            
+
             return { ...prev, includedBuildingIds: newIds };
         });
     };
@@ -32,7 +32,7 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ buildingData, surv
                 <CardTitle>AI-Generated Roof Analysis</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                 <div className="grid grid-cols-2 gap-2 h-48 rounded-lg overflow-hidden border border-gray-700">
+                <div className="grid grid-cols-2 gap-2 h-48 rounded-lg overflow-hidden border border-gray-700">
                     <img src={streetViewUrl} alt="Street view of property" className="object-cover w-full h-full" />
                     {/* Placeholder for map */}
                     <div className="bg-gray-800 flex items-center justify-center text-gray-500">
@@ -45,11 +45,11 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ buildingData, surv
                         {buildingData.buildings.map(building => {
                             const isSelected = surveyState.includedBuildingIds.includes(building.id);
                             return (
-                               <div 
-                                    key={building.id} 
+                                <div
+                                    key={building.id}
                                     onClick={() => handleBuildingToggle(building.id)}
-                                    role="checkbox"
-                                    aria-checked={isSelected}
+                                    role="button"
+                                    aria-pressed={isSelected}
                                     tabIndex={0}
                                     onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && handleBuildingToggle(building.id)}
                                     className={cn(
@@ -57,11 +57,11 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ buildingData, surv
                                         isSelected ? "border-pink-500/70" : "border-gray-700 hover:bg-gray-800"
                                     )}
                                 >
-                                   <span className="capitalize">{building.id.replace(/_/g, ' ')}</span>
-                                   <span className="font-mono text-pink-400">{(building.totalAreaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE).toFixed(2)} SQ</span>
-                               </div>
-                           )
-                       })}
+                                    <span className="capitalize">{building.id.replace(/_/g, ' ')}</span>
+                                    <span className="font-mono text-pink-400">{(building.totalAreaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE).toFixed(2)} SQ</span>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
                 <ProfileCard calcResult={calcResult} buildingData={buildingData} />

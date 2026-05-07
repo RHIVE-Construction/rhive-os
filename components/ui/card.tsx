@@ -1,11 +1,13 @@
-
 import React from 'react';
 import { cn } from '../../lib/utils';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, children, ...props }, ref) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const chamferSize = "24px";
 
-    // CLIP PATH for Backgrounds (Matches the border logic)
+    // CLIP PATH for Backgrounds (Matches the logic)
     const clipPathValue = `polygon(
         ${chamferSize} 0,
         100% 0,
@@ -16,45 +18,41 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     )`;
 
     return (
-        <div 
-            ref={ref} 
-            className={cn('relative flex flex-col group isolate transition-all duration-300', className)} 
+        <div
+            ref={ref}
+            className={cn('relative flex flex-col group isolate transition-all duration-300', className)}
             {...props}
         >
-            {/* 1. Background Layers (Clipped) - Clear/Black only with blur */}
+            {/* 1. Background Layers (Clipped) */}
             <div
-                className="absolute inset-0 bg-black/20 backdrop-blur-md transition-colors duration-300 z-[-2]"
+                className={cn(
+                    "absolute inset-0 backdrop-blur-md transition-colors duration-500 z-[-2]",
+                    isDark ? "bg-black/20" : "bg-white/40"
+                )}
                 style={{ clipPath: clipPathValue }}
             />
             <div
-                className="absolute inset-[1px] bg-black/40 z-[-1] overflow-hidden"
+                className={cn(
+                    "absolute inset-[1px] z-[-1] overflow-hidden transition-colors duration-500",
+                    isDark ? "bg-black/40" : "bg-white/60"
+                )}
                 style={{ clipPath: clipPathValue }}
             >
-                {/* Overlay to ensure text readability while remaining clear */}
-                <div className="absolute inset-0 bg-black/20 z-0" />
+                <div className={cn("absolute inset-0 z-0 transition-colors duration-500", isDark ? "bg-black/20" : "bg-white/10")} />
             </div>
 
-            {/* 2. BORDER CONSTRUCTION (Manual Placement - Gray Only) */}
-            {/* Left Border */}
-            <div className="absolute left-0 top-6 bottom-0 w-[1px] bg-gray-800/80 z-10" />
-            
-            {/* Top Border */}
-            <div className="absolute left-6 right-0 top-0 h-[1px] bg-gray-800/80 z-10" />
+            {/* 2. BORDER CONSTRUCTION */}
+            <div className={cn("absolute left-0 top-6 bottom-0 w-[1px] z-10 transition-colors duration-500", isDark ? "bg-white/10" : "bg-black/10")} />
+            <div className={cn("absolute left-6 right-0 top-0 h-[1px] z-10 transition-colors duration-500", isDark ? "bg-white/10" : "bg-black/10")} />
+            <div className={cn("absolute right-0 top-0 bottom-6 w-[1px] z-10 transition-colors duration-500", isDark ? "bg-white/10" : "bg-black/10")} />
+            <div className={cn("absolute left-0 right-6 bottom-0 h-[1px] z-10 transition-colors duration-500", isDark ? "bg-white/10" : "bg-black/10")} />
 
-            {/* Right Border */}
-            <div className="absolute right-0 top-0 bottom-6 w-[1px] bg-gray-800/80 z-10" />
-
-            {/* Bottom Border */}
-            <div className="absolute left-0 right-6 bottom-0 h-[1px] bg-gray-800/80 z-10" />
-
-            {/* Top-Left Chamfer SVG (Gray Base Only) */}
             <svg className="absolute top-0 left-0 w-6 h-6 z-10 overflow-visible pointer-events-none">
-                <line x1="0" y1="24" x2="24" y2="0" stroke="#374151" strokeWidth="1" strokeLinecap="square" />
+                <line x1="0" y1="24" x2="24" y2="0" stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"} strokeWidth="1" strokeLinecap="square" className="transition-all duration-500" />
             </svg>
 
-            {/* Bottom-Right Chamfer SVG (Gray Base Only) */}
             <svg className="absolute bottom-0 right-0 w-6 h-6 z-10 overflow-visible pointer-events-none">
-                <line x1="0" y1="24" x2="24" y2="0" stroke="#374151" strokeWidth="1" strokeLinecap="square" />
+                <line x1="0" y1="24" x2="24" y2="0" stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"} strokeWidth="1" strokeLinecap="square" className="transition-all duration-500" />
             </svg>
 
             {/* 3. Card Content */}
@@ -66,28 +64,40 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
 });
 Card.displayName = 'Card';
 
-const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('flex flex-col space-y-1.5 p-6 border-b border-gray-800/50', className)} {...props} />
-));
+const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    return (
+        <div ref={ref} className={cn('flex flex-col space-y-1.5 p-6 border-b transition-colors duration-500', isDark ? "border-white/5" : "border-black/5", className)} {...props} />
+    );
+});
 CardHeader.displayName = 'CardHeader';
 
-const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(({ className, ...props }, ref) => (
-  <h3 ref={ref} className={cn('text-xl font-bold text-gray-100 tracking-tight uppercase', className)} {...props} />
-));
+const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(({ className, ...props }, ref) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    return (
+        <h3 ref={ref} className={cn('text-xl font-bold tracking-tight uppercase transition-colors duration-500', isDark ? "text-gray-100" : "text-black", className)} {...props} />
+    );
+});
 CardTitle.displayName = 'CardTitle';
 
-const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn('text-sm text-gray-400 font-medium', className)} {...props} />
-));
+const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(({ className, ...props }, ref) => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    return (
+        <p ref={ref} className={cn('text-sm font-medium transition-colors duration-500', isDark ? "text-gray-400" : "text-gray-600", className)} {...props} />
+    );
+});
 CardDescription.displayName = 'CardDescription';
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('p-6 pt-6', className)} {...props} />
+    <div ref={ref} className={cn('p-6 pt-6', className)} {...props} />
 ));
 CardContent.displayName = 'CardContent';
 
 const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('flex items-center p-6 pt-0', className)} {...props} />
+    <div ref={ref} className={cn('flex items-center p-6 pt-0', className)} {...props} />
 ));
 CardFooter.displayName = 'CardFooter';
 

@@ -1,0 +1,66 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - img "Logo" [ref=e4]
+      - generic [ref=e6]: RHIVE OS
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - generic [ref=e12]:
+          - button "EN" [ref=e13] [cursor=pointer]
+          - button "ES" [ref=e14] [cursor=pointer]
+          - button "FR" [ref=e15] [cursor=pointer]
+          - button "DE" [ref=e16] [cursor=pointer]
+      - button "LIGHT" [ref=e17] [cursor=pointer]:
+        - img [ref=e18]
+        - generic [ref=e22]: LIGHT
+      - generic [ref=e25]: System Active
+  - main [ref=e26]:
+    - generic [ref=e28]:
+      - img "Logo" [ref=e29]
+      - generic [ref=e30]:
+        - img
+        - generic [ref=e32]:
+          - heading "QOS Gateway" [level=2] [ref=e33]
+          - paragraph [ref=e36]: Quantum Operating System v2.0
+        - generic [ref=e38]:
+          - generic [ref=e39] [cursor=pointer]:
+            - img
+            - generic [ref=e41]:
+              - img [ref=e43]
+              - generic [ref=e46]: Employee
+          - generic [ref=e47] [cursor=pointer]:
+            - img
+            - generic [ref=e49]:
+              - img [ref=e51]
+              - generic [ref=e54]: Customer
+          - generic [ref=e55] [cursor=pointer]:
+            - img
+            - generic [ref=e57]:
+              - img [ref=e59]
+              - generic [ref=e64]: Contractor
+          - generic [ref=e65] [cursor=pointer]:
+            - img
+            - generic [ref=e67]:
+              - img [ref=e69]
+              - generic [ref=e74]: Supplier
+        - generic [ref=e75]:
+          - button "PUBLIC PAGES" [ref=e76] [cursor=pointer]:
+            - generic [ref=e77]: PUBLIC PAGES
+            - img [ref=e78]
+          - generic [ref=e81]:
+            - button "Zoho Auth" [ref=e82] [cursor=pointer]:
+              - img [ref=e83]
+              - text: Zoho Auth
+            - button "Biometrics" [ref=e85] [cursor=pointer]:
+              - img [ref=e86]
+              - text: Biometrics
+        - paragraph [ref=e96]: Restricted Access • RHIVE Industries © 2025
+  - button "System Scan" [ref=e97] [cursor=pointer]:
+    - generic [ref=e99]:
+      - img [ref=e100]
+      - generic [ref=e102]: System Scan
+```

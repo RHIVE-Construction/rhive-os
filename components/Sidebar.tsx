@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { PAGE_GROUPS } from '../constants';
 import { PageGroup, Page } from '../types';
 import { 
@@ -31,7 +31,8 @@ import {
     Squares2x2Icon,
     IdentificationIcon,
     ChartPieIcon,
-    ArrowLeftIcon
+    ArrowLeftIcon,
+    SparklesIcon
 } from './icons';
 import { cn } from '../lib/utils';
 
@@ -47,6 +48,8 @@ const getIconForPage = (id: string) => {
     if (id === 'P-09') return <IdentificationIcon className="h-5 w-5" />;
     if (id === 'P-10' || id === 'P-11') return <DocumentTextIcon className="h-5 w-5" />;
     if (id === 'P-12') return <CalculatorIcon className="h-5 w-5" />;
+    if (id === 'P-00') return <SparklesIcon className="h-5 w-5" />;
+    if (id === 'P-00a') return <BoltIcon className="h-5 w-5" />;
 
     // ADMIN (A-Series)
     if (id === 'A-01') return <HomeIcon className="h-5 w-5" />;
@@ -77,6 +80,7 @@ const getIconForPage = (id: string) => {
     if (id === 'E-25' || id === 'E-24') return <BuildingStorefrontIcon className="h-5 w-5" />;
     if (id === 'E-27') return <CalculatorIcon className="h-5 w-5" />;
     if (id === 'E-38') return <BoltIcon className="h-5 w-5" />;
+    if (id === 'E-39') return <SparklesIcon className="h-5 w-5" />;
     if (id === 'E-29') return <ShieldCheckIcon className="h-5 w-5" />;
     if (id === 'E-32') return <WrenchIcon className="h-5 w-5" />;
     if (id === 'E-34') return <CurrencyDollarIcon className="h-5 w-5" />;
@@ -92,13 +96,13 @@ const getIconForPage = (id: string) => {
     if (id === 'C-02') return <ListBulletIcon className="h-5 w-5" />;
     if (id === 'C-03') return <BriefcaseIcon className="h-5 w-5" />;
     if (id.startsWith('C-')) return <UserIcon className="h-5 w-5" />;
-    
+
     // CONTRACTOR
     if (id === 'CO-01') return <HomeIcon className="h-5 w-5" />;
     if (id === 'CO-06') return <ListBulletIcon className="h-5 w-5" />;
     if (id === 'CO-08') return <MapPinIcon className="h-5 w-5" />;
     if (id.startsWith('CO-')) return <BuildingStorefrontIcon className="h-5 w-5" />;
-    
+
     // SUPPLIER
     if (id === 'S-04') return <UserIcon className="h-5 w-5" />;
     if (id.startsWith('S-')) return <TruckIcon className="h-5 w-5" />;
@@ -112,7 +116,10 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
     const { currentUser, logout } = useMockDB();
-    const { activePageId, setActivePageId } = useNavigation();
+    const { activePageId, navigateToPage } = useNavigation();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
     
     // State to track expanded categories
     const [expandedCategories, setExpandedCategories] = React.useState<Record<string, boolean>>({
@@ -144,9 +151,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
     );
 
     return (
-        <aside className="w-64 bg-black/80 border-r border-gray-800 backdrop-blur-md flex flex-col flex-shrink-0 h-full relative z-50">
-            <div className="p-6 border-b border-gray-800 flex items-center justify-center">
-                <RhiveLogo className="h-8" />
+        <aside className={cn(
+            "w-64 border-r backdrop-blur-md flex flex-col flex-shrink-0 h-full relative z-50 transition-colors duration-500",
+            isDark ? "bg-black/80 border-white/5" : "bg-white/80 border-black/5"
+        )}>
+            <div className={cn("p-6 border-b flex items-center justify-center transition-colors duration-500", isDark ? "border-white/5" : "border-black/5")}>
+                <RhiveLogo className={cn("h-8 transition-colors duration-500", isDark ? "text-white" : "text-black")} />
             </div>
 
             <div className="flex-1 overflow-y-auto py-4 scrollbar-hide">
@@ -175,7 +185,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                         return pages.map(page => (
                                             <button
                                                 key={page.id}
-                                                onClick={() => setActivePageId(page.id)}
+                                                onClick={() => navigateToPage(page.id)}
+
                                                 className={cn(
                                                     "flex items-center w-full px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
                                                     activePageId === page.id
@@ -219,7 +230,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                                     {pages.map(page => (
                                                         <button
                                                             key={page.id}
-                                                            onClick={() => setActivePageId(page.id)}
+                                                            onClick={() => navigateToPage(page.id)}
+
                                                             className={cn(
                                                                 "flex items-center w-full px-4 py-1.5 rounded-full text-[13px] font-medium transition-all",
                                                                 activePageId === page.id
@@ -241,17 +253,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                 })}
             </div>
 
-            <div className="p-4 border-t border-gray-800 bg-black/40">
+            <div className={cn("p-4 border-t transition-colors duration-500", isDark ? "border-white/5 bg-black/40" : "border-black/5 bg-white/40")}>
                 <div className="flex items-center mb-4 px-2">
-                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold text-xs border border-gray-600">
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border transition-colors", isDark ? "bg-gray-800 text-white border-gray-700" : "bg-gray-100 text-black border-gray-200")}>
                         {currentUser.name.charAt(0)}
                     </div>
                     <div className="ml-3 overflow-hidden">
-                        <p className="text-sm font-medium text-white truncate">{currentUser.name}</p>
+                        <p className={cn("text-sm font-medium truncate transition-colors", isDark ? "text-white" : "text-black")}>{currentUser.name}</p>
                         <p className="text-xs text-[#ec028b] truncate">{currentUser.role}</p>
                     </div>
                 </div>
-                <button 
+                <button
                     onClick={logout}
                     className="w-full py-2 px-4 bg-gray-900 hover:bg-red-900/20 border border-gray-700 hover:border-red-500/50 rounded-full text-gray-400 hover:text-red-400 text-sm transition-all flex items-center justify-center gap-2"
                 >
