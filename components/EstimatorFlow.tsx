@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import type { Place, BuildingData, SurveyState } from '../types';
+import { getMapsApiKey } from '../lib/mapsConfig';
 import { LandingPage } from './LandingPage';
 import { Dashboard } from './Dashboard';
 import { generateMockBuildingData } from '../lib/mockData';
@@ -25,7 +26,7 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose }) => {
   const [satelliteViewUrl, setSatelliteViewUrl] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
-  const handlePlaceSelected = useCallback((place: Place) => {
+  const handlePlaceSelected = useCallback(async (place: Place) => {
     setError(null);
     try {
       const data = generateMockBuildingData(place);
@@ -40,8 +41,8 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose }) => {
         includedBuildingIds: allBuildingIds,
       }));
 
-      // Using the key present in index.html
-      const apiKey = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+      // Fetch key from backend — never exposed in HTML or bundle
+      const apiKey = await getMapsApiKey();
       
       const satUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${place.latitude},${place.longitude}&zoom=20&size=640x480&maptype=satellite&markers=color:0xec028b%7C${place.latitude},${place.longitude}&key=${apiKey}`;
       setSatelliteViewUrl(satUrl);

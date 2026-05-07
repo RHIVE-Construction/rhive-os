@@ -8,8 +8,7 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { propertyService, contactService, projectService } from '../lib/firebaseService';
 import { cn } from '../lib/utils';
 import PropertyPage from './PropertyPage';
-
-const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+import { getMapsApiKey } from '../lib/mapsConfig';
 
 const stageBadgeColor = (stage?: string) => {
     const s = (stage || '').toLowerCase();
@@ -37,6 +36,9 @@ const PropertyProfilePage: React.FC = () => {
     const [projects, setProjects] = useState<any[]>([]);
     const [allProperties, setAllProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [mapsKey, setMapsKey] = useState('');
+
+    useEffect(() => { getMapsApiKey().then(setMapsKey); }, []);
 
     // Load all properties and subscribe to updates
     useEffect(() => {
@@ -85,9 +87,9 @@ const PropertyProfilePage: React.FC = () => {
     const addressForMap = property?.address_full || property?.property_address;
     
     const satUrl = (property?.latitude && property?.longitude)
-        ? `https://maps.googleapis.com/maps/api/staticmap?center=${property.latitude},${property.longitude}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${property.latitude},${property.longitude}&key=${MAPS_API_KEY}`
+        ? `https://maps.googleapis.com/maps/api/staticmap?center=${property.latitude},${property.longitude}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${property.latitude},${property.longitude}&key=${mapsKey}`
         : addressForMap
-            ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(addressForMap)}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${encodeURIComponent(addressForMap)}&key=${MAPS_API_KEY}`
+            ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(addressForMap)}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${encodeURIComponent(addressForMap)}&key=${mapsKey}`
             : null;
 
     if (loading) {
@@ -131,7 +133,7 @@ const PropertyProfilePage: React.FC = () => {
                                         loading="lazy"
                                         allowFullScreen
                                         referrerPolicy="no-referrer-when-downgrade"
-                                        src={`https://www.google.com/maps/embed/v1/view?key=${MAPS_API_KEY}&center=${property?.latitude || 33.3286},${property?.longitude || -115.8434}&zoom=15&maptype=satellite`}
+                                        src={`https://www.google.com/maps/embed/v1/view?key=${mapsKey}&center=${property?.latitude || 33.3286},${property?.longitude || -115.8434}&zoom=15&maptype=satellite`}
                                     ></iframe>
                                     {/* Floating Address Label over Pin (Since we use view, we center the label) */}
                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[20px] pointer-events-none z-10">

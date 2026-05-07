@@ -265,8 +265,28 @@
       window.dispatchEvent(new Event('google-maps-api-ready'));
     }
   </script>
-  <script async
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady"></script>
+  <script>
+    // ── Dynamic Google Maps Loader ───────────────────────────────────────────
+    // Key is fetched from /api/config (backend) and never embedded in HTML.
+    (function loadMapsFromBackend() {
+      fetch('/api/config')
+        .then(function(res) { return res.json(); })
+        .then(function(cfg) {
+          if (!cfg.mapsApiKey) return;
+          var script = document.createElement('script');
+          script.async = true;
+          script.src =
+            'https://maps.googleapis.com/maps/api/js' +
+            '?key=' + encodeURIComponent(cfg.mapsApiKey) +
+            '&libraries=places,drawing,geometry' +
+            '&callback=onGoogleMapsApiReady';
+          document.head.appendChild(script);
+        })
+        .catch(function(err) {
+          console.error('[RHIVE] Maps config fetch failed:', err);
+        });
+    })();
+  </script>
   <script type="importmap">
     {
       "imports": {

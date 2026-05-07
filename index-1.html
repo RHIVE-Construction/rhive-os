@@ -33,8 +33,36 @@
       window.dispatchEvent(new Event('google-maps-api-ready'));
     }
   </script>
-  <script async
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady"></script>
+  <script>
+    // ── Dynamic Google Maps Loader ───────────────────────────────────────────
+    // The API key is never embedded in HTML. It is fetched server-side from
+    // /api/config (served by vite.config.ts configApiPlugin) and injected
+    // at runtime so it never appears in page source or client bundles.
+    (function loadMapsFromBackend() {
+      fetch('/api/config')
+        .then(function(res) {
+          if (!res.ok) throw new Error('Config endpoint returned ' + res.status);
+          return res.json();
+        })
+        .then(function(cfg) {
+          if (!cfg.mapsApiKey) {
+            console.warn('[RHIVE] Maps API key not configured on server.');
+            return;
+          }
+          var script = document.createElement('script');
+          script.async = true;
+          script.src =
+            'https://maps.googleapis.com/maps/api/js' +
+            '?key=' + encodeURIComponent(cfg.mapsApiKey) +
+            '&libraries=places,drawing,geometry' +
+            '&callback=onGoogleMapsApiReady';
+          document.head.appendChild(script);
+        })
+        .catch(function(err) {
+          console.error('[RHIVE] Failed to load Maps config:', err);
+        });
+    })();
+  </script>
   <script type="importmap">
 {
   "imports": {

@@ -1,12 +1,19 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PageContainer from '../components/PageContainer';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { MapPinIcon, UserIcon, RhiveLogo, ShareIcon } from '../components/icons';
+import { getMapsApiKey } from '../lib/mapsConfig';
 
 const ContactPage: React.FC = () => {
+    const [mapsKey, setMapsKey] = useState('');
+
+    useEffect(() => {
+        getMapsApiKey().then(setMapsKey);
+    }, []);
+
     return (
         <PageContainer 
             title="Get In Touch" 
@@ -83,7 +90,7 @@ const ContactPage: React.FC = () => {
                             <div className="h-48 bg-gray-900 rounded-xl overflow-hidden border border-gray-800 relative group">
                                 {/* Map Placeholder */}
                                 <img 
-                                    src={`https://maps.googleapis.com/maps/api/staticmap?center=41.7766,-111.8211&zoom=15&size=400x300&maptype=roadmap&markers=color:0xec028b%7C41.7766,-111.8211&key=AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA`} 
+                                    src={mapsKey ? `https://maps.googleapis.com/maps/api/staticmap?center=41.7766,-111.8211&zoom=15&size=400x300&maptype=roadmap&markers=color:0xec028b%7C41.7766,-111.8211&key=${mapsKey}` : ''} 
                                     className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
                                     alt="RHIVE HQ Map"
                                 />

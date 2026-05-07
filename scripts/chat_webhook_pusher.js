@@ -4,7 +4,11 @@ const https = require('https');
 // 1. In Google Chat, go to the Space via "Apps & integrations" -> "Manage webhooks"
 // 2. Create Webhook and paste the URL below.
 // ========================================================================
-const WEBHOOK_URL = process.env.CHAT_WEBHOOK_URL || 'https://chat.googleapis.com/v1/spaces/AAQAM7z6EAk/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=XHQwOr4tkb1ITC24gq06FeVaGqjZLXK-_QlyP0-OpHg';
+const WEBHOOK_URL = process.env.CHAT_WEBHOOK_URL;
+if (!WEBHOOK_URL) {
+  console.error('❌ CHAT_WEBHOOK_URL environment variable is not set. Add it to your .env file.');
+  process.exit(1);
+}
 
 function sendChatMessage(text) {
   const payload = JSON.stringify({ text });
