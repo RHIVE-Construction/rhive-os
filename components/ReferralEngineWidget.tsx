@@ -16,17 +16,17 @@ const ReferralEngineWidget: React.FC = () => {
                 
                 <div className="flex-grow text-center md:text-left">
                     <h3 className="text-2xl font-bold text-white mb-1"><span className="text-[#00D1FF]">Share & Earn</span> $350</h3>
-                    <p className="text-gray-400 text-sm max-w-md">
+                    <p className="text-gray-400 text-base max-w-md">
                         Know someone who needs a roof? Send them your unique link. When their project installs, you get $350 instant cash.
                     </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                    <button className="flex items-center justify-center gap-2 bg-[#ec028b] hover:bg-[#ec028b]/80 text-white px-5 py-2.5 rounded text-sm font-bold transition-all shadow-[0_0_15px_rgba(236,2,139,0.3)] hover:shadow-[0_0_25px_rgba(236,2,139,0.5)]">
+                    <button className="flex items-center justify-center gap-2 bg-[#ec028b] hover:bg-[#ec028b]/80 text-white px-5 py-2.5 rounded text-base font-bold transition-all shadow-[0_0_15px_rgba(236,2,139,0.3)] hover:shadow-[0_0_25px_rgba(236,2,139,0.5)]">
                         <ChatBubbleLeftRightIcon className="w-4 h-4" />
                         Text Link
                     </button>
-                    <button className="flex items-center justify-center gap-2 border border-white/20 hover:border-[#00D1FF] hover:text-[#00D1FF] bg-black/30 text-white px-5 py-2.5 rounded text-sm font-bold transition-all">
+                    <button className="flex items-center justify-center gap-2 border border-white/20 hover:border-[#00D1FF] hover:text-[#00D1FF] bg-black/30 text-white px-5 py-2.5 rounded text-base font-bold transition-all">
                         <EnvelopeIcon className="w-4 h-4" />
                         Email Link
                     </button>
@@ -34,7 +34,7 @@ const ReferralEngineWidget: React.FC = () => {
             </div>
             
             {/* Stats Footer */}
-            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500 font-mono">
+            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-base text-gray-500 font-mono">
                 <span>Total Earned: $0.00</span>
                 <span>Clicks: 0</span>
                 <span className="flex items-center gap-1 text-[#00D1FF]">

@@ -37,28 +37,28 @@ const IceManagementPage = () => {
                 <div className="relative z-30 text-center px-4 max-w-5xl">
                     <div className="inline-flex items-center gap-2 border border-[#00D1FF]/30 px-6 py-2 bg-[#00D1FF]/10 mb-8 backdrop-blur-md">
                         <Snowflake className="w-4 h-4 text-[#00D1FF]" />
-                        <span className="text-[#00D1FF] font-black text-xs uppercase tracking-[0.4em]">Winter Perimeter Security</span>
+                        <span className="text-[#00D1FF] font-black text-base uppercase tracking-[0.4em]">Winter Perimeter Security</span>
                     </div>
 
                     <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-8 text-white leading-none drop-shadow-2xl font-sans">
                         ICE <span className="text-[#00D1FF]">MANAGEMENT</span>
                     </h1>
 
-                    <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+                    <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 max-w-prose mx-auto leading-relaxed drop-shadow-lg">
                         Proactive Ice Defense & Structural Protection. Prevent the formation of destructive ice dams and heavy icicles along your roof edges and valleys.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <button
                             onClick={() => setActivePageId('P-12')}
-                            className="group relative px-10 py-5 bg-[#00D1FF] text-black font-black uppercase text-sm tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(0,209,255,0.3)]"
+                            className="group relative px-10 py-5 bg-[#00D1FF] text-black font-black uppercase text-base tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(0,209,255,0.3)]"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >
                             Request Certified Quote
                         </button>
                         <button
                             onClick={scrollToSystems}
-                            className="px-10 py-5 border border-white/10 text-white font-bold uppercase text-xs tracking-[0.2em] hover:bg-white/5 transition-all backdrop-blur-md"
+                            className="px-10 py-5 border border-white/10 text-white font-bold uppercase text-base tracking-[0.2em] hover:bg-white/5 transition-all backdrop-blur-md"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >
                             Review Matrix Specs
@@ -73,7 +73,7 @@ const IceManagementPage = () => {
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-12 h-[2px] bg-[#00D1FF]"></div>
-                            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-[#00D1FF] drop-shadow-[0_0_8px_rgba(0,209,255,0.5)]">
+                            <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-[#00D1FF] drop-shadow-[0_0_8px_rgba(0,209,255,0.5)]">
                                 Automated Defense Network
                             </span>
                         </div>
@@ -84,10 +84,10 @@ const IceManagementPage = () => {
                         
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#00D1FF]/10 border border-[#00D1FF]/30 mb-6">
                             <CheckCircle2 className="w-3 h-3 text-[#00D1FF]" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-[#00D1FF]">RHIVE QUALITY STANDARD VERIFIED</span>
+                            <span className="text-base font-black uppercase tracking-widest text-[#00D1FF]">RHIVE QUALITY STANDARD VERIFIED</span>
                         </div>
                         
-                        <p className="text-lg text-gray-300 font-sans leading-relaxed mb-12 border-l-2 border-[#00D1FF] pl-6">
+                        <p className="text-base md:text-lg text-gray-300 font-sans leading-relaxed max-w-prose mb-12 border-l-2 border-[#00D1FF] pl-6">
                             {iceData?.description}
                         </p>
 
@@ -97,8 +97,8 @@ const IceManagementPage = () => {
                                     <ShieldCheck className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h4 className="text-white font-black text-xs uppercase tracking-widest mb-1">Dual-Protection Warranty</h4>
-                                    <p className="text-gray-500 text-xs text-balance">
+                                    <h4 className="text-white font-black text-base uppercase tracking-widest mb-1">Dual-Protection Warranty</h4>
+                                    <p className="text-gray-500 text-base text-balance">
                                         {iceData?.guarantee.installation} • {iceData?.guarantee.materials}
                                     </p>
                                 </div>
@@ -138,15 +138,15 @@ const IceManagementPage = () => {
                                             <div key={idx} className="flex flex-col gap-1 bg-black/60 backdrop-blur-md border border-white/10 p-4 hover:border-[#00D1FF] transition-colors group/bp">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <ThermometerSnowflake className="w-4 h-4 text-[#00D1FF]" />
-                                                    <span className="text-[10px] font-black uppercase text-[#00D1FF] tracking-widest">{heading}</span>
+                                                    <span className="text-base font-black uppercase text-[#00D1FF] tracking-widest">{heading}</span>
                                                 </div>
-                                                <p className="text-xs text-gray-300 leading-relaxed font-sans pl-6">{details}</p>
+                                                <p className="text-base text-gray-300 leading-relaxed font-sans max-w-prose pl-6">{details}</p>
                                             </div>
                                         );
                                     }
                                     return (
                                         <div key={idx} className="flex items-start gap-4 bg-white/5 border border-white/10 p-4 hover:border-[#00D1FF] transition-colors group/bp">
-                                            <p className="text-xs text-gray-300 leading-relaxed font-sans">{bp}</p>
+                                            <p className="text-base text-gray-300 leading-relaxed font-sans max-w-prose">{bp}</p>
                                         </div>
                                     );
                                 })}

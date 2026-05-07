@@ -38,7 +38,7 @@ const ChoiceButton: React.FC<{ active: boolean; onClick: () => void; children: R
 
 const QuantityInput: React.FC<{ label: string; value: number; onChange: (val: number) => void }> = ({ label, value, onChange }) => (
     <div className="text-center">
-        <label className="text-sm text-gray-400">{label}</label>
+        <label className="text-base text-gray-400">{label}</label>
         <input 
             type="number"
             value={value || ''}

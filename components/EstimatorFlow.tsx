@@ -14,11 +14,12 @@ type AppState = 'landing' | 'addressConfirmation' | 'roofOptions' | 'gutters' | 
 
 interface EstimatorFlowProps {
   onClose: () => void;
+  initialPlace?: Place;
 }
 
-export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose }) => {
-  const [appState, setAppState] = useState<AppState>('landing');
-  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPlace }) => {
+  const [appState, setAppState] = useState<AppState>(initialPlace ? 'addressConfirmation' : 'landing');
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(initialPlace || null);
   const [buildingData, setBuildingData] = useState<BuildingData | null>(null);
   const [surveyState, setSurveyState] = useState<SurveyState>(INITIAL_SURVEY_STATE);
   const [streetViewUrl, setStreetViewUrl] = useState<string>('');
@@ -68,6 +69,12 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose }) => {
       setError(e.message || "An unexpected error occurred.");
     }
   }, []);
+
+  React.useEffect(() => {
+    if (initialPlace) {
+      handlePlaceSelected(initialPlace);
+    }
+  }, [initialPlace, handlePlaceSelected]);
 
   const handleStartNew = () => {
     onClose();

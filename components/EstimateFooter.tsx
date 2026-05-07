@@ -20,7 +20,7 @@ export const EstimateFooter: React.FC<EstimateFooterProps> = ({ calcResult, surv
         <footer className="sticky bottom-0 z-20 bg-black/70 backdrop-blur-sm border-t border-gray-800">
             <div className="container mx-auto px-4 h-20 flex justify-between items-center">
                 <div>
-                    <p className="text-sm text-gray-400">Live Estimate Total</p>
+                    <p className="text-base text-gray-400">Live Estimate Total</p>
                     <p className="text-3xl font-bold text-[#ec028b]">
                         {formatCurrency(calcResult.liveTotal)}
                     </p>
@@ -61,7 +61,7 @@ const BreakdownSheetContent: React.FC<{ calcResult: CalculationResult; surveySta
                 <div>
                     <h3 className="font-semibold mb-2">Base Roof Cost Breakdown (Duration)</h3>
                     <Card>
-                        <CardContent className="pt-4 text-sm space-y-2">
+                        <CardContent className="pt-4 text-base space-y-2">
                              <div className="flex justify-between"><span>Materials</span><span>{formatCurrency(roofEstimate.breakdown.materials)}</span></div>
                              <div className="flex justify-between"><span>Labor</span><span>{formatCurrency(roofEstimate.breakdown.labor)}</span></div>
                              <div className="flex justify-between"><span>Overhead & Addons</span><span>{formatCurrency(roofEstimate.breakdown.overhead)}</span></div>
@@ -116,6 +116,6 @@ const LabelledRadioItem: React.FC<{id:string, value: string, label: string, pric
     <label htmlFor={id} className="flex items-center p-3 rounded-md border border-gray-700 has-[:checked]:border-pink-500/70 has-[:checked]:bg-pink-900/20 cursor-pointer">
         <RadioGroupItem value={value} id={id} />
         <span className="ml-3 flex-grow">{label}</span>
-        <span className="text-sm font-semibold">{priceText}</span>
+        <span className="text-base font-semibold">{priceText}</span>
     </label>
 );

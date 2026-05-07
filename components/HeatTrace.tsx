@@ -37,7 +37,7 @@ const eaveOptions: { name: EaveOverhang, imageUrl: string }[] = [
 
 const DownspoutInput: React.FC<{ label: string; value: number; onChange: (val: number) => void }> = ({ label, value, onChange }) => (
     <div className="text-center">
-        <label className="text-sm text-gray-400">{label}</label>
+        <label className="text-base text-gray-400">{label}</label>
         <input 
             type="number"
             value={value || ''}
@@ -116,7 +116,7 @@ export const HeatTrace: React.FC<HeatTraceProps> = ({ surveyState, onSurveyChang
                                                     <video src="https://video.wixstatic.com/video/c5862a_2479a8a4ae234c3eb11fa6daefd68704/720p/mp4/file.mp4" loop muted autoPlay playsInline className="w-1/2 rounded-md"></video>
                                                     <img src="https://static.wixstatic.com/media/c5862a_43d38b7dcb514cbb9664193eb24bbdb9~mv2.jpg" alt="Heat trace on roof edge" className="w-1/2 rounded-md object-cover" />
                                                 </div>
-                                                <p className="text-xs">Estimate the total length of roof edges and valleys where ice dams typically form. Use the measure tool for a more accurate calculation. Provide the total straight length. Do not calculate the zigzag pattern</p>
+                                                <p className="text-base">Estimate the total length of roof edges and valleys where ice dams typically form. Use the measure tool for a more accurate calculation. Provide the total straight length. Do not calculate the zigzag pattern</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     </label>
@@ -144,7 +144,7 @@ export const HeatTrace: React.FC<HeatTraceProps> = ({ surveyState, onSurveyChang
                                             </TooltipTrigger>
                                             <TooltipContent className="p-2 max-w-xs">
                                                 <img src="https://static.wixstatic.com/media/c5862a_ff6c190422474297abaecc306fc78777~mv2.jpg" alt="Heat trace in downspout" className="w-full rounded-md mb-2" />
-                                                <p className="text-xs">Adding heat cable to downspouts prevents them from freezing solid and causing backups.</p>
+                                                <p className="text-base">Adding heat cable to downspouts prevents them from freezing solid and causing backups.</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     </label>
@@ -181,7 +181,7 @@ export const HeatTrace: React.FC<HeatTraceProps> = ({ surveyState, onSurveyChang
                                                 />
                                                 <img src={imageUrl} alt={`${name} eave`} className="w-full h-24 object-cover rounded-md transition-all border border-transparent peer-checked:border-pink-500/70"/>
                                                 <div className="absolute inset-0 bg-black/50 rounded-md"></div>
-                                                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-sm font-semibold">{name}</span>
+                                                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-base font-semibold">{name}</span>
                                             </label>
                                         ))}
                                     </div>

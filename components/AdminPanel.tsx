@@ -71,7 +71,7 @@ export const AdminPanel: React.FC = () => {
         <PricingCategory title="Base Cost Per Square by Pitch">
             {Object.entries(localPricing.costPerSqByPitch).map(([pitch, costs]) => (
                 <div key={pitch} className="p-2 border-t border-gray-700">
-                    <h4 className="font-semibold text-sm mb-1">{pitch}/12 Pitch</h4>
+                    <h4 className="font-semibold text-base mb-1">{pitch}/12 Pitch</h4>
                      <PricingInput label="Materials" value={(costs as any).materials} onChange={(v) => handleDeeplyNestedInputChange('costPerSqByPitch', pitch, 'materials', v)} />
                      <PricingInput label="Labor" value={(costs as any).labor} onChange={(v) => handleDeeplyNestedInputChange('costPerSqByPitch', pitch, 'labor', v)} />
                      <PricingInput label="Overhead" value={(costs as any).overhead} onChange={(v) => handleDeeplyNestedInputChange('costPerSqByPitch', pitch, 'overhead', v)} />
@@ -81,7 +81,7 @@ export const AdminPanel: React.FC = () => {
         <PricingCategory title="Flat Roofing Cost Per Square">
             {Object.entries(localPricing.flatRoofing).map(([type, costs]) => (
                 <div key={type} className="p-2 border-t border-gray-700">
-                    <h4 className="font-semibold text-sm mb-1">{type}</h4>
+                    <h4 className="font-semibold text-base mb-1">{type}</h4>
                      <PricingInput label="Materials" value={(costs as any).materials} onChange={(v) => handleDeeplyNestedInputChange('flatRoofing', type, 'materials', v)} />
                      <PricingInput label="Labor" value={(costs as any).labor} onChange={(v) => handleDeeplyNestedInputChange('flatRoofing', type, 'labor', v)} />
                      <PricingInput label="Overhead" value={(costs as any).overhead} onChange={(v) => handleDeeplyNestedInputChange('flatRoofing', type, 'overhead', v)} />

@@ -17,7 +17,7 @@ export const ServicesHero: React.FC = () => {
             <div className="relative z-20 text-center px-6 max-w-5xl mx-auto mt-8">
                 <div className="inline-flex items-center justify-center gap-2 mb-6 border border-[var(--rhive-pink)]/30 bg-[var(--rhive-pink)]/5 px-4 py-1.5 rounded-full backdrop-blur-md">
                     <span className="w-1.5 h-1.5 bg-[var(--rhive-pink)] rounded-full animate-pulse shadow-[0_0_8px_rgba(236,2,139,0.8)]"></span>
-                    <span className="text-[10px] uppercase tracking-widest text-[var(--rhive-pink)] font-bold font-mono">RHIVE Architecture: The Vanguard of Roofing</span>
+                    <span className="text-base uppercase tracking-widest text-[var(--rhive-pink)] font-bold font-mono">RHIVE Architecture: The Vanguard of Roofing</span>
                 </div>
 
                 <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-black text-white uppercase tracking-tighter mb-6 font-display drop-shadow-2xl leading-[0.9]">
@@ -27,7 +27,7 @@ export const ServicesHero: React.FC = () => {
                 <p className="text-gray-300 font-serif text-lg md:text-2xl max-w-3xl mx-auto leading-relaxed mb-6">
                     We don't just lay standard shingles; we install precision-layered technology featuring active ventilation, architectural-grade materials, and thermal superiority.
                 </p>
-                <p className="text-[var(--rhive-blue)] font-mono text-sm tracking-widest uppercase font-bold bg-white/5 inline-block px-4 py-2 rounded-sm border border-white/10">
+                <p className="text-[var(--rhive-blue)] font-mono text-base tracking-widest uppercase font-bold bg-white/5 inline-block px-4 py-2 rounded-sm border border-white/10">
                     Fully warrantied, zero-compromise protection for what matters most.
                 </p>
             </div>

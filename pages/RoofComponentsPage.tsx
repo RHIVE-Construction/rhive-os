@@ -72,7 +72,7 @@ const RoofComponentsPage: React.FC = () => {
                         className="inline-flex items-center gap-2 border border-[var(--rhive-pink)]/30 px-6 py-2 bg-[var(--rhive-pink)]/10 mb-8"
                     >
                         <Zap className="w-4 h-4 text-[var(--rhive-pink)] shadow-[0_0_8px_var(--rhive-pink)]" />
-                        <span className="text-[var(--rhive-pink)] font-black text-[10px] uppercase tracking-[0.4em]">Precision Peripherals Hub</span>
+                        <span className="text-[var(--rhive-pink)] font-black text-base uppercase tracking-[0.4em]">Precision Peripherals Hub</span>
                     </motion.div>
 
                     <motion.h1 
@@ -89,7 +89,7 @@ const RoofComponentsPage: React.FC = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="text-lg md:text-xl text-gray-500 font-serif italic max-w-2xl mx-auto leading-relaxed"
+                        className="text-lg md:text-xl text-gray-500 font-serif italic max-w-prose mx-auto leading-relaxed"
                     >
                         Engineering the perimeter defense of your property. From surgical maintenance protocols to industrial-grade water management systems.
                     </motion.p>
@@ -104,7 +104,7 @@ const RoofComponentsPage: React.FC = () => {
                             <button
                                 key={cat}
                                 onClick={() => setActiveCategory(cat)}
-                                className={`px-6 py-2 text-[10px] font-bold uppercase tracking-widest transition-all relative group
+                                className={`px-6 py-2 text-base font-bold uppercase tracking-widest transition-all relative group
                                     ${activeCategory === cat ? 'text-white' : 'text-gray-500 hover:text-white'}`}
                             >
                                 {cat}
@@ -133,19 +133,19 @@ const RoofComponentsPage: React.FC = () => {
                         
                         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between mb-12 border-l-4 border-[var(--rhive-pink)] pl-6 gap-8">
                             <div className="max-w-2xl">
-                                <h2 className="text-[var(--rhive-pink)] text-xs font-bold uppercase tracking-[.3em] mb-2 drop-shadow-[0_0_8px_rgba(236,2,139,0.5)]">Priority Status: Critical</h2>
-                                <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4 text-white">Maintenance & Preservation</h3>
-                                <p className="text-gray-300 font-serif italic text-sm md:text-base leading-relaxed bg-black/40 p-4 rounded-sm border border-white/5 backdrop-blur-md">
+                                <h2 className="text-[var(--rhive-pink)] text-base font-bold uppercase tracking-[.3em] mb-2 drop-shadow-[0_0_8px_rgba(236,2,139,0.5)]">Priority Status: Critical</h2>
+                                <h3 className="text-4xl md:text-5xl leading-tight font-black uppercase tracking-tighter mb-4 text-white">Maintenance & Preservation</h3>
+                                <p className="text-gray-300 font-serif italic text-base md:text-lg leading-relaxed max-w-prose bg-black/40 p-4 rounded-sm border border-white/5 backdrop-blur-md">
                                     Annual roof maintenance is not an option; it is an engineering necessity. A consistent preservation protocol ensures 
                                     every peripheral component—from gutter channels to pipe flashings—operates at peak theoretical capacity. 
                                     <span className="block mt-4 text-white/70 border-t border-[var(--rhive-pink)]/20 pt-4">
-                                        <span className="text-[var(--rhive-pink)] font-bold uppercase tracking-widest text-[10px]">The RHIVE Challenge:</span> Ask other contractors for the specific 
+                                        <span className="text-[var(--rhive-pink)] font-bold uppercase tracking-widest text-base">The RHIVE Challenge:</span> Ask other contractors for the specific 
                                         items on your roof they verify during "maintenance." If they can't provide a technical blueprint for the service, they aren't RHIVE.
                                     </span>
                                 </p>
                             </div>
                             <div className="hidden md:block text-right bg-black/50 p-6 border border-white/10 backdrop-blur-xl" style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
-                                <p className="text-[10px] font-bold text-[var(--rhive-pink)] uppercase tracking-widest mb-2">Integrity Score</p>
+                                <p className="text-base font-bold text-[var(--rhive-pink)] uppercase tracking-widest mb-2">Integrity Score</p>
                                 <p className="text-4xl font-black text-white font-mono shadow-[0_0_15px_rgba(255,255,255,0.2)]">10.0/10.0</p>
                             </div>
                         </div>
@@ -199,14 +199,14 @@ const RoofComponentsPage: React.FC = () => {
                     style={{ clipPath: 'polygon(32px 0, 100% 0, 100% calc(100% - 32px), calc(100% - 32px) 100%, 0 100%, 0 32px)' }}>
                     <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--rhive-pink)]/5 blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                     <div className="relative z-10 max-w-2xl">
-                        <h4 className="text-[10px] font-bold text-[var(--rhive-pink)] uppercase tracking-widest mb-4">The RHIVE Commitment</h4>
+                        <h4 className="text-base font-bold text-[var(--rhive-pink)] uppercase tracking-widest mb-4">The RHIVE Commitment</h4>
                         <h2 className="text-4xl font-black uppercase tracking-tighter mb-6 leading-none">Complete System <br/>Certification.</h2>
-                        <p className="text-gray-400 font-serif italic text-lg mb-10 leading-relaxed">
+                        <p className="text-gray-400 font-serif italic text-base md:text-lg max-w-prose mb-10 leading-relaxed">
                             Every component we install is selected for maximum durability and thermal efficiency. 
                             We don't just build roofs; we engineer weather-defense ecosystems.
                         </p>
                         <button className="flex items-center gap-4 group">
-                            <span className="text-[10px] font-bold uppercase tracking-widest bg-[var(--rhive-pink)] px-8 py-4 group-hover:bg-white group-hover:text-black transition-all">Request Component Diagnostic</span>
+                            <span className="text-base font-bold uppercase tracking-widest bg-[var(--rhive-pink)] px-8 py-4 group-hover:bg-white group-hover:text-black transition-all">Request Component Diagnostic</span>
                             <ChevronRight className="w-5 h-5 text-[var(--rhive-pink)] group-hover:translate-x-2 transition-transform" />
                         </button>
                     </div>
@@ -266,14 +266,14 @@ const ComponentCard: React.FC<{ component: ComponentDetail, onClick: () => void,
                 <div className="mt-6">
                     <div className="flex items-center gap-2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
                         <span className="w-4 h-[1px] bg-[var(--rhive-pink)]" />
-                        <span className="text-[8px] font-bold text-[var(--rhive-pink)] uppercase tracking-widest">Detail Matrix</span>
+                        <span className="text-base font-bold text-[var(--rhive-pink)] uppercase tracking-widest">Detail Matrix</span>
                     </div>
                     <h4 className={`font-black uppercase tracking-tighter leading-none transition-colors
                         ${priority ? 'text-2xl md:text-3xl' : 'text-md group-hover:text-[var(--rhive-pink)]'}`}>
                         {component.title}
                     </h4>
                     {priority && (
-                        <p className="mt-4 text-xs text-gray-500 font-serif italic line-clamp-2 max-w-[80%]">
+                        <p className="mt-4 text-base text-gray-500 font-serif italic line-clamp-2 max-w-[80%]">
                             {component.description}
                         </p>
                     )}
@@ -281,7 +281,7 @@ const ComponentCard: React.FC<{ component: ComponentDetail, onClick: () => void,
             </div>
 
             {/* Tech Decoration */}
-            <div className="absolute bottom-0 right-0 p-2 opacity-10 font-mono text-[8px] tracking-tight uppercase">
+            <div className="absolute bottom-0 right-0 p-2 opacity-10 font-mono text-base tracking-tight uppercase">
                 {component.id}
             </div>
             

@@ -33,7 +33,7 @@ export const DevNavigator: React.FC = () => {
                         <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
                             <div className="flex items-center gap-2">
                                 <Code size={16} className="text-[var(--rhive-pink)]" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-white">Dev Navigator</span>
+                                <span className="text-base font-black uppercase tracking-widest text-white">Dev Navigator</span>
                             </div>
                             <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition-colors">
                                 <X size={16} />
@@ -41,7 +41,7 @@ export const DevNavigator: React.FC = () => {
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
-                            <div className="px-3 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500">Website Pages (P-*)</div>
+                            <div className="px-3 py-2 text-base font-black uppercase tracking-[0.2em] text-gray-500">Website Pages (P-*)</div>
                             <div className="space-y-1 mb-4">
                                 {publicPages.map(page => (
                                     <button
@@ -59,19 +59,19 @@ export const DevNavigator: React.FC = () => {
                                     >
                                         <div className="flex items-center gap-2 w-full">
                                             <span className={cn(
-                                                "text-xs font-bold uppercase tracking-wide",
+                                                "text-base font-bold uppercase tracking-wide",
                                                 activePageId === page.id ? "text-[var(--rhive-pink)]" : "text-gray-300"
                                             )}>
                                                 {page.name}
                                             </span>
                                             {activePageId === page.id && <ChevronRight size={14} className="ml-auto text-[var(--rhive-pink)]" />}
                                         </div>
-                                        <span className="text-[9px] text-gray-500 uppercase font-mono mt-0.5">{page.id} - {page.description}</span>
+                                        <span className="text-base text-gray-500 uppercase font-mono mt-0.5">{page.id} - {page.description}</span>
                                     </button>
                                 ))}
                             </div>
 
-                            <div className="px-3 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 border-t border-white/10 pt-4">Portal Shortcuts</div>
+                            <div className="px-3 py-2 text-base font-black uppercase tracking-[0.2em] text-gray-500 border-t border-white/10 pt-4">Portal Shortcuts</div>
                             <div className="space-y-1">
                                 {devShortcuts.map(page => (
                                     <button
@@ -82,10 +82,10 @@ export const DevNavigator: React.FC = () => {
                                         }}
                                         className="w-full flex flex-col items-start px-3 py-2 rounded-lg text-left hover:bg-white/5 transition-all group"
                                     >
-                                        <span className="text-xs font-bold uppercase tracking-wide text-gray-400 group-hover:text-white">
+                                        <span className="text-base font-bold uppercase tracking-wide text-gray-400 group-hover:text-white">
                                             {page.name}
                                         </span>
-                                        <span className="text-[9px] text-gray-600 uppercase font-mono mt-0.5">{page.id}</span>
+                                        <span className="text-base text-gray-600 uppercase font-mono mt-0.5">{page.id}</span>
                                     </button>
                                 ))}
                             </div>

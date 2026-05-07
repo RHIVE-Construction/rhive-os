@@ -24,7 +24,7 @@ const ReportPage: React.FC<{ children: React.ReactNode, pageNumber?: number, tot
     <div className="bg-white p-[0.75in] w-[8.5in] min-h-[11in] flex flex-col font-serif text-gray-800 shadow-lg break-after-page">
         {children}
         {pageNumber && totalPages && (
-            <footer className="mt-auto pt-3 border-t text-center text-xs text-gray-500 font-sans">
+            <footer className="mt-auto pt-3 border-t text-center text-base text-gray-500 font-sans">
                 Page {pageNumber} of {totalPages} | **Precision Fuels Performance.** This is an *instant estimate* based on AI-powered analysis. A final price requires a *certified on-site inspection*. <br/>
                 &copy; {new Date().getFullYear()} RHIVE Construction. Finish On Top! 🐝
             </footer>
@@ -37,8 +37,8 @@ const ReportHeader: React.FC<{ place: Place, title: string, subtitle: string }> 
         <RhiveLogoBlack className="h-12 w-auto" />
         <div className="text-right">
             <h1 className="font-sans font-bold text-2xl text-[#ec028b]">{title}</h1>
-            <p className="text-xs">{place.address}</p>
-            <p className="text-xs">{subtitle}</p>
+            <p className="text-base">{place.address}</p>
+            <p className="text-base">{subtitle}</p>
         </div>
     </header>
 );
@@ -48,7 +48,7 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 );
 
 const DetailItem: React.FC<{ label: string, value: React.ReactNode, isTotal?: boolean, isSubtotal?: boolean }> = ({ label, value, isTotal, isSubtotal }) => (
-     <div className={`flex justify-between py-2 border-b border-gray-200 ${isSubtotal ? 'font-sans font-bold text-black' : ''} ${isTotal ? 'font-sans text-lg font-extrabold' : 'text-sm'}`}>
+     <div className={`flex justify-between py-2 border-b border-gray-200 ${isSubtotal ? 'font-sans font-bold text-black' : ''} ${isTotal ? 'font-sans text-lg font-extrabold' : 'text-base'}`}>
         <span>{label}</span>
         <strong className={isTotal ? 'text-[#ec028b]' : ''}>{value}</strong>
     </div>
@@ -154,7 +154,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                 </div>
                 
                 <div className="text-center mt-8 space-y-4">
-                    <p className="text-sm font-bold text-gray-700 font-sans">This is your transparent investment. Choose your next action now to lock in quality!</p>
+                    <p className="text-base font-bold text-gray-700 font-sans">This is your transparent investment. Choose your next action now to lock in quality!</p>
                     <div>
                         <button className="inline-block font-sans px-6 py-3 rounded-lg font-bold text-white bg-[#ec028b] mx-2 transition hover:bg-pink-700 shadow-lg hover:scale-105">⚡ Secure Your Certified Quote & Lock Price</button>
                         <button className="inline-block font-sans px-6 py-3 rounded-lg font-bold text-white bg-black mx-2 transition hover:bg-gray-800 shadow-lg hover:scale-105">▶️ Watch The Next Steps Video Guide</button>
@@ -183,7 +183,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                     </div>
                 </div>
                 <SectionTitle>Performance & Confidence (Why RHIVE Finishes On Top!)</SectionTitle>
-                 <ul className="list-none p-0 text-sm space-y-3">
+                 <ul className="list-none p-0 text-base space-y-3">
                     <li className="pl-8 bg-no-repeat bg-[length:1.2rem] bg-left-top" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EC028B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E")`}}>
                         <strong>{isGaf ? 'LayerLock™ Technology:' : 'SureNail® Technology:'}</strong> {isGaf ? 'Mechanically fuses the common bond between layers.' : 'A tough, woven fabric nailing strip provides outstanding grip and 130 MPH wind resistance.'}
                     </li>
@@ -202,7 +202,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                 
                 <SectionTitle>RHIVE Project Savings Promotion</SectionTitle>
                 <p>Our goal is unmatched **efficiency**. By choosing to move forward promptly, we eliminate follow-up costs and pass those savings directly to you. This results-driven promotion delivers exceptional value without compromising materials or specifications.</p>
-                <ul className="list-disc list-inside mt-4 ml-4 font-sans text-sm space-y-2">
+                <ul className="list-disc list-inside mt-4 ml-4 font-sans text-base space-y-2">
                     <li><strong className="text-gray-900">The Savings:</strong> Save approximately **10%** on your job price (up to $1,000 on larger residential projects).</li>
                     <li><strong className="text-gray-900">The Guarantee:</strong> You retain a **3-day right to rescind** in Utah, giving you ample time to solidify your choice and still benefit.</li>
                     <li><strong className="text-gray-900">The Expiration:</strong> This estimate is valid for **two weeks**, but the **Project Savings Promotion is an immediate incentive**.</li>
@@ -210,7 +210,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
 
                 <SectionTitle>Next Action: Secure Your Certified Quote</SectionTitle>
                 <p>Your Instant Proposal is the foundation. A **Certified Quote** from RHIVE is our firm price guarantee, based on a comprehensive on-site inspection. This next step includes:</p>
-                <ul className="list-disc list-inside text-sm mt-2 ml-4 space-y-1">
+                <ul className="list-disc list-inside text-base mt-2 ml-4 space-y-1">
                     <li>Exact, finalized measurements and a detailed scope of work.</li>
                     <li>A complete breakdown of material, labor, overhead, and profit.</li>
                     <li>Customized options, system upgrades, and full warranty details.</li>
@@ -219,7 +219,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
 
                 <div className="text-center mt-8">
                      <button className="inline-block font-sans px-8 py-3 rounded-lg font-bold text-white bg-[#ec028b] mx-2 transition hover:bg-pink-700 shadow-lg hover:scale-105">Request My Certified Quote & Save Now!</button>
-                    <p className="text-xs text-gray-500 mt-2 font-sans">Quote expires soon. Don't miss your chance to **Finish On Top!**</p>
+                    <p className="text-base text-gray-500 mt-2 font-sans">Quote expires soon. Don't miss your chance to **Finish On Top!**</p>
                 </div>
             </ReportPage>
         </div>

@@ -30,7 +30,7 @@ const MembraneTearOffMandate = () => {
                                 <Activity className="w-16 h-16 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
                             </div>
                             <h3 className="text-2xl font-black uppercase tracking-widest text-white">THERMAL DIAGNOSTICS</h3>
-                            <button className="px-6 py-2 bg-[var(--rhive-pink)]/10 border border-[var(--rhive-pink)]/50 text-[var(--rhive-pink)] font-black text-[10px] uppercase tracking-widest hover:bg-[var(--rhive-pink)] hover:text-white transition-all">
+                            <button className="px-6 py-2 bg-[var(--rhive-pink)]/10 border border-[var(--rhive-pink)]/50 text-[var(--rhive-pink)] font-black text-base uppercase tracking-widest hover:bg-[var(--rhive-pink)] hover:text-white transition-all">
                                 VIEW MOISTURE SCAN
                             </button>
                         </div>
@@ -48,7 +48,7 @@ const MembraneTearOffMandate = () => {
                 <div>
                     <div className="flex items-center gap-3 mb-6">
                         <AlertTriangle className="w-5 h-5 text-[var(--rhive-pink)]" />
-                        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)]">
+                        <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)]">
                             Structural Integrity Mandate
                         </span>
                     </div>
@@ -77,8 +77,8 @@ const MembraneTearOffMandate = () => {
                                     <Layers className="w-4 h-4 text-[var(--rhive-pink)]" />
                                 </div>
                                 <div>
-                                    <h4 className="text-white font-bold text-sm uppercase tracking-widest">{item.title}</h4>
-                                    <p className="text-gray-400 text-xs font-sans mt-1">{item.desc}</p>
+                                    <h4 className="text-white font-bold text-base uppercase tracking-widest">{item.title}</h4>
+                                    <p className="text-gray-400 text-base font-sans mt-1">{item.desc}</p>
                                 </div>
                             </div>
                         ))}

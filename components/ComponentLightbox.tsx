@@ -119,14 +119,14 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                     {/* Header */}
                     <div className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <div className="text-[var(--rhive-pink)] text-[10px] font-bold uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
+                            <div className="text-[var(--rhive-pink)] text-base font-bold uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
                                 <span className="w-1 h-1 bg-[var(--rhive-pink)] shadow-[0_0_5px_var(--rhive-pink)]" />
                                 {component.category} Specification
                             </div>
                             <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none font-sans">
                                 {component.title}
                             </h2>
-                            <p className="text-gray-500 font-mono text-[10px] mt-2 uppercase tracking-widest bg-white/5 px-2 py-1 inline-block">
+                            <p className="text-gray-500 font-mono text-base mt-2 uppercase tracking-widest bg-white/5 px-2 py-1 inline-block">
                                 Standard ID: {component.id.toUpperCase()}
                             </p>
                         </div>
@@ -145,7 +145,7 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                         {/* Left Column: Narrative */}
                         <div className="space-y-10">
                             <section>
-                                <h3 className="text-white text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <h3 className="text-white text-base font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
                                     <span className="w-1.5 h-[1px] bg-[var(--rhive-pink)]" />
                                     Mission Parameters
                                 </h3>
@@ -156,7 +156,7 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
 
                             {component.options && component.options.length > 0 && (
                                 <section className="space-y-4">
-                                    <h3 className="text-white text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <h3 className="text-white text-base font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
                                         <span className="w-1.5 h-[1px] bg-[var(--rhive-pink)]" />
                                         Available Options
                                     </h3>
@@ -169,10 +169,10 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                                             >
                                                 <div className="flex items-center gap-3 mb-1">
                                                     <div className="w-2 h-2 bg-[var(--rhive-pink)]/40 group-hover/opt:bg-[var(--rhive-pink)] transition-colors" />
-                                                    <span className="text-sm font-bold text-white uppercase tracking-tight">{option}</span>
+                                                    <span className="text-base font-bold text-white uppercase tracking-tight">{option}</span>
                                                 </div>
                                                 {component.optionDescriptions && component.optionDescriptions[option] && (
-                                                    <p className="text-xs text-gray-500 font-serif ml-5 leading-relaxed">
+                                                    <p className="text-base text-gray-500 font-serif ml-5 leading-relaxed">
                                                         {component.optionDescriptions[option]}
                                                     </p>
                                                 )}
@@ -183,7 +183,7 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                             )}
 
                             <section className="bg-white/5 p-6 border border-white/10" style={{ clipPath: 'polygon(16px 0, 100% 0, 100% 100%, 0 100%, 0 16px)' }}>
-                                <h3 className="text-[var(--rhive-pink)] text-xs font-bold uppercase tracking-widest mb-6">RHIVE Core Commitment & Guarantee</h3>
+                                <h3 className="text-[var(--rhive-pink)] text-base font-bold uppercase tracking-widest mb-6">RHIVE Core Commitment & Guarantee</h3>
                                 <div className="space-y-6">
                                     <div className="flex gap-4">
                                         <div className="w-8 h-8 rounded-full border border-[var(--rhive-pink)]/30 flex items-center justify-center shrink-0">
@@ -192,8 +192,8 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                                             </svg>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Execution Warranty</p>
-                                            <p className="text-white text-sm font-medium">{component.guarantee.installation}</p>
+                                            <p className="text-base text-gray-500 font-bold uppercase tracking-wider mb-1">Execution Warranty</p>
+                                            <p className="text-white text-base font-medium">{component.guarantee.installation}</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-4">
@@ -203,8 +203,8 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                                             </svg>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Asset Warranty</p>
-                                            <p className="text-white text-sm font-medium">{component.guarantee.materials}</p>
+                                            <p className="text-base text-gray-500 font-bold uppercase tracking-wider mb-1">Asset Warranty</p>
+                                            <p className="text-white text-base font-medium">{component.guarantee.materials}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -214,15 +214,15 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                         {/* Right Column: Technical Blueprint */}
                         <div className="space-y-10">
                             <section>
-                                <h3 className="text-white text-xs font-bold uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <h3 className="text-white text-base font-bold uppercase tracking-widest mb-6 flex items-center gap-2">
                                     <span className="w-1.5 h-[1px] bg-[var(--rhive-pink)]" />
                                     Execution Blueprint & Materials
                                 </h3>
                                 <div className="space-y-1">
                                     {component.blueprint.map((step, i) => (
                                         <div key={i} className="flex items-center gap-4 group/item">
-                                            <div className="text-[10px] font-mono text-white/20 group-hover/item:text-[var(--rhive-pink)] transition-colors">0{i+1}</div>
-                                            <div className="flex-1 border-b border-white/5 py-3 text-sm text-gray-300 group-hover/item:text-white transition-colors">
+                                            <div className="text-base font-mono text-white/20 group-hover/item:text-[var(--rhive-pink)] transition-colors">0{i+1}</div>
+                                            <div className="flex-1 border-b border-white/5 py-3 text-base text-gray-300 group-hover/item:text-white transition-colors">
                                                 {step}
                                             </div>
                                         </div>
@@ -231,7 +231,7 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                             </section>
 
                             <section className="bg-black/40 border border-white/5 p-6">
-                                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">RHIVE Efficiency Standard</h4>
+                                <h4 className="text-base font-bold text-gray-500 uppercase tracking-widest mb-4">RHIVE Efficiency Standard</h4>
                                 <div className="flex items-center justify-between">
                                     <span className="text-2xl font-black text-white tracking-tighter uppercase whitespace-pre">{component.standard}</span>
                                     <div className="flex -space-x-2">
@@ -241,7 +241,7 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                                     </div>
                                 </div>
                                 <div className="mt-6 pt-6 border-t border-white/5">
-                                    <p className="text-[9px] text-gray-600 font-mono leading-relaxed uppercase">
+                                    <p className="text-base text-gray-600 font-mono leading-relaxed uppercase">
                                         NOTE: All components listed above define the minimum material standard. 
                                         RHIVE will only substitute material in equivalent or superior quality 
                                         subject to availability and regional engineering requirements.

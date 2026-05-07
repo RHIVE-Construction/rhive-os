@@ -30,7 +30,7 @@ const ChoiceButton: React.FC<{ active: boolean; onClick: () => void; children: R
 
 const DownspoutInput: React.FC<{ label: string; value: number; onChange: (val: number) => void }> = ({ label, value, onChange }) => (
     <div className="text-center">
-        <label className="text-sm text-gray-400">{label}</label>
+        <label className="text-base text-gray-400">{label}</label>
         <input 
             type="number"
             value={value || ''}
@@ -153,7 +153,7 @@ export const Gutters: React.FC<GuttersProps> = ({ surveyState, onSurveyChange, o
                                         </Tooltip>
                                     </label>
                                     <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-4 mt-2">
-                                        <span className="text-sm text-gray-400 mb-2 sm:mb-0 sm:pb-8 sm:w-1/4">Downspout length</span>
+                                        <span className="text-base text-gray-400 mb-2 sm:mb-0 sm:pb-8 sm:w-1/4">Downspout length</span>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full sm:w-3/4">
                                             <DownspoutInput label="1-Story" value={gutters.downspouts1Story} onChange={v => handleValueChange('downspouts1Story', v)} />
                                             <DownspoutInput label="2-Story" value={gutters.downspouts2Story} onChange={v => handleValueChange('downspouts2Story', v)} />

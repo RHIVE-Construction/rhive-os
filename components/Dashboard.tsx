@@ -78,10 +78,10 @@ const HoverVideoCard: React.FC<{
     )}>
         <div className="h-20 bg-gray-800 rounded mb-2"></div>
         <div className="flex items-start justify-between flex-grow">
-            <h3 className="font-semibold text-white text-xs leading-tight">{title}</h3>
+            <h3 className="font-semibold text-white text-base leading-tight">{title}</h3>
         </div>
-        <p className="text-[10px] text-gray-400 mt-1">{description}</p>
-        {priceText && <p className={cn("text-sm font-bold mt-auto pt-1", priceText === 'Included' ? 'text-gray-300' : 'text-pink-400')}>{priceText}</p>}
+        <p className="text-base text-gray-400 mt-1">{description}</p>
+        {priceText && <p className={cn("text-base font-bold mt-auto pt-1", priceText === 'Included' ? 'text-gray-300' : 'text-pink-400')}>{priceText}</p>}
     </div>
 );
 
@@ -97,9 +97,9 @@ const SelectableCard: React.FC<{
         "relative border rounded-lg p-3 cursor-pointer transition-all duration-200 h-full flex flex-col",
         selected ? "bg-pink-900/30 border-pink-500/70" : "border-gray-700 bg-gray-900/50 hover:border-pink-500/70"
     )}>
-        <h3 className="font-semibold text-white text-sm">{title}</h3>
-        <div className="text-xs text-gray-400 mt-1 pr-6 flex-grow">{children}</div>
-        {badge && <div className="absolute top-3 right-3 text-[10px] bg-pink-500/80 text-white font-semibold px-1.5 py-0.5 rounded-full">{badge}</div>}
+        <h3 className="font-semibold text-white text-base">{title}</h3>
+        <div className="text-base text-gray-400 mt-1 pr-6 flex-grow">{children}</div>
+        {badge && <div className="absolute top-3 right-3 text-base bg-pink-500/80 text-white font-semibold px-1.5 py-0.5 rounded-full">{badge}</div>}
         {price !== undefined && (
             <div className="mt-2 text-right">
                 <p className="text-xl font-bold text-pink-400">{formatCurrency(price)}</p>
@@ -115,7 +115,7 @@ const QuoteSummary: React.FC<{
     onSurveyChange: React.Dispatch<React.SetStateAction<SurveyState>>;
     onViewEstimate: () => void;
 }> = ({ buildingData, calcResult, surveyState, onSurveyChange, onViewEstimate }) => (
-    <div className="space-y-4 text-sm">
+    <div className="space-y-4 text-base">
         <div className="p-4 bg-gray-900/50 border border-gray-700 rounded-lg">
             <div className="flex items-center text-gray-300 mb-2">
                 <Squares2x2Icon className="h-4 w-4 mr-2 text-pink-400"/>

@@ -20,7 +20,7 @@ const FinancingPage: React.FC = () => {
                     <div className="max-w-xl">
                         <div className="flex items-center gap-2 mb-4">
                             <BoltIcon className="w-5 h-5 text-pink-500" />
-                            <span className="text-[#ec028b] text-xs font-black uppercase tracking-[0.4em]">Exclusive Initiative</span>
+                            <span className="text-[#ec028b] text-base font-black uppercase tracking-[0.4em]">Exclusive Initiative</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4 font-display italic leading-none">RHIVE Project Savings Promotion</h2>
                         <p className="text-gray-300 leading-relaxed mb-6 font-serif text-lg italic">
@@ -28,11 +28,11 @@ const FinancingPage: React.FC = () => {
                         </p>
                         <div className="flex flex-wrap gap-4">
                             <div className="bg-black/50 border border-pink-500/30 px-6 py-4" style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Residential Credit</p>
+                                <p className="text-base text-gray-500 font-bold uppercase mb-1">Residential Credit</p>
                                 <p className="text-2xl font-black text-white">10% OFF</p>
                             </div>
                             <div className="bg-black/50 border border-pink-500/30 px-6 py-4" style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Commercial Credit</p>
+                                <p className="text-base text-gray-500 font-bold uppercase mb-1">Commercial Credit</p>
                                 <p className="text-2xl font-black text-white">UP TO $3,000</p>
                             </div>
                         </div>
@@ -43,12 +43,12 @@ const FinancingPage: React.FC = () => {
                     >
                         <h3 className="text-white font-bold uppercase mb-2 font-display">Promotion Logic</h3>
                         <p className="text-rhive-pink font-black text-4xl mb-4 animate-pulse">48 HRS</p>
-                        <p className="text-xs text-[var(--rhive-text-muted)] leading-relaxed mb-6 font-serif italic">
+                        <p className="text-base text-[var(--rhive-text-muted)] leading-relaxed mb-6 font-serif italic">
                             Commit within 48 hours of your Certified Quote to activate the RPSP discount.
                         </p>
                         <div className="p-3 bg-[#ec028b]/10 border border-[#ec028b]/30 flex items-center gap-3 text-left">
                             <ShieldCheckIcon className="w-5 h-5 text-[#ec028b]" />
-                            <p className="text-[10px] text-white font-medium uppercase tracking-tight">3-Day Right to Rescind (UTAH)</p>
+                            <p className="text-base text-white font-medium uppercase tracking-tight">3-Day Right to Rescind (UTAH)</p>
                         </div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ const FinancingPage: React.FC = () => {
                         <Card key={i} className="text-center group">
                             <div className="text-4xl font-black text-rhive-pink mb-4 group-hover:scale-110 transition-transform font-display italic">{s.step}</div>
                             <h4 className="text-[var(--rhive-text)] font-bold uppercase tracking-tight mb-2 font-display">{s.label}</h4>
-                            <p className="text-[var(--rhive-text-muted)] text-sm leading-relaxed font-serif italic">{s.desc}</p>
+                            <p className="text-[var(--rhive-text-muted)] text-base leading-relaxed font-serif italic">{s.desc}</p>
                         </Card>
                     ))}
                 </div>
@@ -84,7 +84,7 @@ const FinancingPage: React.FC = () => {
                         </p>
                     </div>
                 </div>
-                <button className="whitespace-nowrap px-10 py-5 bg-rhive-pink text-white font-black uppercase tracking-widest text-xs shadow-pink-glow hover:shadow-[0_0_40px_rgba(236,2,139,0.5)] transition-all flex items-center">
+                <button className="whitespace-nowrap px-10 py-5 bg-rhive-pink text-white font-black uppercase tracking-widest text-base shadow-pink-glow hover:shadow-[0_0_40px_rgba(236,2,139,0.5)] transition-all flex items-center">
                     Prequalify Now
                     <ArrowRightIcon className="w-5 h-5 ml-3" />
                 </button>

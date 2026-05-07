@@ -34,8 +34,8 @@ export const LiveEstimateBreakdown: React.FC<LiveEstimateBreakdownProps> = ({ ca
     <div className="w-full">
       <Card className="bg-gray-900/80 backdrop-blur-md border-pink-500/50">
         <CardContent className="p-4">
-          <p className="text-sm font-semibold text-gray-300">Live Estimate Breakdown</p>
-          <div className="mt-2 text-sm space-y-1">
+          <p className="text-base font-semibold text-gray-300">Live Estimate Breakdown</p>
+          <div className="mt-2 text-base space-y-1">
             <div className="flex justify-between">
               <span className="text-gray-400">Materials</span>
               <span>{formatCurrency(roofEstimate.breakdown.materials)}</span>

@@ -20,7 +20,7 @@ const NumberToggle: React.FC<NumberToggleProps> = ({ options, selected, onChange
             type="button"
             onClick={() => onChange(opt)}
             className={cn(
-              "relative w-10 h-10 flex items-center justify-center text-sm font-bold transition-all duration-300 group",
+              "relative w-10 h-10 flex items-center justify-center text-base font-bold transition-all duration-300 group",
               isActive ? 'text-white shadow-[0_0_10px_rgba(236,2,139,0.3)]' : 'text-gray-500 hover:text-white'
             )}
           >

@@ -31,10 +31,10 @@ const CustomerProjectPulse: React.FC = () => {
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#ec028b]/20 border border-[#ec028b]/30 rounded-full mb-3">
                             <span className="w-2 h-2 rounded-full bg-[#ec028b] animate-pulse" />
-                            <span className="text-xs font-bold text-[#ec028b] uppercase tracking-wider">Project Pulse</span>
+                            <span className="text-base font-bold text-[#ec028b] uppercase tracking-wider">Project Pulse</span>
                         </div>
                         <h2 className="text-3xl font-bold text-white mb-1">124 Maple Street</h2>
-                        <p className="text-gray-300 font-mono text-sm">PRJ-88492 • Residential Replacement</p>
+                        <p className="text-gray-300 font-mono text-base">PRJ-88492 • Residential Replacement</p>
                     </div>
                 </div>
 
@@ -69,11 +69,11 @@ const CustomerProjectPulse: React.FC = () => {
                                         >
                                             {isCompleted && <Check className="w-4 h-4 font-bold" />}
                                             {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#00D1FF] animate-pulse" />}
-                                            {isPending && <span className="text-xs font-mono">{index + 1}</span>}
+                                            {isPending && <span className="text-base font-mono">{index + 1}</span>}
                                         </div>
                                         <span 
                                             className={`
-                                                mt-2 text-xs font-bold uppercase tracking-wider absolute top-8 whitespace-nowrap
+                                                mt-2 text-base font-bold uppercase tracking-wider absolute top-8 whitespace-nowrap
                                                 ${isActive ? 'text-[#00D1FF]' : 'text-gray-400'}
                                             `}
                                         >
@@ -90,8 +90,8 @@ const CustomerProjectPulse: React.FC = () => {
                             <Clock className="w-5 h-5" />
                         </div>
                         <div>
-                            <h4 className="text-white text-sm font-bold mb-1">Current Status: Quote Development</h4>
-                            <p className="text-gray-400 text-xs">Your dedicated estimator is finalizing the material takeoff. Expect the final quote within 24 hours.</p>
+                            <h4 className="text-white text-base font-bold mb-1">Current Status: Quote Development</h4>
+                            <p className="text-gray-400 text-base">Your dedicated estimator is finalizing the material takeoff. Expect the final quote within 24 hours.</p>
                         </div>
                     </div>
                 </div>

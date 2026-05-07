@@ -29,7 +29,7 @@ const ShingleFlexLightbox: React.FC<ShingleFlexLightboxProps> = ({ isOpen, onClo
                                 FLEX - <span className="text-[#00D1FF]">UPGRADE</span>
                                 <img src="/oc-logo.png" alt="OC Preferred" className="h-8 grayscale brightness-200" />
                             </h2>
-                            <p className="text-[#00D1FF] font-mono text-xs uppercase tracking-[0.3em] mt-1 font-bold text-left">Class 4 Hail & Impact Defense</p>
+                            <p className="text-[#00D1FF] font-mono text-base uppercase tracking-[0.3em] mt-1 font-bold text-left">Class 4 Hail & Impact Defense</p>
                         </div>
                     </div>
                     <button
@@ -50,27 +50,27 @@ const ShingleFlexLightbox: React.FC<ShingleFlexLightboxProps> = ({ isOpen, onClo
                         <div className="p-6 border border-white/10 bg-white/5 transition-all hover:border-[#00D1FF]/40">
                             <div className="flex items-center gap-3 mb-4">
                                 <AlertOctagon className="w-5 h-5 text-[#00D1FF]" />
-                                <h4 className="text-white font-black text-[10px] uppercase tracking-widest text-left">Impact Resistance</h4>
+                                <h4 className="text-white font-black text-base uppercase tracking-widest text-left">Impact Resistance</h4>
                             </div>
-                            <p className="text-gray-400 text-xs font-serif leading-relaxed text-left">
+                            <p className="text-gray-400 text-base font-serif leading-relaxed text-left">
                                 Class 4 Rating: Provides the industry's highest level of protection against hail and storm debris, reducing future damage risk.
                             </p>
                         </div>
                         <div className="p-6 border border-white/10 bg-white/5 transition-all hover:border-[#00D1FF]/40">
                             <div className="flex items-center gap-3 mb-4">
                                 <TrendingDown className="w-5 h-5 text-[#00D1FF]" />
-                                <h4 className="text-white font-black text-[10px] uppercase tracking-widest text-left">Insurance ROI</h4>
+                                <h4 className="text-white font-black text-base uppercase tracking-widest text-left">Insurance ROI</h4>
                             </div>
-                            <p className="text-gray-400 text-xs font-serif leading-relaxed text-left">
+                            <p className="text-gray-400 text-base font-serif leading-relaxed text-left">
                                 Potential Premium Discounts: Many carriers offer substantial discounts for certified Class 4 roofs, providing long-term ROI.
                             </p>
                         </div>
                         <div className="p-6 border border-white/10 bg-white/5 transition-all hover:border-[#00D1FF]/40">
                             <div className="flex items-center gap-3 mb-4">
                                 <Activity className="w-5 h-5 text-[#00D1FF]" />
-                                <h4 className="text-white font-black text-[10px] uppercase tracking-widest text-left">Polymer Modified</h4>
+                                <h4 className="text-white font-black text-base uppercase tracking-widest text-left">Polymer Modified</h4>
                             </div>
-                            <p className="text-gray-400 text-xs font-serif leading-relaxed text-left">
+                            <p className="text-gray-400 text-base font-serif leading-relaxed text-left">
                                 Superior Flexibility: SBS Modified asphalt resists cracking during extreme temperature shifts and absorbs high-velocity impacts.
                             </p>
                         </div>
@@ -78,21 +78,21 @@ const ShingleFlexLightbox: React.FC<ShingleFlexLightboxProps> = ({ isOpen, onClo
 
                     <div className="space-y-6">
                         <div className="bg-black/40 border border-white/5 p-8">
-                            <div className="text-[10px] font-black text-[#00D1FF] uppercase tracking-[0.3em] mb-4 text-left">Upgraded Components</div>
+                            <div className="text-base font-black text-[#00D1FF] uppercase tracking-[0.3em] mb-4 text-left">Upgraded Components</div>
                             <div className="space-y-8">
                                 <div>
-                                    <h5 className="text-white font-bold text-sm uppercase mb-2 flex items-center gap-2 text-left">
+                                    <h5 className="text-white font-bold text-base uppercase mb-2 flex items-center gap-2 text-left">
                                         <span className="w-1.5 h-1.5 bg-[#00D1FF] rounded-full"></span> FIELD SHINGLES
                                     </h5>
-                                    <p className="text-gray-400 text-xs font-serif leading-relaxed ml-3.5 italic text-left">
+                                    <p className="text-gray-400 text-base font-serif leading-relaxed ml-3.5 italic text-left">
                                         Upgrade: Owens Corning Duration FLEX® Shingles: 50-Year Preferred Protection, Class 4 Impact Rated featuring SureNail Technology and StreakGuard™ Algae Resistance.
                                     </p>
                                 </div>
                                 <div className="border-t border-white/5 pt-6">
-                                    <h5 className="text-white font-bold text-sm uppercase mb-2 flex items-center gap-2 text-left">
+                                    <h5 className="text-white font-bold text-base uppercase mb-2 flex items-center gap-2 text-left">
                                         <span className="w-1.5 h-1.5 bg-[#00D1FF] rounded-full"></span> HIP & RIDGE SHINGLES
                                     </h5>
-                                    <p className="text-gray-400 text-xs font-serif leading-relaxed ml-3.5 italic text-left">
+                                    <p className="text-gray-400 text-base font-serif leading-relaxed ml-3.5 italic text-left">
                                         Upgrade: Owens Corning DuraRidge® Hip & Ridge Shingles: Specialized modified asphalt blend for superior flexibility and high-profile architectural depth.
                                     </p>
                                 </div>
@@ -104,13 +104,13 @@ const ShingleFlexLightbox: React.FC<ShingleFlexLightboxProps> = ({ isOpen, onClo
                         <div className="flex items-center gap-4">
                             <img src="/oc-logo.png" alt="Owens Corning" className="h-8 brightness-150" />
                             <div className="h-8 w-[1px] bg-white/10"></div>
-                            <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest text-left">
+                            <div className="text-base font-mono text-gray-500 uppercase tracking-widest text-left">
                                 Certified Preferred <br /> Contractor System
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="px-12 py-4 bg-[#00D1FF] text-black font-black uppercase tracking-widest text-[10px] hover:bg-white hover:scale-105 transition-all"
+                            className="px-12 py-4 bg-[#00D1FF] text-black font-black uppercase tracking-widest text-base hover:bg-white hover:scale-105 transition-all"
                             style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                         >
                             Select FLEX Upgrade

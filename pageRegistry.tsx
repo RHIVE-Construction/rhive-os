@@ -21,6 +21,7 @@ import DurationFlexPage from './pages/DurationFlexPage'; // P-02a-2
 import DesignerPackagePage from './pages/DesignerPackagePage'; // P-02a-3
 import PremiumDesignerPackagePage from './pages/PremiumDesignerPackagePage'; // P-02a-4
 import DurationSpecificationPrint from './pages/DurationSpecificationPrint'; // P-02a-SPEC
+import ScopeOfWorkPage from './pages/ScopeOfWorkPage'; // P-Scope
 import OurProcessPage from './pages/OurProcessPage'; // P-03
 import FinancingPage from './pages/FinancingPage'; // P-08
 import ContactPage from './pages/ContactPage'; // P-05
@@ -68,8 +69,6 @@ import ChatbotTestingPage from './pages/ChatbotTestingPage'; // E-TEST
 import RHIVEBrandingPage from './pages/RHIVEBrandingPage'; // E-39
 import InsurancePage from './pages/InsurancePage'; // P-13
 import PreConversionRecordPage from './pages/PreConversionRecordPage'; // (Simulation)
-import InsurancePage from './pages/InsurancePage'; // P-13
-import RHIVEBrandingPage from './pages/RHIVEBrandingPage'; // E-39
 
 // Specific stage pages
 import LeadPage from './pages/LeadPage'; // E-26
@@ -104,6 +103,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-02a-3': DesignerPackagePage,
   'P-02a-4': PremiumDesignerPackagePage,
   'P-02a-SPEC': DurationSpecificationPrint,
+  'P-Scope': ScopeOfWorkPage,
   'P-02b': MembraneRoofingPage,
   'P-02b-1': Tpo60Page,
   'P-02b-2': Tpo80Page,

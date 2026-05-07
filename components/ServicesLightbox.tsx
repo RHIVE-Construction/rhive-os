@@ -77,7 +77,7 @@ export const ServicesLightbox: React.FC<ServicesLightboxProps> = ({ isOpen, onCl
                         <h2 className="text-3xl font-black text-white uppercase tracking-tighter font-display">
                             Package Matrix<span className="text-[var(--rhive-pink)]">.</span>
                         </h2>
-                        <p className="text-gray-500 font-mono text-xs uppercase tracking-widest mt-1">Comparison Engine L-02</p>
+                        <p className="text-gray-500 font-mono text-base uppercase tracking-widest mt-1">Comparison Engine L-02</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -98,23 +98,23 @@ export const ServicesLightbox: React.FC<ServicesLightboxProps> = ({ isOpen, onCl
                                 style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                             >
                                 {pkg.recommended && (
-                                    <div className="absolute top-0 right-0 bg-[var(--rhive-pink)] text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1">
+                                    <div className="absolute top-0 right-0 bg-[var(--rhive-pink)] text-white text-base font-bold uppercase tracking-widest px-3 py-1">
                                         Selected Baseline
                                     </div>
                                 )}
 
-                                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">{pkg.tier}</div>
+                                <div className="text-base font-bold text-gray-500 uppercase tracking-widest mb-2">{pkg.tier}</div>
                                 <h3 className="text-2xl font-black text-white uppercase font-display mb-1">{pkg.name}</h3>
-                                <div className="text-[var(--rhive-pink)] text-sm font-bold uppercase tracking-wider mb-8">{pkg.shingle}</div>
+                                <div className="text-[var(--rhive-pink)] text-base font-bold uppercase tracking-wider mb-8">{pkg.shingle}</div>
 
                                 <div className="mb-8">
-                                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Warranty</div>
-                                    <div className="text-white text-sm font-serif">{pkg.warranty}</div>
+                                    <div className="text-base font-bold text-gray-500 uppercase tracking-widest mb-2">Warranty</div>
+                                    <div className="text-white text-base font-serif">{pkg.warranty}</div>
                                 </div>
 
                                 <ul className="space-y-4 mb-8">
                                     {pkg.highlights.map((h, i) => (
-                                        <li key={i} className="flex items-start text-xs font-serif text-gray-400">
+                                        <li key={i} className="flex items-start text-base font-serif text-gray-400">
                                             <span className="text-[var(--rhive-pink)] mr-2 mt-0.5">■</span>
                                             {h}
                                         </li>
@@ -128,7 +128,7 @@ export const ServicesLightbox: React.FC<ServicesLightboxProps> = ({ isOpen, onCl
                                             document.getElementById('residential')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                         }, 100);
                                     }}
-                                    className={`w-full py-4 text-xs font-bold uppercase tracking-widest transition-all ${pkg.recommended ? 'bg-[var(--rhive-pink)] text-white hover:bg-white hover:text-black' : 'border border-white/20 text-white hover:border-[var(--rhive-pink)] hover:text-[var(--rhive-pink)]'}`}
+                                    className={`w-full py-4 text-base font-bold uppercase tracking-widest transition-all ${pkg.recommended ? 'bg-[var(--rhive-pink)] text-white hover:bg-white hover:text-black' : 'border border-white/20 text-white hover:border-[var(--rhive-pink)] hover:text-[var(--rhive-pink)]'}`}
                                     style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}>
                                     Select Package
                                 </button>

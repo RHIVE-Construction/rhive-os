@@ -37,28 +37,28 @@ const GuttersPage = () => {
                 <div className="relative z-30 text-center px-4 max-w-5xl">
                     <div className="inline-flex items-center gap-2 border border-[var(--rhive-pink)]/30 px-6 py-2 bg-[var(--rhive-pink)]/10 mb-8 backdrop-blur-md">
                         <Droplets className="w-4 h-4 text-[var(--rhive-pink)]" />
-                        <span className="text-[var(--rhive-pink)] font-black text-xs uppercase tracking-[0.4em]">Water Management Diagnostics</span>
+                        <span className="text-[var(--rhive-pink)] font-black text-base uppercase tracking-[0.4em]">Water Management Diagnostics</span>
                     </div>
 
                     <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-8 text-white leading-none drop-shadow-2xl font-sans">
                         GUTTER <span className="text-[var(--rhive-pink)]">DEFENSE</span>
                     </h1>
 
-                    <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+                    <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 max-w-prose mx-auto leading-relaxed drop-shadow-lg">
                         Complete water management systems engineered to exact architectural specifications. Featuring flawless seamless execution manufactured instantly on-site.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <button
                             onClick={() => setActivePageId('P-12')}
-                            className="group relative px-10 py-5 bg-[var(--rhive-pink)] text-white font-black uppercase text-sm tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(236,2,139,0.3)]"
+                            className="group relative px-10 py-5 bg-[var(--rhive-pink)] text-white font-black uppercase text-base tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(236,2,139,0.3)]"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >
                             Request Certified Quote
                         </button>
                         <button
                             onClick={scrollToSystems}
-                            className="px-10 py-5 border border-white/10 text-white font-bold uppercase text-xs tracking-[0.2em] hover:bg-white/5 transition-all backdrop-blur-md"
+                            className="px-10 py-5 border border-white/10 text-white font-bold uppercase text-base tracking-[0.2em] hover:bg-white/5 transition-all backdrop-blur-md"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >
                             Review Matrix Specs
@@ -73,7 +73,7 @@ const GuttersPage = () => {
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-12 h-[2px] bg-[var(--rhive-pink)]"></div>
-                            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)] drop-shadow-[0_0_8px_rgba(236,2,139,0.5)]">
+                            <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)] drop-shadow-[0_0_8px_rgba(236,2,139,0.5)]">
                                 Core Component Architecture
                             </span>
                         </div>
@@ -84,10 +84,10 @@ const GuttersPage = () => {
                         
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--rhive-pink)]/10 border border-[var(--rhive-pink)]/30 mb-6">
                             <CheckCircle2 className="w-3 h-3 text-[var(--rhive-pink)]" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-white">RHIVE QUALITY STANDARD VERIFIED</span>
+                            <span className="text-base font-black uppercase tracking-widest text-white">RHIVE QUALITY STANDARD VERIFIED</span>
                         </div>
                         
-                        <p className="text-xl text-gray-300 font-sans leading-relaxed mb-12 border-l-2 border-[var(--rhive-pink)] pl-6">
+                        <p className="text-xl text-gray-300 font-sans leading-relaxed max-w-prose mb-12 border-l-2 border-[var(--rhive-pink)] pl-6">
                             {gutterData?.description}
                         </p>
 
@@ -97,8 +97,8 @@ const GuttersPage = () => {
                                     <ShieldCheck className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h4 className="text-white font-black text-xs uppercase tracking-widest mb-1">Dual-Protection Warranty</h4>
-                                    <p className="text-gray-500 text-xs text-balance">
+                                    <h4 className="text-white font-black text-base uppercase tracking-widest mb-1">Dual-Protection Warranty</h4>
+                                    <p className="text-gray-500 text-base text-balance">
                                         {gutterData?.guarantee.installation} • {gutterData?.guarantee.materials}
                                     </p>
                                 </div>
@@ -134,7 +134,7 @@ const GuttersPage = () => {
                                         <div className="text-[var(--rhive-pink)] mt-1">
                                             <Anchor className="w-4 h-4" />
                                         </div>
-                                        <p className="text-xs text-gray-300 leading-relaxed font-sans">{bp}</p>
+                                        <p className="text-base text-gray-300 leading-relaxed font-sans max-w-prose">{bp}</p>
                                     </div>
                                 ))}
                             </div>
@@ -147,9 +147,9 @@ const GuttersPage = () => {
             <section className="py-24 bg-[#050505] border-t border-[var(--rhive-pink)]/20">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="flex flex-col items-center text-center mb-16">
-                        <div className="text-[var(--rhive-pink)] text-[10px] font-black uppercase tracking-[0.4em] mb-4 drop-shadow-[0_0_5px_rgba(236,2,139,0.8)]">Profile Configuration</div>
-                        <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-6">ARCHITECTURAL <span className="text-gray-500">PROFILES</span></h2>
-                        <p className="text-gray-400 max-w-2xl text-center">We offer multiple configurations to match the geometric and hydrological requirements of your specific structure.</p>
+                        <div className="text-[var(--rhive-pink)] text-base font-black uppercase tracking-[0.4em] mb-4 drop-shadow-[0_0_5px_rgba(236,2,139,0.8)]">Profile Configuration</div>
+                        <h2 className="text-4xl md:text-5xl leading-tight font-black uppercase tracking-tighter text-white mb-6">ARCHITECTURAL <span className="text-gray-500">PROFILES</span></h2>
+                        <p className="text-gray-400 max-w-prose text-base md:text-lg leading-relaxed text-center">We offer multiple configurations to match the geometric and hydrological requirements of your specific structure.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -159,7 +159,7 @@ const GuttersPage = () => {
                                 <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[var(--rhive-pink)]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 <LayoutGrid className="w-6 h-6 text-[var(--rhive-pink)] mb-4" />
                                 <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-3 leading-tight">{opt}</h3>
-                                <p className="text-xs text-gray-400 leading-relaxed font-sans line-clamp-4 group-hover:line-clamp-none transition-all duration-500">
+                                <p className="text-base text-gray-400 leading-relaxed font-sans line-clamp-4 group-hover:line-clamp-none transition-all duration-500">
                                     {gutterData.optionDescriptions?.[opt] || "High-performance seamless configuration."}
                                 </p>
                             </div>

@@ -184,7 +184,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // Authenticated via role selection + password
         // -------------------------------------------------------
         const candidates = users.filter(u => u.role === role);
-        if (candidates.length === 0) return { success: false, error: 'Role not found in system.' };
+        if (candidates.length === 0 && role !== 'Public') return { success: false, error: 'Role not found in system.' };
 
         if (password !== undefined) {
             const hashed = await hashPassword(password);
@@ -197,7 +197,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         // Default to first user if no password required (e.g., Public)
-        const user = candidates[0] || users.find(u => u.role === 'Public');
+        const user = candidates[0] || users.find(u => u.role === 'Public') || SEED_USERS.find(u => u.role === 'Public');
         if (user) {
             setCurrentUser(user);
             return { success: true };

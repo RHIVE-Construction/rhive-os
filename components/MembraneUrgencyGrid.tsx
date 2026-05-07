@@ -49,7 +49,7 @@ const MembraneUrgencyGrid = () => {
                 <div className="text-center mb-16">
                     <div className="inline-flex items-center gap-2 border border-red-500/30 px-6 py-2 bg-red-500/10 mb-6 backdrop-blur-md">
                         <AlertCircle className="w-4 h-4 text-red-500 hidden sm:block" />
-                        <span className="text-red-500 font-black text-xs uppercase tracking-[0.3em]">Commercial System Failure</span>
+                        <span className="text-red-500 font-black text-base uppercase tracking-[0.3em]">Commercial System Failure</span>
                     </div>
                     
                     <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-6">
@@ -82,7 +82,7 @@ const MembraneUrgencyGrid = () => {
                                     {sign.title}
                                 </h3>
                                 
-                                <p className="text-gray-400 font-sans text-xs leading-relaxed group-hover:text-gray-200 transition-colors duration-300 relative z-20">
+                                <p className="text-gray-400 font-sans text-base leading-relaxed group-hover:text-gray-200 transition-colors duration-300 relative z-20">
                                     {sign.desc}
                                 </p>
                             </div>

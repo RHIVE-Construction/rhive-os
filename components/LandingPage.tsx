@@ -29,7 +29,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onPlaceSelected, error
             <AddressInput onPlaceSelected={onPlaceSelected} onInputChange={() => setHasInteracted(true)} />
           </div>
           <div className={cn(
-            "text-red-400 text-sm mt-4 h-5 transition-opacity duration-300",
+            "text-red-400 text-base mt-4 h-5 transition-opacity duration-300",
             error && !hasInteracted ? "opacity-100" : "opacity-0"
           )}>
             {error && !hasInteracted ? error : ''}

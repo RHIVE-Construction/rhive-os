@@ -41,7 +41,7 @@ export const AboutUsHeroModule = () => (
         {/* Left Side: The Hook */}
         <div className="relative z-10 w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center">
             <div className="inline-block border border-rhive-pink/30 px-4 py-1 rounded-full bg-rhive-pink/10 mb-6 self-start shadow-[0_0_15px_rgba(236,2,139,0.2)]">
-                <span className="text-rhive-pink font-bold text-xs tracking-[0.2em] uppercase flex items-center gap-2">
+                <span className="text-rhive-pink font-bold text-base tracking-[0.2em] uppercase flex items-center gap-2">
                     <Zap size={12} fill="currentColor" /> The RHIVE Standard
                 </span>
             </div>
@@ -61,7 +61,7 @@ export const AboutUsHeroModule = () => (
             {/* CTA Button */}
             <button
                 onClick={() => window.location.href = '/aboutus'}
-                className="group relative px-8 py-4 bg-rhive-pink border border-transparent text-white font-black uppercase tracking-widest text-sm hover:bg-white hover:text-black hover:border-rhive-pink transition-all flex items-center justify-center gap-3 overflow-hidden self-start"
+                className="group relative px-8 py-4 bg-rhive-pink border border-transparent text-white font-black uppercase tracking-widest text-base hover:bg-white hover:text-black hover:border-rhive-pink transition-all flex items-center justify-center gap-3 overflow-hidden self-start"
                 style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
             >
                 <span className="relative z-10 flex items-center gap-2">Read Our Story <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
@@ -81,12 +81,12 @@ export const AboutUsHeroModule = () => (
                 <div className="flex justify-center gap-8 mt-8">
                     <div className="text-center">
                         <div className="text-3xl font-black text-rhive-pink mb-1">100%</div>
-                        <div className="text-xs uppercase tracking-widest text-white/50 font-bold">Transparency</div>
+                        <div className="text-base uppercase tracking-widest text-white/50 font-bold">Transparency</div>
                     </div>
                     <div className="w-[1px] bg-white/10" />
                     <div className="text-center">
                         <div className="text-3xl font-black text-rhive-blue mb-1">0%</div>
-                        <div className="text-xs uppercase tracking-widest text-white/50 font-bold">Salesman Markup</div>
+                        <div className="text-base uppercase tracking-widest text-white/50 font-bold">Salesman Markup</div>
                     </div>
                 </div>
             </div>

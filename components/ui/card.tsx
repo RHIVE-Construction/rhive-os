@@ -86,7 +86,7 @@ const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttribu
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     return (
-        <p ref={ref} className={cn('text-sm font-medium transition-colors duration-500', isDark ? "text-gray-400" : "text-gray-600", className)} {...props} />
+        <p ref={ref} className={cn('text-base font-medium transition-colors duration-500', isDark ? "text-gray-400" : "text-gray-600", className)} {...props} />
     );
 });
 CardDescription.displayName = 'CardDescription';

@@ -290,6 +290,8 @@ export const ChatBubbleLeftRightIcon = createIcon("M8 9h8 M8 13h6 M18 4a2 2 0 0 
 export const ZohoIcon = createIcon("M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5"); // Use Layers for Zoho for now as specialized
 
 // Additional required exports
+export const GiftIcon = I;
+export const ClipboardDocumentListIcon = I;
 export const SunIcon2 = createIcon("M12 2v2 M12 20v2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M2 12h2 M20 12h2 M4.93 19.07l1.41-1.41 M17.66 6.34l1.41-1.41 M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z");
 export const MoonIcon2 = createIcon("M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z");
 export const GlobeAlt = createIcon("M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z");

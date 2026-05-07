@@ -64,18 +64,18 @@ const FinancialInsuranceSection = () => {
                                 <div className="p-3 bg-[var(--rhive-pink)]/10 border border-[var(--rhive-pink)]/30 text-[var(--rhive-pink)]">
                                     <DollarSign className="w-6 h-6" />
                                 </div>
-                                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)]">Enhancify Capital</span>
+                                <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)]">Enhancify Capital</span>
                             </div>
 
                             <h3 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4 font-sans relative z-10">
                                 $0 DOWN <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--rhive-pink)] to-white block md:inline">0% APR</span>
                             </h3>
 
-                            <p className="text-gray-400 font-sans text-sm leading-relaxed mb-8 relative z-10 pr-4">
+                            <p className="text-gray-400 font-sans text-base leading-relaxed mb-8 relative z-10 pr-4">
                                 Keep your capital liquid. Leverage our lending partnerships through Enhancify to access aggressive, zero-friction financing. Approval takes seconds, leaving your emergency funds completely untouched while securing the ultimate structural defense for your property.
                             </p>
 
-                            <button className="px-8 py-4 bg-white/5 border border-white/20 text-white font-black text-[11px] uppercase tracking-widest hover:bg-[var(--rhive-pink)] hover:border-transparent transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(236,2,139,0.3)] relative z-10"
+                            <button className="px-8 py-4 bg-white/5 border border-white/20 text-white font-black text-base uppercase tracking-widest hover:bg-[var(--rhive-pink)] hover:border-transparent transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(236,2,139,0.3)] relative z-10"
                                     style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
                                 Configure Finance Option
                             </button>
@@ -116,24 +116,24 @@ const FinancialInsuranceSection = () => {
                                 <div className="p-3 bg-[#08137C]/20 border border-[#08137C]/50 text-white">
                                     <Umbrella className="w-6 h-6" />
                                 </div>
-                                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.4em] text-white/50">Ethical Claim Support</span>
+                                <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-white/50">Ethical Claim Support</span>
                             </div>
 
                             <h3 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4 font-sans relative z-10">
                                 TRANSPARENT <span className="text-[#08137C] drop-shadow-[0_0_5px_rgba(8,19,124,0.8)]">EMPOWERING</span>
                             </h3>
 
-                            <p className="text-gray-400 font-sans text-xs leading-relaxed mb-6 relative z-10 border-l-2 border-[#08137C] pl-4 italic uppercase tracking-wider font-bold">
+                            <p className="text-gray-400 font-sans text-base leading-relaxed mb-6 relative z-10 border-l-2 border-[#08137C] pl-4 italic uppercase tracking-wider font-bold">
                                 We support your claim, we don't 'work' it.
                             </p>
 
-                            <p className="text-gray-300 font-sans text-sm leading-relaxed mb-8 relative z-10 font-medium">
+                            <p className="text-gray-300 font-sans text-base leading-relaxed mb-8 relative z-10 font-medium">
                                 RHIVE provides the <strong>certified technical data and Dual-Math transparency</strong> required to ensure your insurance carrier awards a fair settlement based on manufacturer component specs and local building codes. No games, no rebates—just data-backed performance.
                             </p>
 
                             <button 
                                 onClick={() => setActivePageId('P-13')}
-                                className="px-8 py-4 bg-white/5 border border-white/20 text-white font-black text-[11px] uppercase tracking-widest hover:bg-[#08137C] hover:border-transparent transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(8,19,124,0.3)] relative z-10 flex items-center gap-3"
+                                className="px-8 py-4 bg-white/5 border border-white/20 text-white font-black text-base uppercase tracking-widest hover:bg-[#08137C] hover:border-transparent transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(8,19,124,0.3)] relative z-10 flex items-center gap-3"
                                 style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
                                 <FileText className="w-4 h-4" />
                                 Insurance Data Hub

@@ -528,7 +528,7 @@ const NumberToggle = ({ options, selected, onChange }) => (
       <button 
         key={opt}
         onClick={() => onChange(opt)}
-        className={\`relative w-10 h-10 flex items-center justify-center text-sm font-bold transition-all duration-200 group
+        className={\`relative w-10 h-10 flex items-center justify-center text-base font-bold transition-all duration-200 group
           \${selected === opt ? 'text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'}\`}
       >
         <div
@@ -592,7 +592,7 @@ const NumberToggle = ({ options, selected, onChange }: { options: string[], sele
                 <button
                     key={opt}
                     onClick={() => onChange(opt)}
-                    className={\`relative w-10 h-10 flex items-center justify-center text-sm font-bold transition-all duration-200 group
+                    className={\`relative w-10 h-10 flex items-center justify-center text-base font-bold transition-all duration-200 group
               \${ isActive ? 'text-white shadow-[0_0_10px_rgba(236,2,139,0.3)]' : 'text-gray-500 hover:text-white' } \`}
                 >
                     {/* Background Layer */}
@@ -645,9 +645,9 @@ const AssetGrid = ({ assets, onDelete, onCopy }) => (
                     <img src={asset.url} alt={asset.name} className="max-w-[70%] max-h-[70%] object-contain relative z-10" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-[var(--text-main)] truncate" title={asset.name}>{asset.name}</p>
+                    <p className="text-base font-bold text-[var(--text-main)] truncate" title={asset.name}>{asset.name}</p>
                     <div className="flex items-center justify-between mt-0.5">
-                        <p className="text-[10px] text-[var(--text-muted)] font-mono uppercase">{asset.type}</p>
+                        <p className="text-base text-[var(--text-muted)] font-mono uppercase">{asset.type}</p>
                         {!asset.isSystem && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); onDelete(asset.id); }}
@@ -662,7 +662,7 @@ const AssetGrid = ({ assets, onDelete, onCopy }) => (
                     <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={() => onCopy(asset.url, 'url')}
-                            className="flex-1 text-[10px] bg-gray-800 hover:bg-rhive-pink hover:text-white text-gray-400 px-2 py-1 rounded-sm transition-colors border border-gray-700"
+                            className="flex-1 text-base bg-gray-800 hover:bg-rhive-pink hover:text-white text-gray-400 px-2 py-1 rounded-sm transition-colors border border-gray-700"
                         >
                             URL
                         </button>
@@ -726,10 +726,10 @@ const DATA_CODE = `// COMPONENT: Data Metric Card
         <div className="w-2 h-2 rounded-full bg-rhive-pink animate-pulse"></div>
     </div>
     <div>
-        <div className="text-xs text-[var(--text-muted)] uppercase font-medium">Monthly Revenue</div>
+        <div className="text-base text-[var(--text-muted)] uppercase font-medium">Monthly Revenue</div>
         <div className="text-2xl font-mono text-[var(--text-main)] mt-1">$3.2M</div>
     </div>
-    <div className="text-xs text-rhive-pink flex items-center gap-1 font-mono">
+    <div className="text-base text-rhive-pink flex items-center gap-1 font-mono">
         ▲ 12% <span className="text-[var(--text-muted)] font-sans">vs last month</span>
     </div>
     {/* SVG Chart Overlay */}
@@ -837,17 +837,17 @@ Z
 const CodeBlock: React.FC<{ code: string }> = ({ code }) => (
     <div className="mt-6 bg-[var(--bg-code)] border border-[var(--border-color)] overflow-hidden relative z-20">
         <div className="flex justify-between items-center px-4 py-2 bg-[var(--bg-card-overlay)] border-b border-[var(--border-color)]">
-            <span className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">Design Spec / Code</span>
+            <span className="text-base font-mono text-[var(--text-muted)] uppercase tracking-wider">Design Spec / Code</span>
             <button
                 onClick={() => navigator.clipboard.writeText(code)}
-                className="text-xs font-medium text-rhive-pink hover:opacity-80 transition-opacity"
+                className="text-base font-medium text-rhive-pink hover:opacity-80 transition-opacity"
                 title="Copy to clipboard"
             >
                 COPY CODE
             </button>
         </div>
         <div className="p-4 overflow-x-auto max-h-96">
-            <pre className="text-xs font-mono text-[var(--text-main)] leading-relaxed whitespace-pre-wrap selection:bg-rhive-pink/30 selection:text-white opacity-80">
+            <pre className="text-base font-mono text-[var(--text-main)] leading-relaxed whitespace-pre-wrap selection:bg-rhive-pink/30 selection:text-white opacity-80">
                 {code}
             </pre>
         </div>
@@ -958,11 +958,11 @@ const ShowcaseCard: React.FC<ShowcaseCardProps & { isDark?: boolean }> = ({ chil
                     <div className="mb-6 relative overflow-hidden group/desc">
                         <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-rhive-blue to-transparent"></div>
                         <div className="bg-gradient-to-r from-rhive-blue/10 to-transparent p-4 pl-5 rounded-r-sm border border-l-0 border-[var(--border-color)]">
-                            <h4 className="text-[10px] font-mono text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                            <h4 className="text-base font-mono text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                                 Design Logic
                             </h4>
-                            <p className="text-sm text-[var(--text-muted)] leading-relaxed font-sans opacity-90">
+                            <p className="text-base text-[var(--text-muted)] leading-relaxed font-sans opacity-90">
                                 {description}
                             </p>
                         </div>
@@ -983,7 +983,7 @@ const SimpleTooltip = ({ children, content }: { children: React.ReactNode, conte
         <div className="relative group/tooltip inline-block">
             {children}
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[var(--bg-card-solid)] border border-[var(--border-color)] rounded shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50">
-                <p className="text-xs text-[var(--text-main)] text-center">{content}</p>
+                <p className="text-base text-[var(--text-main)] text-center">{content}</p>
                 {/* Arrow */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[var(--border-color)]" />
             </div>
@@ -1019,14 +1019,14 @@ const ColorSwatch = ({ name, hex, textColor = "text-gray-500" }: { name: string,
                 <div
                     className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-200 z-20 ${copied ? 'opacity-100' : 'opacity-0'}`}
                 >
-                    <div className="bg-[var(--bg-card-solid)] text-[var(--text-main)] text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm shadow-xl border border-[var(--border-color)]">
+                    <div className="bg-[var(--bg-card-solid)] text-[var(--text-main)] text-base font-bold px-2 py-1 rounded backdrop-blur-sm shadow-xl border border-[var(--border-color)]">
                         COPIED
                     </div>
                 </div>
             </div>
 
-            <p className={`mt-3 text-xs font-bold text-[var(--text-main)] transition-colors group-hover:text-rhive-pink`}>{name}</p>
-            <p className={`text-[10px] font-mono text-[var(--text-muted)]`}>{hex}</p>
+            <p className={`mt-3 text-base font-bold text-[var(--text-main)] transition-colors group-hover:text-rhive-pink`}>{name}</p>
+            <p className={`text-base font-mono text-[var(--text-muted)]`}>{hex}</p>
         </div>
     );
 };
@@ -1082,7 +1082,7 @@ const ChamferedInput = React.forwardRef<HTMLInputElement, ChamferedInputProps>((
                     {...props}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
-                    className={`w-full h-full bg-transparent border-none outline-none text-[var(--text-main)] placeholder-[var(--text-muted)] px-4 ${icon ? 'pl-2' : ''} text-sm font-sans`}
+                    className={`w-full h-full bg-transparent border-none outline-none text-[var(--text-main)] placeholder-[var(--text-muted)] px-4 ${icon ? 'pl-2' : ''} text-base font-sans`}
                 />
             </div>
         </div>
@@ -1100,7 +1100,7 @@ const NumberToggle = ({ options, selected, onChange }: { options: string[], sele
                 <button
                     key={opt}
                     onClick={() => onChange(opt)}
-                    className={`relative w-10 h-10 flex items-center justify-center text-sm font-bold transition-all duration-200 group/toggle
+                    className={`relative w-10 h-10 flex items-center justify-center text-base font-bold transition-all duration-200 group/toggle
               ${isActive ? 'text-white shadow-pink-glow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'} `}
                     style={{ clipPath: "polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)" }}
                 >
@@ -1164,10 +1164,10 @@ const BuildingCard = ({ label, sqft, selected, onToggle }: { label: string, sqft
 
             {/* Content */}
             <div className="relative z-20 pl-2 text-center w-full">
-                <h4 className={`font-bold text-sm transition-colors ${selected ? 'text-white' : 'text-rhive-pink'} `}>
+                <h4 className={`font-bold text-base transition-colors ${selected ? 'text-white' : 'text-rhive-pink'} `}>
                     {label}
                 </h4>
-                <span className="text-xs font-mono text-[var(--text-muted)] mt-1 block">{sqft} SQ</span>
+                <span className="text-base font-mono text-[var(--text-muted)] mt-1 block">{sqft} SQ</span>
             </div>
         </div>
     );
@@ -1267,7 +1267,7 @@ const EstimationPreview = () => {
         <div className="space-y-8">
             {/* Building Select */}
             <div className="space-y-4">
-                <h4 className="text-sm font-medium text-[var(--text-muted)]">Select buildings to include in estimate:</h4>
+                <h4 className="text-base font-medium text-[var(--text-muted)]">Select buildings to include in estimate:</h4>
                 <div className="flex flex-wrap gap-4">
                     <BuildingCard
                         label="Main House"
@@ -1313,7 +1313,7 @@ const EstimationPreview = () => {
                     <div className="mb-8 space-y-6">
                         {/* Name Input */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-[var(--text-muted)]">Your Name</label>
+                            <label className="text-base font-medium text-[var(--text-muted)]">Your Name</label>
                             <ChamferedInput
                                 type="text"
                                 value={name}
@@ -1324,7 +1324,7 @@ const EstimationPreview = () => {
 
                         {/* Phone Input - NEW */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-[var(--text-muted)]">Phone Number</label>
+                            <label className="text-base font-medium text-[var(--text-muted)]">Phone Number</label>
                             <ChamferedInput
                                 type="text"
                                 value={phone}
@@ -1336,9 +1336,9 @@ const EstimationPreview = () => {
 
                         {/* Address Input - with Google Autocomplete */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-[var(--text-muted)] flex justify-between">
+                            <label className="text-base font-medium text-[var(--text-muted)] flex justify-between">
                                 Project Address
-                                <span className="text-[10px] text-blue-400 flex items-center gap-1"><Icons.MapPin className="w-3 h-3" /> Auto-fill active</span>
+                                <span className="text-base text-blue-400 flex items-center gap-1"><Icons.MapPin className="w-3 h-3" /> Auto-fill active</span>
                             </label>
                             <div className="relative">
                                 {/* Wrap in relative for absolute icon? No, ChamferedInput handles icon prop */}
@@ -1354,8 +1354,8 @@ const EstimationPreview = () => {
 
                     {/* Layer Count */}
                     <div className="mb-8">
-                        <h4 className="text-sm font-medium text-[var(--text-muted)] mb-3 block">Roof Options</h4>
-                        <label className="block text-sm font-medium text-[var(--text-muted)] mb-3">
+                        <h4 className="text-base font-medium text-[var(--text-muted)] mb-3 block">Roof Options</h4>
+                        <label className="block text-base font-medium text-[var(--text-muted)] mb-3">
                             How many layers are on your project?*
                             <SimpleTooltip content="Each layer of existing roofing material adds to the removal cost.">
                                 <Icons.HelpCircle className="inline w-4 h-4 ml-1 text-[var(--text-muted)] hover:text-rhive-pink transition-colors cursor-help" />
@@ -1372,7 +1372,7 @@ const EstimationPreview = () => {
 
                     {/* Feature Counts */}
                     <div className="space-y-6">
-                        <h4 className="text-sm font-medium text-[var(--text-muted)]">Indicate the quantity of each feature:</h4>
+                        <h4 className="text-base font-medium text-[var(--text-muted)]">Indicate the quantity of each feature:</h4>
 
                         {[
                             { id: 'chimneys', label: 'Chimneys' },
@@ -1400,8 +1400,8 @@ const EstimationPreview = () => {
                     <div className="h-px bg-[var(--border-color)] w-full my-8" />
 
                     <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">Estimated Total</span>
-                        <span className="text-[10px] font-mono text-rhive-pink uppercase tracking-wider animate-pulse">Live Spec</span>
+                        <span className="text-base font-mono text-[var(--text-muted)] uppercase tracking-wider">Estimated Total</span>
+                        <span className="text-base font-mono text-rhive-pink uppercase tracking-wider animate-pulse">Live Spec</span>
                     </div>
                     <div className="text-4xl font-bold text-[var(--text-main)] font-mono">$24,500.00</div>
                 </div>
@@ -1682,13 +1682,13 @@ const ImageLinkBuilder = ({ isDark = true }: { isDark?: boolean }) => {
                 {uploading ? (
                     <div className="flex flex-col items-center justify-center">
                         <Icons.RefreshCw className="w-8 h-8 text-rhive-pink animate-spin mb-2" />
-                        <span className="text-sm text-[var(--text-muted)]">Uploading & Generating Link...</span>
+                        <span className="text-base text-[var(--text-muted)]">Uploading & Generating Link...</span>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center">
                         <Icons.Upload className="w-10 h-10 text-[var(--text-muted)] mb-3" />
-                        <h4 className="text-sm font-bold text-[var(--text-main)]">Upload Marketing Asset</h4>
-                        <p className="text-xs text-[var(--text-muted)] mt-1">Drag & drop or click to upload. Persists locally.</p>
+                        <h4 className="text-base font-bold text-[var(--text-main)]">Upload Marketing Asset</h4>
+                        <p className="text-base text-[var(--text-muted)] mt-1">Drag & drop or click to upload. Persists locally.</p>
                     </div>
                 )}
             </div>
@@ -1696,8 +1696,8 @@ const ImageLinkBuilder = ({ isDark = true }: { isDark?: boolean }) => {
             {/* Asset Grid */}
             <div className="space-y-2">
                 <div className="flex justify-between items-end">
-                    <h4 className="text-xs font-mono text-[var(--text-muted)] uppercase">Asset Library</h4>
-                    <span className="text-[10px] text-[var(--text-muted)]">{assets.length} items</span>
+                    <h4 className="text-base font-mono text-[var(--text-muted)] uppercase">Asset Library</h4>
+                    <span className="text-base text-[var(--text-muted)]">{assets.length} items</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                     {assets.map((asset) => (
@@ -1712,9 +1712,9 @@ const ImageLinkBuilder = ({ isDark = true }: { isDark?: boolean }) => {
                                 <img src={asset.url} alt={asset.name} className="max-w-[70%] max-h-[70%] object-contain relative z-10" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-[var(--text-main)] truncate" title={asset.name}>{asset.name}</p>
+                                <p className="text-base font-bold text-[var(--text-main)] truncate" title={asset.name}>{asset.name}</p>
                                 <div className="flex items-center justify-between mt-0.5">
-                                    <p className="text-[10px] text-gray-500 font-mono uppercase">{asset.type}</p>
+                                    <p className="text-base text-gray-500 font-mono uppercase">{asset.type}</p>
                                     {!asset.isSystem && (
                                         <button
                                             onClick={(e) => { e.stopPropagation(); deleteAsset(asset.id); }}
@@ -1729,13 +1729,13 @@ const ImageLinkBuilder = ({ isDark = true }: { isDark?: boolean }) => {
                                 <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={() => copyLink(asset.url, 'url')}
-                                        className="flex-1 text-[10px] bg-gray-800 hover:bg-rhive-pink hover:text-white text-gray-400 px-2 py-1 rounded-sm transition-colors border border-gray-700"
+                                        className="flex-1 text-base bg-gray-800 hover:bg-rhive-pink hover:text-white text-gray-400 px-2 py-1 rounded-sm transition-colors border border-gray-700"
                                     >
                                         URL
                                     </button>
                                     <button
                                         onClick={() => copyLink(asset.url, 'img')}
-                                        className="flex-1 text-[10px] bg-gray-800 hover:bg-rhive-blue hover:text-white text-gray-400 px-2 py-1 rounded-sm transition-colors border border-gray-700"
+                                        className="flex-1 text-base bg-gray-800 hover:bg-rhive-blue hover:text-white text-gray-400 px-2 py-1 rounded-sm transition-colors border border-gray-700"
                                     >
                                         [IMG]
                                     </button>
@@ -1920,7 +1920,7 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
                                 placeholder="Search 150+ icons (e.g. 'Social Media', 'Roof', 'Analytics')..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full h-full bg-transparent border-none outline-none pl-9 pr-4 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] font-mono"
+                                className="w-full h-full bg-transparent border-none outline-none pl-9 pr-4 text-base text-[var(--text-main)] placeholder-[var(--text-muted)] font-mono"
                             />
                         </div>
                         <Icons.Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] w-4 h-4 pointer-events-none" />
@@ -1928,7 +1928,7 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
 
                     <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-4">
-                            <span className="text-sm text-[var(--text-muted)]">Color Preview:</span>
+                            <span className="text-base text-[var(--text-muted)]">Color Preview:</span>
                             <div className="flex items-center gap-2">
                                 {['#ec028b', '#e2ab49', '#08137C', (isDark ? '#FFFFFF' : '#000000')].map((color) => (
                                     <button
@@ -1954,7 +1954,7 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
                                             onChange={(e) => setSelectedColor(e.target.value)}
                                             className="absolute inset-0 w-[150%] h-[150%] -left-1/4 -top-1/4 cursor-pointer p-0 border-0 opacity-0 z-10"
                                         />
-                                        <div className="w-full h-full bg-[var(--bg-code)] flex items-center justify-center text-[10px] font-mono text-[var(--text-main)] pointer-events-none" style={{ backgroundColor: selectedColor }}>
+                                        <div className="w-full h-full bg-[var(--bg-code)] flex items-center justify-center text-base font-mono text-[var(--text-main)] pointer-events-none" style={{ backgroundColor: selectedColor }}>
                                             <span className={`${isDark ? 'bg-black/50' : 'bg-white/70'} px-1 rounded backdrop-blur-sm`}>{selectedColor.slice(0, 4)}</span>
                                         </div>
                                         {/* Hexagon Mask for custom picker display */}
@@ -1979,7 +1979,7 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
                         {/* COPY SYSTEM RULES BUTTON */}
                         <button
                             onClick={handleCopySystemRules}
-                            className="bg-[var(--bg-card-translucent)] hover:bg-rhive-pink/10 border border-[var(--border-color)] hover:border-rhive-pink text-[var(--text-muted)] hover:text-[var(--text-main)] px-3 py-1.5 rounded-sm text-[10px] font-mono uppercase tracking-wider transition-all flex items-center gap-2 group shadow-sm"
+                            className="bg-[var(--bg-card-translucent)] hover:bg-rhive-pink/10 border border-[var(--border-color)] hover:border-rhive-pink text-[var(--text-muted)] hover:text-[var(--text-main)] px-3 py-1.5 rounded-sm text-base font-mono uppercase tracking-wider transition-all flex items-center gap-2 group shadow-sm"
                         >
                             {copiedIcon === "SYSTEM RULES" ? (
                                 <>
@@ -1999,7 +1999,7 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
                 {/* Favorites Section */}
                 {favorites.size > 0 && !searchQuery && (
                     <div className="space-y-2">
-                        <h4 className="text-xs font-mono text-rhive-pink uppercase flex items-center gap-2">
+                        <h4 className="text-base font-mono text-rhive-pink uppercase flex items-center gap-2">
                             <Icons.HeartIcon className="w-3 h-3 fill-current" /> Favorites
                         </h4>
                         <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
@@ -2028,7 +2028,7 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
                 {/* Recents Section */}
                 {recent.length > 0 && !searchQuery && (
                     <div className="space-y-2">
-                        <h4 className="text-xs font-mono text-gray-500 uppercase flex items-center gap-2">
+                        <h4 className="text-base font-mono text-gray-500 uppercase flex items-center gap-2">
                             <Icons.Clock className="w-3 h-3" /> Recently Used
                         </h4>
                         <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
@@ -2069,7 +2069,7 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
                                 // @ts-ignore
                                 className={`${!selectedColor.startsWith('#') ? selectedColor : ''} w-8 h-8 mb-2 transition-transform group-hover/icon:scale-110`}
                             />
-                            <span className="text-[9px] font-mono text-[var(--text-muted)] truncate w-full text-center group-hover/icon:text-[var(--text-main)]">
+                            <span className="text-base font-mono text-[var(--text-muted)] truncate w-full text-center group-hover/icon:text-[var(--text-main)]">
                                 {name}
                             </span>
 
@@ -2084,14 +2084,14 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
                             {/* Copied Tooltip */}
                             {copiedIcon === name && (
                                 <div className="absolute inset-0 bg-rhive-pink/90 backdrop-blur-sm flex items-center justify-center z-30" style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}>
-                                    <span className="text-white text-[10px] font-bold animate-pulse">COPIED</span>
+                                    <span className="text-white text-base font-bold animate-pulse">COPIED</span>
                                 </div>
                             )}
                         </div>
                     ))}
 
                     {filteredIcons.length === 0 && (
-                        <div className="col-span-full text-center py-8 text-gray-500 text-sm">
+                        <div className="col-span-full text-center py-8 text-gray-500 text-base">
                             No icons found for "{searchQuery}"
                         </div>
                     )}
@@ -2116,12 +2116,12 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
 
                         <div className="space-y-4">
                             <div>
-                                <label className="text-xs text-[var(--text-muted)] mb-1 block">Description Prompt</label>
+                                <label className="text-base text-[var(--text-muted)] mb-1 block">Description Prompt</label>
                                 <textarea
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
                                     placeholder="e.g. A stylized roof outline with a lightning bolt"
-                                    className="w-full bg-[var(--bg-card-translucent)] border border-[var(--border-color)] rounded-sm p-3 text-sm text-[var(--text-main)] focus:border-rhive-pink outline-none min-h-[80px]"
+                                    className="w-full bg-[var(--bg-card-translucent)] border border-[var(--border-color)] rounded-sm p-3 text-base text-[var(--text-main)] focus:border-rhive-pink outline-none min-h-[80px]"
                                 />
                             </div>
 
@@ -2130,16 +2130,16 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
                                 {isGenerating ? (
                                     <div className="flex flex-col items-center">
                                         <Icons.RefreshCw className="w-8 h-8 text-rhive-pink animate-spin mb-2" />
-                                        <span className="text-rhive-pink text-xs font-mono animate-pulse">GENERATING...</span>
+                                        <span className="text-rhive-pink text-base font-mono animate-pulse">GENERATING...</span>
                                     </div>
                                 ) : generatedResult ? (
                                     <div className="flex flex-col items-center animate-fade-in">
                                         {/* @ts-ignore */}
                                         <generatedResult.component className="w-16 h-16 text-rhive-pink drop-shadow-pink-glow" />
-                                        <span className="text-[10px] text-green-400 mt-2 font-mono uppercase">Asset Created</span>
+                                        <span className="text-base text-green-400 mt-2 font-mono uppercase">Asset Created</span>
                                     </div>
                                 ) : (
-                                    <span className="text-[var(--text-muted)] text-xs italic">Result will appear here</span>
+                                    <span className="text-[var(--text-muted)] text-base italic">Result will appear here</span>
                                 )}
                             </div>
 
@@ -2147,14 +2147,14 @@ RHIVE DESIGN SYSTEM - ICONOGRAPHY RULES & CATALOG
                                 <button
                                     onClick={handleAIGenerate}
                                     disabled={!prompt || isGenerating}
-                                    className="flex-1 bg-[var(--bg-card-solid)] border border-[var(--border-color)] text-[var(--text-main)] py-2 rounded-sm hover:bg-[var(--bg-card-overlay)] transition-colors text-sm font-medium"
+                                    className="flex-1 bg-[var(--bg-card-solid)] border border-[var(--border-color)] text-[var(--text-main)] py-2 rounded-sm hover:bg-[var(--bg-card-overlay)] transition-colors text-base font-medium"
                                 >
                                     Generate
                                 </button>
                                 <button
                                     onClick={handleAddCustomIcon}
                                     disabled={!generatedResult}
-                                    className="flex-1 bg-rhive-pink text-white py-2 rounded-sm hover:bg-opacity-90 transition-colors text-sm font-bold shadow-pink-glow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 bg-rhive-pink text-white py-2 rounded-sm hover:bg-opacity-90 transition-colors text-base font-bold shadow-pink-glow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Add to Library
                                 </button>
@@ -2194,11 +2194,11 @@ const VisualFXCard = ({ bg, dot, line, label, code }: { bg: string, dot: string,
                     className="h-full w-full"
                 />
             </div>
-            <p className="text-xs font-bold text-[var(--text-main)] mb-1">{label}</p>
+            <p className="text-base font-bold text-[var(--text-main)] mb-1">{label}</p>
             <SimpleTooltip content="Click to copy Component code">
                 <button
                     onClick={handleCopy}
-                    className={`text-[9px] font-mono text-[var(--text-muted)] hover:text-rhive-pink truncate max-w-full px-2 py-1 bg-[var(--bg-card-translucent)] border border-[var(--border-color)] rounded-sm transition-colors`}
+                    className={`text-base font-mono text-[var(--text-muted)] hover:text-rhive-pink truncate max-w-full px-2 py-1 bg-[var(--bg-card-translucent)] border border-[var(--border-color)] rounded-sm transition-colors`}
                 >
                     {copied ? 'COPIED!' : 'PRESET CODE'}
                 </button>
@@ -2225,7 +2225,7 @@ const ThemeToggle = ({ isDark, onToggle }: { isDark: boolean, onToggle: () => vo
                 />
             </svg>
 
-            <div className="relative z-10 flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-widest text-[var(--text-main)] group-hover:text-rhive-pink transition-colors">
+            <div className="relative z-10 flex items-center gap-2 text-base font-mono font-bold uppercase tracking-widest text-[var(--text-main)] group-hover:text-rhive-pink transition-colors">
                 {isDark ? <Icons.Moon className="w-4 h-4" /> : <Icons.Sun className="w-4 h-4" />}
                 {isDark ? 'Dark Mode' : 'Light Mode'}
             </div>
@@ -2266,7 +2266,7 @@ const MasterCopyButton = ({ isDark }: { isDark: boolean }) => {
             </svg>
 
             {/* Text & Icon */}
-            <div className={`relative z-10 flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-[0.15em] transition-colors ${copied ? 'text-white' : 'text-rhive-pink'}`}>
+            <div className={`relative z-10 flex items-center gap-2 text-base font-mono font-bold uppercase tracking-[0.15em] transition-colors ${copied ? 'text-white' : 'text-rhive-pink'}`}>
                 {copied ? <Icons.Check className="w-4 h-4" /> : <Icons.Zap className="w-4 h-4 animate-pulse" />}
                 {copied ? 'SYSTEM INGESTED' : 'INGEST MASTER PROMPT'}
             </div>
@@ -2369,7 +2369,7 @@ const StyleShowcase: React.FC = () => {
                             <p className="text-2xl font-semibold">Aa - Section Headings</p>
                             <p className="font-serif text-2xl italic text-[var(--text-muted)]">Aa - Formal Reports (EB Garamond)</p>
                             <p className="text-base">Aa - Body copy for descriptions and information.</p>
-                            <p className="text-sm text-[var(--text-muted)]">Aa - Secondary text for labels and captions.</p>
+                            <p className="text-base text-[var(--text-muted)]">Aa - Secondary text for labels and captions.</p>
                             <p className="font-mono text-rhive-pink">123.45 SQ - Monospaced for data.</p>
                         </div>
                     </ShowcaseCard>
@@ -2388,15 +2388,15 @@ const StyleShowcase: React.FC = () => {
                         </p>
                         <div className="space-y-4">
                             <div>
-                                <h4 className="text-sm font-bold text-[var(--text-muted)] mb-2">PlexusShape.tsx (Background Logic)</h4>
+                                <h4 className="text-base font-bold text-[var(--text-muted)] mb-2">PlexusShape.tsx (Background Logic)</h4>
                                 <CodeBlock code={PLEXUS_FULL_CODE} />
                             </div>
                             <div>
-                                <h4 className="text-sm font-bold text-[var(--text-muted)] mb-2">Tailwind Config (Theme)</h4>
+                                <h4 className="text-base font-bold text-[var(--text-muted)] mb-2">Tailwind Config (Theme)</h4>
                                 <CodeBlock code={TAILWIND_FULL_CODE} />
                             </div>
                             <div>
-                                <h4 className="text-sm font-bold text-[var(--text-muted)] mb-2">Unified System Prompt</h4>
+                                <h4 className="text-base font-bold text-[var(--text-muted)] mb-2">Unified System Prompt</h4>
                                 <CodeBlock code={MASTER_SYSTEM_PROMPT} />
                             </div>
                         </div>
@@ -2476,9 +2476,9 @@ const StyleShowcase: React.FC = () => {
                             The core architectural pattern for RHIVE widgets combines a reactive Plexus background with a glass-like content layer. This ensures the "Tech-Noir" aesthetic permeates every interface element while maintaining readability via the black overlay.
                         </p>
                         <div className="mt-4 p-4 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card-overlay)] relative overflow-hidden">
-                            <div className="absolute top-2 right-2 text-xs text-[var(--text-muted)] font-mono">Widget Preview</div>
+                            <div className="absolute top-2 right-2 text-base text-[var(--text-muted)] font-mono">Widget Preview</div>
                             <div className="h-20 flex items-center justify-center">
-                                <span className="text-rhive-pink font-mono text-sm animate-pulse">Plexus Layer Active</span>
+                                <span className="text-rhive-pink font-mono text-base animate-pulse">Plexus Layer Active</span>
                             </div>
                         </div>
                     </ShowcaseCard>

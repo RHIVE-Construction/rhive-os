@@ -105,7 +105,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                 {/* Controls Part */}
                 <div className="p-4 sm:p-5 space-y-4">
                     <div>
-                        <p className="text-sm text-gray-400">Selected Address</p>
+                        <p className="text-base text-gray-400">Selected Address</p>
                         <h2 className="text-xl font-semibold text-white truncate">{place.address}</h2>
                     </div>
                     
@@ -115,7 +115,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                              <button
                                 onClick={() => setView('street')}
                                 className={cn(
-                                    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 gap-2',
+                                    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-base font-medium transition-colors h-10 px-4 py-2 gap-2',
                                     view === 'street'
                                         ? 'bg-[#ec028b] text-white'
                                         : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'
@@ -127,7 +127,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                             <button
                                 onClick={() => setView('satellite')}
                                 className={cn(
-                                    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-10 px-4 py-2 gap-2',
+                                    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-base font-medium transition-colors h-10 px-4 py-2 gap-2',
                                     view === 'satellite'
                                         ? 'bg-[#ec028b] text-white'
                                         : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'

@@ -33,7 +33,7 @@ const AsphaltRoofingPage = () => {
             type: 'MAXIMUM IMPACT DEFENSE',
             description: 'SBS modified polymer armor. Engineered to aggressively absorb extreme hail and wind impacts while maintaining ultimate flexibility.',
             color: '#00D1FF',
-            image: '/duration_flex_shingle.png',
+            image: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FImages%2Fduration%20flex.jpg?alt=media&token=aedc6ffb-3b7d-418e-967d-6d45eb6595c8',
             features: ['Class 4 Impact Rated', 'SBS Polymer Protection', 'Extreme Weather-Ready'],
             cta: 'Configure Flex',
             action: () => setActivePageId('P-02a-2')
@@ -44,7 +44,7 @@ const AsphaltRoofingPage = () => {
             type: 'ARCHITECTURAL PRESTIGE',
             description: 'Custom hand-cut wood shake look. A complete integrated roof system engineered for dramatic curb appeal and bespoke statement.',
             color: '#e2ab49',
-            image: '/gaf_woodland_shingle.png',
+            image: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FImages%2Fgaf%20woodland.jpg?alt=media&token=a3dcd550-0f35-4443-a900-858d6f683336',
             features: ['Tri-Laminate Depth', 'Hand-Cut Shake Look', 'Designer Status'],
             cta: 'View Woodland Specs',
             action: () => setActivePageId('P-02a-3')
@@ -55,7 +55,7 @@ const AsphaltRoofingPage = () => {
             type: 'ULTRA-PREMIUM LUXURY',
             description: 'The ultimate wood-shake alternative. Rugged, oversized tabs create a sophisticated, dramatic appearance for high-value properties.',
             color: '#e2ab49',
-            image: '/gaf_grand_sequoia.png',
+            image: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FImages%2Fgrand%20sequoia.jpg?alt=media&token=49432746-bc5e-4c54-a0f3-edc3a6e59d46',
             features: ['Extra-Large Shingle Tabs', 'High-Contrast Look', 'Maximum ROI Finish'],
             cta: 'View Sequoia Specs',
             action: () => setActivePageId('P-02a-4')
@@ -98,28 +98,28 @@ const AsphaltRoofingPage = () => {
                 <div className="relative z-30 text-center px-4 max-w-5xl">
                     <div className="inline-flex items-center gap-2 border border-[var(--rhive-pink)]/30 px-6 py-2 bg-[var(--rhive-pink)]/10 mb-8 backdrop-blur-md">
                         <Home className="w-4 h-4 text-[var(--rhive-pink)]" />
-                        <span className="text-[var(--rhive-pink)] font-black text-xs uppercase tracking-[0.4em]">Premium Roofing Solutions</span>
+                        <span className="text-[var(--rhive-pink)] font-black text-base uppercase tracking-[0.4em]">Premium Roofing Solutions</span>
                     </div>
 
                     <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-8 text-white leading-none drop-shadow-2xl font-sans">
                         ASPHALT <span className="text-[var(--rhive-pink)]">ROOFING</span>
                     </h1>
 
-                    <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+                    <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 max-w-prose mx-auto leading-relaxed drop-shadow-lg">
                         Certified, high-performance asphalt shingle systems backed by industry-leading lifetime warranties and a fully transparent quoting process.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <button
                             onClick={() => window.location.href = '#quote'}
-                            className="group relative px-10 py-5 bg-[var(--rhive-pink)] text-white font-black uppercase text-sm tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(236,2,139,0.3)]"
+                            className="group relative px-10 py-5 bg-[var(--rhive-pink)] text-white font-black uppercase text-base tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(236,2,139,0.3)]"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >
                             Request Certified Quote
                         </button>
                         <button
                             onClick={scrollToSystems}
-                            className="px-10 py-5 border border-white/10 text-white font-bold uppercase text-xs tracking-[0.2em] hover:bg-white/5 transition-all backdrop-blur-md"
+                            className="px-10 py-5 border border-white/10 text-white font-bold uppercase text-base tracking-[0.2em] hover:bg-white/5 transition-all backdrop-blur-md"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >
                             Review System Specs
@@ -137,11 +137,11 @@ const AsphaltRoofingPage = () => {
                 <div className="max-w-[85rem] mx-auto px-6 mb-12 text-center relative z-20">
                     <div className="flex items-center justify-center gap-3 mb-4">
                         <div className="w-8 h-[2px] bg-[var(--rhive-pink)]"></div>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--rhive-pink)] font-bold">System Diagnostics</span>
+                        <span className="font-mono text-base uppercase tracking-[0.3em] text-[var(--rhive-pink)] font-bold">System Diagnostics</span>
                         <div className="w-8 h-[2px] bg-[var(--rhive-pink)]"></div>
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase font-display tracking-tight mb-4 text-center">ANATOMY OF PROTECTION<span className="text-[var(--rhive-pink)]">.</span></h2>
-                    <p className="text-gray-400 font-sans max-w-2xl mx-auto text-lg text-center text-balance">
+                    <h2 className="text-4xl md:text-5xl leading-tight font-black text-white uppercase font-display tracking-tight mb-4 text-center">ANATOMY OF PROTECTION<span className="text-[var(--rhive-pink)]">.</span></h2>
+                    <p className="text-gray-400 font-sans max-w-prose mx-auto text-base md:text-lg leading-relaxed text-center text-balance">
                         Scan the structure below to see the commercial-grade layering included in every RHIVE installation.
                     </p>
                 </div>
@@ -156,7 +156,7 @@ const AsphaltRoofingPage = () => {
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-12 h-[2px] bg-[var(--rhive-pink)]"></div>
-                            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)] drop-shadow-[0_0_8px_rgba(236,2,139,0.5)]">
+                            <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)] drop-shadow-[0_0_8px_rgba(236,2,139,0.5)]">
                                 The Standard Foundation
                             </span>
                         </div>
@@ -166,9 +166,9 @@ const AsphaltRoofingPage = () => {
                         </h1>
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--rhive-pink)]/10 border border-[var(--rhive-pink)]/30 mb-6">
                             <CheckCircle2 className="w-3 h-3 text-[var(--rhive-pink)]" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-white">A ROOF THAT OUTLASTS THE MORTGAGE</span>
+                            <span className="text-base font-black uppercase tracking-widest text-white">A ROOF THAT OUTLASTS THE MORTGAGE</span>
                         </div>
-                        <p className="text-xl text-gray-300 font-sans leading-relaxed mb-12 border-l-2 border-[var(--rhive-pink)] pl-6">
+                        <p className="text-xl text-gray-300 font-sans leading-relaxed max-w-prose mb-12 border-l-2 border-[var(--rhive-pink)] pl-6">
                             The definitive system for the modern property owner. Featuring Owens Corning Duration® shingles as our <strong>uncompromised baseline</strong>. Far outperforming standard architectural and 3-tab shingles, this system is engineered to perform as a single, impenetrable weather-defense unit.
                         </p>
 
@@ -178,8 +178,8 @@ const AsphaltRoofingPage = () => {
                                     <ShieldCheck className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h4 className="text-white font-black text-xs uppercase tracking-widest mb-1">Preferred Protection Warranty</h4>
-                                    <p className="text-gray-500 text-xs text-balance">50 Years Non-Prorated coverage + 10-year Workmanship backup if installer exits market.</p>
+                                    <h4 className="text-white font-black text-base uppercase tracking-widest mb-1">Preferred Protection Warranty</h4>
+                                    <p className="text-gray-500 text-base text-balance">50 Years Non-Prorated coverage + 10-year Workmanship backup if installer exits market.</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-6 group">
@@ -187,8 +187,8 @@ const AsphaltRoofingPage = () => {
                                     <Package className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h4 className="text-white font-black text-xs uppercase tracking-widest mb-1">8-Point Component System</h4>
-                                    <p className="text-gray-500 text-xs text-balance">Engineered together to perform as a single, impenetrable weather-defense unit.</p>
+                                    <h4 className="text-white font-black text-base uppercase tracking-widest mb-1">8-Point Component System</h4>
+                                    <p className="text-gray-500 text-base text-balance">Engineered together to perform as a single, impenetrable weather-defense unit.</p>
                                 </div>
                             </div>
                         </div>
@@ -196,7 +196,7 @@ const AsphaltRoofingPage = () => {
                         <div className="flex flex-col sm:flex-row gap-4 mb-12">
                             <button
                                 onClick={() => setActivePageId('P-02a-1')}
-                                className="flex-1 inline-flex items-center justify-center gap-3 px-8 py-5 border border-white/20 bg-white/5 backdrop-blur-md text-white font-black text-[11px] uppercase tracking-[0.3em] hover:bg-white/10 hover:border-[var(--rhive-pink)]/50 transition-all shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+                                className="flex-1 inline-flex items-center justify-center gap-3 px-8 py-5 border border-white/20 bg-white/5 backdrop-blur-md text-white font-black text-base uppercase tracking-[0.3em] hover:bg-white/10 hover:border-[var(--rhive-pink)]/50 transition-all shadow-[0_0_20px_rgba(255,255,255,0.05)]"
                                 style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                             >
                                 Open System Components <ArrowRight className="w-4 h-4" />
@@ -239,7 +239,7 @@ const AsphaltRoofingPage = () => {
                                         <div className="text-[var(--rhive-pink)] group-hover/item:text-white transition-colors">
                                             {item.icon}
                                         </div>
-                                        <span className="text-sm font-bold text-gray-300 uppercase font-sans tracking-widest group-hover/item:text-white transition-colors">{item.text}</span>
+                                        <span className="text-base font-bold text-gray-300 uppercase font-sans tracking-widest group-hover/item:text-white transition-colors">{item.text}</span>
                                     </div>
                                 ))}
                             </div>
@@ -254,23 +254,25 @@ const AsphaltRoofingPage = () => {
             <section className="py-20 bg-[#050505]">
                 <div className="max-w-5xl mx-auto px-6">
                     <div className="text-center mb-20">
-                        <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-6">OPTIONAL PACKAGE <span className="text-[var(--primary-accent)]">ENHANCEMENTS</span></h2>
-                        <p className="text-gray-400 font-sans uppercase text-[10px] tracking-[0.5em]">Aesthetic and performance specializations</p>
+                        <h2 className="text-4xl md:text-5xl leading-tight font-black uppercase tracking-tighter text-white mb-6">OPTIONAL PACKAGE <span className="text-[var(--primary-accent)]">ENHANCEMENTS</span></h2>
+                        <p className="text-gray-400 font-sans uppercase text-base tracking-[0.5em]">Aesthetic and performance specializations</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {upgradeOptions.map((opt) => (
                             <div key={opt.id} className="relative group overflow-hidden bg-black border border-white/5 transition-all duration-700 hover:border-[var(--rhive-pink)]/30 h-full flex flex-col">
-                                {/* Image Background */}
-                                <div className="absolute inset-0 z-0 h-40 opacity-40 group-hover:opacity-60 transition-opacity duration-700 overflow-hidden">
+                                {/* Liqui-Glass Image Section */}
+                                <div className="relative w-full h-64 overflow-hidden z-0 border-b border-white/5">
                                     <img src={opt.image} alt={opt.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000" />
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/90 to-black"></div>
+                                    {/* Tech-Noir Glass Overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10"></div>
+                                    <div className="absolute inset-0 bg-white/5 backdrop-blur-[2px] group-hover:backdrop-blur-0 transition-all duration-700 z-20 pointer-events-none"></div>
                                 </div>
-                                <div className="relative z-10 p-6 flex flex-col h-full pt-32">
+                                <div className="relative z-10 p-6 flex flex-col h-full -mt-12 bg-gradient-to-b from-transparent via-black to-black">
                                     <div className="mb-6 text-left">
-                                        <div className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: opt.color }}>{opt.type}</div>
+                                        <div className="text-base font-black uppercase tracking-widest mb-1" style={{ color: opt.color }}>{opt.type}</div>
                                         <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-3">{opt.name}</h3>
-                                        <p className="text-gray-400 text-[10px] font-sans leading-relaxed min-h-[50px]">
+                                        <p className="text-gray-400 text-base font-sans leading-relaxed min-h-[50px]">
                                             {opt.description}
                                         </p>
                                     </div>
@@ -279,14 +281,14 @@ const AsphaltRoofingPage = () => {
                                         {opt.features.map((f, i) => (
                                             <div key={i} className="flex items-center gap-2">
                                                 <div className="w-1 h-1 rounded-full" style={{ backgroundColor: opt.color }} />
-                                                <span className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">{f}</span>
+                                                <span className="text-base font-bold text-gray-300 uppercase tracking-widest">{f}</span>
                                             </div>
                                         ))}
                                     </div>
 
                                     <button
                                         onClick={opt.action}
-                                        className="w-full py-3 border border-white/10 text-white font-black text-[9px] uppercase tracking-widest hover:bg-white/10 transition-all"
+                                        className="w-full py-3 border border-white/10 text-white font-black text-base uppercase tracking-widest hover:bg-white/10 transition-all"
                                         style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}
                                     >
                                         {opt.cta}
@@ -321,8 +323,8 @@ const AsphaltRoofingPage = () => {
                 <div className="absolute inset-0 bg-gradient-to-tr from-[var(--rhive-pink)]/5 to-transparent pointer-events-none z-0"></div>
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <div className="flex flex-col items-center mb-16 text-center">
-                        <div className="text-[var(--rhive-pink)] text-[10px] font-black uppercase tracking-[0.4em] mb-4">Interactive System Tool</div>
-                        <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-6">QUANTUM ROOF <span className="text-[var(--rhive-pink)]">VISUALIZER</span></h2>
+                        <div className="text-[var(--rhive-pink)] text-base font-black uppercase tracking-[0.4em] mb-4">Interactive System Tool</div>
+                        <h2 className="text-4xl md:text-5xl leading-tight font-black uppercase tracking-tighter text-white mb-6">QUANTUM ROOF <span className="text-[var(--rhive-pink)]">VISUALIZER</span></h2>
                         <div className="w-24 h-[1px] bg-[var(--rhive-pink)]" />
                     </div>
                     

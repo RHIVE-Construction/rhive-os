@@ -29,7 +29,7 @@ const HexButton = ({ icon: Icon, label, color }: { icon: any, label: string, col
         )}
             style={{ borderColor: color }}
         >
-            <span className="text-[10px] font-black tracking-widest text-white">{label}</span>
+            <span className="text-base font-black tracking-widest text-white">{label}</span>
         </div>
     </motion.button>
 );

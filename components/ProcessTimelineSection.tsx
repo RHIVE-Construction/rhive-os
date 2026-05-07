@@ -39,7 +39,7 @@ const ProcessTimelineSection = () => {
                 <div className="text-center mb-20">
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <div className="w-4 h-[2px] bg-[#00D1FF]"></div>
-                        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.4em] text-[#00D1FF]">
+                        <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-[#00D1FF]">
                             Execution Architecture
                         </span>
                         <div className="w-4 h-[2px] bg-[#00D1FF]"></div>
@@ -83,7 +83,7 @@ const ProcessTimelineSection = () => {
                                         {step.title}
                                     </h3>
                                     
-                                    <p className="text-gray-400 font-sans text-sm leading-relaxed group-hover:text-gray-300 transition-colors duration-300 text-balance">
+                                    <p className="text-gray-400 font-sans text-base leading-relaxed group-hover:text-gray-300 transition-colors duration-300 text-balance">
                                         {step.desc}
                                     </p>
                                 </div>

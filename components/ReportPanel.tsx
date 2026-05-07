@@ -21,7 +21,7 @@ const ReportItem: React.FC<{ label: string; value: string | number; unit?: strin
   <div className={`flex justify-between items-baseline py-3 px-4 rounded-md ${highlight ? 'bg-blue-50' : ''}`}>
     <span className="text-slate-600">{label}</span>
     <span className={`font-bold text-slate-900 ${highlight ? 'text-blue-700 text-lg' : ''}`}>
-      {value} <span className="text-sm font-normal text-slate-500">{unit}</span>
+      {value} <span className="text-base font-normal text-slate-500">{unit}</span>
     </span>
   </div>
 );
@@ -92,7 +92,7 @@ export const ReportPanel: React.FC<ReportPanelProps> = ({ report, address }) => 
                     </div>
                 </div>
             </div>
-             <div className="text-center mt-8 pt-4 border-t text-sm text-slate-500">
+             <div className="text-center mt-8 pt-4 border-t text-base text-slate-500">
                 Measured by <strong>RoofScope Pro</strong>
             </div>
         </div>

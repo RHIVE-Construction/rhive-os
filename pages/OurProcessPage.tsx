@@ -14,11 +14,11 @@ const StageNode = ({ number, title, description, isLast }: any) => (
             {!isLast && <div className="w-0.5 h-24 md:h-20 bg-gradient-to-b from-[#ec028b] to-transparent -mt-2 opacity-50" />}
         </div>
         <div className="pt-1 pb-10">
-            <h4 className="text-lg md:text-xl font-bold text-[var(--rhive-text)] uppercase tracking-tight mb-2 flex items-center font-display italic">
+            <h4 className="text-lg md:text-xl leading-tight font-bold text-[var(--rhive-text)] uppercase tracking-tight mb-2 flex items-center font-display italic">
                 {title}
                 <BoltIcon className="w-4 h-4 ml-2 text-[#ec028b] opacity-50" />
             </h4>
-            <p className="text-[var(--rhive-text-muted)] text-sm leading-relaxed max-w-xl font-serif italic">{description}</p>
+            <p className="text-[var(--rhive-text-muted)] text-base leading-relaxed max-w-prose font-serif italic">{description}</p>
         </div>
     </div>
 );
@@ -47,8 +47,8 @@ const OurProcessPage: React.FC = () => {
                     <div className="mb-10 p-6 bg-[#ec028b]/5 border border-[#ec028b]/20 flex items-center gap-4" style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}>
                         <Check className="w-8 h-8 text-green-400 shrink-0" />
                         <div>
-                            <h3 className="text-[var(--rhive-text)] font-bold uppercase tracking-widest text-sm font-display">Automated Transparency</h3>
-                            <p className="text-[var(--rhive-text-muted)] text-xs mt-1 font-serif">Our system prevents "ghosting" by sending automated status alerts at every transition stage.</p>
+                            <h3 className="text-[var(--rhive-text)] font-bold uppercase tracking-widest text-base font-display leading-tight">Automated Transparency</h3>
+                            <p className="text-[var(--rhive-text-muted)] text-base mt-1 font-serif leading-relaxed max-w-prose">Our system prevents "ghosting" by sending automated status alerts at every transition stage.</p>
                         </div>
                     </div>
 
@@ -61,7 +61,7 @@ const OurProcessPage: React.FC = () => {
             </Card>
 
             <div className="mt-8 text-center pb-12">
-                <p className="text-[var(--rhive-text-muted)] text-[10px] font-mono uppercase tracking-[0.4em] opacity-50">RHIVE QOS V.3.0 // PROCESS_ENGINE_ACTIVE</p>
+                <p className="text-[var(--rhive-text-muted)] text-base font-mono uppercase tracking-[0.4em] opacity-50">RHIVE QOS V.3.0 // PROCESS_ENGINE_ACTIVE</p>
             </div>
         </PageContainer>
     );

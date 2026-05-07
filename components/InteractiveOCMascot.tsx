@@ -148,7 +148,7 @@ export const InteractiveOCMascot = () => {
                                 <div className="h-3 w-1 bg-[#ec028b] shadow-[0_0_8px_#ec028b]"></div>
                                 <h4 className="text-white font-black uppercase text-base tracking-[0.25em]">Duration® Integrated Protection</h4>
                             </div>
-                            <p className="text-gray-400 font-sans text-[10px] uppercase tracking-widest font-bold ml-4">
+                            <p className="text-gray-400 font-sans text-base uppercase tracking-widest font-bold ml-4">
                                 The <span className="text-[#ec028b]">Industry-Defining</span> Standard for Wind & Weather Defense
                             </p>
                         </div>
@@ -160,11 +160,11 @@ export const InteractiveOCMascot = () => {
                                     <ShieldCheck className="w-5 h-5 text-[#ec028b]" />
                                 </div>
                                 <div className="flex-1">
-                                    <span className="text-[#ec028b] font-black text-[9px] uppercase block tracking-widest mb-1">OWENS CORNING - PREFERRED PROTECTION</span>
-                                    <span className="text-white font-black text-[11px] uppercase block tracking-wider mb-1">50-YR NON-PRORATED SYSTEM WARRANTY</span>
-                                    <p className="text-gray-500 text-[9px] uppercase font-bold leading-tight tracking-widest">
+                                    <span className="text-[#ec028b] font-black text-base uppercase block tracking-widest mb-1">OWENS CORNING - PREFERRED PROTECTION</span>
+                                    <span className="text-white font-black text-base uppercase block tracking-wider mb-1">50-YR NON-PRORATED SYSTEM WARRANTY</span>
+                                    <p className="text-gray-500 text-base uppercase font-bold leading-tight tracking-widest">
                                         Powered by SureNail® Technology. Includes <span className="text-white">10-Yr Workmanship Backing</span> from OC—your ultimate insurance against market fluctuations.
-                                        <span className="block mt-1 text-[8px] italic text-[#ec028b]/80">*Unlocked via 4+ Performance Components*</span>
+                                        <span className="block mt-1 text-base italic text-[#ec028b]/80">*Unlocked via 4+ Performance Components*</span>
                                     </p>
                                 </div>
                             </div>
@@ -177,26 +177,26 @@ export const InteractiveOCMascot = () => {
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <span className="text-[#00D1FF] font-black text-[9px] uppercase block tracking-widest mb-1">RHIVE MASTER INSTALLER GUARANTEE</span>
-                                    <span className="text-white font-black text-[11px] uppercase block tracking-wider mb-1">LIFETIME NO-LEAK CRAFTSMANSHIP</span>
-                                    <p className="text-gray-500 text-[9px] uppercase font-bold leading-tight tracking-widest">A zero-fail, in-house commitment to your property's absolute moisture defense for the life of the shingle.</p>
+                                    <span className="text-[#00D1FF] font-black text-base uppercase block tracking-widest mb-1">RHIVE MASTER INSTALLER GUARANTEE</span>
+                                    <span className="text-white font-black text-base uppercase block tracking-wider mb-1">LIFETIME NO-LEAK CRAFTSMANSHIP</span>
+                                    <p className="text-gray-500 text-base uppercase font-bold leading-tight tracking-widest">A zero-fail, in-house commitment to your property's absolute moisture defense for the life of the shingle.</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* CERTIFIED COMPARISON MATRIX - DUAL MATH */}
                         <div className="mt-2 border-t border-white/10 pt-4">
-                            <div className="text-[10px] text-rhive-gold font-mono uppercase tracking-[0.3em] mb-4">The "Dual-Math" Advantage</div>
+                            <div className="text-base text-rhive-gold font-mono uppercase tracking-[0.3em] mb-4">The "Dual-Math" Advantage</div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-white/5 p-3 rounded-sm border-l border-gray-600">
-                                    <div className="text-[8px] text-gray-500 uppercase tracking-widest font-bold mb-1">Typical Contractors</div>
-                                    <div className="text-[10px] text-white font-black">Speculative Pricing</div>
-                                    <div className="text-[8px] text-gray-400 mt-1 uppercase italic tracking-wider">Estimated margins</div>
+                                    <div className="text-base text-gray-500 uppercase tracking-widest font-bold mb-1">Typical Contractors</div>
+                                    <div className="text-base text-white font-black">Speculative Pricing</div>
+                                    <div className="text-base text-gray-400 mt-1 uppercase italic tracking-wider">Estimated margins</div>
                                 </div>
                                 <div className="bg-rhive-pink/10 p-3 rounded-sm border-l-2 border-rhive-pink">
-                                    <div className="text-[8px] text-rhive-pink uppercase tracking-widest font-bold mb-1">RHIVE TRANSPARENCY</div>
-                                    <div className="text-[10px] text-white font-black whitespace-nowrap">Direct Cost + Fixed Fee</div>
-                                    <div className="text-[8px] text-gray-300 mt-1 uppercase italic tracking-wider">No hidden builder-adjusted markups</div>
+                                    <div className="text-base text-rhive-pink uppercase tracking-widest font-bold mb-1">RHIVE TRANSPARENCY</div>
+                                    <div className="text-base text-white font-black whitespace-nowrap">Direct Cost + Fixed Fee</div>
+                                    <div className="text-base text-gray-300 mt-1 uppercase italic tracking-wider">No hidden builder-adjusted markups</div>
                                 </div>
                             </div>
                         </div>
