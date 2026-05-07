@@ -13,6 +13,7 @@ import {
     getDocs,
     doc,
     getDoc,
+    setDoc,
     updateDoc,
     deleteDoc,
     query,
@@ -395,6 +396,15 @@ export const userService = {
     getAll: () => firestoreService.getAllDocuments('users'),
     subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('users', callback),
     create: (data: any) => firestoreService.addDocument('users', data),
+    // Write a Firestore user doc using a specific ID (e.g. Firebase Auth UID)
+    createWithId: async (id: string, data: any) => {
+        try {
+            await setDoc(doc(db, 'users', id), { ...data, updated_at: new Date().toISOString() });
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    },
     update: (id: string, data: any) => firestoreService.updateDocument('users', id, data),
     delete: (id: string) => firestoreService.deleteDocument('users', id),
     getByEmail: async (email: string) => {

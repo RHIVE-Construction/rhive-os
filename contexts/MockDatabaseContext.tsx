@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Project, Property, User, ProjectStage, PROJECT_STAGES_ORDER } from '../types';
-import { contactService, userService } from '../lib/firebaseService';
+import { contactService, userService, authService } from '../lib/firebaseService';
 
 interface MockDatabaseContextType {
     users: User[];
@@ -136,9 +136,55 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const login = async (role: string, password?: string, email?: string) => {
         const { hashPassword } = await import('../lib/utils');
 
+        const INTERNAL_ROLES = ['Admin', 'Super Admin', 'Employee'];
+
+        // -------------------------------------------------------
+        // INTERNAL LOGIN: Admin, Super Admin, Employee
+        // Authenticated via Firebase Auth (email + password)
+        // -------------------------------------------------------
+        if (INTERNAL_ROLES.includes(role)) {
+            if (!email || !password) {
+                return { success: false, error: 'Email and password are required.' };
+            }
+            try {
+                // 1. Sign in with Firebase Auth
+                const credential = await authService.signIn(email.toLowerCase().trim(), password);
+                const uid = credential.user.uid;
+
+                // 2. Fetch the matching Firestore user doc
+                const userResult = await userService.getByEmail(email.toLowerCase().trim());
+                if (userResult.success && userResult.data) {
+                    const foundUser = userResult.data as User;
+                    // Ensure role matches
+                    if (foundUser.role !== role) {
+                        return { success: false, error: `No ${role} account found with this email.` };
+                    }
+                    setCurrentUser(foundUser);
+                    return { success: true };
+                }
+
+                // No Firestore doc yet — create a synthetic user from Auth data
+                const syntheticUser: User = {
+                    id: uid,
+                    name: credential.user.displayName || email.split('@')[0],
+                    email: email.toLowerCase().trim(),
+                    role: role as any,
+                };
+                setCurrentUser(syntheticUser);
+                return { success: true };
+            } catch (err: any) {
+                const msg = err?.code === 'auth/invalid-credential' || err?.code === 'auth/wrong-password'
+                    ? 'Invalid email or password.'
+                    : err?.code === 'auth/user-not-found'
+                    ? 'No account found with this email.'
+                    : err?.message || 'Login failed.';
+                return { success: false, error: msg };
+            }
+        }
+
         // -------------------------------------------------------
         // PORTAL LOGIN: Customer, Contractor, Supplier
-        // Authenticated via email + password against contacts/users
+        // Authenticated via email + password hash in Firestore
         // -------------------------------------------------------
         if (role === 'Customer' || role === 'Contractor' || role === 'Supplier') {
             if (!email || !password) {
@@ -151,11 +197,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             const userResult = await userService.getByEmail(normalizedEmail);
             if (userResult.success && userResult.data) {
                 const foundUser = userResult.data as User;
-                // Validate role matches
                 if (foundUser.role !== role) {
                     return { success: false, error: `No ${role} account found with this email.` };
                 }
-                // Validate password hash
                 if (!foundUser.password_hash) {
                     return { success: false, error: 'This account has no password set. Please contact your administrator.' };
                 }
@@ -170,9 +214,6 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             // 2. Fallback: check the `contacts` collection for email match
             const contactResult = await contactService.getByEmail(normalizedEmail);
             if (contactResult.success && contactResult.data) {
-                // Contact exists in DB — but they need a user account to have a password.
-                // Create a synthetic user so they can log in (read-only portal access)
-                // If in the future contacts have passwords added, validate here.
                 return { success: false, error: 'Your email was found in our system, but no portal account exists yet. Please contact your administrator.' };
             }
 
@@ -180,24 +221,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         // -------------------------------------------------------
-        // INTERNAL LOGIN: Admin, Super Admin, Employee
-        // Authenticated via role selection + password
+        // PUBLIC / GUEST
         // -------------------------------------------------------
-        const candidates = users.filter(u => u.role === role);
-        if (candidates.length === 0) return { success: false, error: 'Role not found in system.' };
-
-        if (password !== undefined) {
-            const hashed = await hashPassword(password);
-            const validUser = candidates.find(u => u.password_hash === hashed);
-            if (validUser) {
-                setCurrentUser(validUser);
-                return { success: true };
-            }
-            return { success: false, error: 'Invalid security key.' };
-        }
-
-        // Default to first user if no password required (e.g., Public)
-        const user = candidates[0] || users.find(u => u.role === 'Public');
+        const user = users.find(u => u.role === 'Public') || users[0];
         if (user) {
             setCurrentUser(user);
             return { success: true };
