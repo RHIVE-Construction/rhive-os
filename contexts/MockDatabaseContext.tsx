@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Project, Property, User, ProjectStage, PROJECT_STAGES_ORDER } from '../types';
 import { contactService, userService, authService } from '../lib/firebaseService';
+import { session, initialUser } from '../lib/session';
 
 interface MockDatabaseContextType {
     users: User[];
@@ -102,31 +103,26 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const [projects, setProjects] = useState<Project[]>(SEED_PROJECTS);
     const [loading, setLoading] = useState(true);
 
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    // initialUser is read at MODULE LOAD TIME (before React) — guaranteed no timing issues
+    const [currentUser, setCurrentUser] = useState<User | null>(initialUser);
     const [currentProjectId, setCurrentProjectId] = useState<string | null>(localStorage.getItem('rhive_project_id'));
 
     useEffect(() => {
         const unsub = userService.subscribe((data) => {
             setUsers(data as User[]);
             setLoading(false);
-            
-            // Sync current user if role/data changed in DB
-            const saved = localStorage.getItem('rhive_user');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                const updated = (data as User[]).find(u => u.id === parsed.id);
-                if (updated && JSON.stringify(updated) !== saved) {
+            // Sync currentUser if their Firestore record changed
+            if (currentUser) {
+                const updated = (data as User[]).find(u => u.id === currentUser.id);
+                if (updated && JSON.stringify(updated) !== JSON.stringify(currentUser)) {
                     setCurrentUser(updated);
+                    session.write(updated);
                 }
             }
         });
         return () => unsub();
-    }, []);
-
-    useEffect(() => {
-        if (currentUser) localStorage.setItem('rhive_user', JSON.stringify(currentUser));
-        else localStorage.removeItem('rhive_user');
     }, [currentUser]);
+
 
     useEffect(() => {
         if (currentProjectId) localStorage.setItem('rhive_project_id', currentProjectId);
@@ -138,6 +134,11 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         const INTERNAL_ROLES = ['Admin', 'Super Admin', 'Employee'];
 
+        const setSessionUser = (user: User) => {
+            session.write(user);
+            setCurrentUser(user);
+        };
+
         // -------------------------------------------------------
         // INTERNAL LOGIN: Admin, Super Admin, Employee
         // Authenticated via Firebase Auth (email + password)
@@ -147,30 +148,24 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 return { success: false, error: 'Email and password are required.' };
             }
             try {
-                // 1. Sign in with Firebase Auth
                 const credential = await authService.signIn(email.toLowerCase().trim(), password);
                 const uid = credential.user.uid;
-
-                // 2. Fetch the matching Firestore user doc
                 const userResult = await userService.getByEmail(email.toLowerCase().trim());
                 if (userResult.success && userResult.data) {
                     const foundUser = userResult.data as User;
-                    // Ensure role matches
                     if (foundUser.role !== role) {
                         return { success: false, error: `No ${role} account found with this email.` };
                     }
-                    setCurrentUser(foundUser);
+                    setSessionUser(foundUser);
                     return { success: true };
                 }
-
-                // No Firestore doc yet — create a synthetic user from Auth data
                 const syntheticUser: User = {
                     id: uid,
                     name: credential.user.displayName || email.split('@')[0],
                     email: email.toLowerCase().trim(),
                     role: role as any,
                 };
-                setCurrentUser(syntheticUser);
+                setSessionUser(syntheticUser);
                 return { success: true };
             } catch (err: any) {
                 const msg = err?.code === 'auth/invalid-credential' || err?.code === 'auth/wrong-password'
@@ -207,7 +202,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 if (foundUser.password_hash !== hashed) {
                     return { success: false, error: 'Invalid email or password.' };
                 }
-                setCurrentUser(foundUser);
+                setSessionUser(foundUser);
                 return { success: true };
             }
 
@@ -221,17 +216,56 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         // -------------------------------------------------------
-        // PUBLIC / GUEST
+        // PUBLIC / GUEST LOGIN — no credentials needed
         // -------------------------------------------------------
-        const user = users.find(u => u.role === 'Public') || users[0];
-        if (user) {
-            setCurrentUser(user);
+        if (role === 'Public') {
+            const guestUser: User = { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' };
+            setSessionUser(guestUser);
             return { success: true };
         }
-        return { success: false, error: 'Login failed.' };
+
+        // -------------------------------------------------------
+        // INTERNAL LOGIN: Admin, Super Admin, Employee
+        // Authenticated via email + password against `users` collection
+        // -------------------------------------------------------
+        if (!email) {
+            // Legacy fallback: password-only search across all users of that role
+            const candidates = users.filter(u => u.role === role);
+            if (candidates.length === 0) return { success: false, error: 'Role not found in system.' };
+            if (password !== undefined) {
+                const hashed = await hashPassword(password);
+                const validUser = candidates.find(u => u.password_hash === hashed);
+                if (validUser) { setSessionUser(validUser); return { success: true }; }
+                return { success: false, error: 'Invalid security key.' };
+            }
+            const user = candidates[0];
+            if (user) { setSessionUser(user); return { success: true }; }
+            return { success: false, error: 'Login failed.' };
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const userResult = await userService.getByEmail(normalizedEmail);
+        if (!userResult.success || !userResult.data) {
+            return { success: false, error: 'No account found with this email address.' };
+        }
+        const foundUser = userResult.data as User;
+        if (foundUser.role !== role) {
+            return { success: false, error: `No ${role} account found with this email.` };
+        }
+        if (!foundUser.password_hash) {
+            return { success: false, error: 'This account has no password set. Contact your administrator.' };
+        }
+        const hashed = await hashPassword(password!);
+        if (foundUser.password_hash !== hashed) {
+            return { success: false, error: 'Invalid email or password.' };
+        }
+        setSessionUser(foundUser);
+        return { success: true };
     };
 
     const logout = () => {
+        session.clear();
+        localStorage.removeItem('rhive_project_id');
         setCurrentUser(null);
         setCurrentProjectId(null);
     };

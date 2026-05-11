@@ -13,12 +13,26 @@ import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
 import { DevNavigator } from './components/DevNavigator';
 import { cn } from './lib/utils';
+import { session } from './lib/session';
 
 const AppContentAuthenticated: React.FC = () => {
     const { activePageId, setActivePageId } = useNavigation();
     const { currentUser } = useMockDB();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+
+    // Refresh the 24-hour session window on any user activity
+    useEffect(() => {
+        const refresh = () => session.refresh();
+        window.addEventListener('click',   refresh, { passive: true });
+        window.addEventListener('keydown', refresh, { passive: true });
+        window.addEventListener('scroll',  refresh, { passive: true });
+        return () => {
+            window.removeEventListener('click',   refresh);
+            window.removeEventListener('keydown', refresh);
+            window.removeEventListener('scroll',  refresh);
+        };
+    }, []);
 
     useEffect(() => {
         console.log('App: activePageId changed to:', activePageId);

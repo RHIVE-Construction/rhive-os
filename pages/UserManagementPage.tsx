@@ -23,6 +23,8 @@ import { cn } from '../lib/utils';
 // Internal roles that must register via Firebase Auth
 const INTERNAL_ROLES: UserType[] = ['Admin', 'Super Admin', 'Employee'];
 
+const INTERNAL_ROLES: UserType[] = ['Employee', 'Admin', 'Super Admin'];
+
 const UserManagementPage: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState('');
@@ -31,12 +33,14 @@ const UserManagementPage: React.FC = () => {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [formError, setFormError] = useState('');
+    const [submitError, setSubmitError] = useState('');
     // Change Password modal state
     const [pwUser, setPwUser] = useState<User | null>(null);
     const [newPassword, setNewPassword] = useState('');
     const [pwError, setPwError] = useState('');
     const [pwSuccess, setPwSuccess] = useState(false);
     const [pwSubmitting, setPwSubmitting] = useState(false);
+
 
     // Form state
     const [formData, setFormData] = useState({
@@ -64,6 +68,7 @@ const UserManagementPage: React.FC = () => {
     const handleOpenAdd = () => {
         setEditingUser(null);
         setFormError('');
+        setSubmitError('');
         setFormData({ name: '', role: 'Employee', email: '', phone: '', password: '' });
         setIsModalOpen(true);
     };
@@ -71,6 +76,7 @@ const UserManagementPage: React.FC = () => {
     const handleOpenEdit = (user: User) => {
         setEditingUser(user);
         setFormError('');
+        setSubmitError('');
         setFormData({
             name: user.name,
             role: user.role,
@@ -112,43 +118,66 @@ const UserManagementPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setFormError('');
+        setSubmitError('');
         setSubmitting(true);
 
         const isInternal = INTERNAL_ROLES.includes(formData.role as UserType);
 
         try {
             if (editingUser) {
-                // ── EDIT: update Firestore profile only ──────────────────────
+                // ── EDIT: update Firestore profile ──────────────────────────────
                 const payload: any = {
                     name: formData.name,
                     role: formData.role,
+                    email: formData.email,
                     phone: formData.phone,
                     updated_at: new Date().toISOString()
                 };
+                if (formData.password) {
+                    payload.password_hash = await hashPassword(formData.password);
+                }
                 await userService.update(editingUser.id, payload);
             } else {
                 // ── CREATE ────────────────────────────────────────────────────
                 if (isInternal) {
                     // 1. Register in Firebase Auth
-                    const credential = await authService.signUp(formData.email.toLowerCase().trim(), formData.password);
-                    const uid = credential.user.uid;
+                    if (!formData.email || !formData.password) {
+                        setSubmitError('Email and password are required for internal accounts.');
+                        setSubmitting(false);
+                        return;
+                    }
+                    try {
+                        const credential = await authService.signUp(formData.email.toLowerCase().trim(), formData.password);
+                        const uid = credential.user.uid;
+                        const passwordHash = await hashPassword(formData.password);
 
-                    // 2. Write Firestore doc using Auth UID as document ID
-                    await userService.createWithId(uid, {
-                        name: formData.name,
-                        role: formData.role,
-                        email: formData.email.toLowerCase().trim(),
-                        phone: formData.phone,
-                        created_at: new Date().toISOString(),
-                        auth_uid: uid,
-                    });
+                        // 2. Write Firestore doc using Auth UID as document ID
+                        await userService.createWithId(uid, {
+                            name: formData.name,
+                            role: formData.role,
+                            email: formData.email.toLowerCase().trim(),
+                            phone: formData.phone,
+                            password_hash: passwordHash,
+                            auth_uid: uid,
+                            created_at: new Date().toISOString(),
+                        });
+                    } catch (authErr: any) {
+                        const msg = authErr?.code === 'auth/email-already-in-use'
+                            ? 'An account with this email already exists.'
+                            : authErr?.message || 'Failed to create account.';
+                        setSubmitError(msg);
+                        setSubmitting(false);
+                        return;
+                    }
                 } else {
                     // External roles: just save to Firestore (no Auth)
+                    const passwordHash = formData.password ? await hashPassword(formData.password) : undefined;
                     await userService.create({
                         name: formData.name,
                         role: formData.role,
                         email: formData.email.toLowerCase().trim(),
                         phone: formData.phone,
+                        ...(passwordHash ? { password_hash: passwordHash } : {}),
                         created_at: new Date().toISOString(),
                     });
                 }
@@ -156,13 +185,13 @@ const UserManagementPage: React.FC = () => {
 
             setIsModalOpen(false);
         } catch (err: any) {
-            // Map Firebase Auth error codes to friendly messages
             const msg = err?.code === 'auth/email-already-in-use'
                 ? 'That email address is already registered.'
                 : err?.code === 'auth/weak-password'
                     ? 'Password must be at least 6 characters.'
                     : err?.message || 'An error occurred. Please try again.';
             setFormError(msg);
+            setSubmitError(msg);
         } finally {
             setSubmitting(false);
         }
@@ -426,6 +455,12 @@ const UserManagementPage: React.FC = () => {
                             {formError && (
                                 <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
                                     <p className="text-red-400 text-xs font-bold">{formError}</p>
+                                </div>
+                            )}
+
+                            {submitError && (
+                                <div className="px-4 py-3 rounded-xl bg-red-900/20 border border-red-500/30">
+                                    <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest">{submitError}</p>
                                 </div>
                             )}
 

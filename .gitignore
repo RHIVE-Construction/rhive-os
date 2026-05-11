@@ -29,11 +29,11 @@ scripts/drive-automation/service-account.json
 # REFERENCES (TOGGLE: Comment out to allow AI indexing; Un-comment to protect during push)
 REFERENCES/
 
-# Environment variables
-.env
+# Environment variables (already covered above by .env and .env.*)
 
-# Firebase credentials
+# Firebase credentials — NEVER commit to git
 firebase-service-account.json
+serviceAccountKey.json
 
 # Editor directories and files
 .vscode/*

@@ -32,35 +32,18 @@
       window.googleMapsApiLoaded = true;
       window.dispatchEvent(new Event('google-maps-api-ready'));
     }
-  </script>
-  <script>
-    // ── Dynamic Google Maps Loader ───────────────────────────────────────────
-    // The API key is never embedded in HTML. It is fetched server-side from
-    // /api/config (served by vite.config.ts configApiPlugin) and injected
-    // at runtime so it never appears in page source or client bundles.
-    (function loadMapsFromBackend() {
-      fetch('/api/config')
-        .then(function(res) {
-          if (!res.ok) throw new Error('Config endpoint returned ' + res.status);
-          return res.json();
-        })
-        .then(function(cfg) {
-          if (!cfg.mapsApiKey) {
-            console.warn('[RHIVE] Maps API key not configured on server.');
-            return;
-          }
-          var script = document.createElement('script');
-          script.async = true;
-          script.src =
-            'https://maps.googleapis.com/maps/api/js' +
-            '?key=' + encodeURIComponent(cfg.mapsApiKey) +
-            '&libraries=places,drawing,geometry' +
-            '&callback=onGoogleMapsApiReady';
-          document.head.appendChild(script);
-        })
-        .catch(function(err) {
-          console.error('[RHIVE] Failed to load Maps config:', err);
-        });
+    // Key is injected by Vite at build time — NOT hardcoded.
+    (function () {
+      var key = typeof __VITE_GOOGLE_MAPS_API_KEY__ !== 'undefined'
+        ? __VITE_GOOGLE_MAPS_API_KEY__
+        : (typeof process !== 'undefined' && process.env && process.env.VITE_GOOGLE_MAPS_API_KEY)
+          ? process.env.VITE_GOOGLE_MAPS_API_KEY
+          : '';
+      if (!key) { console.warn('[RHIVE] VITE_GOOGLE_MAPS_API_KEY is not set — Maps features disabled.'); return; }
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady';
+      document.head.appendChild(s);
     })();
   </script>
   <script type="importmap">

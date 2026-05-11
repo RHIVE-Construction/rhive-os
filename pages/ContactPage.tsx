@@ -7,6 +7,8 @@ import { Input } from '../components/ui/input';
 import { MapPinIcon, UserIcon, RhiveLogo, ShareIcon } from '../components/icons';
 import { getMapsApiKey } from '../lib/mapsConfig';
 
+const MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
+
 const ContactPage: React.FC = () => {
     const [mapsKey, setMapsKey] = useState('');
 

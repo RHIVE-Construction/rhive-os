@@ -413,38 +413,54 @@ const StormAlertWidget: React.FC = () => {
     );
 };
 
+// ─── Stage counting helper ─────────────────────────────────────────────────────
+function countByStage(projects: any[], keyword: string): number {
+    return projects.filter(p => {
+        const s = (p.current_stage || p.status || '').toLowerCase();
+        return s.includes(keyword.toLowerCase());
+    }).length;
+}
+
 // ─── Main Dashboard ────────────────────────────────────────────────────────────
 const EmployeeDashboard: React.FC = () => {
     const page = PAGE_GROUPS.flatMap(g => g.pages).find(p => p.id === 'E-01');
+    const [allProjects, setAllProjects] = useState<any[]>([]);
     const [recentProjects, setRecentProjects] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const unsubscribe = projectService.subscribe((data: any[]) => {
-            console.log('🔥 Firebase data received:', data);
-            console.log('🔥 Number of documents:', data.length);
+            setAllProjects(data);
+            setLoading(false);
 
-            const mapped = data.map((p: any) => {
-                console.log('📄 Document:', p);
-                return {
-                    _id: p.id,
-                    name: p.name,
-                    current_stage: p.current_stage || p.status || 'Lead',
-                    status: p.status || 'Active',
-                    last_updated: p.updated_at || p.created_at || new Date().toISOString()
-                };
-            });
-
-            const sorted = mapped.sort((a: any, b: any) =>
-                new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime()
-            ).slice(0, 5);
-
-            console.log('✅ Sorted projects for display:', sorted);
+            const sorted = [...data]
+                .sort((a, b) =>
+                    new Date(b.updated_at || b.created_at || 0).getTime() -
+                    new Date(a.updated_at || a.created_at || 0).getTime()
+                )
+                .slice(0, 6);
             setRecentProjects(sorted);
         });
         return () => unsubscribe();
     }, []);
 
+    // ── Live KPI counts ────────────────────────────────────────────────────────
+    const totalRecords   = allProjects.length;
+    const leadCount      = countByStage(allProjects, 'lead');
+    const estimateCount  = countByStage(allProjects, 'estimate');
+    const quoteCount     = countByStage(allProjects, 'quote');
+    const signCount      = countByStage(allProjects, 'sign');
+    const scheduleCount  = countByStage(allProjects, 'schedule');
+    const installCount   = countByStage(allProjects, 'install');
+    const invoiceCount   = countByStage(allProjects, 'invoic');
+    const completedCount = countByStage(allProjects, 'complet') + countByStage(allProjects, 'past');
+    const activeCount    = totalRecords - completedCount;
+
+    // Stage bar max for percentage width
+    const maxForBar = Math.max(leadCount, estimateCount, quoteCount, installCount, completedCount, 1);
+
     const timeAgo = (dateString: string) => {
+        if (!dateString) return '—';
         const diff = Date.now() - new Date(dateString).getTime();
         const minutes = Math.floor(diff / 60000);
         if (minutes < 1) return 'Just now';
@@ -454,86 +470,111 @@ const EmployeeDashboard: React.FC = () => {
         return `${Math.floor(hours / 24)}d ago`;
     };
 
+    // ── Stage bar config ───────────────────────────────────────────────────────
+    const stageRows = [
+        { label: 'Lead',          count: leadCount,      color: 'bg-yellow-500' },
+        { label: 'Estimate',      count: estimateCount,  color: 'bg-blue-500' },
+        { label: 'Quote',         count: quoteCount,     color: 'bg-indigo-500' },
+        { label: 'Sign & Verify', count: signCount,      color: 'bg-purple-500' },
+        { label: 'Schedule',      count: scheduleCount,  color: 'bg-cyan-500' },
+        { label: 'Install',       count: installCount,   color: 'bg-orange-500' },
+        { label: 'Invoicing',     count: invoiceCount,   color: 'bg-green-400' },
+        { label: 'Completed',     count: completedCount, color: 'bg-emerald-500' },
+    ];
+
     return (
         <PageContainer title={page?.name || 'Employee Dashboard'} description={page?.description || 'Your personal performance analytics.'}>
+            {/* ── Live KPI Tiles ── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                {[
+                    { label: 'Total Records',  value: loading ? '…' : totalRecords,   color: 'text-[#ec028b]',  dot: 'bg-[#ec028b]' },
+                    { label: 'Active',         value: loading ? '…' : activeCount,    color: 'text-yellow-400', dot: 'bg-yellow-400' },
+                    { label: 'Completed',      value: loading ? '…' : completedCount, color: 'text-emerald-400',dot: 'bg-emerald-400' },
+                    { label: 'In Install',     value: loading ? '…' : installCount,   color: 'text-orange-400', dot: 'bg-orange-400' },
+                ].map(({ label, value, color, dot }) => (
+                    <div key={label} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${dot} shadow-[0_0_6px_currentColor]`} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{label}</span>
+                        </div>
+                        <p className={`text-3xl font-extrabold ${color} ${loading ? 'animate-pulse' : ''}`}>{value}</p>
+                    </div>
+                ))}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Sales Performance Card */}
                 <Card title="Sales Performance (Q3)" className="lg:col-span-2">
-                    <div className="h-64 bg-gray-900/50 rounded-lg flex items-center justify-center">
-                        <ChartBarIcon className="w-16 h-16 text-gray-700" />
-                        <p className="absolute text-gray-500">Sales Chart Placeholder</p>
+                    <div className="h-48 bg-gray-900/50 rounded-lg flex items-center justify-center">
+                        <ChartBarIcon className="w-12 h-12 text-gray-700" />
+                        <p className="absolute text-gray-500 text-sm">Chart coming soon</p>
                     </div>
                 </Card>
 
-                {/* KPIs Card */}
-                <Card title="Key Metrics">
-                    <div className="space-y-4">
-                        <div className="p-3 bg-gray-900/50 rounded-lg">
-                            <p className="text-sm text-gray-400">Quotes Sent This Month</p>
-                            <p className="text-2xl font-bold text-white">42</p>
-                        </div>
-                        <div className="p-3 bg-gray-900/50 rounded-lg">
-                            <p className="text-sm text-gray-400">Contracts Signed</p>
-                            <p className="text-2xl font-bold text-white">18</p>
-                        </div>
-                        <div className="p-3 bg-gray-900/50 rounded-lg">
-                            <p className="text-sm text-gray-400">Close Rate</p>
-                            <p className="text-2xl font-bold text-green-400">42.8%</p>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Project Statuses Card */}
-                <Card title="Project Status Overview">
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-300">Lead</span>
-                            <div className="w-2/3 bg-gray-700 rounded-full h-2.5">
-                                <div className="bg-[#ec028b] h-2.5 rounded-full" style={{ width: '90%' }}></div>
+                {/* Live Pipeline Stage Breakdown */}
+                <Card title="Pipeline Breakdown">
+                    <div className="space-y-2.5">
+                        {stageRows.map(({ label, count, color }) => (
+                            <div key={label} className="flex items-center gap-2">
+                                <span className="text-gray-400 text-xs w-24 shrink-0 truncate">{label}</span>
+                                <div className="flex-1 bg-gray-800 rounded-full h-2">
+                                    <div
+                                        className={`${color} h-2 rounded-full transition-all duration-700`}
+                                        style={{ width: `${Math.round((count / maxForBar) * 100)}%` }}
+                                    />
+                                </div>
+                                <span className={`font-bold text-white text-xs w-6 text-right ${loading ? 'opacity-40' : ''}`}>
+                                    {loading ? '…' : count}
+                                </span>
                             </div>
-                            <span className="font-bold text-white">120</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-300">Quote</span>
-                            <div className="w-2/3 bg-gray-700 rounded-full h-2.5">
-                                <div className="bg-[#ec028b] h-2.5 rounded-full" style={{ width: '60%' }}></div>
-                            </div>
-                            <span className="font-bold text-white">42</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-300">In Progress</span>
-                            <div className="w-2/3 bg-gray-700 rounded-full h-2.5">
-                                <div className="bg-[#ec028b] h-2.5 rounded-full" style={{ width: '40%' }}></div>
-                            </div>
-                            <span className="font-bold text-white">25</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-300">Completed</span>
-                            <div className="w-2/3 bg-gray-700 rounded-full h-2.5">
-                                <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '25%' }}></div>
-                            </div>
-                            <span className="font-bold text-white">88</span>
-                        </div>
+                        ))}
                     </div>
                 </Card>
 
                 {/* Recent Activity Card */}
                 <Card title="Recent Activity" className="lg:col-span-2">
-                    <div className="space-y-6">
-                        {recentProjects.map((project) => (
-                            <div key={project._id} className="flex items-start gap-4 border-b border-gray-800/50 pb-6 last:border-0 last:pb-0 group">
-                                <div className="mt-1.5 w-2.5 h-2.5 rounded-full bg-[#ec028b] shadow-[0_0_10px_#ec028b] shrink-0" />
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-300 leading-relaxed">
-                                        <span className="font-bold text-white">New Lead</span> submitted form <span className="font-bold text-[#ec028b]">{project.name}</span>.
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1 font-medium">{timeAgo(project.last_updated)}</p>
+                    <div className="space-y-4">
+                        {loading ? (
+                            [1, 2, 3].map(i => (
+                                <div key={i} className="h-12 bg-gray-900 rounded-lg animate-pulse" />
+                            ))
+                        ) : recentProjects.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500 text-sm">No recent activity found.</div>
+                        ) : (
+                            recentProjects.map((project) => (
+                                <div key={project.id} className="flex items-start gap-3 border-b border-gray-800/50 pb-4 last:border-0 last:pb-0">
+                                    <div className="mt-1.5 w-2 h-2 rounded-full bg-[#ec028b] shadow-[0_0_8px_#ec028b] shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-300 leading-snug">
+                                            <span className="font-bold text-[#ec028b]">{project.name || 'Unnamed'}</span>
+                                            {' · '}
+                                            <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">
+                                                {project.current_stage || 'Lead'}
+                                            </span>
+                                        </p>
+                                        <p className="text-xs text-gray-600 mt-0.5">{timeAgo(project.updated_at || project.created_at)}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                        {recentProjects.length === 0 && (
-                            <div className="text-center py-8 text-gray-500 italic">No recent activity found.</div>
+                            ))
                         )}
+                    </div>
+                </Card>
+
+                {/* Quick Stats */}
+                <Card title="Quick Stats">
+                    <div className="space-y-4">
+                        <div className="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center">
+                            <p className="text-sm text-gray-400">Leads</p>
+                            <p className="text-2xl font-bold text-yellow-400">{loading ? '…' : leadCount}</p>
+                        </div>
+                        <div className="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center">
+                            <p className="text-sm text-gray-400">Quotes</p>
+                            <p className="text-2xl font-bold text-indigo-400">{loading ? '…' : quoteCount}</p>
+                        </div>
+                        <div className="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center">
+                            <p className="text-sm text-gray-400">Invoicing</p>
+                            <p className="text-2xl font-bold text-green-400">{loading ? '…' : invoiceCount}</p>
+                        </div>
                     </div>
                 </Card>
             </div>

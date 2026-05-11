@@ -102,11 +102,11 @@ const FloatingInput: React.FC<{
             value={value}
             onChange={(e) => onChange(e.target.value)}
             autoFocus={autoFocus}
-            className="peer w-full bg-black/60 border border-gray-800 focus:border-rhive-pink outline-none text-white pl-12 pr-12 pt-5 pb-3 rounded-xl text-sm font-mono tracking-wide transition-all placeholder-transparent"
+            className="peer w-full bg-black/60 border border-gray-800 focus:border-rhive-pink outline-none text-white pl-12 pr-12 pt-7 pb-2 rounded-xl text-sm font-mono tracking-wide transition-all placeholder-transparent"
         />
         <label
             htmlFor={id}
-            className="absolute left-12 top-4 text-[10px] font-bold uppercase tracking-widest text-gray-600 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-xs peer-focus:top-2 peer-focus:-translate-y-0 peer-focus:text-[10px] peer-focus:text-rhive-pink transition-all pointer-events-none"
+            className="absolute left-12 top-2.5 text-[10px] font-bold uppercase tracking-widest text-gray-600 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-xs peer-focus:top-2.5 peer-focus:-translate-y-0 peer-focus:text-[10px] peer-focus:text-rhive-pink transition-all pointer-events-none"
         >
             {label}
         </label>
@@ -173,6 +173,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         setPortalPassword('');
         setInternalEmail('');
         setInternalPassword('');
+        setInternalRole('Admin');
         setError('');
     };
 
