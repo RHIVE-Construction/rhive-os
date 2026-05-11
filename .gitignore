@@ -27,7 +27,7 @@ scripts/drive-automation/service-account.json
 *.tar.gz
 
 # REFERENCES (TOGGLE: Comment out to allow AI indexing; Un-comment to protect during push)
-REFERENCES/
+# REFERENCES/
 
 # Environment variables
 .env

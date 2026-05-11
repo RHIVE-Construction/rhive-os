@@ -577,7 +577,7 @@ Extract the following information as a flat JSON object (strictly raw JSON, no m
   "state": "State if mentioned, or empty string",
   "zip": "Zip code if mentioned, or empty string",
   "projectType": "Must be exactly one of: Residential, Commercial, Government",
-  "projectRole": "Determine caller's role based on projectType. For Residential: Property Owner, Landlord, Tenant, Neighbor, Relative, Other. For Commercial: Property Manager, Building Owner, Maintenance Supervisor, HOA Board Member, Other. For Government: Contract Officer, Site Representative, Facility Manager, Other.",
+  "projectRole": "Determine caller's role based on projectType. For Residential: Property Owner, Landlord, Tenant, Neighbor, Relative, Other. For Commercial: Property Manager, Building Owner, Maintenance Supervisor, HOA Board Member, Other. For Government: Contracting Officer, Site Representative, Facility Manager, Other.",
   "details": "A brief 2 sentence summary of what they requested"
 }`;
                 try {
