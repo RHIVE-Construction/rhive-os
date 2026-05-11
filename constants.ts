@@ -47,15 +47,10 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'P-02d', name: 'Ice Management', userType: 'Public', description: 'Heat Trace Systems', parentId: 'P-02' },
             { id: 'P-02e', name: 'Roof Components/Options', userType: 'Public', description: 'Technical Peripheral Hub', parentId: 'P-02' },
             { id: 'P-03', name: 'Our Process', userType: 'Public', description: 'The 10-Stage Journey' },
-            { id: 'P-04', name: 'Financing', userType: 'Public', description: 'RPSP & Payment Options' },
-            { id: 'P-05', name: 'Contact', userType: 'Public', description: 'Directory & Lead Gen' },
-            { id: 'P-07', name: 'Password Reset', userType: 'Public', description: 'Secure Account Recovery' },
             { id: 'P-09', name: 'CONTRACTOR SIGNUP', userType: 'Public', description: 'Vendor Vetting & Onboarding' },
             { id: 'P-10', name: 'PUBLIC CAREERS', userType: 'Public', description: 'Recruitment & Brand Manifesto' },
-            { id: 'P-11', name: 'JOB APPLICATION', userType: 'Public', description: 'Candidate Intake Wizard' },
             { id: 'P-12', name: 'ESTIMATE TOOL', userType: 'Public', description: 'Instant Pricing Engine' },
             { id: 'P-00', name: 'Home', userType: 'Public', description: 'RHIVE Main Gateway' },
-            { id: 'P-00a', name: 'LIVE WEBSITE', userType: 'Public', description: 'Production Environment' },
         ]
     },
     {
@@ -115,7 +110,6 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'E-23', name: 'Quote Builder', userType: 'Employee' },
             { id: 'E-38', name: 'Weather Guide', userType: 'Employee' },
             { id: 'E-21', name: 'My Info', userType: 'Employee' },
-            { id: 'E-22', name: 'Timeoff Request', userType: 'Employee' },
         ]
     },
     {
@@ -133,7 +127,6 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'A-01', name: 'Admin Dashboard', userType: 'Admin' },
             { id: 'A-02', name: 'User Management', userType: 'Admin' },
             { id: 'A-03', name: 'Estimate Pricing', userType: 'Admin' },
-            { id: 'A-04', name: 'Backend & API', userType: 'Admin' },
             { id: 'A-05', name: 'Line Item Master', userType: 'Admin' },
         ]
     },
