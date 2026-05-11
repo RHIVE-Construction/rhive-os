@@ -163,6 +163,29 @@ export const firestoreService = {
 // DOMAIN SERVICES
 // ============================================
 
+// Helper to normalize a Firestore 'deals' document to the common project shape
+const normalizeDeal = (deal: any): any => ({
+    ...deal,
+    _source: 'deals',
+    // Support both Zoho-style (Deal_Name / Stage) and internal snake_case fields
+    name: deal.name || deal.Deal_Name || deal.deal_name || 'Unnamed Deal',
+    current_stage: deal.current_stage || deal.Deal_Stage || deal.stage || 'Lead',
+    project_type: deal.project_type || deal.Type || deal.type || 'Deal',
+    property_address: deal.property_address || deal.Property_Address || deal.Address || '',
+    lead_source: deal.lead_source || deal.Lead_Source || deal.source || '',
+    notes: deal.notes || deal.Description || deal.description || '',
+    quote: deal.quote ?? (
+        deal.Amount || deal.amount
+            ? { total: Number(deal.Amount || deal.amount) }
+            : undefined
+    ),
+    contact_id: deal.contact_id || deal.Contact_Id || null,
+    property_id: deal.property_id || null,
+    account_id: deal.account_id || deal.Account_Id || null,
+    created_at: deal.created_at || deal.Created_Time || null,
+    updated_at: deal.updated_at || deal.Modified_Time || null,
+});
+
 // Helper to convert CamelCase ProjectInput to SnakeCase for compatibility
 const mapProjectToSnakeCase = (input: ProjectInput) => ({
     user_id: input.userId,
@@ -185,49 +208,76 @@ export const projectService = {
     getAll: async () => {
         const p = await firestoreService.getAllDocuments('projects');
         const l = await firestoreService.getAllDocuments('leads');
-        const combined = [...(p.data || []), ...(l.data || [])];
+        const d = await firestoreService.getAllDocuments('deals');
+        const combined = [
+            ...(p.data || []),
+            ...(l.data || []),
+            ...(d.data || []).map(normalizeDeal),
+        ];
         return { success: true, data: combined };
     },
     subscribe: (callback: (data: any[]) => void) => {
         let projects: any[] = [];
         let leads: any[] = [];
-        
-        const notify = () => callback([...projects, ...leads]);
-        
+        let deals: any[] = [];
+
+        const notify = () => callback([...projects, ...leads, ...deals]);
+
         const unsubProjects = firestoreService.subscribeToDocuments('projects', (data) => {
             projects = data;
             notify();
         });
-        
+
         const unsubLeads = firestoreService.subscribeToDocuments('leads', (data) => {
             leads = data;
             notify();
         });
-        
+
+        const unsubDeals = onSnapshot(
+            collection(db, 'deals'),
+            (snap) => {
+                deals = snap.docs.map(mapDoc).map(normalizeDeal);
+                notify();
+            },
+            (error) => {
+                console.warn('🔥 Firestore [deals] subscribe error:', error.code);
+                notify();
+            }
+        );
+
         return () => {
             unsubProjects();
             unsubLeads();
+            unsubDeals();
         };
     },
     subscribeAllWork: (callback: (data: any[]) => void) => {
         let projects: any[] = [];
         let leads: any[] = [];
-        const notify = () => callback([...projects, ...leads]);
-        
+        let deals: any[] = [];
+        const notify = () => callback([...projects, ...leads, ...deals]);
+
         const unsubP = firestoreService.subscribeToDocuments('projects', (d) => { projects = d; notify(); });
         const unsubL = firestoreService.subscribeToDocuments('leads', (d) => { leads = d; notify(); });
-        
-        return () => { unsubP(); unsubL(); };
+        const unsubD = onSnapshot(
+            collection(db, 'deals'),
+            (snap) => { deals = snap.docs.map(mapDoc).map(normalizeDeal); notify(); },
+            () => notify()
+        );
+
+        return () => { unsubP(); unsubL(); unsubD(); };
     },
     subscribeToRecentActivity: (callback: (data: any[]) => void, limitCount = 6) => {
         let projectDocs: any[] = [];
         let leadDocs: any[] = [];
+        let dealDocs: any[] = [];
         let projectsFired = false;
         let leadsFired = false;
+        let dealsFired = false;
 
         const notify = () => {
-            if (!projectsFired || !leadsFired) return;
-            const merged = [...projectDocs, ...leadDocs]
+            if (!projectsFired || !leadsFired || !dealsFired) return;
+            const merged = [...projectDocs, ...leadDocs, ...dealDocs]
                 .sort((a, b) =>
                     new Date(b.updated_at || b.created_at || b._importedAt || 0).getTime() -
                     new Date(a.updated_at || a.created_at || a._importedAt || 0).getTime()
@@ -246,8 +296,13 @@ export const projectService = {
             (snap) => { leadDocs = snap.docs.map(mapDoc); leadsFired = true; notify(); },
             () => { leadsFired = true; notify(); }
         );
+        const unsubD = onSnapshot(
+            collection(db, 'deals'),
+            (snap) => { dealDocs = snap.docs.map(mapDoc).map(normalizeDeal); dealsFired = true; notify(); },
+            () => { dealsFired = true; notify(); }
+        );
 
-        return () => { unsubP(); unsubL(); };
+        return () => { unsubP(); unsubL(); unsubD(); };
     },
     getById: (id: string) => firestoreService.getDocument('projects', id),
     createBatch: (dataArray: any[]) => firestoreService.createBatch('projects', dataArray),
