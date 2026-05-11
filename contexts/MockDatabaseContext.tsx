@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Project, Property, User, ProjectStage, PROJECT_STAGES_ORDER } from '../types';
 import { contactService, userService } from '../lib/firebaseService';
+import { session, initialUser } from '../lib/session';
 
 interface MockDatabaseContextType {
     users: User[];
@@ -102,31 +103,26 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const [projects, setProjects] = useState<Project[]>(SEED_PROJECTS);
     const [loading, setLoading] = useState(true);
 
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    // initialUser is read at MODULE LOAD TIME (before React) — guaranteed no timing issues
+    const [currentUser, setCurrentUser] = useState<User | null>(initialUser);
     const [currentProjectId, setCurrentProjectId] = useState<string | null>(localStorage.getItem('rhive_project_id'));
 
     useEffect(() => {
         const unsub = userService.subscribe((data) => {
             setUsers(data as User[]);
             setLoading(false);
-            
-            // Sync current user if role/data changed in DB
-            const saved = localStorage.getItem('rhive_user');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                const updated = (data as User[]).find(u => u.id === parsed.id);
-                if (updated && JSON.stringify(updated) !== saved) {
+            // Sync currentUser if their Firestore record changed
+            if (currentUser) {
+                const updated = (data as User[]).find(u => u.id === currentUser.id);
+                if (updated && JSON.stringify(updated) !== JSON.stringify(currentUser)) {
                     setCurrentUser(updated);
+                    session.write(updated);
                 }
             }
         });
         return () => unsub();
-    }, []);
-
-    useEffect(() => {
-        if (currentUser) localStorage.setItem('rhive_user', JSON.stringify(currentUser));
-        else localStorage.removeItem('rhive_user');
     }, [currentUser]);
+
 
     useEffect(() => {
         if (currentProjectId) localStorage.setItem('rhive_project_id', currentProjectId);
@@ -135,6 +131,11 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const login = async (role: string, password?: string, email?: string) => {
         const { hashPassword } = await import('../lib/utils');
+
+        const setSessionUser = (user: User) => {
+            session.write(user);
+            setCurrentUser(user);
+        };
 
         // -------------------------------------------------------
         // PORTAL LOGIN: Customer, Contractor, Supplier
@@ -163,7 +164,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 if (foundUser.password_hash !== hashed) {
                     return { success: false, error: 'Invalid email or password.' };
                 }
-                setCurrentUser(foundUser);
+                setSessionUser(foundUser);
                 return { success: true };
             }
 
@@ -184,7 +185,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // -------------------------------------------------------
         if (role === 'Public') {
             const guestUser: User = { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' };
-            setCurrentUser(guestUser);
+            setSessionUser(guestUser);
             return { success: true };
         }
 
@@ -199,11 +200,11 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             if (password !== undefined) {
                 const hashed = await hashPassword(password);
                 const validUser = candidates.find(u => u.password_hash === hashed);
-                if (validUser) { setCurrentUser(validUser); return { success: true }; }
+                if (validUser) { setSessionUser(validUser); return { success: true }; }
                 return { success: false, error: 'Invalid security key.' };
             }
             const user = candidates[0];
-            if (user) { setCurrentUser(user); return { success: true }; }
+            if (user) { setSessionUser(user); return { success: true }; }
             return { success: false, error: 'Login failed.' };
         }
 
@@ -223,11 +224,13 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (foundUser.password_hash !== hashed) {
             return { success: false, error: 'Invalid email or password.' };
         }
-        setCurrentUser(foundUser);
+        setSessionUser(foundUser);
         return { success: true };
     };
 
     const logout = () => {
+        session.clear();
+        localStorage.removeItem('rhive_project_id');
         setCurrentUser(null);
         setCurrentProjectId(null);
     };

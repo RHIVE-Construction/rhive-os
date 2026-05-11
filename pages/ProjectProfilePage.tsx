@@ -60,6 +60,11 @@ const ProjectProfilePage: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
                 <div className="flex gap-3 items-center">
                     <StatusBadge status={project.current_stage || 'lead'} />
+                    {project._source === 'deals' && (
+                        <span className="text-[10px] uppercase font-bold tracking-widest bg-[#ec028b]/10 border border-[#ec028b]/30 px-3 py-1 rounded text-[#ec028b]">
+                            Deal
+                        </span>
+                    )}
                     <span className="text-[10px] uppercase font-bold tracking-widest bg-gray-900 border border-gray-800 px-3 py-1 rounded text-gray-400">
                         {project.project_type || 'General'}
                     </span>
