@@ -182,6 +182,9 @@ const UserManagementPage: React.FC = () => {
     const getRoleIcon = (role: string) => {
         if (role === 'Super Admin' || role === 'Admin') return <ShieldCheckIcon className="w-4 h-4" />;
         if (role === 'Employee') return <BriefcaseIcon className="w-4 h-4" />;
+        if (role === 'Customer') return <UserIcon className="w-4 h-4" />;
+        if (role === 'Contractor') return <BriefcaseIcon className="w-4 h-4" />;
+        if (role === 'Supplier') return <BriefcaseIcon className="w-4 h-4" />;
         return <UserIcon className="w-4 h-4" />;
     };
 
@@ -326,32 +329,49 @@ const UserManagementPage: React.FC = () => {
                         </div>
 
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            {/* Role Selector — prominent */}
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">User Type</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {(['Employee', 'Admin'] as UserType[]).map(r => (
-                                        <button
-                                            key={r}
-                                            type="button"
-                                            disabled={!!editingUser}
-                                            onClick={() => setFormData({ ...formData, role: r })}
-                                            className={cn(
-                                                "flex items-center justify-center gap-2 py-3 border rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                                                formData.role === r
-                                                    ? r === 'Admin'
-                                                        ? "bg-blue-500/10 border-blue-500/60 text-blue-400"
-                                                        : "bg-green-500/10 border-green-500/60 text-green-400"
-                                                    : "bg-black/40 border-gray-800 text-gray-600 hover:border-gray-600 hover:text-gray-300",
-                                                editingUser && "opacity-50 cursor-not-allowed"
-                                            )}
-                                        >
-                                            {r === 'Admin' ? <ShieldCheckIcon className="w-4 h-4" /> : <BriefcaseIcon className="w-4 h-4" />}
-                                            {r}
-                                        </button>
-                                    ))}
+                            {/* Role Dropdown */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">User Role</label>
+                                <div className="relative">
+                                    <select
+                                        required
+                                        value={formData.role}
+                                        onChange={(e) => setFormData({ ...formData, role: e.target.value as UserType })}
+                                        className="w-full bg-black/60 border border-gray-800 focus:border-[#ec028b] rounded-xl px-4 py-3 text-sm text-white outline-none transition-all appearance-none cursor-pointer"
+                                    >
+                                        <optgroup label="── Internal Staff">
+                                            <option value="Super Admin">Super Admin</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="Employee">Employee</option>
+                                        </optgroup>
+                                        <optgroup label="── External Portal">
+                                            <option value="Customer">Customer</option>
+                                            <option value="Contractor">Contractor</option>
+                                            <option value="Supplier">Supplier</option>
+                                        </optgroup>
+                                    </select>
+                                    {/* Dropdown arrow */}
+                                    <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
                                 </div>
-
+                                {/* Role badge preview */}
+                                <div className={cn(
+                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border mt-1",
+                                    formData.role === 'Super Admin' ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' :
+                                    formData.role === 'Admin' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
+                                    formData.role === 'Employee' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                                    formData.role === 'Customer' ? 'bg-orange-500/10 text-orange-400 border-orange-500/30' :
+                                    formData.role === 'Contractor' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' :
+                                    'bg-gray-500/10 text-gray-400 border-gray-500/30'
+                                )}>
+                                    {getRoleIcon(formData.role)}
+                                    <span>{formData.role}</span>
+                                    <span className="opacity-50">—</span>
+                                    <span>{INTERNAL_ROLES.includes(formData.role as UserType) ? 'Internal Staff' : 'External Portal'}</span>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -397,11 +417,8 @@ const UserManagementPage: React.FC = () => {
                                 )}
                             </div>
 
-                            {!editingUser && (
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                                        {isInternal ? 'Login Password' : 'Station Security Key'}
-                                    </label>
+                            <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Password</label>
                                     <div className="relative">
                                         <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                                         <input
@@ -410,15 +427,17 @@ const UserManagementPage: React.FC = () => {
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                             className="w-full bg-black/60 border border-gray-800 focus:border-[#ec028b] rounded-xl pl-12 pr-4 py-3 text-sm text-white outline-none transition-all"
                                             placeholder="••••••••••••"
-                                            required
-                                            minLength={isInternal ? 6 : 1}
+                                            required={!editingUser}
+                                            minLength={6}
                                         />
                                     </div>
-                                    {isInternal && (
-                                        <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-1">Min. 6 characters required by Firebase Auth</p>
+                                    {editingUser && (
+                                        <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-1">Leave blank to keep existing password</p>
+                                    )}
+                                    {!editingUser && (
+                                        <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-1">Minimum 6 characters</p>
                                     )}
                                 </div>
-                            )}
 
                             {formError && (
                                 <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
