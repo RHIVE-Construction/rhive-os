@@ -4,6 +4,7 @@ import {
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
+    sendPasswordResetEmail,
     User,
     UserCredential
 } from 'firebase/auth';
@@ -45,7 +46,35 @@ export const authService = {
     signIn: (email: string, password: string) => signInWithEmailAndPassword(auth, email, password),
     signOut: () => signOut(auth),
     onAuthStateChanged: (callback: (user: User | null) => void) => onAuthStateChanged(auth, callback),
-    getCurrentUser: () => auth.currentUser
+    getCurrentUser: () => auth.currentUser,
+
+    /**
+     * Sends a secure password reset email via Firebase Auth.
+     * The link is time-limited (1 hour by default) and single-use.
+     * SECURITY: Always resolves successfully to prevent email enumeration.
+     * The caller should NEVER reveal to the UI whether an account actually exists.
+     */
+    sendPasswordReset: async (email: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const normalized = email.toLowerCase().trim();
+            await sendPasswordResetEmail(auth, normalized, {
+                // Redirect back to the QOS login after the password is reset
+                url: `${window.location.origin}/?reset=success`,
+                handleCodeInApp: false,
+            });
+            return { success: true };
+        } catch (error: any) {
+            // Firebase throws auth/user-not-found, auth/invalid-email, etc.
+            // We intentionally swallow these to prevent enumeration attacks.
+            // Only surface non-enumeration errors (e.g. network failure).
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
+                // Treat as success — do NOT tell the user the email doesn't exist
+                return { success: true };
+            }
+            console.error('[sendPasswordReset] Unexpected error:', error.code, error.message);
+            return { success: false, error: 'Unable to send reset email. Please try again later.' };
+        }
+    },
 };
 
 // ============================================

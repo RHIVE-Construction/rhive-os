@@ -33,7 +33,7 @@ import {
     TrashIcon,
     SparklesIcon,
     GutterIcon,
-    PlusIcon, ClipboardDocumentListIcon
+    PlusIcon, ClipboardDocumentCheckIcon
 } from '../components/icons';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -639,7 +639,7 @@ const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, prope
                 </div>
 
                 <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-2"><ClipboardDocumentListIcon className="w-5 h-5 text-gray-400" /><span className="text-[11px] font-black uppercase tracking-widest text-[#ec028b]">Certified Quote Intent Verified</span></div>
+                    <div className="flex items-center gap-2 mb-2"><ClipboardDocumentCheckIcon className="w-5 h-5 text-gray-400" /><span className="text-[11px] font-black uppercase tracking-widest text-[#ec028b]">Certified Quote Intent Verified</span></div>
                     <div className="flex items-center justify-between">
                         <QuestionLabel>Project Role</QuestionLabel>
                         <div className="flex gap-4">
