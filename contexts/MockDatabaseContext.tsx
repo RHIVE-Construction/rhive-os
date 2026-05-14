@@ -180,29 +180,51 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         // -------------------------------------------------------
-        // INTERNAL LOGIN: Admin, Super Admin, Employee
-        // Authenticated via role selection + password
+        // PUBLIC / GUEST LOGIN — no credentials needed
         // -------------------------------------------------------
-        const candidates = users.filter(u => u.role === role);
-        if (candidates.length === 0) return { success: false, error: 'Role not found in system.' };
-
-        if (password !== undefined) {
-            const hashed = await hashPassword(password);
-            const validUser = candidates.find(u => u.password_hash === hashed);
-            if (validUser) {
-                setCurrentUser(validUser);
-                return { success: true };
-            }
-            return { success: false, error: 'Invalid security key.' };
-        }
-
-        // Default to first user if no password required (e.g., Public)
-        const user = candidates[0] || users.find(u => u.role === 'Public');
-        if (user) {
-            setCurrentUser(user);
+        if (role === 'Public') {
+            const guestUser: User = { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' };
+            setCurrentUser(guestUser);
             return { success: true };
         }
-        return { success: false, error: 'Login failed.' };
+
+        // -------------------------------------------------------
+        // INTERNAL LOGIN: Admin, Super Admin, Employee
+        // Authenticated via email + password against `users` collection
+        // -------------------------------------------------------
+        if (!email) {
+            // Legacy fallback: password-only search across all users of that role
+            const candidates = users.filter(u => u.role === role);
+            if (candidates.length === 0) return { success: false, error: 'Role not found in system.' };
+            if (password !== undefined) {
+                const hashed = await hashPassword(password);
+                const validUser = candidates.find(u => u.password_hash === hashed);
+                if (validUser) { setCurrentUser(validUser); return { success: true }; }
+                return { success: false, error: 'Invalid security key.' };
+            }
+            const user = candidates[0];
+            if (user) { setCurrentUser(user); return { success: true }; }
+            return { success: false, error: 'Login failed.' };
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const userResult = await userService.getByEmail(normalizedEmail);
+        if (!userResult.success || !userResult.data) {
+            return { success: false, error: 'No account found with this email address.' };
+        }
+        const foundUser = userResult.data as User;
+        if (foundUser.role !== role) {
+            return { success: false, error: `No ${role} account found with this email.` };
+        }
+        if (!foundUser.password_hash) {
+            return { success: false, error: 'This account has no password set. Contact your administrator.' };
+        }
+        const hashed = await hashPassword(password!);
+        if (foundUser.password_hash !== hashed) {
+            return { success: false, error: 'Invalid email or password.' };
+        }
+        setCurrentUser(foundUser);
+        return { success: true };
     };
 
     const logout = () => {

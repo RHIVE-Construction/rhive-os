@@ -41,8 +41,8 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose }) => {
         includedBuildingIds: allBuildingIds,
       }));
 
-      // Fetch key from backend — never exposed in HTML or bundle
-      const apiKey = await getMapsApiKey();
+      // Key comes from VITE_GOOGLE_MAPS_API_KEY in .env — never hardcode here.
+      const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
       
       const satUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${place.latitude},${place.longitude}&zoom=20&size=640x480&maptype=satellite&markers=color:0xec028b%7C${place.latitude},${place.longitude}&key=${apiKey}`;
       setSatelliteViewUrl(satUrl);

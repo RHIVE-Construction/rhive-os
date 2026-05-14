@@ -14,6 +14,7 @@ import {
     getDocs,
     doc,
     getDoc,
+    setDoc,
     updateDoc,
     deleteDoc,
     query,
@@ -21,7 +22,6 @@ import {
     orderBy,
     limit,
     DocumentData,
-    Timestamp,
     onSnapshot,
     writeBatch
 } from 'firebase/firestore';
@@ -112,11 +112,24 @@ export const firestoreService = {
     },
 
     subscribeToDocuments: (collectionName: string, callback: (data: any[]) => void, sortField = 'created_at') => {
-        const q = query(collection(db, collectionName), orderBy(sortField, 'desc'));
-        return onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(mapDoc);
-            callback(data);
-        });
+        // Use simple collection listener (no orderBy = no index required)
+        return onSnapshot(
+            collection(db, collectionName),
+            (snapshot) => {
+                const data = snapshot.docs
+                    .map(mapDoc)
+                    .sort((a, b) => {
+                        const aVal = a[sortField] || '';
+                        const bVal = b[sortField] || '';
+                        return bVal > aVal ? 1 : bVal < aVal ? -1 : 0;
+                    });
+                callback(data);
+            },
+            (error) => {
+                console.error(`🔥 Firestore [${collectionName}] error:`, error.code, error.message);
+                callback([]);
+            }
+        );
     },
 
     getDocument: async (collectionName: string, id: string) => {
@@ -235,15 +248,35 @@ export const projectService = {
         
         return () => { unsubP(); unsubL(); };
     },
-    subscribeToRecentActivity: (callback: (data: any[]) => void, limitCount = 5) => {
-        const q = query(
+    subscribeToRecentActivity: (callback: (data: any[]) => void, limitCount = 6) => {
+        let projectDocs: any[] = [];
+        let leadDocs: any[] = [];
+        let projectsFired = false;
+        let leadsFired = false;
+
+        const notify = () => {
+            if (!projectsFired || !leadsFired) return;
+            const merged = [...projectDocs, ...leadDocs]
+                .sort((a, b) =>
+                    new Date(b.updated_at || b.created_at || b._importedAt || 0).getTime() -
+                    new Date(a.updated_at || a.created_at || a._importedAt || 0).getTime()
+                )
+                .slice(0, limitCount);
+            callback(merged);
+        };
+
+        const unsubP = onSnapshot(
             collection(db, 'projects'),
-            orderBy('created_at', 'desc'),
-            limit(limitCount)
+            (snap) => { projectDocs = snap.docs.map(mapDoc); projectsFired = true; notify(); },
+            () => { projectsFired = true; notify(); }
         );
-        return onSnapshot(q, (snapshot) => {
-            callback(snapshot.docs.map(mapDoc));
-        });
+        const unsubL = onSnapshot(
+            collection(db, 'leads'),
+            (snap) => { leadDocs = snap.docs.map(mapDoc); leadsFired = true; notify(); },
+            () => { leadsFired = true; notify(); }
+        );
+
+        return () => { unsubP(); unsubL(); };
     },
     getById: (id: string) => firestoreService.getDocument('projects', id),
     createBatch: (dataArray: any[]) => firestoreService.createBatch('projects', dataArray),
@@ -424,6 +457,20 @@ export const userService = {
     getAll: () => firestoreService.getAllDocuments('users'),
     subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('users', callback),
     create: (data: any) => firestoreService.addDocument('users', data),
+    createWithId: async (id: string, data: any) => {
+        try {
+            const docRef = doc(db, 'users', id);
+            await setDoc(docRef, {
+                ...data,
+                created_at: data.created_at || new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            });
+            return { success: true, id, data: { id, ...data } };
+        } catch (error: any) {
+            console.error('Error creating user with ID:', error);
+            return { success: false, error: error.message };
+        }
+    },
     update: (id: string, data: any) => firestoreService.updateDocument('users', id, data),
     delete: (id: string) => firestoreService.deleteDocument('users', id),
     getByEmail: async (email: string) => {
@@ -479,46 +526,103 @@ export const dashboardService = {
         let tasksOverdue = 0;
         let messagesCount = 0;
 
-        const notify = () => callback({
-            activeProjects: projectCount,
-            activeProjectsTrend: projectsThisWeek > 0 ? `+${projectsThisWeek} this week` : 'No new this week',
-            tasksDue: tasksCount,
-            tasksOverdue,
-            pendingQuotesCount: estimatesCount,
-            pendingQuotesValue: estimatesValue,
-            unreadMessages: messagesCount,
-        });
+        // Track which core sources have fired (projects + leads)
+        let projectsFired = false;
+        let leadsFired = false;
+        let notified = false;
+
+        const notify = () => {
+            // Notify once both core sources have fired
+            if (!projectsFired || !leadsFired) return;
+            notified = true;
+            callback({
+                activeProjects: projectCount,
+                activeProjectsTrend: projectsThisWeek > 0 ? `+${projectsThisWeek} this week` : 'No new this week',
+                tasksDue: tasksCount,
+                tasksOverdue,
+                pendingQuotesCount: estimatesCount,
+                pendingQuotesValue: estimatesValue,
+                unreadMessages: messagesCount,
+            });
+        };
+
+        // Safety timeout: force fire stats after 5s even if a collection is missing
+        const safetyTimer = setTimeout(() => {
+            if (!notified) {
+                projectsFired = true;
+                leadsFired = true;
+                callback({
+                    activeProjects: projectCount,
+                    activeProjectsTrend: projectsThisWeek > 0 ? `+${projectsThisWeek} this week` : 'No new this week',
+                    tasksDue: tasksCount,
+                    tasksOverdue,
+                    pendingQuotesCount: estimatesCount,
+                    pendingQuotesValue: estimatesValue,
+                    unreadMessages: messagesCount,
+                });
+            }
+        }, 5000);
 
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
         // Active projects (non-completed)
+        let rawProjectCount = 0;
+        let rawLeadCount = 0;
+        let projectsThisWeekCount = 0;
+        let leadsThisWeekCount = 0;
+
+        const recomputeActive = () => {
+            projectCount = rawProjectCount + rawLeadCount;
+            projectsThisWeek = projectsThisWeekCount + leadsThisWeekCount;
+            notify();
+        };
+
+        // Projects collection — no orderBy to avoid index requirement
         const unsubProjects = onSnapshot(
-            query(collection(db, 'projects'), orderBy('created_at', 'desc')),
+            collection(db, 'projects'),
             (snap) => {
-                projectCount = snap.docs.filter(d => {
-                    const s = d.data().status;
-                    return !s || s !== 'Completed';
+                rawProjectCount = snap.docs.filter(d => {
+                    const s = (d.data().current_stage || d.data().status || '').toLowerCase();
+                    return !s.includes('complet') && !s.includes('past');
                 }).length;
-                projectsThisWeek = snap.docs.filter(d => {
+                projectsThisWeekCount = snap.docs.filter(d => {
                     const created = d.data().created_at;
                     return created && new Date(created) >= oneWeekAgo;
                 }).length;
+                projectsFired = true;
+                recomputeActive();
+            },
+            (error) => {
+                console.error('🔥 Firestore [projects] stats error:', error.code);
+                projectsFired = true;
                 notify();
             }
         );
 
-        // Also track leads
+        // Leads collection
         const unsubLeads = onSnapshot(
             collection(db, 'leads'),
             (snap) => {
-                // You might want to combine these into projectCount or separate
-                // For now, let's keep it simple
+                rawLeadCount = snap.docs.filter(d => {
+                    const s = (d.data().current_stage || '').toLowerCase();
+                    return !s.includes('complet') && !s.includes('past');
+                }).length;
+                leadsThisWeekCount = snap.docs.filter(d => {
+                    const created = d.data().created_at;
+                    return created && new Date(created) >= oneWeekAgo;
+                }).length;
+                leadsFired = true;
+                recomputeActive();
+            },
+            (error) => {
+                console.error('🔥 Firestore [leads] stats error:', error.code);
+                leadsFired = true;
                 notify();
             }
         );
 
-        // Pending quotes / estimates
+        // Estimates — optional, graceful fallback
         const unsubEstimates = onSnapshot(
             collection(db, 'estimates'),
             (snap) => {
@@ -528,10 +632,14 @@ export const dashboardService = {
                     return sum + Number(total);
                 }, 0);
                 notify();
+            },
+            (error) => {
+                console.warn('🔥 Firestore [estimates] not available:', error.code);
+                notify();
             }
         );
 
-        // Tasks due
+        // Tasks — optional, graceful fallback
         const unsubTasks = onSnapshot(
             collection(db, 'tasks'),
             (snap) => {
@@ -541,21 +649,30 @@ export const dashboardService = {
                     return !d.data().completed && due && new Date(due) < new Date();
                 }).length;
                 notify();
-            }
-        );
-
-        // Unread messages
-        const unsubMessages = onSnapshot(
-            query(collection(db, 'messages'), where('read', '==', false)),
-            (snap) => {
-                messagesCount = snap.size;
+            },
+            (error) => {
+                console.warn('🔥 Firestore [tasks] not available:', error.code);
                 notify();
             }
         );
 
-        // Return cleanup function that unsubscribes all listeners
+        // Messages — count all unread without a where() to avoid missing index errors
+        const unsubMessages = onSnapshot(
+            collection(db, 'messages'),
+            (snap) => {
+                messagesCount = snap.docs.filter(d => d.data().read === false).length;
+                notify();
+            },
+            (error) => {
+                console.warn('🔥 Firestore [messages] not available:', error.code);
+                notify();
+            }
+        );
+
         return () => {
+            clearTimeout(safetyTimer);
             unsubProjects();
+            unsubLeads();
             unsubEstimates();
             unsubTasks();
             unsubMessages();
@@ -610,6 +727,59 @@ export const storageService = {
 export const customerService = {
     getAllCustomers: () => contactService.getAll(),
     addCustomer: (data: any) => contactService.create(data),
+};
+
+// ============================================
+// DEALS SERVICE
+// ============================================
+// The 'deals' collection holds quote-stage CRM records.
+// Each deal is associated to a contact via the `contact_id` field.
+
+export const dealService = {
+    getAll: () => firestoreService.getAllDocuments('deals'),
+    subscribe: (callback: (data: any[]) => void) =>
+        firestoreService.subscribeToDocuments('deals', callback),
+    getById: (id: string) => firestoreService.getDocument('deals', id),
+    create: (data: any) => firestoreService.addDocument('deals', data),
+    update: (id: string, data: any) => firestoreService.updateDocument('deals', id, data),
+    delete: (id: string) => firestoreService.deleteDocument('deals', id),
+    createBatch: (dataArray: any[]) => firestoreService.createBatch('deals', dataArray),
+
+    /** Fetch all deals linked to a specific contact. */
+    getByContactId: async (contactId: string) => {
+        try {
+            const q = query(collection(db, 'deals'), where('contact_id', '==', contactId));
+            const snapshot = await getDocs(q);
+            return { success: true, data: snapshot.docs.map(mapDoc) };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    },
+
+    /** Fetch all deals at the Quote stage (Stage 3). */
+    subscribeToQuoteStage: (callback: (data: any[]) => void) => {
+        return onSnapshot(
+            collection(db, 'deals'),
+            (snapshot) => {
+                const data = snapshot.docs
+                    .map(mapDoc)
+                    .filter((d) => {
+                        const stage = (d.current_stage || d.stage || '').toLowerCase();
+                        return stage.includes('quote') || stage.includes('stage 3');
+                    })
+                    .sort((a, b) => {
+                        const aVal = a.created_at || a.createdTime || '';
+                        const bVal = b.created_at || b.createdTime || '';
+                        return bVal > aVal ? 1 : bVal < aVal ? -1 : 0;
+                    });
+                callback(data);
+            },
+            (error) => {
+                console.error(`🔥 Firestore [deals] error:`, error.code, error.message);
+                callback([]);
+            }
+        );
+    },
 };
 
 export const propertyService = {

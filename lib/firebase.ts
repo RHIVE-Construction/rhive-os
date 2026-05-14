@@ -25,9 +25,13 @@ let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
-// Analytics only works in browser environment
+// Analytics only works in browser environment and may fail gracefully
 if (typeof window !== 'undefined') {
-    analytics = getAnalytics(app);
+    try {
+        analytics = getAnalytics(app);
+    } catch (e) {
+        console.warn('Firebase Analytics not available:', e);
+    }
 }
 
 // Initialize other services

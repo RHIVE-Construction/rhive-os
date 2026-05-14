@@ -264,50 +264,21 @@
       window.googleMapsApiLoaded = true;
       window.dispatchEvent(new Event('google-maps-api-ready'));
     }
-  </script>
-  <script>
-    // ── Dynamic Google Maps Loader ───────────────────────────────────────────
-    // Key is fetched from /api/config (backend) and never embedded in HTML.
-    (function loadMapsFromBackend() {
-      fetch('/api/config')
-        .then(function(res) { return res.json(); })
-        .then(function(cfg) {
-          if (!cfg.mapsApiKey) return;
-          var script = document.createElement('script');
-          script.async = true;
-          script.src =
-            'https://maps.googleapis.com/maps/api/js' +
-            '?key=' + encodeURIComponent(cfg.mapsApiKey) +
-            '&libraries=places,drawing,geometry' +
-            '&callback=onGoogleMapsApiReady';
-          document.head.appendChild(script);
-        })
-        .catch(function(err) {
-          console.error('[RHIVE] Maps config fetch failed:', err);
-        });
+    // Key is injected by Vite at build time from VITE_GOOGLE_MAPS_API_KEY in .env
+    // It is NOT hardcoded here — never commit your .env file.
+    (function () {
+      var key = typeof __VITE_GOOGLE_MAPS_API_KEY__ !== 'undefined'
+        ? __VITE_GOOGLE_MAPS_API_KEY__
+        : (typeof process !== 'undefined' && process.env && process.env.VITE_GOOGLE_MAPS_API_KEY)
+          ? process.env.VITE_GOOGLE_MAPS_API_KEY
+          : '';
+      if (!key) { console.warn('[RHIVE] VITE_GOOGLE_MAPS_API_KEY is not set — Maps features disabled.'); return; }
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady';
+      document.head.appendChild(s);
     })();
   </script>
-  <script type="importmap">
-    {
-      "imports": {
-        "react/": "https://aistudiocdn.com/react@^19.1.1/",
-        "react": "https://aistudiocdn.com/react@^19.1.1",
-        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0",
-        "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
-        "class-variance-authority": "https://aistudiocdn.com/class-variance-authority@^0.7.1",
-        "@radix-ui/react-slot": "https://aistudiocdn.com/@radix-ui/react-slot@^1.2.3",
-        "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
-        "tailwind-merge": "https://aistudiocdn.com/tailwind-merge@^3.3.1",
-        "@radix-ui/react-accordion": "https://aistudiocdn.com/@radix-ui/react-accordion@^1.2.12",
-        "path": "https://aistudiocdn.com/path@^0.12.7",
-        "vite": "https://aistudiocdn.com/vite@^7.2.4",
-        "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-        "url": "https://aistudiocdn.com/url@^0.11.4",
-        "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
-      }
-    }
-    </script>
-    -->
   <link rel="stylesheet" href="/index.css">
 </head>
 

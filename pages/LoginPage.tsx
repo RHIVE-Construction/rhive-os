@@ -135,8 +135,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     const [portalPassword, setPortalPassword] = useState('');
     const [showPortalPwd, setShowPortalPwd] = useState(false);
 
-    // Admin (Internal)
-    const [adminPassword, setAdminPassword] = useState('');
+    // Admin/Employee (Internal)
+    const [internalRole, setInternalRole] = useState<'Admin' | 'Employee'>('Admin');
+    const [internalEmail, setInternalEmail] = useState('');
+    const [internalPassword, setInternalPassword] = useState('');
+    const [showInternalPwd, setShowInternalPwd] = useState(false);
 
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -163,13 +166,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         if (result && !result.success) showError(result.error || 'Login failed.');
     };
 
-    const handleAdminSubmit = async (e: React.FormEvent) => {
+    const handleInternalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!adminPassword) return;
+        if (!internalEmail || !internalPassword) return;
         setLoading(true);
-        const result = await onLogin('Admin', adminPassword);
+        const result = await onLogin(internalRole, internalPassword, internalEmail);
         setLoading(false);
-        if (result && !result.success) showError(result.error || 'Invalid security key.');
+        if (result && !result.success) showError(result.error || 'Invalid credentials.');
     };
 
     const handleForgotSubmit = async (e: React.FormEvent) => {
@@ -202,7 +205,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         setSelectedPortalRole(null);
         setPortalEmail('');
         setPortalPassword('');
-        setAdminPassword('');
+        setInternalEmail('');
+        setInternalPassword('');
+        setInternalRole('Admin');
         setError('');
         setForgotEmail('');
         setForgotSent(false);
@@ -485,33 +490,68 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     )}
 
                     {/* ════════════════════════════════════════════════════════
-                        VIEW: ADMIN LOGIN (password-only, Admin role only)
+                        VIEW: INTERNAL LOGIN (email + password, Admin or Employee)
                     ════════════════════════════════════════════════════════ */}
                     {view === 'admin-login' && (
                         <div className="relative z-20 animate-slide-up max-w-sm mx-auto">
-                            {/* Admin badge */}
-                            <div className="flex items-center justify-center gap-3 mb-6 p-4 rounded-xl border border-rhive-pink/30 bg-rhive-pink/10">
+                            {/* Badge */}
+                            <div className="flex items-center justify-center gap-3 mb-5 p-4 rounded-xl border border-rhive-pink/30 bg-rhive-pink/10">
                                 <ShieldCheckIcon className="w-8 h-8 text-rhive-pink" />
                                 <div>
-                                    <p className="text-white text-xs font-black uppercase tracking-widest">Admin Terminal</p>
-                                    <p className="text-gray-400 text-[10px] uppercase tracking-widest">Restricted Access — Authorized Personnel Only</p>
+                                    <p className="text-white text-xs font-black uppercase tracking-widest">Internal Access</p>
+                                    <p className="text-gray-400 text-[10px] uppercase tracking-widest">Authorized Personnel Only</p>
                                 </div>
                             </div>
 
-                            <form onSubmit={handleAdminSubmit} className="space-y-4">
-                                <div className="relative group">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-rhive-pink transition-colors">
-                                        <KeyIcon className="w-5 h-5" />
-                                    </div>
-                                    <input
-                                        type="password"
-                                        placeholder="STATION SECURITY KEY"
-                                        value={adminPassword}
-                                        onChange={(e) => setAdminPassword(e.target.value)}
-                                        className="w-full bg-black/60 border border-gray-800 focus:border-rhive-pink outline-none text-white px-12 py-4 rounded-xl text-xs font-mono tracking-widest transition-all placeholder:text-gray-700"
-                                        autoFocus
-                                    />
-                                </div>
+                            {/* Role toggle */}
+                            <div className="grid grid-cols-2 gap-2 mb-5">
+                                {(['Admin', 'Employee'] as const).map(r => (
+                                    <button
+                                        key={r}
+                                        type="button"
+                                        onClick={() => setInternalRole(r)}
+                                        className={cn(
+                                            'py-2.5 px-4 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all',
+                                            internalRole === r
+                                                ? 'bg-rhive-pink/20 border-rhive-pink text-rhive-pink'
+                                                : 'bg-black/40 border-gray-800 text-gray-500 hover:border-gray-600 hover:text-gray-300'
+                                        )}
+                                    >
+                                        {r}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <form onSubmit={handleInternalSubmit} className="space-y-4">
+                                <FloatingInput
+                                    id="internal-email"
+                                    type="email"
+                                    label="Email Address"
+                                    value={internalEmail}
+                                    onChange={setInternalEmail}
+                                    icon={<EnvelopeIcon className="w-5 h-5" />}
+                                    autoFocus
+                                />
+                                <FloatingInput
+                                    id="internal-password"
+                                    type={showInternalPwd ? 'text' : 'password'}
+                                    label="Password"
+                                    value={internalPassword}
+                                    onChange={setInternalPassword}
+                                    icon={<KeyIcon className="w-5 h-5" />}
+                                    rightEl={
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowInternalPwd(!showInternalPwd)}
+                                            className="text-gray-600 hover:text-rhive-pink transition-colors"
+                                        >
+                                            {showInternalPwd
+                                                ? <EyeSlashIcon className="w-4 h-4" />
+                                                : <EyeIcon className="w-4 h-4" />
+                                            }
+                                        </button>
+                                    }
+                                />
 
                                 {error && (
                                     <p className="text-rhive-pink text-[10px] font-bold uppercase tracking-widest text-center animate-pulse">
@@ -530,7 +570,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                     </Button>
                                     <Button
                                         type="submit"
-                                        disabled={!adminPassword || loading}
+                                        disabled={!internalEmail || !internalPassword || loading}
                                         className="flex-1 h-12 bg-rhive-pink hover:bg-[#ff039a] text-white rounded-xl uppercase tracking-widest text-[10px] font-black shadow-[0_0_30px_rgba(236,2,139,0.3)] disabled:opacity-40"
                                     >
                                         {loading ? 'Verifying…' : 'Establish Link'}

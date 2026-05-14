@@ -70,6 +70,7 @@ import InsurancePage from './pages/InsurancePage'; // P-13
 import PreConversionRecordPage from './pages/PreConversionRecordPage'; // (Simulation)
 import InsurancePage from './pages/InsurancePage'; // P-13
 import RHIVEBrandingPage from './pages/RHIVEBrandingPage'; // E-39
+import FirestoreDebugPage from './pages/FirestoreDebugPage'; // DEBUG
 
 // Specific stage pages
 import LeadPage from './pages/LeadPage'; // E-26
@@ -201,4 +202,5 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-TEST': ChatbotTestingPage,
   'SA-01': RoleManagementPage,
   'SA-02': () => <Placeholder name="Global Settings" />,
+  'DEBUG': FirestoreDebugPage,
 };
