@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { Calculator, MapPin, Zap } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-const HexButton = ({ icon: Icon, label, color }: { icon: any, label: string, color: string }) => (
+const HexButton = ({ icon: Icon, label, color, onClick }: { icon: any, label: string, color: string, onClick?: () => void }) => (
     <motion.button
         whileHover={{ x: -10 }}
-        className="group relative flex items-center"
+        onClick={onClick}
+        className="group relative flex items-center bg-transparent border-none cursor-pointer"
     >
         <div className={cn(
             "w-12 h-14 flex items-center justify-center relative translate-x-2 z-10 overflow-visible",
@@ -35,11 +36,27 @@ const HexButton = ({ icon: Icon, label, color }: { icon: any, label: string, col
 );
 
 const RhiveHexSidebar: React.FC = () => {
+    const handleCalculatorClick = () => {
+        window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'estimator' } }));
+    };
+
+    const handleProjectsClick = () => {
+        window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'roofing' } }));
+    };
+
+    const handleAlertsClick = () => {
+        window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
+        // Let's scroll to process
+        setTimeout(() => {
+            document.getElementById('process')?.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+    };
+
     return (
         <div className="fixed right-0 top-1/2 -translate-y-1/2 z-[1000] flex flex-col gap-4 pr-2">
-            <HexButton icon={Calculator} label="INSTANT ESTIMATE" color="#ec028b" />
-            <HexButton icon={MapPin} label="OUR PROJECTS" color="#116dff" />
-            <HexButton icon={Zap} label="STORM ALERTS" color="#e2ab49" />
+            <HexButton icon={Calculator} label="INSTANT ESTIMATE" color="#ec028b" onClick={handleCalculatorClick} />
+            <HexButton icon={MapPin} label="OUR PROJECTS" color="#116dff" onClick={handleProjectsClick} />
+            <HexButton icon={Zap} label="STORM ALERTS" color="#e2ab49" onClick={handleAlertsClick} />
         </div>
     );
 };
