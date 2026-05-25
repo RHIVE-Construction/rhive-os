@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     UserIcon,
     BriefcaseIcon,
@@ -20,6 +20,7 @@ import { cn } from '../lib/utils';
 import { Button } from '../components/ui/button';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { passwordResetService } from '../lib/firebaseService';
 
 interface LoginPageProps {
     onLogin: (role: UserType, password?: string, email?: string) => Promise<any>;
@@ -125,8 +126,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     const isDark = theme === 'dark';
     const mainC = 40;
 
-    // View state: 'gateway' | 'portal-login' | 'admin-login'
-    const [view, setView] = useState<'gateway' | 'portal-login' | 'admin-login'>('gateway');
+    // View state: 'gateway' | 'portal-login' | 'admin-login' | 'forgot-password'
+    const [view, setView] = useState<'gateway' | 'portal-login' | 'admin-login' | 'forgot-password'>('gateway');
 
     // Portal (Customer / Contractor / Supplier)
     const [selectedPortalRole, setSelectedPortalRole] = useState<UserType | null>(null);
@@ -142,6 +143,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Forgot Password state
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotSent, setForgotSent] = useState(false);
+    const [forgotOrigin, setForgotOrigin] = useState<'portal-login' | 'admin-login'>('portal-login');
+    // Rate limiting: max 3 attempts per 10 minutes
+    const forgotAttempts = useRef<number[]>([]);
+    const RATE_LIMIT = 3;
+    const RATE_WINDOW_MS = 10 * 60 * 1000;
 
     const showError = (msg: string) => {
         setError(msg);
@@ -166,6 +176,31 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         if (result && !result.success) showError(result.error || 'Invalid credentials.');
     };
 
+    const handleForgotSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!forgotEmail.trim()) return;
+
+        // Rate limit check
+        const now = Date.now();
+        forgotAttempts.current = forgotAttempts.current.filter(t => now - t < RATE_WINDOW_MS);
+        if (forgotAttempts.current.length >= RATE_LIMIT) {
+            showError('Too many requests. Please wait 10 minutes before trying again.');
+            return;
+        }
+        forgotAttempts.current.push(now);
+
+        setLoading(true);
+        const result = await passwordResetService.requestReset(forgotEmail);
+        setLoading(false);
+
+        if (!result.success) {
+            showError(result.error || 'Unable to send reset email. Please try again.');
+        } else {
+            // Always show success — prevents email enumeration
+            setForgotSent(true);
+        }
+    };
+
     const resetToGateway = () => {
         setView('gateway');
         setSelectedPortalRole(null);
@@ -175,6 +210,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         setInternalPassword('');
         setInternalRole('Admin');
         setError('');
+        setForgotEmail('');
+        setForgotSent(false);
+        setForgotOrigin('portal-login');
+    };
+
+    const goToForgot = (origin: 'portal-login' | 'admin-login', prefillEmail: string) => {
+        setForgotOrigin(origin);
+        setForgotEmail(prefillEmail);
+        setForgotSent(false);
+        setError('');
+        setView('forgot-password');
     };
 
     const publicPortals = [
@@ -216,6 +262,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                             {view === 'gateway' && 'QOS Gateway'}
                             {view === 'portal-login' && 'Portal Login'}
                             {view === 'admin-login' && 'Internal Access'}
+                            {view === 'forgot-password' && 'Account Recovery'}
                         </h2>
                         <div className="flex items-center justify-center gap-4">
                             <div className="h-[1px] w-10 bg-gradient-to-r from-transparent to-gray-700" />
@@ -223,6 +270,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                 {view === 'gateway' && 'Quantum Operating System v2.5'}
                                 {view === 'portal-login' && 'Secure Client Authentication'}
                                 {view === 'admin-login' && 'Admin Verification Protocol'}
+                                {view === 'forgot-password' && 'Secure Reset Protocol'}
                             </p>
                             <div className="h-[1px] w-10 bg-gradient-to-l from-transparent to-gray-700" />
                         </div>
@@ -348,12 +396,111 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                         <ArrowRightIcon className="w-4 h-4 ml-2" />
                                     </Button>
                                 </div>
+
+                                {/* Forgot password link */}
+                                <div className="text-center pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => goToForgot('portal-login', portalEmail)}
+                                        className="text-[10px] font-bold uppercase tracking-widest text-gray-600 hover:text-rhive-pink transition-colors"
+                                    >
+                                        Forgot Password?
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     )}
 
                     {/* ════════════════════════════════════════════════════════
-                        VIEW: ADMIN/EMPLOYEE LOGIN (email + password)
+                        VIEW: FORGOT PASSWORD
+                    ════════════════════════════════════════════════════════ */}
+                    {view === 'forgot-password' && (
+                        <div className="relative z-20 animate-fade-in max-w-sm mx-auto">
+                            {!forgotSent ? (
+                                <>
+                                    {/* Security badge */}
+                                    <div className="flex items-center justify-center gap-3 mb-6 p-4 border border-rhive-pink/20 bg-rhive-pink/5" style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
+                                        <LockIcon className="w-6 h-6 text-rhive-pink flex-shrink-0" />
+                                        <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest leading-relaxed">
+                                            Enter your registered email. A secure, time-limited reset link will be dispatched.
+                                        </p>
+                                    </div>
+
+                                    <form onSubmit={handleForgotSubmit} className="space-y-4">
+                                        <FloatingInput
+                                            id="forgot-email"
+                                            type="email"
+                                            label="Registered Email Address"
+                                            value={forgotEmail}
+                                            onChange={setForgotEmail}
+                                            icon={<EnvelopeIcon className="w-5 h-5" />}
+                                            autoFocus
+                                        />
+
+                                        {error && (
+                                            <p className="text-rhive-pink text-[10px] font-bold uppercase tracking-widest text-center animate-pulse">
+                                                {error}
+                                            </p>
+                                        )}
+
+                                        <div className="flex gap-3 pt-1">
+                                            <Button
+                                                type="button"
+                                                onClick={() => { setView(forgotOrigin); setError(''); }}
+                                                className="flex-none px-5 h-12 bg-gray-900 border-gray-800 text-gray-500 hover:bg-gray-800 hover:text-white rounded-xl uppercase tracking-widest text-[10px] font-black"
+                                            >
+                                                <XIcon className="w-4 h-4 mr-1" />
+                                                Back
+                                            </Button>
+                                            <Button
+                                                type="submit"
+                                                disabled={!forgotEmail.trim() || loading}
+                                                className="flex-1 h-12 bg-rhive-pink hover:bg-[#ff039a] text-white rounded-xl uppercase tracking-widest text-[10px] font-black shadow-[0_0_30px_rgba(236,2,139,0.3)] disabled:opacity-40"
+                                            >
+                                                {loading ? 'Dispatching…' : 'Send Reset Link'}
+                                                <ArrowRightIcon className="w-4 h-4 ml-2" />
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </>
+                            ) : (
+                                /* Success state — always shown regardless of whether email exists */
+                                <div className="text-center py-4 animate-fade-in space-y-5">
+                                    <div className="w-16 h-16 mx-auto flex items-center justify-center bg-rhive-pink/10 border border-rhive-pink/30 shadow-[0_0_20px_rgba(236,2,139,0.2)]" style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
+                                        <EnvelopeIcon className="w-8 h-8 text-rhive-pink" />
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-black uppercase tracking-widest text-sm mb-2">Transmission Sent</p>
+                                        <p className="text-gray-400 text-xs leading-relaxed">
+                                            If an account is registered with <span className="text-rhive-pink font-bold">{forgotEmail}</span>, a secure reset link has been dispatched. Check your inbox and spam folder. The link expires in <span className="text-white font-bold">1 hour</span>.
+                                        </p>
+                                    </div>
+                                    <div className="p-3 bg-black/40 border border-gray-800 text-[9px] text-gray-600 font-bold uppercase tracking-widest" style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}>
+                                        Do not share the reset link with anyone.
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <Button
+                                            type="button"
+                                            onClick={() => { setForgotSent(false); setForgotEmail(''); }}
+                                            className="flex-1 h-11 bg-gray-900 border-gray-800 text-gray-500 hover:bg-gray-800 hover:text-white rounded-xl uppercase tracking-widest text-[10px] font-black"
+                                        >
+                                            Try Different Email
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            onClick={() => { setView(forgotOrigin); setForgotSent(false); setForgotEmail(''); }}
+                                            className="flex-1 h-11 bg-rhive-pink/10 border border-rhive-pink/30 text-rhive-pink hover:bg-rhive-pink/20 rounded-xl uppercase tracking-widest text-[10px] font-black"
+                                        >
+                                            Back to Login
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ════════════════════════════════════════════════════════
+                        VIEW: INTERNAL LOGIN (email + password, Admin or Employee)
                     ════════════════════════════════════════════════════════ */}
                     {view === 'admin-login' && (
                         <div className="relative z-20 animate-slide-up max-w-sm mx-auto">
@@ -430,9 +577,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                         disabled={!internalEmail || !internalPassword || loading}
                                         className="flex-1 h-12 bg-rhive-pink hover:bg-[#ff039a] text-white rounded-xl uppercase tracking-widest text-[10px] font-black shadow-[0_0_30px_rgba(236,2,139,0.3)] disabled:opacity-40"
                                     >
-                                        {loading ? 'Verifying…' : 'Establish Link'}
+                                        {loading ? 'Verifying…' : 'Login'}
                                         <ArrowRightIcon className="w-4 h-4 ml-2" />
                                     </Button>
+                                </div>
+
+                                {/* Forgot password link */}
+                                <div className="text-center pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => goToForgot('admin-login', internalEmail)}
+                                        className="text-[10px] font-bold uppercase tracking-widest text-gray-600 hover:text-rhive-pink transition-colors"
+                                    >
+                                        Forgot Password?
+                                    </button>
                                 </div>
                             </form>
                         </div>
