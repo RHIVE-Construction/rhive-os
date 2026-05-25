@@ -224,6 +224,7 @@ export const VideoCallInterface: React.FC<{ onClose: () => void }> = ({ onClose 
             localStreamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
+                videoRef.current.play().catch(e => console.error("Video play failed:", e));
                 videoRef.current.onloadeddata = () => {
                     cancelAnimationFrame(animationFrameRef.current);
                     processVideo();
@@ -264,7 +265,7 @@ export const VideoCallInterface: React.FC<{ onClose: () => void }> = ({ onClose 
                         autoPlay 
                         playsInline 
                         muted 
-                        className="hidden"
+                        className="opacity-0 absolute pointer-events-none w-1 h-1 z-[-1]"
                     />
                     
                     {isVideoEnabled || isScreenSharing ? (

@@ -45,21 +45,16 @@ export const GlobalChatWidget: React.FC = () => {
     // Fetch all users
     useEffect(() => {
         if (!chatUser) return;
-        const fetchUsers = async () => {
-            try {
-                // In a real app, you might have a dedicated users collection or use MockDB.
-                // For this, we'll assume a 'users' collection exists in Firestore.
-                const q = query(collection(db, 'users'));
-                const snapshot = await getDocs(q);
-                const fetchedUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // If the users collection is empty, we'll populate it with mock data or just use what's there
-                setUsers(fetchedUsers);
-            } catch (err) {
-                console.error("Error fetching users:", err);
-            }
-        };
-        fetchUsers();
-    }, [currentUser]);
+        const q = query(collection(db, 'users'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setUsers(fetchedUsers);
+        }, (error) => {
+            console.error("Error fetching users:", error);
+        });
+        
+        return () => unsubscribe();
+    }, [chatUser]);
 
     // Fetch user's chats
     useEffect(() => {
