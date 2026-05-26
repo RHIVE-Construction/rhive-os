@@ -41,7 +41,25 @@ const RhiveHeader: React.FC = () => {
     ];
 
     const scrollToSection = (id: string) => {
-        // If we are not on the homepage, navigate there first
+        // Dispatch virtual navigation events for sub-pages in OS recreation mode
+        if (id === 'hero' || id === 'about') {
+            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'about' } }));
+            return;
+        }
+        if (id === 'services') {
+            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'roofing' } }));
+            return;
+        }
+        if (id === 'process' || id === 'financing' || id === 'faq' || id === 'contact') {
+            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
+            setTimeout(() => {
+                const element = document.getElementById(id);
+                element?.scrollIntoView({ behavior: 'smooth' });
+            }, 150);
+            return;
+        }
+
+        // Standard scrolling logic for live mode / external pages
         if (activePageId !== 'P-00' && activePageId !== 'P-01') {
             setActivePageId('P-00');
             // Give it a moment to mount before scrolling
@@ -94,7 +112,10 @@ const RhiveHeader: React.FC = () => {
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setActivePageId('P-00')}
+                    onClick={() => {
+                        setActivePageId('P-00');
+                        window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
+                    }}
                     className="relative flex items-center justify-center mt-1"
                 >
                     <img

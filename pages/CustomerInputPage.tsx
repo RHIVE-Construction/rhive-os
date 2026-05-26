@@ -46,8 +46,7 @@ import { INITIAL_SURVEY_STATE } from '../lib/constants';
 import { WeatherReport } from '../components/WeatherReport';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, ProjectStage } from '../types';
 import { createProject as createProjectApi } from '../lib/api';
-
-const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+import { getMapsApiKey } from '../lib/mapsConfig';
 
 // --- Reusable UI Components ---
 
@@ -265,10 +264,15 @@ const AddressConfirmationModal: React.FC<{
     onConfirm: () => void,
     onCancel: () => void
 }> = ({ data, onConfirm, onCancel }) => {
-    const [view, setView] = useState<'street' | 'satellite'>('satellite'); // Default to satellite for "scanning" feel
+    const [view, setView] = useState<'street' | 'satellite'>('satellite');
+    const [mapsKey, setMapsKey] = useState('');
 
-    const streetUrl = `https://maps.googleapis.com/maps/api/streetview?size=1024x512&location=${data.latitude},${data.longitude}&fov=90&pitch=10&key=${MAPS_API_KEY}`;
-    const satUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${data.latitude},${data.longitude}&zoom=21&size=1024x512&maptype=satellite&key=${MAPS_API_KEY}`;
+    useEffect(() => {
+        getMapsApiKey().then(setMapsKey);
+    }, []);
+
+    const streetUrl = mapsKey ? `https://maps.googleapis.com/maps/api/streetview?size=1024x512&location=${data.latitude},${data.longitude}&fov=90&pitch=10&key=${mapsKey}` : '';
+    const satUrl = mapsKey ? `https://maps.googleapis.com/maps/api/staticmap?center=${data.latitude},${data.longitude}&zoom=21&size=1024x512&maptype=satellite&key=${mapsKey}` : '';
 
     const chamfer = 24;
     const clipPathValue = `polygon(${chamfer}px 0, 100% 0, 100% calc(100% - ${chamfer}px), calc(100% - ${chamfer}px) 100%, 0 100%, 0 ${chamfer}px)`;
@@ -875,11 +879,11 @@ const CustomerInputPage: React.FC = () => {
                     affiliations: c.affiliations || []
                 })),
                 details: {
-                    purchaseIntent: purchaseIntent,
+                    purchaseIntent: buyerIntent,
                     scopeType: scopeType,
-                    activeLeak: repairDetails.activeLeak,
-                    isOld: repairDetails.isOld,
-                    hasPhotos: repairDetails.hasPhotos,
+                    activeLeak: activeLeak,
+                    isOld: roofAge,
+                    hasPhotos: hasPhotos,
                     scheduledInspection: scheduledDetails || undefined
                 }
             });

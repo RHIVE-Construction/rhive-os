@@ -41,6 +41,11 @@ body {
     transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+/* Strip italic from ALL elements globally */
+* {
+    font-style: normal !important;
+}
+
 /* High-Contrast Glassmorphism */
 .glass {
     background: var(--bg-card);

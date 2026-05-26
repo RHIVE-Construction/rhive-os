@@ -13,6 +13,7 @@ import {
     getDocs,
     doc,
     getDoc,
+    setDoc,
     updateDoc,
     deleteDoc,
     query,
@@ -20,7 +21,6 @@ import {
     orderBy,
     limit,
     DocumentData,
-    Timestamp,
     onSnapshot,
     writeBatch
 } from 'firebase/firestore';
@@ -31,6 +31,8 @@ import {
     deleteObject
 } from 'firebase/storage';
 import { ProjectInput } from './sharedProjectTypes';
+import { hashPassword } from './utils';
+import { session } from './session';
 
 // Helper to map Firestore docs to data with ID
 // Note: Firestore automatically creates collections when you add documents to them.
@@ -83,11 +85,24 @@ export const firestoreService = {
     },
 
     subscribeToDocuments: (collectionName: string, callback: (data: any[]) => void, sortField = 'created_at') => {
-        const q = query(collection(db, collectionName), orderBy(sortField, 'desc'));
-        return onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(mapDoc);
-            callback(data);
-        });
+        // Use simple collection listener (no orderBy = no index required)
+        return onSnapshot(
+            collection(db, collectionName),
+            (snapshot) => {
+                const data = snapshot.docs
+                    .map(mapDoc)
+                    .sort((a, b) => {
+                        const aVal = a[sortField] || '';
+                        const bVal = b[sortField] || '';
+                        return bVal > aVal ? 1 : bVal < aVal ? -1 : 0;
+                    });
+                callback(data);
+            },
+            (error) => {
+                console.error(`🔥 Firestore [${collectionName}] error:`, error.code, error.message);
+                callback([]);
+            }
+        );
     },
 
     getDocument: async (collectionName: string, id: string) => {
@@ -150,6 +165,29 @@ export const firestoreService = {
 // DOMAIN SERVICES
 // ============================================
 
+// Helper to normalize a Firestore 'deals' document to the common project shape
+const normalizeDeal = (deal: any): any => ({
+    ...deal,
+    _source: 'deals',
+    // Support both Zoho-style (Deal_Name / Stage) and internal snake_case fields
+    name: deal.name || deal.Deal_Name || deal.deal_name || 'Unnamed Deal',
+    current_stage: deal.current_stage || deal.Deal_Stage || deal.stage || 'Lead',
+    project_type: deal.project_type || deal.Type || deal.type || 'Deal',
+    property_address: deal.property_address || deal.Property_Address || deal.Address || '',
+    lead_source: deal.lead_source || deal.Lead_Source || deal.source || '',
+    notes: deal.notes || deal.Description || deal.description || '',
+    quote: deal.quote ?? (
+        deal.Amount || deal.amount
+            ? { total: Number(deal.Amount || deal.amount) }
+            : undefined
+    ),
+    contact_id: deal.contact_id || deal.Contact_Id || null,
+    property_id: deal.property_id || null,
+    account_id: deal.account_id || deal.Account_Id || null,
+    created_at: deal.created_at || deal.Created_Time || null,
+    updated_at: deal.updated_at || deal.Modified_Time || null,
+});
+
 // Helper to convert CamelCase ProjectInput to SnakeCase for compatibility
 const mapProjectToSnakeCase = (input: ProjectInput) => ({
     user_id: input.userId,
@@ -172,49 +210,103 @@ export const projectService = {
     getAll: async () => {
         const p = await firestoreService.getAllDocuments('projects');
         const l = await firestoreService.getAllDocuments('leads');
-        const combined = [...(p.data || []), ...(l.data || [])];
+        const d = await firestoreService.getAllDocuments('deals');
+        const combined = [
+            ...(p.data || []),
+            ...(l.data || []),
+            ...(d.data || []).map(normalizeDeal),
+        ];
         return { success: true, data: combined };
     },
     subscribe: (callback: (data: any[]) => void) => {
         let projects: any[] = [];
         let leads: any[] = [];
-        
-        const notify = () => callback([...projects, ...leads]);
-        
+        let deals: any[] = [];
+
+        const notify = () => callback([...projects, ...leads, ...deals]);
+
+
         const unsubProjects = firestoreService.subscribeToDocuments('projects', (data) => {
             projects = data;
             notify();
         });
-        
+
         const unsubLeads = firestoreService.subscribeToDocuments('leads', (data) => {
             leads = data;
             notify();
         });
-        
+
+        const unsubDeals = onSnapshot(
+            collection(db, 'deals'),
+            (snap) => {
+                deals = snap.docs.map(mapDoc).map(normalizeDeal);
+                notify();
+            },
+            (error) => {
+                console.warn('🔥 Firestore [deals] subscribe error:', error.code);
+                notify();
+            }
+        );
+
+
         return () => {
             unsubProjects();
             unsubLeads();
+            unsubDeals();
         };
     },
     subscribeAllWork: (callback: (data: any[]) => void) => {
         let projects: any[] = [];
         let leads: any[] = [];
-        const notify = () => callback([...projects, ...leads]);
-        
+        let deals: any[] = [];
+        const notify = () => callback([...projects, ...leads, ...deals]);
+
         const unsubP = firestoreService.subscribeToDocuments('projects', (d) => { projects = d; notify(); });
         const unsubL = firestoreService.subscribeToDocuments('leads', (d) => { leads = d; notify(); });
-        
-        return () => { unsubP(); unsubL(); };
-    },
-    subscribeToRecentActivity: (callback: (data: any[]) => void, limitCount = 5) => {
-        const q = query(
-            collection(db, 'projects'),
-            orderBy('created_at', 'desc'),
-            limit(limitCount)
+        const unsubD = onSnapshot(
+            collection(db, 'deals'),
+            (snap) => { deals = snap.docs.map(mapDoc).map(normalizeDeal); notify(); },
+            () => notify()
         );
-        return onSnapshot(q, (snapshot) => {
-            callback(snapshot.docs.map(mapDoc));
-        });
+
+        return () => { unsubP(); unsubL(); unsubD(); };
+    },
+    subscribeToRecentActivity: (callback: (data: any[]) => void, limitCount = 6) => {
+        let projectDocs: any[] = [];
+        let leadDocs: any[] = [];
+        let dealDocs: any[] = [];
+        let projectsFired = false;
+        let leadsFired = false;
+        let dealsFired = false;
+
+        const notify = () => {
+            if (!projectsFired || !leadsFired || !dealsFired) return;
+            const merged = [...projectDocs, ...leadDocs, ...dealDocs]
+                .sort((a, b) =>
+                    new Date(b.updated_at || b.created_at || b._importedAt || 0).getTime() -
+                    new Date(a.updated_at || a.created_at || a._importedAt || 0).getTime()
+                )
+                .slice(0, limitCount);
+            callback(merged);
+        };
+
+        const unsubP = onSnapshot(
+            collection(db, 'projects'),
+            (snap) => { projectDocs = snap.docs.map(mapDoc); projectsFired = true; notify(); },
+            () => { projectsFired = true; notify(); }
+        );
+        const unsubL = onSnapshot(
+            collection(db, 'leads'),
+            (snap) => { leadDocs = snap.docs.map(mapDoc); leadsFired = true; notify(); },
+            () => { leadsFired = true; notify(); }
+        );
+        const unsubD = onSnapshot(
+            collection(db, 'deals'),
+            (snap) => { dealDocs = snap.docs.map(mapDoc).map(normalizeDeal); dealsFired = true; notify(); },
+            () => { dealsFired = true; notify(); }
+        );
+
+        return () => { unsubP(); unsubL(); unsubD(); };
     },
     getById: (id: string) => firestoreService.getDocument('projects', id),
     createBatch: (dataArray: any[]) => firestoreService.createBatch('projects', dataArray),
@@ -395,6 +487,22 @@ export const userService = {
     getAll: () => firestoreService.getAllDocuments('users'),
     subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('users', callback),
     create: (data: any) => firestoreService.addDocument('users', data),
+    // Write a Firestore user doc using a specific ID (e.g. Firebase Auth UID)
+    createWithId: async (id: string, data: any) => {
+        try {
+            const docRef = doc(db, 'users', id);
+            await setDoc(docRef, {
+                ...data,
+                created_at: data.created_at || new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            });
+            return { success: true, id, data: { id, ...data } };
+        } catch (error: any) {
+            console.error('Error creating user with ID:', error);
+
+            return { success: false, error: error.message };
+        }
+    },
     update: (id: string, data: any) => firestoreService.updateDocument('users', id, data),
     delete: (id: string) => firestoreService.deleteDocument('users', id),
     getByEmail: async (email: string) => {
@@ -404,6 +512,112 @@ export const userService = {
             if (snapshot.empty) return { success: false, error: 'No user found with this email' };
             return { success: true, data: snapshot.docs.map(mapDoc)[0] };
         } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    }
+};
+
+export const passwordResetService = {
+    createResetToken: async (email: string) => {
+        try {
+            const normalizedEmail = email.toLowerCase().trim();
+            // 1. Verify user exists
+            const userResult = await userService.getByEmail(normalizedEmail);
+            if (!userResult.success || !userResult.data) {
+                return { success: false, error: 'No account found with this email address.' };
+            }
+
+            // 2. Generate secure token: random hex + timestamp
+            const randomBytes = Array.from({ length: 16 }, () => Math.floor(Math.random() * 256));
+            const token = randomBytes.map(b => b.toString(16).padStart(2, '0')).join('') + Date.now().toString(36);
+
+            // 3. Store in firestore 'password_resets'
+            const expiry = new Date(Date.now() + 3600 * 1000).toISOString(); // 1 hour expiration
+            const resetDoc = {
+                email: normalizedEmail,
+                token,
+                expires_at: expiry,
+                used: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const result = await firestoreService.addDocument('password_resets', resetDoc);
+            if (!result.success) return { success: false, error: result.error };
+
+            return { success: true, token, email: normalizedEmail };
+        } catch (error: any) {
+            console.error('Error in createResetToken:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    verifyResetToken: async (token: string) => {
+        try {
+            const q = query(
+                collection(db, 'password_resets'),
+                where('token', '==', token),
+                where('used', '==', false)
+            );
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                return { success: false, error: 'This secure recovery link is invalid or has already been used.' };
+            }
+
+            const docData = snapshot.docs.map(mapDoc)[0];
+            const expiresAt = new Date(docData.expires_at).getTime();
+            if (expiresAt < Date.now()) {
+                return { success: false, error: 'This secure recovery link has expired.' };
+            }
+
+            return { success: true, email: docData.email, resetDocId: docData.id };
+        } catch (error: any) {
+            console.error('Error in verifyResetToken:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    completePasswordReset: async (token: string, newPassword: string) => {
+        try {
+            // 1. Verify token
+            const verification = await passwordResetService.verifyResetToken(token);
+            if (!verification.success || !verification.email || !verification.resetDocId) {
+                return { success: false, error: verification.error || 'Token verification failed.' };
+            }
+
+            const email = verification.email;
+            const resetDocId = verification.resetDocId;
+
+            // 2. Fetch the user document to get its ID
+            const userResult = await userService.getByEmail(email);
+            if (!userResult.success || !userResult.data) {
+                return { success: false, error: 'Failed to locate user profile for update.' };
+            }
+
+            const userDoc = userResult.data as any;
+
+            // 3. Hash the new password
+            const passwordHash = await hashPassword(newPassword);
+
+            // 4. Update the user document
+            const updateResult = await userService.update(userDoc.id, {
+                password_hash: passwordHash,
+                updated_at: new Date().toISOString()
+            });
+
+            if (!updateResult.success) {
+                return { success: false, error: updateResult.error || 'Failed to update password in profile.' };
+            }
+
+            // 5. Mark reset token as used
+            await firestoreService.updateDocument('password_resets', resetDocId, {
+                used: true,
+                updated_at: new Date().toISOString()
+            });
+
+            return { success: true };
+        } catch (error: any) {
+            console.error('Error in completePasswordReset:', error);
             return { success: false, error: error.message };
         }
     }
@@ -450,46 +664,103 @@ export const dashboardService = {
         let tasksOverdue = 0;
         let messagesCount = 0;
 
-        const notify = () => callback({
-            activeProjects: projectCount,
-            activeProjectsTrend: projectsThisWeek > 0 ? `+${projectsThisWeek} this week` : 'No new this week',
-            tasksDue: tasksCount,
-            tasksOverdue,
-            pendingQuotesCount: estimatesCount,
-            pendingQuotesValue: estimatesValue,
-            unreadMessages: messagesCount,
-        });
+        // Track which core sources have fired (projects + leads)
+        let projectsFired = false;
+        let leadsFired = false;
+        let notified = false;
+
+        const notify = () => {
+            // Notify once both core sources have fired
+            if (!projectsFired || !leadsFired) return;
+            notified = true;
+            callback({
+                activeProjects: projectCount,
+                activeProjectsTrend: projectsThisWeek > 0 ? `+${projectsThisWeek} this week` : 'No new this week',
+                tasksDue: tasksCount,
+                tasksOverdue,
+                pendingQuotesCount: estimatesCount,
+                pendingQuotesValue: estimatesValue,
+                unreadMessages: messagesCount,
+            });
+        };
+
+        // Safety timeout: force fire stats after 5s even if a collection is missing
+        const safetyTimer = setTimeout(() => {
+            if (!notified) {
+                projectsFired = true;
+                leadsFired = true;
+                callback({
+                    activeProjects: projectCount,
+                    activeProjectsTrend: projectsThisWeek > 0 ? `+${projectsThisWeek} this week` : 'No new this week',
+                    tasksDue: tasksCount,
+                    tasksOverdue,
+                    pendingQuotesCount: estimatesCount,
+                    pendingQuotesValue: estimatesValue,
+                    unreadMessages: messagesCount,
+                });
+            }
+        }, 5000);
 
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
         // Active projects (non-completed)
+        let rawProjectCount = 0;
+        let rawLeadCount = 0;
+        let projectsThisWeekCount = 0;
+        let leadsThisWeekCount = 0;
+
+        const recomputeActive = () => {
+            projectCount = rawProjectCount + rawLeadCount;
+            projectsThisWeek = projectsThisWeekCount + leadsThisWeekCount;
+            notify();
+        };
+
+        // Projects collection — no orderBy to avoid index requirement
         const unsubProjects = onSnapshot(
-            query(collection(db, 'projects'), orderBy('created_at', 'desc')),
+            collection(db, 'projects'),
             (snap) => {
-                projectCount = snap.docs.filter(d => {
-                    const s = d.data().status;
-                    return !s || s !== 'Completed';
+                rawProjectCount = snap.docs.filter(d => {
+                    const s = (d.data().current_stage || d.data().status || '').toLowerCase();
+                    return !s.includes('complet') && !s.includes('past');
                 }).length;
-                projectsThisWeek = snap.docs.filter(d => {
+                projectsThisWeekCount = snap.docs.filter(d => {
                     const created = d.data().created_at;
                     return created && new Date(created) >= oneWeekAgo;
                 }).length;
+                projectsFired = true;
+                recomputeActive();
+            },
+            (error) => {
+                console.error('🔥 Firestore [projects] stats error:', error.code);
+                projectsFired = true;
                 notify();
             }
         );
 
-        // Also track leads
+        // Leads collection
         const unsubLeads = onSnapshot(
             collection(db, 'leads'),
             (snap) => {
-                // You might want to combine these into projectCount or separate
-                // For now, let's keep it simple
+                rawLeadCount = snap.docs.filter(d => {
+                    const s = (d.data().current_stage || '').toLowerCase();
+                    return !s.includes('complet') && !s.includes('past');
+                }).length;
+                leadsThisWeekCount = snap.docs.filter(d => {
+                    const created = d.data().created_at;
+                    return created && new Date(created) >= oneWeekAgo;
+                }).length;
+                leadsFired = true;
+                recomputeActive();
+            },
+            (error) => {
+                console.error('🔥 Firestore [leads] stats error:', error.code);
+                leadsFired = true;
                 notify();
             }
         );
 
-        // Pending quotes / estimates
+        // Estimates — optional, graceful fallback
         const unsubEstimates = onSnapshot(
             collection(db, 'estimates'),
             (snap) => {
@@ -499,10 +770,14 @@ export const dashboardService = {
                     return sum + Number(total);
                 }, 0);
                 notify();
+            },
+            (error) => {
+                console.warn('🔥 Firestore [estimates] not available:', error.code);
+                notify();
             }
         );
 
-        // Tasks due
+        // Tasks — optional, graceful fallback
         const unsubTasks = onSnapshot(
             collection(db, 'tasks'),
             (snap) => {
@@ -512,21 +787,30 @@ export const dashboardService = {
                     return !d.data().completed && due && new Date(due) < new Date();
                 }).length;
                 notify();
-            }
-        );
-
-        // Unread messages
-        const unsubMessages = onSnapshot(
-            query(collection(db, 'messages'), where('read', '==', false)),
-            (snap) => {
-                messagesCount = snap.size;
+            },
+            (error) => {
+                console.warn('🔥 Firestore [tasks] not available:', error.code);
                 notify();
             }
         );
 
-        // Return cleanup function that unsubscribes all listeners
+        // Messages — count all unread without a where() to avoid missing index errors
+        const unsubMessages = onSnapshot(
+            collection(db, 'messages'),
+            (snap) => {
+                messagesCount = snap.docs.filter(d => d.data().read === false).length;
+                notify();
+            },
+            (error) => {
+                console.warn('🔥 Firestore [messages] not available:', error.code);
+                notify();
+            }
+        );
+
         return () => {
+            clearTimeout(safetyTimer);
             unsubProjects();
+            unsubLeads();
             unsubEstimates();
             unsubTasks();
             unsubMessages();
@@ -583,6 +867,59 @@ export const customerService = {
     addCustomer: (data: any) => contactService.create(data),
 };
 
+// ============================================
+// DEALS SERVICE
+// ============================================
+// The 'deals' collection holds quote-stage CRM records.
+// Each deal is associated to a contact via the `contact_id` field.
+
+export const dealService = {
+    getAll: () => firestoreService.getAllDocuments('deals'),
+    subscribe: (callback: (data: any[]) => void) =>
+        firestoreService.subscribeToDocuments('deals', callback),
+    getById: (id: string) => firestoreService.getDocument('deals', id),
+    create: (data: any) => firestoreService.addDocument('deals', data),
+    update: (id: string, data: any) => firestoreService.updateDocument('deals', id, data),
+    delete: (id: string) => firestoreService.deleteDocument('deals', id),
+    createBatch: (dataArray: any[]) => firestoreService.createBatch('deals', dataArray),
+
+    /** Fetch all deals linked to a specific contact. */
+    getByContactId: async (contactId: string) => {
+        try {
+            const q = query(collection(db, 'deals'), where('contact_id', '==', contactId));
+            const snapshot = await getDocs(q);
+            return { success: true, data: snapshot.docs.map(mapDoc) };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    },
+
+    /** Fetch all deals at the Quote stage (Stage 3). */
+    subscribeToQuoteStage: (callback: (data: any[]) => void) => {
+        return onSnapshot(
+            collection(db, 'deals'),
+            (snapshot) => {
+                const data = snapshot.docs
+                    .map(mapDoc)
+                    .filter((d) => {
+                        const stage = (d.current_stage || d.stage || '').toLowerCase();
+                        return stage.includes('quote') || stage.includes('stage 3');
+                    })
+                    .sort((a, b) => {
+                        const aVal = a.created_at || a.createdTime || '';
+                        const bVal = b.created_at || b.createdTime || '';
+                        return bVal > aVal ? 1 : bVal < aVal ? -1 : 0;
+                    });
+                callback(data);
+            },
+            (error) => {
+                console.error(`🔥 Firestore [deals] error:`, error.code, error.message);
+                callback([]);
+            }
+        );
+    },
+};
+
 export const propertyService = {
     getAll: () => firestoreService.getAllDocuments('properties'),
     subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('properties', callback),
@@ -590,5 +927,54 @@ export const propertyService = {
     create: (data: any) => firestoreService.addDocument('properties', data),
     update: (id: string, data: any) => firestoreService.updateDocument('properties', id, data),
     delete: (id: string) => firestoreService.deleteDocument('properties', id)
+};
+
+// ============================================
+// USER LOG SERVICE
+// ============================================
+export interface UserLog {
+    id?: string;
+    userId: string;
+    userName: string;
+    userRole: string;
+    actionType: string;
+    description: string;
+    payload?: Record<string, any>;
+    timestamp: string;
+}
+
+export const userLogService = {
+    getAll: () => firestoreService.getAllDocuments('user_log'),
+    subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('user_log', callback),
+    logAction: async (
+        actionType: string,
+        description: string,
+        payload?: Record<string, any>,
+        userContext?: { id: string; name: string; role: string }
+    ) => {
+        const currentUser = userContext || session.read();
+        const userId = currentUser?.id || 'anonymous';
+        const userName = currentUser?.name || 'Anonymous';
+        const userRole = currentUser?.role || 'Guest';
+
+        const logDoc = {
+            userId,
+            userName,
+            userRole,
+            actionType,
+            description,
+            payload: payload || {},
+            timestamp: new Date().toISOString()
+        };
+
+        try {
+            const result = await firestoreService.addDocument('user_log', logDoc);
+            console.log(`[user_log] Successfully recorded log: ${actionType} - ${description}`, result);
+            return result;
+        } catch (error: any) {
+            console.warn('🔥 Failed to write user action to Firestore user_log:', error);
+            return { success: false, error: error.message };
+        }
+    }
 };
 

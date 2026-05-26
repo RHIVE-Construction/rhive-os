@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PlexusShape from './PlexusShape';
+import { getMapsApiKey } from '../lib/mapsConfig';
 
 // Simple icon placeholder component for StyleShowcase
 const IconPlaceholder: React.FC<{ className?: string }> = ({ className = '' }) => (
@@ -1222,15 +1223,16 @@ const EstimationPreview = () => {
             });
         };
 
-        const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
-        if (apiKey) {
-            loadScript(
-                `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`,
-                initAutocomplete
-            );
-        } else {
-            console.warn("Google Maps API Key not found in environment variables.");
-        }
+        getMapsApiKey().then(apiKey => {
+            if (apiKey) {
+                loadScript(
+                    `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`,
+                    initAutocomplete
+                );
+            } else {
+                console.warn('[RHIVE] Maps API key not available from backend.');
+            }
+        });
     }, []);
 
     const toggleBuilding = (name: string) => {
