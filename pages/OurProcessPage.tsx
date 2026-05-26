@@ -2,8 +2,10 @@
 import React from 'react';
 import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
-import { Check, BoltIcon } from '../components/icons';
+import { Check, BoltIcon, ShieldCheckIcon } from '../components/icons';
 import { cn } from '../lib/utils';
+import ContextualCTA from '../components/ContextualCTA';
+import GlobalBottomCTA from '../components/GlobalBottomCTA';
 
 const StageNode = ({ number, title, description, isLast }: any) => (
     <div className="flex gap-6 md:gap-10 items-start">
@@ -42,6 +44,33 @@ const OurProcessPage: React.FC = () => {
             title="The 10-Stage Journey"
             description="Experience a construction project defined by transparency, automation, and consistent communication."
         >
+            {/* 1-2-3 Summary Graphic */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="bg-black/40 border border-white/10 p-6 text-center">
+                    <div className="text-4xl font-black text-[#ec028b] mb-4 font-display italic">1</div>
+                    <h3 className="text-white font-bold uppercase tracking-widest mb-2">Assess</h3>
+                    <p className="text-gray-400 text-sm">AI-powered mapping & instant quote.</p>
+                </div>
+                <div className="bg-black/40 border border-white/10 p-6 text-center">
+                    <div className="text-4xl font-black bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent mb-4 font-display italic">2</div>
+                    <h3 className="text-white font-bold uppercase tracking-widest mb-2">Approve</h3>
+                    <p className="text-gray-400 text-sm">Fixed-cost transparent contracts.</p>
+                </div>
+                <div className="bg-black/40 border border-white/10 p-6 text-center">
+                    <div className="text-4xl font-black text-rhive-gold mb-4 font-display italic">3</div>
+                    <h3 className="text-white font-bold uppercase tracking-widest mb-2">Deploy</h3>
+                    <p className="text-gray-400 text-sm">Certified swift installation.</p>
+                </div>
+            </div>
+
+            {/* Trust Badge */}
+            <div className="mb-12 flex justify-center">
+                <div className="inline-flex items-center gap-4 px-6 py-3 bg-green-500/10 border border-green-500/30 rounded-full">
+                    <ShieldCheckIcon className="w-6 h-6 text-green-500" />
+                    <span className="text-green-400 font-bold uppercase tracking-widest text-sm">Licensed, Bonded, and Insured</span>
+                </div>
+            </div>
+
             <Card className="p-0 border-0">
                 <div className="p-8 md:p-12">
                     <div className="mb-10 p-6 bg-[#ec028b]/5 border border-[#ec028b]/20 flex items-center gap-4" style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}>
@@ -60,9 +89,14 @@ const OurProcessPage: React.FC = () => {
                 </div>
             </Card>
 
-            <div className="mt-8 text-center pb-12">
-                <p className="text-[var(--rhive-text-muted)] text-base font-mono uppercase tracking-[0.4em] opacity-50">RHIVE QOS V.3.0 // PROCESS_ENGINE_ACTIVE</p>
-            </div>
+            {/* Contextual CTA */}
+            <ContextualCTA 
+                message="Ready for a stress-free installation?" 
+                buttonText="Start the Process Today" 
+            />
+
+            {/* Global CTA */}
+            <GlobalBottomCTA />
         </PageContainer>
     );
 };

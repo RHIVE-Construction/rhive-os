@@ -19,7 +19,7 @@ export const WeatherReport: React.FC<WeatherReportProps> = ({ onDateSelect }) =>
     <div className="bg-black/40 border border-gray-800 rounded-[20px] overflow-hidden backdrop-blur-md shadow-2xl">
       <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/40">
         <h3 className="text-base font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
-          <CloudArrowUpIcon className="w-4 h-4 text-[#00D1FF]" />
+          <CloudArrowUpIcon className="w-4 h-4" color="url(#blue-white-grad)" />
           Verified Storm History Feed
         </h3>
         <span className="text-base text-gray-500 font-bold uppercase tracking-tight">DATA SOURCE: NWS / NOAA</span>

@@ -12,7 +12,7 @@ const Tpo60Page: React.FC = () => {
             desc: "GAF EverGuard® System Limited Warranty including 20 years of non-prorated material and labor coverage. Backed by RHIVE's certified installation."
         },
         {
-            icon: <Layers className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <Layers className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "TPO 60 MIL MEMBRANE",
             desc: "GAF EverGuard® 60 mil TPO. Highly reflective, energy-efficient, and puncture-resistant single-ply roofing proven in commercial environments."
         },
@@ -22,7 +22,7 @@ const Tpo60Page: React.FC = () => {
             desc: "All seams are heat-welded by robotic automatic welders to form a single, impenetrable, monolithic layer across the entire roof surface."
         },
         {
-            icon: <FileCheck className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <FileCheck className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "POLYISO INSULATION",
             desc: "EnergyGuard™ Polyiso Insulation provides high thermal efficiency (R-Value), minimizing heating and cooling costs for your facility."
         },
@@ -32,7 +32,7 @@ const Tpo60Page: React.FC = () => {
             desc: "Prevents interior moisture from infiltrating the roofing assembly, ensuring longevity and maintaining insulation performance."
         },
         {
-            icon: <Wrench className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <Wrench className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "FLASHINGS & DETAILS",
             desc: "Pre-molded, factory-built accessories for pipes, corners, and curbs to eliminate weak points and human error in crucial transition areas."
         }

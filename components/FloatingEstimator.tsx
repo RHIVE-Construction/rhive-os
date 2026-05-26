@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Gauge,
@@ -25,7 +26,11 @@ export const FloatingEstimator: React.FC = () => {
     const [address, setAddress] = useState('');
     const [activeProtocol, setActiveProtocol] = useState<string | null>(null);
 
-    React.useEffect(() => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const autocompleteRef = useRef<any>(null);
+    const isApiReady = useGoogleMapsApi();
+
+    useEffect(() => {
         const handleOpen = (e: any) => {
             setActiveProtocol(e.detail?.protocol || null);
             setIsOpen(true);
@@ -34,6 +39,38 @@ export const FloatingEstimator: React.FC = () => {
         window.addEventListener('open-estimator', handleOpen);
         return () => window.removeEventListener('open-estimator', handleOpen);
     }, []);
+
+    useEffect(() => {
+        if (!isApiReady || !inputRef.current || !window.google || !window.google.maps.places) return;
+        if (autocompleteRef.current) return;
+
+        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+            types: ['address'],
+            fields: ['formatted_address'],
+            componentRestrictions: { country: 'us' }
+        });
+
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+                setAddress(place.formatted_address);
+            } else if (inputRef.current) {
+                setAddress(inputRef.current.value);
+            }
+        });
+
+        autocompleteRef.current = autocomplete;
+
+        return () => {
+            if (autocompleteRef.current) {
+                window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+                autocompleteRef.current = null;
+            }
+            // Remove pac-containers only if they persist
+            const pacContainers = document.querySelectorAll('.pac-container');
+            pacContainers.forEach((el) => el.remove());
+        };
+    }, [isApiReady, step, isOpen]);
 
     const steps = [
         { id: 'address', label: 'Identity' },
@@ -57,7 +94,7 @@ export const FloatingEstimator: React.FC = () => {
                 }}
                 whileHover={{ scale: 1.05, x: -10 }}
                 whileTap={{ scale: 0.95 }}
-                className="fixed right-0 top-1/2 -translate-y-1/2 z-[600] flex items-center gap-3 bg-[var(--rhive-bg)] text-[var(--rhive-text)] px-4 py-10 rounded-l-3xl shadow-[0_20px_60px_rgba(236,2,139,0.4)] hover:shadow-pink-glow transition-all group overflow-hidden border border-[var(--rhive-border)] outline-none"
+                className="fixed right-0 top-1/2 -translate-y-1/2 z-[600] flex items-center gap-3 bg-[var(--rhive-bg)] text-[var(--rhive-text)] px-4 py-10 rounded-l-3xl shadow-[-20px_0_40px_rgba(236,2,139,0.3)] hover:shadow-[-30px_0_60px_rgba(236,2,139,0.6)] transition-all group overflow-hidden border border-[var(--rhive-border)] outline-none"
                 initial={{ x: 100 }}
                 animate={{ x: 0 }}
                 transition={{ type: 'spring', damping: 20, stiffness: 100 }}
@@ -222,8 +259,9 @@ export const FloatingEstimator: React.FC = () => {
                                             <Search size={22} />
                                         </div>
                                         <input
+                                            ref={inputRef}
                                             type="text"
-                                            placeholder="STREET ADDRESS..."
+                                            placeholder={isApiReady ? "STREET ADDRESS..." : "INITIALIZING..."}
                                             value={address}
                                             onChange={(e) => setAddress(e.target.value)}
                                             className="w-full bg-[var(--rhive-bg)] border-2 border-[var(--rhive-border)] py-6 pl-16 pr-8 text-base font-black uppercase tracking-widest outline-none focus:border-rhive-pink transition-all placeholder-[var(--rhive-text-muted)] text-[var(--rhive-text)]"

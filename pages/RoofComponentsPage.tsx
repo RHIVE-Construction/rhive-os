@@ -5,6 +5,8 @@ import { Settings, Shield, Droplets, Snowflake, Flame, Construction, Wrench, Inf
 import { roofComponents, ComponentDetail } from '../data/roofComponentsData';
 import ComponentLightbox from '../components/ComponentLightbox';
 import PlexusShape from '../components/PlexusShape';
+import ContextualCTA from '../components/ContextualCTA';
+import GlobalBottomCTA from '../components/GlobalBottomCTA';
 
 const CategoryIcon = ({ category, className }: { category: string, className?: string }) => {
     switch (category) {
@@ -194,23 +196,14 @@ const RoofComponentsPage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* FOOTER CALL TO ACTION */}
-                <section className="bg-white/5 border border-white/10 p-12 relative overflow-hidden" 
-                    style={{ clipPath: 'polygon(32px 0, 100% 0, 100% calc(100% - 32px), calc(100% - 32px) 100%, 0 100%, 0 32px)' }}>
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--rhive-pink)]/5 blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                    <div className="relative z-10 max-w-2xl">
-                        <h4 className="text-base font-bold text-[var(--rhive-pink)] uppercase tracking-widest mb-4">The RHIVE Commitment</h4>
-                        <h2 className="text-4xl font-black uppercase tracking-tighter mb-6 leading-none">Complete System <br/>Certification.</h2>
-                        <p className="text-gray-400 font-serif italic text-base md:text-lg max-w-prose mb-10 leading-relaxed">
-                            Every component we install is selected for maximum durability and thermal efficiency. 
-                            We don't just build roofs; we engineer weather-defense ecosystems.
-                        </p>
-                        <button className="flex items-center gap-4 group">
-                            <span className="text-base font-bold uppercase tracking-widest bg-[var(--rhive-pink)] px-8 py-4 group-hover:bg-white group-hover:text-black transition-all">Request Component Diagnostic</span>
-                            <ChevronRight className="w-5 h-5 text-[var(--rhive-pink)] group-hover:translate-x-2 transition-transform" />
-                        </button>
-                    </div>
-                </section>
+                {/* Contextual CTA */}
+                <ContextualCTA 
+                    message="Need precise numbers for your project?" 
+                    buttonText="Get a Detailed Material Quote" 
+                />
+
+                {/* Global CTA */}
+                <GlobalBottomCTA />
             </main>
 
             {/* LIGHTBOX */}

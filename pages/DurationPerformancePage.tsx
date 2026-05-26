@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { Shield, Zap, Hammer, FileCheck, Anchor, Wind, Wrench, Menu } from 'lucide-react';
+import ContextualCTA from '../components/ContextualCTA';
+import GlobalBottomCTA from '../components/GlobalBottomCTA';
 
 const DurationPerformancePage: React.FC = () => {
     const { setActivePageId } = useNavigation();
@@ -12,7 +14,7 @@ const DurationPerformancePage: React.FC = () => {
             desc: "Includes 50 years of non-prorated material and labor coverage, 10 years of workmanship coverage, 130 MPH wind resistance, and 25 years of algae resistance. Conferred automatically by RHIVE's certified installation."
         },
         {
-            icon: <Hammer className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <Hammer className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "FIELD SHINGLES",
             desc: "Owens Corning Duration Series Shingles: 50-Year Preferred Protection featuring SureNail Technology, 130 MPH Wind Rating, and guaranteed StreakGuard™ Algae Resistance 25YR."
         },
@@ -22,7 +24,7 @@ const DurationPerformancePage: React.FC = () => {
             desc: "Electro-galvanized coil nails installed with 6 nails per shingle (utilizing SureNail Technology) for superior wind resistance to exceed standard building codes."
         },
         {
-            icon: <FileCheck className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <FileCheck className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "UNDERLAYMENT",
             desc: "Owens Corning ProArmor®: A high-performance synthetic underlayment installed on the entire non-covered roof field as a secondary water-shedding barrier."
         },
@@ -32,7 +34,7 @@ const DurationPerformancePage: React.FC = () => {
             desc: "Owens Corning Starter Strip Plus: A specialized shingle installed on all eaves for a straight edge and an effective perimeter seal against high winds."
         },
         {
-            icon: <Wrench className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <Wrench className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "HIP & RIDGE",
             desc: "Owens Corning ProEdge Hip & Ridge Shingles: Provides an architectural, high-profile look while delivering enhanced system performance and 130 mph wind resistance."
         },
@@ -88,18 +90,15 @@ const DurationPerformancePage: React.FC = () => {
                     ))}
                 </div>
 
-                {/* CTA */}
-                <div className="bg-gradient-to-br from-[var(--rhive-pink)]/10 to-transparent p-10 border border-[var(--rhive-pink)]/20 text-center">
-                    <h3 className="text-2xl leading-tight font-black text-white uppercase mb-4">Protect Your Structure Today</h3>
-                    <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-prose mx-auto mb-8">Get an instant estimate for the O.C. Duration package using our transparent pricing engine.</p>
-                    <button
-                        onClick={() => setActivePageId('P-12')}
-                        className="px-8 py-4 bg-[var(--rhive-pink)] hover:bg-[#c90278] text-white font-bold uppercase tracking-widest text-base transition-colors"
-                    >
-                        Request A Quote
-                    </button>
-                </div>
+                {/* Contextual CTA */}
+                <ContextualCTA 
+                    message="Need precise numbers for your project?" 
+                    buttonText="Get a Detailed Material Quote" 
+                />
             </div>
+            
+            {/* Global CTA */}
+            <GlobalBottomCTA />
         </div>
     );
 };

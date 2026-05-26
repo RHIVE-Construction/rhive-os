@@ -85,7 +85,7 @@ export const AboutUsHeroModule = () => (
                     </div>
                     <div className="w-[1px] bg-white/10" />
                     <div className="text-center">
-                        <div className="text-3xl font-black text-rhive-blue mb-1">0%</div>
+                        <div className="text-3xl font-black bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent mb-1">0%</div>
                         <div className="text-base uppercase tracking-widest text-white/50 font-bold">Salesman Markup</div>
                     </div>
                 </div>

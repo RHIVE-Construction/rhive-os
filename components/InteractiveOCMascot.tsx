@@ -126,7 +126,7 @@ export const InteractiveOCMascot = () => {
 
                     <img
                         ref={pantherRef}
-                        src="/panther-transparent.png"
+                        src="https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FImages%2FUntitled%20design%20(2).png?alt=media&token=c92ce786-7403-4399-93cf-b36d176fc563"
                         alt="Owens Corning Panther"
                         className="w-full h-full object-contain origin-bottom filter drop-shadow-[0_20px_30px_rgba(0,0,0,0.7)] translate-y-12 scale-100 pointer-events-none"
                         style={{ willChange: 'transform' }}
@@ -170,14 +170,14 @@ export const InteractiveOCMascot = () => {
                             </div>
 
                             {/* Workmanship & Installer Guarantee */}
-                            <div className="flex items-start gap-4 p-4 bg-white/5 border border-white/5 hover:border-[#00D1FF]/30 transition-colors">
-                                <div className="p-2 bg-[#00D1FF]/10 border border-[#00D1FF]/20">
+                            <div className="flex items-start gap-4 p-4 bg-white/5 border border-white/5 hover:border-[var(--rhive-blue)]/30 transition-colors">
+                                <div className="p-2 bg-[var(--rhive-blue)]/10 border border-[var(--rhive-blue)]/20">
                                     <div className="w-5 h-5 flex items-center justify-center">
-                                        <div className="w-3 h-3 bg-[#00D1FF] rotate-45 shadow-[0_0_10px_#00D1FF]" />
+                                        <div className="w-3 h-3 bg-[var(--rhive-blue)] rotate-45 shadow-[0_0_10px_var(--rhive-blue)]" />
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <span className="text-[#00D1FF] font-black text-base uppercase block tracking-widest mb-1">RHIVE MASTER INSTALLER GUARANTEE</span>
+                                    <span className="bg-gradient-to-t from-[var(--rhive-blue)] to-white bg-clip-text text-transparent font-black text-base uppercase block tracking-widest mb-1">RHIVE MASTER INSTALLER GUARANTEE</span>
                                     <span className="text-white font-black text-base uppercase block tracking-wider mb-1">LIFETIME NO-LEAK CRAFTSMANSHIP</span>
                                     <p className="text-gray-500 text-base uppercase font-bold leading-tight tracking-widest">A zero-fail, in-house commitment to your property's absolute moisture defense for the life of the shingle.</p>
                                 </div>

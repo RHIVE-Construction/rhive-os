@@ -4,6 +4,7 @@ import React from 'react';
 // Import all page components
 import LoginPage from './pages/LoginPage';
 import PublicHomepage from './pages/PublicHomepage'; // P-00
+import PublicHomepageV2 from './pages/PublicHomepageV2'; // P-00-V2
 import CurrentWebsitePage from './pages/CurrentWebsitePage'; // P-00a
 import Web2Page from './pages/Web2Page'; // P-00b
 import AboutUsPage from './pages/AboutUsPage'; // P-01
@@ -23,7 +24,7 @@ import PremiumDesignerPackagePage from './pages/PremiumDesignerPackagePage'; // 
 import DurationSpecificationPrint from './pages/DurationSpecificationPrint'; // P-02a-SPEC
 import ScopeOfWorkPage from './pages/ScopeOfWorkPage'; // P-Scope
 import OurProcessPage from './pages/OurProcessPage'; // P-03
-import FinancingPage from './pages/FinancingPage'; // P-08
+import FinancingPage from './pages/FinancingPage'; // P-04
 import ContactPage from './pages/ContactPage'; // P-05
 import PasswordResetPage from './pages/PasswordResetPage'; // P-07
 import ContractorSignupPage from './pages/ContractorSignupPage'; // P-09
@@ -69,6 +70,8 @@ import ChatbotTestingPage from './pages/ChatbotTestingPage'; // E-TEST
 import RHIVEBrandingPage from './pages/RHIVEBrandingPage'; // E-39
 import InsurancePage from './pages/InsurancePage'; // P-13
 import PreConversionRecordPage from './pages/PreConversionRecordPage'; // (Simulation)
+import UniversalLandingPage from './pages/UniversalLandingPage'; // P-Landing
+import MaintenancePage from './pages/MaintenancePage'; // P-14
 
 // Specific stage pages
 import LeadPage from './pages/LeadPage'; // E-26
@@ -93,6 +96,7 @@ const Placeholder = ({ name }: { name: string }) => (
 export const pageComponentMap: Record<string, React.FC> = {
   // Public
   'P-00': PublicHomepage,
+  'P-00-V2': PublicHomepageV2,
   'P-00a': CurrentWebsitePage,
   'P-00b': Web2Page,
   'P-01': AboutUsPage,
@@ -115,12 +119,14 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-05': ContactPage,
   'P-06': LoginPage,
   'P-07': PasswordResetPage,
-  'P-08': FinancingPage,
+  'P-04': FinancingPage,
   'P-09': ContractorSignupPage,
   'P-10': PublicCareersPage,
   'P-11': JobApplicationPage,
   'P-12': EstimateToolPage,
   'P-13': InsurancePage,
+  'P-14': MaintenancePage,
+  'P-Landing': UniversalLandingPage,
 
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,

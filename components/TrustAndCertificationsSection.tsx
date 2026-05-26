@@ -94,7 +94,7 @@ const TrustAndCertificationsSection = () => {
 
                         {/* Celebratory Badge */}
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-[var(--rhive-pink)] via-[#00D1FF] to-[var(--rhive-pink)] opacity-30 blur group-hover:opacity-100 group-hover:animate-pulse transition duration-1000"></div>
+                            <div className="absolute -inset-1 bg-gradient-to-r from-[var(--rhive-pink)] via-[var(--rhive-blue)] to-[var(--rhive-pink)] opacity-30 blur group-hover:opacity-100 group-hover:animate-pulse transition duration-1000"></div>
                             <div className="relative flex items-center gap-3 px-6 py-3 bg-black border border-white/20 w-fit cursor-default">
                                 <Shield className="w-5 h-5 text-[var(--rhive-pink)] animate-bounce" />
                                 <span className="text-base font-black uppercase tracking-[0.3em] text-white">Preferred Protection Upgrade Unlocked</span>

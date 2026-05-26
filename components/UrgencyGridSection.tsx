@@ -34,9 +34,9 @@ const UrgencyGridSection = () => {
             icon: <Droplet className="w-8 h-8" />,
             title: "INTERIOR WATER STAINS",
             desc: "If you see ceiling stains, thousands of dollars in hidden decking and insulation rot have already occurred above it. Immediate action is critical.",
-            color: "text-[#00D1FF]",
-            bgHover: "hover:bg-[#00D1FF]/20",
-            borderColor: "hover:border-[#00D1FF]/50",
+            color: "text-blue-500",
+            bgHover: "hover:bg-blue-500/20",
+            borderColor: "hover:border-blue-500/50",
             image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600"
         }
     ];

@@ -48,7 +48,9 @@ const getIconForPage = (id: string) => {
     if (id === 'P-09') return <IdentificationIcon className="h-5 w-5" />;
     if (id === 'P-10' || id === 'P-11') return <DocumentTextIcon className="h-5 w-5" />;
     if (id === 'P-12') return <CalculatorIcon className="h-5 w-5" />;
+    if (id === 'P-Landing') return <SparklesIcon className="h-5 w-5" />;
     if (id === 'P-00') return <SparklesIcon className="h-5 w-5" />;
+    if (id === 'P-00-V2') return <SparklesIcon className="h-5 w-5" />;
     if (id === 'P-00a') return <BoltIcon className="h-5 w-5" />;
 
     // ADMIN (A-Series)

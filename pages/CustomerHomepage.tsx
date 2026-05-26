@@ -22,7 +22,7 @@ const CustomerHomepage: React.FC = () => {
                     <span className="text-sm text-gray-500 font-mono hidden md:inline-block">Simulate Role:</span>
                     <button 
                         onClick={() => setIsCommercial(!isCommercial)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors border ${isCommercial ? 'bg-[#00D1FF]/20 border-[#00D1FF]/40 text-[#00D1FF]' : 'bg-transparent border-white/10 text-gray-400 hover:text-white'}`}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors border ${isCommercial ? 'bg-gradient-to-b from-white/10 to-rhive-blue/30 border-rhive-blue/50 text-white shadow-[0_0_15px_rgba(8,19,124,0.4)]' : 'bg-transparent border-white/10 text-gray-400 hover:text-white'}`}
                     >
                         {isCommercial ? 'Commercial' : 'Residential'}
                     </button>
@@ -30,11 +30,11 @@ const CustomerHomepage: React.FC = () => {
             </div>
 
             {isCommercial && (
-                <div className="mb-8 p-4 bg-black/40 border border-[#00D1FF]/30 rounded-lg flex items-center justify-between">
+                <div className="mb-8 p-4 bg-black/40 border border-rhive-blue/40 shadow-[0_0_15px_rgba(8,19,124,0.2)] rounded-lg flex items-center justify-between">
                     <div>
-                        <span className="text-xs uppercase tracking-widest text-[#00D1FF] font-bold block mb-1">Portfolio Toggle</span>
-                        <h2 className="text-white font-mono flex items-center gap-2 cursor-pointer hover:text-[#00D1FF] transition-colors">
-                            The Waverly HOA <ChevronDown className="w-4 h-4" />
+                        <span className="text-xs uppercase tracking-widest bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent font-bold block mb-1">Portfolio Toggle</span>
+                        <h2 className="text-white font-mono flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                            The Waverly HOA <ChevronDown className="w-4 h-4 text-white/50" />
                         </h2>
                     </div>
                 </div>
@@ -49,9 +49,9 @@ const CustomerHomepage: React.FC = () => {
             {/* Unified Comm Hub & Digital Wallet Entry */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {/* Unified Comm Hub */}
-                <Card title="Latest Update" className="border-t border-[#00D1FF]/30">
+                <Card title="Latest Update" className="border-t border-rhive-blue/40 shadow-[0_-5px_15px_rgba(8,19,124,0.1)]">
                     <div className="flex gap-4">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#00D1FF]/20 flex items-center justify-center">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-b from-white/20 to-rhive-blue/40 border border-rhive-blue/30 flex items-center justify-center">
                             <span className="text-white font-bold">R</span>
                         </div>
                         <div>
@@ -59,8 +59,8 @@ const CustomerHomepage: React.FC = () => {
                             <span className="text-xs text-gray-500 font-mono">— RHIVE Team (2 hours ago)</span>
                         </div>
                     </div>
-                    <button className="mt-4 w-full py-2 bg-white/5 hover:bg-white/10 text-[#00D1FF] text-sm font-bold border border-white/10 flex items-center justify-center gap-2">
-                        <Cog6ToothIcon className="w-4 h-4" /> Message Support
+                    <button className="mt-4 w-full py-2 bg-gradient-to-b from-white/5 to-rhive-blue/10 hover:from-white/10 hover:to-rhive-blue/20 text-white text-sm font-bold border border-rhive-blue/20 flex items-center justify-center gap-2 transition-all">
+                        <Cog6ToothIcon className="w-4 h-4 text-white/70" /> Message Support
                     </button>
                 </Card>
 

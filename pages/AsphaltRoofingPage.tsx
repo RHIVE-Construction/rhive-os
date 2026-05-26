@@ -14,6 +14,8 @@ import ProcessTimelineSection from '../components/ProcessTimelineSection';
 import FinancialInsuranceSection from '../components/FinancialInsuranceSection';
 import TrustAndCertificationsSection from '../components/TrustAndCertificationsSection';
 import CommercialCapExCTA from '../components/CommercialCapExCTA';
+import ContextualCTA from '../components/ContextualCTA';
+import GlobalBottomCTA from '../components/GlobalBottomCTA';
 
 const AsphaltRoofingPage = () => {
     const { setActivePageId } = useNavigation();
@@ -32,7 +34,7 @@ const AsphaltRoofingPage = () => {
             name: 'O.C. DURATION FLEX®',
             type: 'MAXIMUM IMPACT DEFENSE',
             description: 'SBS modified polymer armor. Engineered to aggressively absorb extreme hail and wind impacts while maintaining ultimate flexibility.',
-            color: '#00D1FF',
+            color: 'var(--rhive-blue)',
             image: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FImages%2Fduration%20flex.jpg?alt=media&token=aedc6ffb-3b7d-418e-967d-6d45eb6595c8',
             features: ['Class 4 Impact Rated', 'SBS Polymer Protection', 'Extreme Weather-Ready'],
             cta: 'Configure Flex',
@@ -347,6 +349,15 @@ const AsphaltRoofingPage = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Contextual CTA */}
+            <ContextualCTA 
+                message="Need precise numbers for your project?" 
+                buttonText="Get a Detailed Material Quote" 
+            />
+
+            {/* Global CTA */}
+            <GlobalBottomCTA />
 
             {/* LIGHTBOXES */}
             <ShingleDurationLightbox isOpen={durationOpen} onClose={() => setDurationOpen(false)} />

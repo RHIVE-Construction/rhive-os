@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { Shield, Map, Target, Layers, Anchor, Wind, Wrench } from 'lucide-react';
+import ContextualCTA from '../components/ContextualCTA';
+import GlobalBottomCTA from '../components/GlobalBottomCTA';
 
 const DesignerPackagePage: React.FC = () => {
     const { setActivePageId } = useNavigation();
@@ -64,6 +66,24 @@ const DesignerPackagePage: React.FC = () => {
                     </p>
                 </div>
 
+                {/* Visual Gallery (I Target) */}
+                <div className="mb-16">
+                    <div className="flex items-center gap-4 mb-6">
+                        <h2 className="text-2xl leading-tight font-black text-white uppercase tracking-tight">Exclusive Gallery</h2>
+                        <div className="h-[1px] flex-grow bg-gradient-to-r from-rhive-gold/50 to-transparent" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="h-72 overflow-hidden rounded-sm group relative">
+                            <img src="https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FGAF%20Woodland%2FHouse%2FCedarwood%20Abbey%20House.png?alt=media&token=7c633769-7bf9-4576-8e41-a09951317e80" alt="Stunning Roof" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                            <div className="absolute bottom-0 left-0 bg-black/80 px-4 py-2 font-mono text-xs tracking-widest uppercase text-rhive-gold">Stunning Visuals</div>
+                        </div>
+                        <div className="h-72 overflow-hidden rounded-sm group relative">
+                            <img src="https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FGAF%20Woodland%2FHouse%2FCastlewood%20Gray%20House.png?alt=media&token=0d9c4275-95a9-496a-a778-553a3a97e149" alt="Exclusive Design" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                            <div className="absolute bottom-0 left-0 bg-black/80 px-4 py-2 font-mono text-xs tracking-widest uppercase text-rhive-gold">Maximum Curb Appeal</div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Inclusions Grid */}
                 <h2 className="text-2xl leading-tight font-black text-white uppercase mb-8 tracking-tight">System Inclusions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
@@ -82,18 +102,15 @@ const DesignerPackagePage: React.FC = () => {
                     ))}
                 </div>
 
-                {/* CTA */}
-                <div className="bg-gradient-to-br from-rhive-gold/10 to-transparent p-10 border border-rhive-gold/20 text-center">
-                    <h3 className="text-2xl leading-tight font-black text-white uppercase mb-4">Elevate Your Architecture</h3>
-                    <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-prose mx-auto mb-8">Get an instant estimate for the GAF Designer Woodland package using our pricing engine.</p>
-                    <button
-                        onClick={() => setActivePageId('P-12')}
-                        className="px-8 py-4 bg-rhive-gold hover:bg-[#d49938] text-black font-black uppercase tracking-widest text-base transition-colors"
-                    >
-                        Request A Quote
-                    </button>
-                </div>
+                {/* Contextual CTA */}
+                <ContextualCTA 
+                    message="Love this look for your home?" 
+                    buttonText="Schedule a Design Consultation" 
+                />
             </div>
+            
+            {/* Global Catch-All CTA */}
+            <GlobalBottomCTA />
         </div>
     );
 };

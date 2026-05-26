@@ -231,9 +231,9 @@ const SolarIntelligenceOverlay = ({ data }: { data: AddressData }) => {
             </div>
 
             {/* Storm Severity API Node */}
-            <div className="absolute top-10 right-10 p-4 bg-black/80 backdrop-blur-md border border-[#00D1FF]/40 text-white space-y-2 animate-fade-in delay-300 shadow-2xl transition-all duration-500 hover:border-[#00D1FF]"
+            <div className="absolute top-10 right-10 p-4 bg-black/80 backdrop-blur-md border border-rhive-blue/40 text-white space-y-2 animate-fade-in delay-300 shadow-2xl transition-all duration-500 hover:border-rhive-blue"
                 style={{ clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)" }}>
-                <p className="text-[9px] text-[#00D1FF] font-black uppercase tracking-widest flex items-center gap-1"><CloudArrowUpIcon className="w-3 h-3"/> Storm Severity API</p>
+                <p className="text-[9px] bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent font-black uppercase tracking-widest flex items-center gap-1"><CloudArrowUpIcon className="w-3 h-3" color="url(#blue-white-grad)"/> Storm Severity API</p>
                 <div className="flex justify-between gap-8">
                     <span className="text-gray-400 text-[10px] font-bold uppercase">Wind Gusts (&gt;35mph)</span>
                     <div className="text-right">
@@ -244,7 +244,7 @@ const SolarIntelligenceOverlay = ({ data }: { data: AddressData }) => {
                 <div className="flex justify-between gap-8 items-center pt-1 mt-1 border-t border-gray-800">
                     <span className="text-gray-400 text-[10px] font-bold uppercase">Severe Hail (1.5"+)</span>
                     <div className="text-right">
-                        <span className="block font-mono text-xs text-[#00D1FF] leading-none">Feb 18, 2026</span>
+                        <span className="block font-mono text-xs bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent leading-none">Feb 18, 2026</span>
                         <span className="text-[8px] text-gray-500 font-bold uppercase">@ 11:12 AM MST</span>
                     </div>
                 </div>
@@ -1448,7 +1448,7 @@ const CustomerInputPage: React.FC = () => {
                             <div><p className="text-[9px] text-gray-500 font-black uppercase mb-1">Target Address</p><p className="text-white text-xs font-bold">{propertyData.address || 'Pending'}</p></div>
                             <div><p className="text-[9px] text-gray-500 font-black uppercase mb-1">Primary Contact</p><p className="text-white text-xs font-bold">{contacts.find(c=>c.isPrimary)?.firstName || 'Pending'} {contacts.find(c=>c.isPrimary)?.lastName}</p></div>
                             <div><p className="text-[9px] text-gray-500 font-black uppercase mb-1">Project Category</p><p className="text-[#ec028b] text-xs font-bold uppercase">{projectCategory}</p></div>
-                            <div><p className="text-[9px] text-gray-500 font-black uppercase mb-1">Intake Route</p><p className="text-[#00D1FF] text-xs font-bold uppercase">{buyerIntent || 'Pending Calculation'}</p></div>
+                            <div><p className="text-[9px] text-gray-500 font-black uppercase mb-1">Intake Route</p><p className="bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent text-xs font-bold uppercase">{buyerIntent || 'Pending Calculation'}</p></div>
                         </div>
                         
                         <div className="flex w-full justify-between items-center pt-4">

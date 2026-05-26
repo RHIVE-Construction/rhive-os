@@ -76,7 +76,7 @@ export const AboutUsLightbox: React.FC<AboutUsLightboxProps> = ({ isOpen, onClos
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
                                 <div className="flex items-start gap-4">
                                     <div className="p-2 bg-rhive-blue/10 rounded-sm border border-rhive-blue/30 shrink-0">
-                                        <ShieldCheckIcon className="w-6 h-6 text-rhive-blue" />
+                                        <ShieldCheckIcon className="w-6 h-6" color="url(#blue-white-grad)" />
                                     </div>
                                     <div>
                                         <h4 className="text-white font-bold text-base uppercase mb-1">Total Transparency</h4>

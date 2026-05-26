@@ -79,7 +79,7 @@ const GlitchText = ({ text, className }: { text: string, className?: string }) =
 
             {/* Cyan Glitch Layer */}
             <motion.span
-                className="absolute inset-0 z-20 text-[#00ffff] mix-blend-screen pointer-events-none select-none"
+                className="absolute inset-0 z-20 bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent mix-blend-screen pointer-events-none select-none"
                 initial={{ opacity: 0 }}
                 animate={{
                     opacity: [0, 0.7, 0, 0.4, 0],
@@ -182,7 +182,7 @@ const FounderCard = ({ name, role, bio, image, colorClass = "rhive-pink" }: any)
         <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <h3 className={cn(
                 "font-display text-2xl font-bold uppercase text-[var(--rhive-text)] mb-1 transition-colors",
-                colorClass === "rhive-pink" ? "group-hover:text-rhive-pink" : "group-hover:text-rhive-blue"
+                colorClass === "rhive-pink" ? "group-hover:text-rhive-pink" : "group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-t group-hover:from-rhive-blue group-hover:to-white"
             )}>{name}</h3>
             <p className="text-rhive-gold text-sm font-bold tracking-widest uppercase mb-4">{role}</p>
             <p className="text-[var(--rhive-text-muted)] text-sm leading-relaxed max-w-md font-serif italic">
@@ -341,6 +341,16 @@ const PublicHomepage: React.FC = () => {
                         density={120}
                     />
                 </div>
+                
+                {/* Gradient Definition for Icons */}
+                <svg width="0" height="0" className="absolute pointer-events-none">
+                    <defs>
+                        <linearGradient id="blue-white-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+                            <stop offset="0%" stopColor="#08137C" />
+                            <stop offset="100%" stopColor="#ffffff" />
+                        </linearGradient>
+                    </defs>
+                </svg>
 
                 <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center mt-12">
                     <motion.h1
@@ -465,8 +475,8 @@ const PublicHomepage: React.FC = () => {
             <section id="process" className="h-screen overflow-y-auto py-24 relative bg-[var(--rhive-bg)] snap-start flex flex-col justify-center">
                 <div className="container mx-auto px-6 relative z-10">
                     <div className="text-center mb-20 text-[var(--rhive-text)]">
-                        <div className="inline-block border border-rhive-blue/50 text-rhive-blue px-4 py-1 rounded-full text-xs font-bold tracking-[0.2em] mb-4 uppercase bg-rhive-blue/10">
-                            Zero Surprises Promise
+                        <div className="inline-block border border-rhive-blue/50 px-4 py-1 rounded-full text-xs font-bold tracking-[0.2em] mb-4 uppercase bg-rhive-blue/10">
+                            <span className="bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent">Zero Surprises Promise</span>
                         </div>
                         <h2 className="font-display text-3xl md:text-5xl font-bold uppercase">The 10-Stage Journey</h2>
                     </div>

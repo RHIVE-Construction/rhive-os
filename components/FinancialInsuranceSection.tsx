@@ -120,7 +120,7 @@ const FinancialInsuranceSection = () => {
                             </div>
 
                             <h3 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4 font-sans relative z-10">
-                                TRANSPARENT <span className="text-[#08137C] drop-shadow-[0_0_5px_rgba(8,19,124,0.8)]">EMPOWERING</span>
+                                TRANSPARENT <span className="bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent drop-shadow-[0_0_5px_rgba(8,19,124,0.8)]">EMPOWERING</span>
                             </h3>
 
                             <p className="text-gray-400 font-sans text-base leading-relaxed mb-6 relative z-10 border-l-2 border-[#08137C] pl-4 italic uppercase tracking-wider font-bold">

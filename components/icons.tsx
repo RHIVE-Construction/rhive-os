@@ -54,7 +54,7 @@ export const InformationCircleIcon = createIcon("M12 16V12 M12 8h.01 M22 12a10 1
 export const QuestionMarkCircleIcon = createIcon("M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z");
 
 // All other icons exported as I (DefaultIcon) for safety
-export const StarIcon = I;
+export const StarIcon = createIcon("M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z");
 export const WalletIcon = I;
 export const HeartIcon = I;
 export const BoltIcon = createIcon("M13 2L3 14h9l-1 8 10-12h-9l1-8z");

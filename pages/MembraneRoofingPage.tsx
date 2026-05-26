@@ -37,7 +37,7 @@ const MembraneRoofingPage = () => {
             name: 'GAF PVC 60 MIL',
             type: 'CHEMICAL RESISTANCE',
             description: 'Specialized chemical-resistant base. Highly resistant to fats, oils, and grease in demanding commercial or restaurant environments.',
-            color: '#00D1FF',
+            color: 'var(--rhive-blue)',
             features: ['20-Year NDL Warranty', 'Superior Chemical Defense', 'Grease Resistant'],
             cta: 'View PVC Specs',
             action: () => setActivePageId('P-02b-3')
@@ -250,7 +250,7 @@ const MembraneRoofingPage = () => {
                                 <div className="mb-12 text-left">
                                     <div className="text-base font-black uppercase tracking-widest mb-2" style={{ color: opt.color }}>{opt.type}</div>
                                     <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-4">{opt.name}</h3>
-                                    <p className="text-gray-500 text-base font-serif italic leading-relaxed">{opt.description}</p>
+                                    <p className="text-gray-300 text-base font-sans leading-relaxed">{opt.description}</p>
                                 </div>
 
                                 <div className="space-y-4 mb-12">

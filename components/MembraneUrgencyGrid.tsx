@@ -7,9 +7,9 @@ const MembraneUrgencyGrid = () => {
             icon: <Waves className="w-8 h-8" />,
             title: "PONDING WATER",
             desc: "Water standing on a flat roof for more than 48 hours is a critical failure. It rapidly accelerates membrane degradation and massively increases leak potential.",
-            color: "text-[#00D1FF]",
-            bgHover: "hover:bg-[#00D1FF]/20",
-            borderColor: "hover:border-[#00D1FF]/50",
+            color: "text-blue-500",
+            bgHover: "hover:bg-blue-500/20",
+            borderColor: "hover:border-blue-500/50",
             image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600"
         },
         {

@@ -140,7 +140,7 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                 className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-[2s]"
                             />
                             <div className="absolute bottom-4 left-4 z-20">
-                                <span className="text-base font-black uppercase tracking-[0.3em] text-cyan-400 bg-black/60 px-3 py-1 backdrop-blur-md">RHIVE DEPLOYMENT: PAST JOB</span>
+                                <span className="text-base font-black uppercase tracking-[0.3em] bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent bg-black/60 px-3 py-1 backdrop-blur-md">RHIVE DEPLOYMENT: PAST JOB</span>
                                 <h4 className="text-white font-black text-base mt-2 uppercase tracking-widest">CERTIFIED PREFERRED INSTALLATION</h4>
                             </div>
                         </div>
@@ -206,8 +206,8 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                                         </div>
 
                                                         {/* OC SIDE */}
-                                                        <div className="relative pl-8 border-l-2 border-cyan-500/30">
-                                                            <div className="absolute -left-[9px] top-0 w-4 h-4 bg-cyan-500/50 rotate-45"></div>
+                                                        <div className="relative pl-8 border-l-2 border-rhive-blue/30">
+                                                            <div className="absolute -left-[9px] top-0 w-4 h-4 bg-rhive-blue/50 rotate-45"></div>
                                                             <h5 className="text-base font-black text-white uppercase tracking-widest mb-4 italic">OC PREFERRED PROTECTION (TOTAL SYSTEM)</h5>
                                                             <p className="text-gray-400 font-serif text-base leading-relaxed border-b border-white/5 pb-4 mb-4">
                                                                 50 Years Non-Prorated Material & Labor. Includes 10-Year Workmanship backup from OC if RHIVE goes out of business.
