@@ -153,6 +153,41 @@ const ForecastCard = ({ day, isToday }: { day: DayForecast; isToday: boolean }) 
     );
 };
 
+// ─── Mock data for demo mode (no API key) ────────────────────────────────────
+const _today = new Date();
+const _mkDate = (offset: number) => { const d = new Date(_today); d.setDate(d.getDate() + offset); return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() }; };
+const _sunriseISO = new Date(new Date().setHours(6, 24, 0, 0)).toISOString();
+const _sunsetISO  = new Date(new Date().setHours(20, 11, 0, 0)).toISOString();
+
+const MOCK_CURRENT: CurrentConditions = {
+    currentTime: new Date().toISOString(), isDaytime: true,
+    weatherCondition: { iconBaseUri: '', description: { text: 'Severe Thunderstorm Warning' }, type: 'THUNDERSTORM' },
+    temperature: { degrees: 18, unit: 'CELSIUS' }, feelsLikeTemperature: { degrees: 15, unit: 'CELSIUS' },
+    relativeHumidity: 82, uvIndex: 2, cloudCover: 95, thunderstormProbability: 74,
+    wind: { direction: { cardinal: 'SOUTH_SOUTHWEST', degrees: 202 }, speed: { value: 38, unit: 'KILOMETERS_PER_HOUR' }, gust: { value: 72, unit: 'KILOMETERS_PER_HOUR' } },
+    precipitation: { probability: { percent: 88, type: 'RAIN' }, qpf: { quantity: 14, unit: 'MILLIMETERS' } },
+    visibility: { distance: 6, unit: 'KILOMETERS' },
+    airPressure: { meanSeaLevelMillibars: 998 },
+    currentConditionsHistory: { maxTemperature: { degrees: 23, unit: 'CELSIUS' }, minTemperature: { degrees: 14, unit: 'CELSIUS' } },
+};
+
+const _mkDay = (offset: number, type: string, desc: string, maxC: number, minC: number, rain: number): DayForecast => ({
+    displayDate: _mkDate(offset), maxTemperature: { degrees: maxC, unit: 'CELSIUS' }, minTemperature: { degrees: minC, unit: 'CELSIUS' },
+    sunEvents: { sunriseTime: _sunriseISO, sunsetTime: _sunsetISO },
+    daytimeForecast: { weatherCondition: { iconBaseUri: '', description: { text: desc }, type }, precipitation: { probability: { percent: rain, type: 'RAIN' }, qpf: { quantity: Math.round(rain / 10), unit: 'MILLIMETERS' } }, wind: { direction: { cardinal: 'SSW', degrees: 202 }, speed: { value: 20, unit: 'KILOMETERS_PER_HOUR' }, gust: { value: 35, unit: 'KILOMETERS_PER_HOUR' } }, uvIndex: 4, relativeHumidity: 65 },
+    nighttimeForecast: { weatherCondition: { iconBaseUri: '', description: { text: 'Cloudy' }, type: 'CLOUDY' }, precipitation: { probability: { percent: Math.round(rain / 2), type: 'RAIN' }, qpf: { quantity: 1, unit: 'MILLIMETERS' } } },
+});
+
+const MOCK_FORECAST: DayForecast[] = [
+    _mkDay(0, 'THUNDERSTORM',     'Severe Thunderstorm', 23, 14, 88),
+    _mkDay(1, 'SHOWERS',          'Showers',             19, 11, 65),
+    _mkDay(2, 'PARTLY_CLOUDY',    'Partly Cloudy',       22, 12, 20),
+    _mkDay(3, 'MOSTLY_CLEAR',     'Mostly Clear',        26, 14, 10),
+    _mkDay(4, 'CLEAR',            'Sunny',               28, 16, 5),
+    _mkDay(5, 'MOSTLY_CLOUDY',    'Mostly Cloudy',       25, 15, 30),
+    _mkDay(6, 'SCATTERED_SHOWERS','Scattered Showers',   20, 13, 55),
+];
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const WeatherGuideWidgetPage: React.FC = () => {
     const page = PAGE_GROUPS.flatMap(g => g.pages).find(p => p.id === 'E-30');
@@ -164,11 +199,13 @@ const WeatherGuideWidgetPage: React.FC = () => {
     const [forecast, setForecast] = useState<DayForecast[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [noKey, setNoKey] = useState(false);
+    const isDemoMode = !GOOGLE_WEATHER_API_KEY;
 
     const fetchWeather = useCallback(async (lat: number, lon: number) => {
+        // ── Demo mode: load mock data immediately ──
         if (!GOOGLE_WEATHER_API_KEY) {
-            setNoKey(true);
+            setCurrent(MOCK_CURRENT);
+            setForecast(MOCK_FORECAST);
             return;
         }
         setLoading(true);
@@ -237,26 +274,10 @@ const WeatherGuideWidgetPage: React.FC = () => {
     return (
         <PageContainer
             title={page?.name || 'Weather Guide Widget'}
-            description={page?.description || 'Live weather powered by Google Weather API.'}
         >
             <div className="max-w-4xl mx-auto space-y-6">
 
-                {/* ── API Key Warning ── */}
-                {noKey && (
-                    <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-2xl p-5 text-center space-y-2">
-                        <p className="text-yellow-400 font-bold text-lg">⚠️ Google Weather API Key Required</p>
-                        <p className="text-gray-400 text-sm">
-                            Add your key to your <code className="bg-black/40 px-1.5 py-0.5 rounded text-yellow-300">.env</code> file:
-                        </p>
-                        <code className="block bg-black/50 border border-yellow-500/20 rounded-lg px-4 py-2 text-yellow-300 text-sm font-mono">
-                            VITE_GOOGLE_WEATHER_API_KEY=your_google_maps_api_key_here
-                        </code>
-                        <p className="text-gray-500 text-xs">
-                            Enable the <strong className="text-gray-400">Weather API</strong> in your Google Cloud Console → APIs & Services.
-                            Then restart the dev server.
-                        </p>
-                    </div>
-                )}
+
 
                 {/* ── Search & Controls ── */}
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -432,22 +453,22 @@ const WeatherGuideWidgetPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* ── Setup Instructions (when no key) ── */}
-                {noKey && (
-                    <div className="bg-black/40 border border-white/10 rounded-2xl p-6 space-y-4">
-                        <h3 className="text-white font-bold">🔧 Setup Instructions</h3>
-                        <ol className="space-y-3 text-sm text-gray-400 list-decimal list-inside">
-                            <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-[#ec028b] hover:underline">Google Cloud Console</a></li>
-                            <li>Create or select a project → Enable <strong className="text-white">Weather API</strong> under APIs & Services</li>
-                            <li>Also enable <strong className="text-white">Geocoding API</strong> (for city search)</li>
-                            <li>Go to <strong className="text-white">Credentials</strong> → Create API Key</li>
-                            <li>Create a <code className="bg-black/50 px-1.5 py-0.5 rounded text-yellow-300">.env</code> file in your project root:</li>
-                        </ol>
-                        <pre className="bg-black/60 border border-white/10 rounded-xl p-4 text-sm font-mono text-green-400 overflow-x-auto">
-                            {`VITE_GOOGLE_WEATHER_API_KEY=AIza...your_key_here`}
-                        </pre>
-                        <p className="text-gray-600 text-xs">Restart the dev server after adding the key.</p>
-                    </div>
+                {/* ── Setup Instructions (collapsed in demo mode) ── */}
+                {isDemoMode && (
+                    <details className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden">
+                        <summary className="cursor-pointer px-5 py-3 text-gray-500 text-xs font-semibold hover:text-gray-300 transition-colors list-none flex items-center gap-2">
+                            <span>🔧</span> How to enable live Google Weather data
+                        </summary>
+                        <div className="px-5 pb-5 space-y-3 pt-2 border-t border-white/10">
+                            <ol className="space-y-2 text-sm text-gray-400 list-decimal list-inside">
+                                <li>Go to <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-[#ec028b] hover:underline">Google Cloud Console</a></li>
+                                <li>Enable <strong className="text-white">Weather API</strong> + <strong className="text-white">Geocoding API</strong></li>
+                                <li>Create an API Key under <strong className="text-white">Credentials</strong></li>
+                                <li>Add to your <code className="bg-black/50 px-1.5 py-0.5 rounded text-yellow-300">.env</code> file and restart dev server</li>
+                            </ol>
+                            <pre className="bg-black/60 border border-white/10 rounded-xl p-3 text-xs font-mono text-green-400 overflow-x-auto">{`VITE_GOOGLE_WEATHER_API_KEY=AIza...your_key_here`}</pre>
+                        </div>
+                    </details>
                 )}
             </div>
         </PageContainer>

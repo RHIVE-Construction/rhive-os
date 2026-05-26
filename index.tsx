@@ -2,6 +2,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import * as firebaseServices from './lib/firebaseService';
+
+// Expose services to window for console testing
+(window as any).db_debug = firebaseServices;
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

@@ -1,0 +1,17 @@
+[
+  {
+    "name": "v1 /contacts | KEY:SECRET | Browser UA",
+    "status": 403,
+    "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\n<p>You don't have permis"
+  },
+  {
+    "name": "v1 /calls | KEY:SECRET | Browser UA",
+    "status": 403,
+    "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\n<p>You don't have permis"
+  },
+  {
+    "name": "v1 /users | KEY:SECRET | Browser UA",
+    "status": 403,
+    "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\n<p>You don't have permis"
+  }
+]

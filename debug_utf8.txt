@@ -1,0 +1,47 @@
+﻿[dotenv@17.3.1] injecting env (7) from .env -- tip: ≡ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+node : C:\Users\Victor\Downloads\R
+HIVE2\RHIVE-OS-1.0-Antigravity-1\f
+unctions\index.js:171
+At line:1 char:1
++ node -e 
+"require('./functions/index.js')" 
+> debug_require.txt 2>&1; G ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : Not 
+   Specified: (C:\Users\Victor..  
+  .ns\index.js:171:String) [],    
+ RemoteException
+    + FullyQualifiedErrorId : Nat 
+   iveCommandError
+ 
+    
+.document('contacts/{contactId}')
+     ^
+
+TypeError: 
+functions.firestore.document is 
+not a function
+    at Object.<anonymous> (C:\User
+s\Victor\Downloads\RHIVE2\RHIVE-OS
+-1.0-Antigravity-1\functions\index
+.js:171:6)
+    at Module._compile (node:inter
+nal/modules/cjs/loader:1760:14)
+    at Object..js (node:internal/m
+odules/cjs/loader:1892:10)
+    at Module.load (node:internal/
+modules/cjs/loader:1480:32)
+    at Module._load (node:internal
+/modules/cjs/loader:1299:12)
+    at TracingChannel.traceSync 
+(node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:intern
+al/modules/cjs/loader:245:24)
+    at Module.require (node:intern
+al/modules/cjs/loader:1503:12)
+    at require (node:internal/modu
+les/helpers:152:16)
+    at [eval]:1:1
+
+Node.js v25.2.1

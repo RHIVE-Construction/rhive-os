@@ -240,6 +240,7 @@ export interface Page {
     userType: UserType | 'All';
     description?: string;
     category?: string;
+    parentId?: string;
 }
 
 export interface PageGroup {

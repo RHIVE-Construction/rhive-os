@@ -1,0 +1,15 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // RHIVE QOS — App-managed authentication (password_hash in Firestore)
+    // Firebase Auth is not used for session management, so auth token is not available.
+    // All access is controlled at the application layer.
+
+    match /{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

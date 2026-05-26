@@ -12,8 +12,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { MapPinIcon } from '../components/icons';
 import ContactsListPage from './ContactsListPage';
-
-const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+import { getMapsApiKey } from '../lib/mapsConfig';
 
 const ContactVendorProfilePage: React.FC = () => {
     const page = PAGE_GROUPS.flatMap(g => g.pages).find(p => p.id === 'E-10');
@@ -21,6 +20,11 @@ const ContactVendorProfilePage: React.FC = () => {
 
     const [contactData, setContactData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [mapsKey, setMapsKey] = useState('');
+
+    useEffect(() => {
+        getMapsApiKey().then(setMapsKey);
+    }, []);
 
     useEffect(() => {
         if (!selectedContactId) {
@@ -29,14 +33,21 @@ const ContactVendorProfilePage: React.FC = () => {
         }
 
         const docRef = doc(db, 'contacts', selectedContactId);
-        const unsub = onSnapshot(docRef, (snap) => {
-            if (snap.exists()) {
-                setContactData({ id: snap.id, ...snap.data() });
-            } else {
-                setContactData(null);
+        const unsub = onSnapshot(
+            docRef, 
+            (snap) => {
+                if (snap.exists()) {
+                    setContactData({ id: snap.id, ...snap.data() });
+                } else {
+                    setContactData(null);
+                }
+                setLoading(false);
+            },
+            (err) => {
+                console.warn("⚠️ [RHIVE QOS] Contacts Firestore listener failed (offline/mock):", err);
+                setLoading(false);
             }
-            setLoading(false);
-        });
+        );
 
         return () => unsub();
     }, [selectedContactId]);
@@ -52,8 +63,8 @@ const ContactVendorProfilePage: React.FC = () => {
         projects: contactData?.projects || []
     };
 
-    const satUrl = contractor.address
-        ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(contractor.address)}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${encodeURIComponent(contractor.address)}&key=${MAPS_API_KEY}`
+    const satUrl = mapsKey && contractor.address
+        ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(contractor.address)}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${encodeURIComponent(contractor.address)}&key=${mapsKey}`
         : null;
 
     if (!selectedContactId) {
@@ -106,7 +117,7 @@ const ContactVendorProfilePage: React.FC = () => {
                                         loading="lazy"
                                         allowFullScreen
                                         referrerPolicy="no-referrer-when-downgrade"
-                                        src={`https://www.google.com/maps/embed/v1/place?key=${MAPS_API_KEY}&q=${encodeURIComponent(contractor.address)}&maptype=satellite&zoom=15`}
+                                        src={`https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${encodeURIComponent(contractor.address)}&maptype=satellite&zoom=15`}
                                     ></iframe>
                                     {/* Floating Address Label over Pin */}
                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40px] pointer-events-none z-10">

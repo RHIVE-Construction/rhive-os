@@ -3,7 +3,7 @@ import { ProjectStageLayout } from '../components/ProjectStageLayout';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { ClockIcon, DocumentCheckIcon } from '../components/icons';
-import { firestoreService } from '../lib/firebaseService';
+import { firestoreService, userLogService } from '../lib/firebaseService';
 import { useNavigation } from '../contexts/NavigationContext';
 
 // ─── Bolt icon (local) ───────────────────────────────────────────────────────
@@ -204,6 +204,13 @@ const QuotePage: React.FC = () => {
                     updated_at: new Date().toISOString(),
                 });
             }
+
+            // Log quote approval and signature
+            await userLogService.logAction(
+                'STAGE_CHANGE',
+                `Quote signed & accepted by customer (Project ID: ${project.id})`,
+                { projectId: project.id, oldStage: 'Quote', newStage: 'Sign & Verify', projectName: project.name || 'Unknown' }
+            );
             // Navigate to Sign & Verify page (E-29) while keeping selectedProjectId
             setActivePageId('E-29');
         } catch (err) {

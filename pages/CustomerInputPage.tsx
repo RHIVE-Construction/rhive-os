@@ -45,7 +45,6 @@ import { calculateEstimate } from '../lib/calculations';
 import { INITIAL_SURVEY_STATE } from '../lib/constants';
 import { WeatherReport } from '../components/WeatherReport';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, ProjectStage } from '../types';
-import { createProject as createProjectApi } from '../lib/api';
 
 const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
 
@@ -660,44 +659,6 @@ const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, prope
     );
 };
 
-const SuccessModal = ({ onNavigate }: { onNavigate: () => void }) => {
-    useEffect(() => {
-        const timer = setTimeout(onNavigate, 3000);
-        return () => clearTimeout(timer);
-    }, [onNavigate]);
-
-    return createPortal(
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 animate-in fade-in duration-500">
-            <div className="relative max-w-lg w-full bg-black border border-[#ec028b]/30 shadow-[0_0_100px_rgba(236,2,139,0.2)] p-12 text-center overflow-hidden"
-                style={{ clipPath: "polygon(40px 0, 100% 0, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%, 0 40px)" }}>
-
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(236,2,139,0.1)_0%,transparent_70%)]" />
-
-                <div className="relative z-10 flex flex-col items-center gap-6">
-                    <div className="w-24 h-24 rounded-full border-2 border-[#ec028b] flex items-center justify-center shadow-[0_0_30px_rgba(236,2,139,0.4)] animate-pulse">
-                        <Check className="w-12 h-12 text-[#ec028b]" />
-                    </div>
-
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">System Locked</h2>
-                        <p className="text-gray-400 font-medium tracking-wide">Lead entry successfully</p>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-[#ec028b] text-xs font-black uppercase tracking-widest animate-pulse">
-                        <span className="w-2 h-2 bg-[#ec028b] rounded-full" />
-                        Redirecting to Dashboard...
-                    </div>
-
-                    <Button onClick={onNavigate} className="w-full mt-4 bg-[#ec028b]/10 border border-[#ec028b]/50 text-[#ec028b] hover:bg-[#ec028b] hover:text-white transition-all uppercase tracking-widest font-black py-4">
-                        Access Dashboard Now
-                    </Button>
-                </div>
-            </div>
-        </div>,
-        document.body
-    );
-};
-
 // --- Main Page Component ---
 
 const CustomerInputPage: React.FC = () => {
@@ -777,8 +738,6 @@ const CustomerInputPage: React.FC = () => {
 
 
 
-    const [isSuccess, setIsSuccess] = useState(false);
-
     useEffect(() => {
         if (!isApiReady || !propertyNameRef.current || !isCommercialOrGov || isOrgCollapsed) return;
         const autocomplete = new window.google.maps.places.Autocomplete(propertyNameRef.current, {
@@ -827,68 +786,13 @@ const CustomerInputPage: React.FC = () => {
         }
     }, [projectCategory, contacts, propertyData, companyData.parentCompany, isBillingConfirmed]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (contacts.length === 0) return alert("Please add at least one contact.");
         const primary = contacts.find(c => c.isPrimary) || contacts[0];
         const projNameStr = isCommercialOrGov ? (companyData.propertyName || propertyData.address) : `${primary.lastName} Residence`;
-
-        try {
-            await createProjectApi({
-                userId: primary.existingUserId || 'U-NEW',
-                name: projNameStr,
-                type: projectCategory,
-                property: {
-                    address: propertyData.address,
-                    city: propertyData.city,
-                    state: propertyData.state,
-                    zip: propertyData.zip,
-                    latitude: propertyData.latitude,
-                    longitude: propertyData.longitude
-                },
-                organization: (companyData.parentCompany || companyData.propertyName) ? {
-                    parentCompany: companyData.parentCompany,
-                    propertyName: companyData.propertyName
-                } : undefined,
-                insurance: isInsurance ? {
-                    isClaim: true,
-                    carrier: insuranceInfo.carrier,
-                    status: insuranceStatus,
-                    claimNumber: insuranceInfo.claimNumber,
-                    deductible: insuranceInfo.deductible,
-                    dateOfLoss: insuranceInfo.dateOfLoss,
-                    damageType: insuranceInfo.damageType
-                } : undefined,
-                billing: {
-                    name: billToName || 'Same as Property',
-                    address: billingData
-                },
-                contacts: contacts.map(c => ({
-                    firstName: c.firstName,
-                    lastName: c.lastName,
-                    phone: c.phone,
-                    email: c.email,
-                    role: c.role,
-                    isPrimary: c.isPrimary || false,
-                    preferredContactMethod: c.preferredContactMethod,
-                    responsibilities: c.responsibilities || [],
-                    affiliations: c.affiliations || []
-                })),
-                details: {
-                    purchaseIntent: purchaseIntent,
-                    scopeType: scopeType,
-                    activeLeak: repairDetails.activeLeak,
-                    isOld: repairDetails.isOld,
-                    hasPhotos: repairDetails.hasPhotos,
-                    scheduledInspection: scheduledDetails || undefined
-                }
-            });
-            console.log("✅ Project and Property successfully saved to Firebase!");
-            setIsSuccess(true);
-        } catch (error) {
-            console.error("❌ Failed to save project to database:", error);
-            alert(`Failed to save to Firebase: ${error instanceof Error ? error.message : 'Unknown error'}. Check browser console for details.`);
-        }
+        createProject(projNameStr, projectCategory, propertyData.address, primary.existingUserId || 'U-NEW');
+        setActivePageId('E-18');
     };
 
     const handleDeductibleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1457,10 +1361,8 @@ const CustomerInputPage: React.FC = () => {
                         </div>
                     </CardContent>
                 </Card>
-                <button type="submit" className="hidden" /> {/* Implicit submit for enter key if needed, or just relying on the buttons */}
             </form>
-            {isSuccess && <SuccessModal onNavigate={() => setActivePageId('E-01')} />}
-        </PageContainer >
+        </PageContainer>
     );
 };
 

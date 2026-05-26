@@ -1,0 +1,72 @@
+{
+  "found": true,
+  "contact": {
+    "id": "LxpTm4gjKzaTd6z7ahyG",
+    "project_id": "CsDSKCkh989FY7Q6yye0",
+    "first_name": "James TEST",
+    "last_name": "Gimena TEST",
+    "email": "james.g@rhiveconstruction.com",
+    "phone": "(333) 333-3333",
+    "role": "Property Owner",
+    "is_primary": true,
+    "created_at": "2026-02-16T18:35:51.074Z",
+    "updated_at": "2026-02-16T18:35:51.074Z"
+  },
+  "projects": [
+    {
+      "id": "CsDSKCkh989FY7Q6yye0",
+      "user_id": "U-NEW",
+      "name": "Gimena TEST Residence",
+      "project_type": "Residential",
+      "status": "Lead",
+      "property_address": "280 Bleecker St",
+      "property_city": "New York",
+      "property_state": "NY",
+      "property_zip": "10014",
+      "property": {
+        "address": "280 Bleecker St",
+        "city": "New York",
+        "state": "NY",
+        "zip": "10014",
+        "latitude": 40.7317208,
+        "longitude": -74.0034605
+      },
+      "organization": {
+        "parentCompany": "",
+        "propertyName": "s"
+      },
+      "billing": {
+        "name": "James TEST Gimena TEST",
+        "address": {
+          "address": "280 Bleecker St",
+          "city": "New York",
+          "state": "NY",
+          "zip": "10014",
+          "latitude": 40.7317208,
+          "longitude": -74.0034605,
+          "placeName": "Salt Hank’s"
+        }
+      },
+      "details": {
+        "purchaseIntent": "Ready",
+        "scopeType": "Replacement",
+        "activeLeak": false,
+        "isOld": false,
+        "hasPhotos": false
+      },
+      "created_at": "2026-02-16T18:35:48.521Z",
+      "updated_at": "2026-02-16T18:35:48.521Z"
+    }
+  ],
+  "properties": [
+    {
+      "address": "280 Bleecker St",
+      "city": "New York",
+      "state": "NY",
+      "zip": "10014",
+      "latitude": 40.7317208,
+      "longitude": -74.0034605
+    }
+  ],
+  "contextSummary": "Customer: James TEST Gimena TEST\n                Email: james.g@rhiveconstruction.com\n                Projects: Gimena TEST Residence (Status: Lead)\n                Properties: 280 Bleecker St"
+}

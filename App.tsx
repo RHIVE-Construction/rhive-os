@@ -41,8 +41,6 @@ const AppContentAuthenticated: React.FC = () => {
     useEffect(() => {
         if (currentUser && !activePageId) {
             switch (currentUser.role) {
-                case 'Super Admin': setActivePageId('SA-01'); break;
-                case 'Admin': setActivePageId('E-01'); break; // Unified entry point
                 case 'Employee': setActivePageId('E-01'); break;
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;

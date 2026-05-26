@@ -17,7 +17,7 @@ import {
     XIcon,
     CalendarIcon
 } from '../components/icons';
-import { projectService, firestoreService } from '../lib/firebaseService';
+import { projectService, firestoreService, userLogService } from '../lib/firebaseService';
 import { cn, getStagePageId } from '../lib/utils';
 
 // ─── Conversion Modal ─────────────────────────────────────────────────────────
@@ -267,6 +267,13 @@ const LeadPage: React.FC = () => {
                     converted_to: type,
                 });
             }
+
+            // Log lead conversion successfully
+            await userLogService.logAction(
+                'CONVERT_LEAD',
+                `Lead converted to ${type} (Project ID: ${selectedProjectId})`,
+                { projectId: selectedProjectId, convertTo: type, projectName: project?.name || 'Unknown' }
+            );
         } catch (err) {
             console.error('Conversion error:', err);
         }

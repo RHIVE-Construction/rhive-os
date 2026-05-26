@@ -6,6 +6,13 @@ async function debug() {
     const page = await browser.newPage();
     await page.setViewportSize({ width: 1280, height: 720 });
 
+    // Print all browser console messages and unhandled runtime page errors
+    page.on('console', msg => console.log(`[BRWS ${msg.type().toUpperCase()}] ${msg.text()}`));
+    page.on('pageerror', err => {
+        console.error('🔥 [BRWS RUNTIME EXCEPTION]:', err.message);
+        console.error(err.stack);
+    });
+
     console.log('Navigating to http://localhost:3000/');
     await page.goto('http://localhost:3000/');
     await page.waitForTimeout(5000);
