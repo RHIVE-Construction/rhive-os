@@ -68,7 +68,7 @@ const AppContentAuthenticated: React.FC = () => {
 
     const CurrentPage = pageComponentMap[activePageId] || (() => <div className="p-10 text-gray-400">Select a page from the menu.</div>);
 
-    const isPublicRoute = activePageId.startsWith('P-');
+    const isPublicRoute = (activePageId || '').startsWith('P-');
 
     return (
         <div className={cn(
@@ -99,17 +99,43 @@ const AppContentAuthenticated: React.FC = () => {
 
 const LoginBridge: React.FC = () => {
     const { currentUser, login } = useMockDB();
-    const { setActivePageId } = useNavigation();
+    const { activePageId, setActivePageId } = useNavigation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
+    // Parse URL parameter on mount/popstate so direct links work
+    useEffect(() => {
+        const handleUrlChange = () => {
+            const params = new URLSearchParams(window.location.search);
+            const pageCode = params.get('page');
+            if (pageCode && pageCode !== activePageId) {
+                setActivePageId(pageCode);
+            }
+        };
+
+        handleUrlChange();
+        window.addEventListener('popstate', handleUrlChange);
+        window.addEventListener('nav-page', handleUrlChange);
+        return () => {
+            window.removeEventListener('popstate', handleUrlChange);
+            window.removeEventListener('nav-page', handleUrlChange);
+        };
+    }, [activePageId, setActivePageId]);
+
+    // Force non-public pages back to login/empty if logged out
     useEffect(() => {
         if (!currentUser) {
-            setActivePageId('');
+            if (activePageId && !(activePageId || '').startsWith('P-')) {
+                setActivePageId('');
+            }
         }
-    }, [currentUser, setActivePageId]);
+    }, [currentUser, activePageId, setActivePageId]);
 
     if (!currentUser) {
+        // If a public page is active (except P-06 which is LoginPage itself), render that page inside the public layout!
+        const isPublicPage = (activePageId || '').startsWith('P-') && activePageId !== 'P-06' && activePageId !== '';
+        const CurrentPublicPage = isPublicPage ? pageComponentMap[activePageId] : null;
+
         return (
             <div className={cn(
                 "fixed inset-0 w-screen h-screen overflow-hidden transition-colors duration-500",
@@ -122,7 +148,11 @@ const LoginBridge: React.FC = () => {
                 />
                 <GlobalHeader />
                 <main className="relative z-10 w-full h-full pt-12 flex items-center justify-center overflow-auto px-4">
-                    <LoginPage onLogin={login} />
+                    {CurrentPublicPage ? (
+                        <CurrentPublicPage />
+                    ) : (
+                        <LoginPage onLogin={login} />
+                    )}
                 </main>
                 <FloatingEstimator />
             </div>

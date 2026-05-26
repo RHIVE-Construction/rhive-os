@@ -31,6 +31,8 @@ import {
     deleteObject
 } from 'firebase/storage';
 import { ProjectInput } from './sharedProjectTypes';
+import { hashPassword } from './utils';
+import { session } from './session';
 
 // Helper to map Firestore docs to data with ID
 // Note: Firestore automatically creates collections when you add documents to them.
@@ -515,6 +517,112 @@ export const userService = {
     }
 };
 
+export const passwordResetService = {
+    createResetToken: async (email: string) => {
+        try {
+            const normalizedEmail = email.toLowerCase().trim();
+            // 1. Verify user exists
+            const userResult = await userService.getByEmail(normalizedEmail);
+            if (!userResult.success || !userResult.data) {
+                return { success: false, error: 'No account found with this email address.' };
+            }
+
+            // 2. Generate secure token: random hex + timestamp
+            const randomBytes = Array.from({ length: 16 }, () => Math.floor(Math.random() * 256));
+            const token = randomBytes.map(b => b.toString(16).padStart(2, '0')).join('') + Date.now().toString(36);
+
+            // 3. Store in firestore 'password_resets'
+            const expiry = new Date(Date.now() + 3600 * 1000).toISOString(); // 1 hour expiration
+            const resetDoc = {
+                email: normalizedEmail,
+                token,
+                expires_at: expiry,
+                used: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            const result = await firestoreService.addDocument('password_resets', resetDoc);
+            if (!result.success) return { success: false, error: result.error };
+
+            return { success: true, token, email: normalizedEmail };
+        } catch (error: any) {
+            console.error('Error in createResetToken:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    verifyResetToken: async (token: string) => {
+        try {
+            const q = query(
+                collection(db, 'password_resets'),
+                where('token', '==', token),
+                where('used', '==', false)
+            );
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                return { success: false, error: 'This secure recovery link is invalid or has already been used.' };
+            }
+
+            const docData = snapshot.docs.map(mapDoc)[0];
+            const expiresAt = new Date(docData.expires_at).getTime();
+            if (expiresAt < Date.now()) {
+                return { success: false, error: 'This secure recovery link has expired.' };
+            }
+
+            return { success: true, email: docData.email, resetDocId: docData.id };
+        } catch (error: any) {
+            console.error('Error in verifyResetToken:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    completePasswordReset: async (token: string, newPassword: string) => {
+        try {
+            // 1. Verify token
+            const verification = await passwordResetService.verifyResetToken(token);
+            if (!verification.success || !verification.email || !verification.resetDocId) {
+                return { success: false, error: verification.error || 'Token verification failed.' };
+            }
+
+            const email = verification.email;
+            const resetDocId = verification.resetDocId;
+
+            // 2. Fetch the user document to get its ID
+            const userResult = await userService.getByEmail(email);
+            if (!userResult.success || !userResult.data) {
+                return { success: false, error: 'Failed to locate user profile for update.' };
+            }
+
+            const userDoc = userResult.data as any;
+
+            // 3. Hash the new password
+            const passwordHash = await hashPassword(newPassword);
+
+            // 4. Update the user document
+            const updateResult = await userService.update(userDoc.id, {
+                password_hash: passwordHash,
+                updated_at: new Date().toISOString()
+            });
+
+            if (!updateResult.success) {
+                return { success: false, error: updateResult.error || 'Failed to update password in profile.' };
+            }
+
+            // 5. Mark reset token as used
+            await firestoreService.updateDocument('password_resets', resetDocId, {
+                used: true,
+                updated_at: new Date().toISOString()
+            });
+
+            return { success: true };
+        } catch (error: any) {
+            console.error('Error in completePasswordReset:', error);
+            return { success: false, error: error.message };
+        }
+    }
+};
+
 export const dashboardService = {
     getStats: async () => {
         try {
@@ -819,5 +927,54 @@ export const propertyService = {
     create: (data: any) => firestoreService.addDocument('properties', data),
     update: (id: string, data: any) => firestoreService.updateDocument('properties', id, data),
     delete: (id: string) => firestoreService.deleteDocument('properties', id)
+};
+
+// ============================================
+// USER LOG SERVICE
+// ============================================
+export interface UserLog {
+    id?: string;
+    userId: string;
+    userName: string;
+    userRole: string;
+    actionType: string;
+    description: string;
+    payload?: Record<string, any>;
+    timestamp: string;
+}
+
+export const userLogService = {
+    getAll: () => firestoreService.getAllDocuments('user_log'),
+    subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('user_log', callback),
+    logAction: async (
+        actionType: string,
+        description: string,
+        payload?: Record<string, any>,
+        userContext?: { id: string; name: string; role: string }
+    ) => {
+        const currentUser = userContext || session.read();
+        const userId = currentUser?.id || 'anonymous';
+        const userName = currentUser?.name || 'Anonymous';
+        const userRole = currentUser?.role || 'Guest';
+
+        const logDoc = {
+            userId,
+            userName,
+            userRole,
+            actionType,
+            description,
+            payload: payload || {},
+            timestamp: new Date().toISOString()
+        };
+
+        try {
+            const result = await firestoreService.addDocument('user_log', logDoc);
+            console.log(`[user_log] Successfully recorded log: ${actionType} - ${description}`, result);
+            return result;
+        } catch (error: any) {
+            console.warn('🔥 Failed to write user action to Firestore user_log:', error);
+            return { success: false, error: error.message };
+        }
+    }
 };
 
