@@ -38,7 +38,7 @@ const SEED_USERS: User[] = [
     { id: 'U-CONT-1', name: 'Quality Roofing', role: 'Contractor', email: 'jobs@quality.com' },
     { id: 'U-SUPP-1', name: 'ABC Supply', role: 'Supplier', email: 'orders@abc.com' },
     { id: 'U-ACC-LHM', name: 'Larry H Miller Group', role: 'Customer', email: 'billing@lhm.com' },
-    { id: 'U-CUST-JAMES', name: 'James Gimena', role: 'Customer', email: 'james.g@rhiveconstruction.com', phone: '(333) 333-3333', password_hash: '70d24497e68c187515f400732890e0c01e6955a1532f386c99c4a85239a95786', avatarUrl: 'https://i.pravatar.cc/150?u=james' },
+    { id: 'U-ADMIN-JAMES', name: 'James Gimena', role: 'Admin', email: 'james.g@rhiveconstruction.com', phone: '(333) 333-3333', password_hash: 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5', avatarUrl: 'https://i.pravatar.cc/150?u=james' },
     { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' },
 ];
 
@@ -47,7 +47,7 @@ const SEED_PROPERTIES: Property[] = [
     { _id: 'PROP-2', address_full: '525 Aspen Meadow Dr, Logan, UT', owner_id: 'U-CUST-2', type: 'Commercial', coordinates: { lat: 41.7, lng: -111.8 }, features: ['Flat', 'Commercial'] },
     { _id: 'PROP-3', address_full: 'Hill AFB Hangar 42, UT', owner_id: 'U-GOV', type: 'Government', coordinates: { lat: 41.1, lng: -111.9 }, features: ['Metal', 'High Security'] },
     { _id: 'PROP-MEGAPLEX', address_full: 'South Jordan Parkway Megaplex', owner_id: 'U-ACC-LHM', type: 'Commercial', coordinates: { lat: 40.5, lng: -111.9 }, features: ['Flat', 'Commercial'] },
-    { _id: 'PROP-JAMES', address_full: '280 Bleecker St, New York, NY', owner_id: 'U-CUST-JAMES', type: 'Residential', coordinates: { lat: 40.7317208, lng: -74.0034605 }, features: ['Shingle'] },
+    { _id: 'PROP-JAMES', address_full: '280 Bleecker St, New York, NY', owner_id: 'U-ADMIN-JAMES', type: 'Residential', coordinates: { lat: 40.7317208, lng: -74.0034605 }, features: ['Shingle'] },
 ];
 
 const SEED_PROJECTS: Project[] = [
@@ -99,7 +99,7 @@ const SEED_PROJECTS: Project[] = [
         _id: 'PROJ-JAMES',
         name: 'Gimena TEST Residence',
         property_id: 'PROP-JAMES',
-        account_id: 'U-CUST-JAMES',
+        account_id: 'U-ADMIN-JAMES',
         project_type: 'Residential',
         current_stage: 'Lead',
         status: 'Active',
@@ -151,20 +151,23 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         else localStorage.removeItem('rhive_project_id');
     }, [currentProjectId]);
 
-    // Ensure James Gimena profile is correctly seeded/updated in the live Firestore users collection
+    // Ensure James Gimena admin profile is correctly seeded/updated in the live Firestore users collection
     useEffect(() => {
         const seedJamesIfNeeded = async () => {
             try {
                 const email = 'james.g@rhiveconstruction.com';
+                const correctHash = 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5'; // SHA-256 of 'qwerty123'
+                const correctRole = 'Admin';
+                const correctId = 'U-ADMIN-JAMES';
+
                 const res = await userService.getByEmail(email);
-                const correctHash = '70d24497e68c187515f400732890e0c01e6955a1532f386c99c4a85239a95786'; // SHA-256 of 'qwerty123'
-                
+
                 if (!res.success || !res.data) {
-                    console.log("Seeding James Gimena customer profile to Firestore...");
-                    await userService.createWithId('U-CUST-JAMES', {
-                        id: 'U-CUST-JAMES',
+                    console.log("Seeding James Gimena admin profile to Firestore...");
+                    await userService.createWithId(correctId, {
+                        id: correctId,
                         name: 'James Gimena',
-                        role: 'Customer',
+                        role: correctRole,
                         email: email,
                         phone: '(333) 333-3333',
                         password_hash: correctHash,
@@ -174,23 +177,28 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     });
                 } else {
                     const userDoc = res.data as any;
-                    if (userDoc.password_hash !== correctHash) {
-                        console.log("Updating James Gimena password hash in Firestore to match 'qwerty123'...");
+                    const needsUpdate =
+                        userDoc.password_hash !== correctHash ||
+                        userDoc.role !== correctRole;
+
+                    if (needsUpdate) {
+                        console.log("Updating James Gimena Firestore profile to Admin role with correct password hash...");
                         await userService.update(userDoc.id, {
+                            role: correctRole,
                             password_hash: correctHash,
                             updated_at: new Date().toISOString()
                         });
                     }
                 }
             } catch (err) {
-                console.warn("Failed to automatically seed/sync James Gimena user doc in Firestore:", err);
+                console.warn("Failed to automatically seed/sync James Gimena admin doc in Firestore:", err);
             }
         };
 
         const timer = setTimeout(() => {
             seedJamesIfNeeded();
         }, 1500);
-        
+
         return () => clearTimeout(timer);
     }, []);
 
