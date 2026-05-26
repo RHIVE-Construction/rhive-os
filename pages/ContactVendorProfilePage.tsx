@@ -137,14 +137,21 @@ const ContactVendorProfilePage: React.FC = () => {
         }
 
         const docRef = doc(db, 'contacts', selectedContactId);
-        const unsub = onSnapshot(docRef, (snap) => {
-            if (snap.exists()) {
-                setContactData({ id: snap.id, ...snap.data() });
-            } else {
-                setContactData(null);
+        const unsub = onSnapshot(
+            docRef, 
+            (snap) => {
+                if (snap.exists()) {
+                    setContactData({ id: snap.id, ...snap.data() });
+                } else {
+                    setContactData(null);
+                }
+                setLoading(false);
+            },
+            (err) => {
+                console.warn("⚠️ [RHIVE QOS] Contacts Firestore listener failed (offline/mock):", err);
+                setLoading(false);
             }
-            setLoading(false);
-        });
+        );
 
         return () => unsub();
     }, [selectedContactId]);

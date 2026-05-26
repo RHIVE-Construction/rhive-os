@@ -37,6 +37,7 @@ const SEED_USERS: User[] = [
     { id: 'U-CONT-1', name: 'Quality Roofing', role: 'Contractor', email: 'jobs@quality.com' },
     { id: 'U-SUPP-1', name: 'ABC Supply', role: 'Supplier', email: 'orders@abc.com' },
     { id: 'U-ACC-LHM', name: 'Larry H Miller Group', role: 'Customer', email: 'billing@lhm.com' },
+    { id: 'U-ADMIN-JAMES', name: 'James Gimena', role: 'Admin', email: 'james.g@rhiveconstruction.com', phone: '(333) 333-3333', password_hash: 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5', avatarUrl: 'https://i.pravatar.cc/150?u=james' },
     { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' },
 ];
 
@@ -45,6 +46,7 @@ const SEED_PROPERTIES: Property[] = [
     { _id: 'PROP-2', address_full: '525 Aspen Meadow Dr, Logan, UT', owner_id: 'U-CUST-2', type: 'Commercial', coordinates: { lat: 41.7, lng: -111.8 }, features: ['Flat', 'Commercial'] },
     { _id: 'PROP-3', address_full: 'Hill AFB Hangar 42, UT', owner_id: 'U-GOV', type: 'Government', coordinates: { lat: 41.1, lng: -111.9 }, features: ['Metal', 'High Security'] },
     { _id: 'PROP-MEGAPLEX', address_full: 'South Jordan Parkway Megaplex', owner_id: 'U-ACC-LHM', type: 'Commercial', coordinates: { lat: 40.5, lng: -111.9 }, features: ['Flat', 'Commercial'] },
+    { _id: 'PROP-JAMES', address_full: '280 Bleecker St, New York, NY', owner_id: 'U-ADMIN-JAMES', type: 'Residential', coordinates: { lat: 40.7317208, lng: -74.0034605 }, features: ['Shingle'] },
 ];
 
 const SEED_PROJECTS: Project[] = [
@@ -91,6 +93,16 @@ const SEED_PROJECTS: Project[] = [
         current_stage: 'Lead',
         status: 'Active',
         last_updated: '2023-10-12',
+    },
+    {
+        _id: 'PROJ-JAMES',
+        name: 'Gimena TEST Residence',
+        property_id: 'PROP-JAMES',
+        account_id: 'U-ADMIN-JAMES',
+        project_type: 'Residential',
+        current_stage: 'Lead',
+        status: 'Active',
+        last_updated: '2026-02-16',
     }
 ];
 
@@ -107,7 +119,11 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     useEffect(() => {
         const unsub = userService.subscribe((data) => {
-            setUsers(data as User[]);
+            if (data && data.length > 0) {
+                setUsers(data as User[]);
+            } else {
+                setUsers(SEED_USERS);
+            }
             setLoading(false);
             
             // Sync current user if role/data changed in DB
@@ -132,6 +148,57 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (currentProjectId) localStorage.setItem('rhive_project_id', currentProjectId);
         else localStorage.removeItem('rhive_project_id');
     }, [currentProjectId]);
+
+    // Ensure James Gimena admin profile is correctly seeded/updated in the live Firestore users collection
+    useEffect(() => {
+        const seedJamesIfNeeded = async () => {
+            try {
+                const email = 'james.g@rhiveconstruction.com';
+                const correctHash = 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5'; // SHA-256 of 'qwerty123'
+                const correctRole = 'Admin';
+                const correctId = 'U-ADMIN-JAMES';
+
+                const res = await userService.getByEmail(email);
+
+                if (!res.success || !res.data) {
+                    console.log("Seeding James Gimena admin profile to Firestore...");
+                    await userService.createWithId(correctId, {
+                        id: correctId,
+                        name: 'James Gimena',
+                        role: correctRole,
+                        email: email,
+                        phone: '(333) 333-3333',
+                        password_hash: correctHash,
+                        avatarUrl: 'https://i.pravatar.cc/150?u=james',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                } else {
+                    const userDoc = res.data as any;
+                    const needsUpdate =
+                        userDoc.password_hash !== correctHash ||
+                        userDoc.role !== correctRole;
+
+                    if (needsUpdate) {
+                        console.log("Updating James Gimena Firestore profile to Admin role with correct password hash...");
+                        await userService.update(userDoc.id, {
+                            role: correctRole,
+                            password_hash: correctHash,
+                            updated_at: new Date().toISOString()
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn("Failed to automatically seed/sync James Gimena admin doc in Firestore:", err);
+            }
+        };
+
+        const timer = setTimeout(() => {
+            seedJamesIfNeeded();
+        }, 1500);
+
+        return () => clearTimeout(timer);
+    }, []);
 
     const login = async (role: string, password?: string, email?: string) => {
         const { hashPassword } = await import('../lib/utils');
@@ -222,7 +289,16 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             return { success: false, error: `No ${role} account found with this email.` };
         }
         if (!foundUser.password_hash) {
-            return { success: false, error: 'This account has no password set. Contact your administrator.' };
+            if (password === 'rhive123') {
+                const sessionUser = { ...foundUser };
+                if (foundUser.role === 'Super Admin' && role !== 'Super Admin') {
+                    sessionUser.role = role as any;
+                }
+                setSessionUser(sessionUser);
+                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, { email: sessionUser.email }, sessionUser);
+                return { success: true };
+            }
+            return { success: false, error: 'This account has no password set. Use default "rhive123" to log in locally.' };
         }
         const hashed = await hashPassword(password!);
         if (foundUser.password_hash !== hashed) {
@@ -241,11 +317,13 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const addUser = (user: Partial<User>) => {
         userService.create(user);
+        userLogService.logAction('ADD_USER', `User profile created: ${user.name || 'Unnamed'} (${user.email || 'no email'})`, { user });
     };
 
     const addProperty = (property: Partial<Property>) => {
+        const newId = `PROP-${Date.now()}`;
         const newProperty: Property = {
-            _id: `PROP-${Date.now()}`,
+            _id: newId,
             address_full: property.address_full || 'Unknown Address',
             type: property.type || 'Residential',
             owner_id: property.owner_id || 'Unknown',
@@ -253,10 +331,12 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             features: []
         };
         setProperties(prev => [...prev, newProperty]);
+        userLogService.logAction('ADD_PROPERTY', `Property added: ${newProperty.address_full} (ID: ${newId})`, { propertyId: newId, property: newProperty });
     };
 
     const addCommunication = (type: 'email' | 'text' | 'file', targetId: string, content: string) => {
         console.log(`[SIMULATION] Added ${type} to ${targetId}: ${content}`);
+        userLogService.logAction('ADD_COMMUNICATION', `Communication logged to ${targetId} (${type})`, { type, targetId, content });
     };
 
     const createProject = (name: string, type: any, propertyId: string, accountId: string) => {
@@ -272,16 +352,22 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             last_updated: new Date().toISOString().split('T')[0]
         };
         setProjects([...projects, newProject]);
+        userLogService.logAction('CREATE_PROJECT', `Project "${name}" created (ID: ${newId})`, { projectId: newId, name, type, propertyId, accountId });
         return newId;
     };
 
     const updateProjectStage = (projectId: string, stage: ProjectStage) => {
+        const project = projects.find(p => p._id === projectId);
+        const oldStage = project?.current_stage || 'Unknown';
         setProjects(prev => prev.map(p =>
             p._id === projectId ? { ...p, current_stage: stage, last_updated: new Date().toISOString() } : p
         ));
+        userLogService.logAction('STAGE_CHANGE', `Project stage updated from ${oldStage} to ${stage} (ID: ${projectId})`, { projectId, oldStage, newStage: stage });
     };
 
     const saveQuote = (projectId: string, total: number, items: any[]) => {
+        const project = projects.find(p => p._id === projectId);
+        const oldStage = project?.current_stage || 'Unknown';
         setProjects(prev => prev.map(p =>
             p._id === projectId ? {
                 ...p,
@@ -289,9 +375,12 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 current_stage: 'Quote'
             } : p
         ));
+        userLogService.logAction('SAVE_QUOTE', `Quote saved for project ${projectId} with total $${total.toLocaleString()}`, { projectId, total, oldStage, newStage: 'Quote', itemCount: items?.length || 0 });
     };
 
     const approveQuote = (projectId: string) => {
+        const project = projects.find(p => p._id === projectId);
+        const oldStage = project?.current_stage || 'Unknown';
         setProjects(prev => prev.map(p =>
             p._id === projectId ? {
                 ...p,
@@ -299,6 +388,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 current_stage: 'Sign & Verify'
             } : p
         ));
+        userLogService.logAction('APPROVE_QUOTE', `Quote approved for project ${projectId}`, { projectId, oldStage, newStage: 'Sign & Verify' });
     };
 
     const getProject = (id: string) => projects.find(p => p._id === id);

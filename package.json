@@ -10,12 +10,13 @@
     "start": "serve -s dist -l tcp://0.0.0.0:$PORT",
     "dev": "vite --port 3000",
     "build": "vite build",
-    "preview": "vite preview --port 8002 "
+    "preview": "vite preview --port 8002"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@google-cloud/firestore": "^8.5.0",
     "@google/genai": "^1.50.1",
+    "@protobufjs/aspromise": "^1.1.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",

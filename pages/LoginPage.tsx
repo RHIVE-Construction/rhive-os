@@ -123,6 +123,7 @@ const FloatingInput: React.FC<{
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     const { theme } = useTheme();
     const { t } = useLanguage();
+    const { setActivePageId } = useNavigation();
     const isDark = theme === 'dark';
     const mainC = 40;
 
@@ -371,6 +372,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                         </button>
                                     }
                                 />
+                                <div className="flex justify-end pr-2 -mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActivePageId('P-07')}
+                                        className="text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-rhive-pink transition-colors bg-transparent border-none outline-none"
+                                    >
+                                        Forgot password?
+                                    </button>
+                                </div>
 
                                 {error && (
                                     <p className="text-rhive-pink text-[10px] font-bold uppercase tracking-widest text-center animate-pulse">
@@ -556,6 +566,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                         </button>
                                     }
                                 />
+                                <div className="flex justify-end pr-2 -mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActivePageId('P-07')}
+                                        className="text-[10px] font-black uppercase tracking-wider text-gray-500 hover:text-rhive-pink transition-colors bg-transparent border-none outline-none"
+                                    >
+                                        Forgot password?
+                                    </button>
+                                </div>
 
                                 {error && (
                                     <p className="text-rhive-pink text-[10px] font-bold uppercase tracking-widest text-center animate-pulse">
