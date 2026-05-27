@@ -91,7 +91,7 @@ const RhiveHeader: React.FC = () => {
                     className="flex items-center gap-3 px-5 py-2.5 border-transparent group hover:border-rhive-pink/30 transition-all bg-transparent"
                 >
                     <LogOut size={16} className="text-rhive-pink group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-[10px] font-black tracking-[0.3em] uppercase opacity-70 group-hover:opacity-100 transition-opacity text-white">Exit to Portal</span>
+                    <span className="text-base font-black tracking-[0.3em] uppercase opacity-70 group-hover:opacity-100 transition-opacity text-white">Exit to Portal</span>
                 </motion.button>
             </div>
 
@@ -100,7 +100,7 @@ const RhiveHeader: React.FC = () => {
                     <button
                         key={link.target}
                         onClick={() => scrollToSection(link.target)}
-                        className="text-[11px] font-black tracking-[0.3em] uppercase text-white/50 hover:text-rhive-pink transition-colors"
+                        className="text-base font-black tracking-[0.3em] uppercase text-white/50 hover:text-rhive-pink transition-colors"
                     >
                         {link.label}
                     </button>
@@ -133,7 +133,7 @@ const RhiveHeader: React.FC = () => {
                     <button
                         key={link.target}
                         onClick={() => scrollToSection(link.target)}
-                        className="text-[11px] font-black tracking-[0.3em] uppercase text-white/50 hover:text-rhive-pink transition-colors"
+                        className="text-base font-black tracking-[0.3em] uppercase text-white/50 hover:text-rhive-pink transition-colors"
                     >
                         {link.label}
                     </button>

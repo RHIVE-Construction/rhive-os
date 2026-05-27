@@ -12,7 +12,7 @@ const Tpo80Page: React.FC = () => {
             desc: "GAF EverGuard® System Limited Warranty including 30 years of non-prorated material and labor coverage. Backed by RHIVE's certified installation."
         },
         {
-            icon: <Layers className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <Layers className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "TPO 80 MIL MEMBRANE",
             desc: "GAF EverGuard® 80 mil TPO. Ultra-thick, maximum durability membrane offering the highest puncture resistance and longevity in the TPO class."
         },
@@ -22,7 +22,7 @@ const Tpo80Page: React.FC = () => {
             desc: "The 80 mil thickness provides significantly enhanced protection against hail, airborne debris, and rooftop foot traffic compared to standard membranes."
         },
         {
-            icon: <Activity className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <Activity className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "SUPERIOR UV RESISTANCE",
             desc: "Enhanced weathering layer protects against extreme sun exposure and ultra-violet degradation, ensuring the roof performs for its full 30-year lifespan."
         },
@@ -32,7 +32,7 @@ const Tpo80Page: React.FC = () => {
             desc: "Added directly beneath the membrane for supreme crush resistance and to provide an ultra-rigid substrate for the robotic hot-air welders."
         },
         {
-            icon: <Wrench className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <Wrench className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "ROBOTIC SEAM WELDING",
             desc: "Monolithic, continuous seam integration performed by calibrated hot-air robotics, eliminating virtually all points of potential failure."
         }
@@ -67,7 +67,7 @@ const Tpo80Page: React.FC = () => {
                 <h2 className="text-2xl font-black text-white uppercase mb-8 tracking-tight">System Specifications</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
                     {inclusions.map((item, i) => (
-                        <div key={i} className="bg-black/50 border border-[var(--border-color)] p-6 rounded-sm hover:border-[#00D1FF]/50 transition-colors">
+                        <div key={i} className="bg-black/50 border border-[var(--border-color)] p-6 rounded-sm hover:border-rhive-blue/50 transition-colors">
                             <div className="flex items-start gap-4">
                                 <div className="mt-1 p-2 bg-white/5 border border-white/10 rounded-sm">
                                     {item.icon}
@@ -82,14 +82,14 @@ const Tpo80Page: React.FC = () => {
                 </div>
 
                 {/* CTA */}
-                <div className="relative group bg-gradient-to-br from-[#00D1FF]/10 to-transparent p-10 border border-[#00D1FF]/20 text-center overflow-hidden">
+                <div className="relative group bg-gradient-to-br from-rhive-blue/10 to-transparent p-10 border border-rhive-blue/20 text-center overflow-hidden">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0"></div>
                     <div className="relative z-10">
-                        <h3 className="text-2xl font-black text-white uppercase mb-4">Upgrade to 30-Year Performance</h3>
+                        <h3 className="text-2xl font-black uppercase mb-4 bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent">Upgrade to 30-Year Performance</h3>
                         <p className="text-gray-400 mb-8 max-w-xl mx-auto">Get an instant estimate for the GAF TPO 80 mil upgrade using our transparent pricing engine.</p>
                         <button
                             onClick={() => setActivePageId('P-12')}
-                            className="px-8 py-4 bg-[#00D1FF] hover:bg-[#00b8e6] text-black font-black uppercase tracking-widest text-sm transition-colors shadow-[0_0_20px_rgba(0,209,255,0.3)] hover:shadow-[0_0_30px_rgba(0,209,255,0.5)]"
+                            className="px-8 py-4 bg-gradient-to-b from-white to-rhive-blue hover:from-white hover:to-[#08137C] text-black font-black uppercase tracking-widest text-sm transition-colors shadow-[0_0_20px_rgba(8,19,124,0.3)] hover:shadow-[0_0_30px_rgba(8,19,124,0.5)]"
                             style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                         >
                             Request A Quote

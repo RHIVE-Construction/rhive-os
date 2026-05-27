@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { Shield, Zap, Hammer, FileCheck, Anchor, Wind, Wrench, Menu } from 'lucide-react';
+import ContextualCTA from '../components/ContextualCTA';
+import GlobalBottomCTA from '../components/GlobalBottomCTA';
 
 const DurationPerformancePage: React.FC = () => {
     const { setActivePageId } = useNavigation();
@@ -12,7 +14,7 @@ const DurationPerformancePage: React.FC = () => {
             desc: "Includes 50 years of non-prorated material and labor coverage, 10 years of workmanship coverage, 130 MPH wind resistance, and 25 years of algae resistance. Conferred automatically by RHIVE's certified installation."
         },
         {
-            icon: <Hammer className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <Hammer className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "FIELD SHINGLES",
             desc: "Owens Corning Duration Series Shingles: 50-Year Preferred Protection featuring SureNail Technology, 130 MPH Wind Rating, and guaranteed StreakGuard™ Algae Resistance 25YR."
         },
@@ -22,7 +24,7 @@ const DurationPerformancePage: React.FC = () => {
             desc: "Electro-galvanized coil nails installed with 6 nails per shingle (utilizing SureNail Technology) for superior wind resistance to exceed standard building codes."
         },
         {
-            icon: <FileCheck className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <FileCheck className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "UNDERLAYMENT",
             desc: "Owens Corning ProArmor®: A high-performance synthetic underlayment installed on the entire non-covered roof field as a secondary water-shedding barrier."
         },
@@ -32,7 +34,7 @@ const DurationPerformancePage: React.FC = () => {
             desc: "Owens Corning Starter Strip Plus: A specialized shingle installed on all eaves for a straight edge and an effective perimeter seal against high winds."
         },
         {
-            icon: <Wrench className="w-6 h-6 text-[#00D1FF]" />,
+            icon: <Wrench className="w-6 h-6" color="url(#blue-white-grad)" />,
             title: "HIP & RIDGE",
             desc: "Owens Corning ProEdge Hip & Ridge Shingles: Provides an architectural, high-profile look while delivering enhanced system performance and 130 mph wind resistance."
         },
@@ -50,20 +52,20 @@ const DurationPerformancePage: React.FC = () => {
                 {/* Back Navigation */}
                 <button
                     onClick={() => setActivePageId('P-02a')}
-                    className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 font-mono text-xs uppercase tracking-widest transition-colors"
+                    className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 font-mono text-base uppercase tracking-widest transition-colors"
                 >
                     &larr; Back to Asphalt Systems
                 </button>
 
                 {/* Header */}
                 <div className="border-b border-white/10 pb-10 mb-12">
-                    <div className="inline-flex items-center px-3 py-1 mb-6 rounded-sm bg-white/5 border border-white/10 font-mono text-[10px] uppercase tracking-wider text-gray-300">
+                    <div className="inline-flex items-center px-3 py-1 mb-6 rounded-sm bg-white/5 border border-white/10 font-mono text-base uppercase tracking-wider text-gray-300">
                         THE PERFORMANCE BASELINE
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight mb-4 flex items-center gap-4">
+                    <h1 className="text-4xl md:text-5xl leading-tight font-black text-white uppercase tracking-tight mb-4 flex items-center gap-4">
                         O.C. Duration <span className="text-[var(--rhive-pink)]">Package</span>
                     </h1>
-                    <p className="text-xl text-gray-300 font-serif leading-relaxed max-w-3xl">
+                    <p className="text-xl text-gray-300 font-serif leading-relaxed max-w-prose">
                         Premium roofing solution featuring Owens Corning Duration shingles. This system delivers
                         commercial-grade durability built for the toughest Western weather and is backed by our
                         Lifetime No-Leak Guarantee.
@@ -71,7 +73,7 @@ const DurationPerformancePage: React.FC = () => {
                 </div>
 
                 {/* Inclusions Grid */}
-                <h2 className="text-2xl font-black text-white uppercase mb-8 tracking-tight">System Inclusions</h2>
+                <h2 className="text-2xl leading-tight font-black text-white uppercase mb-8 tracking-tight">System Inclusions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
                     {inclusions.map((item, i) => (
                         <div key={i} className="bg-black/50 border border-white/5 p-6 rounded-sm hover:border-white/20 transition-colors">
@@ -81,25 +83,22 @@ const DurationPerformancePage: React.FC = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
-                                    <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
+                                    <p className="text-gray-400 text-base leading-relaxed max-w-prose">{item.desc}</p>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* CTA */}
-                <div className="bg-gradient-to-br from-[var(--rhive-pink)]/10 to-transparent p-10 border border-[var(--rhive-pink)]/20 text-center">
-                    <h3 className="text-2xl font-black text-white uppercase mb-4">Protect Your Structure Today</h3>
-                    <p className="text-gray-400 mb-8 max-w-xl mx-auto">Get an instant estimate for the O.C. Duration package using our transparent pricing engine.</p>
-                    <button
-                        onClick={() => setActivePageId('P-12')}
-                        className="px-8 py-4 bg-[var(--rhive-pink)] hover:bg-[#c90278] text-white font-bold uppercase tracking-widest text-sm transition-colors"
-                    >
-                        Request A Quote
-                    </button>
-                </div>
+                {/* Contextual CTA */}
+                <ContextualCTA 
+                    message="Need precise numbers for your project?" 
+                    buttonText="Get a Detailed Material Quote" 
+                />
             </div>
+            
+            {/* Global CTA */}
+            <GlobalBottomCTA />
         </div>
     );
 };

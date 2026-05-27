@@ -35,7 +35,7 @@ export const TooltipContent = React.forwardRef<
             className={cn(
             'absolute w-max max-w-xs',
             'z-50 scale-95 opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100 pointer-events-none',
-            'rounded-md bg-gray-950 border border-gray-700 px-3 py-1.5 text-sm text-gray-100 shadow-lg',
+            'rounded-md bg-gray-950 border border-gray-700 px-3 py-1.5 text-base text-gray-100 shadow-lg',
             positionClasses[side],
             className
             )}

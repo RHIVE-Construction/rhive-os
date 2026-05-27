@@ -31,10 +31,10 @@ const CustomerProjectPulse: React.FC = () => {
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#ec028b]/20 border border-[#ec028b]/30 rounded-full mb-3">
                             <span className="w-2 h-2 rounded-full bg-[#ec028b] animate-pulse" />
-                            <span className="text-xs font-bold text-[#ec028b] uppercase tracking-wider">Project Pulse</span>
+                            <span className="text-base font-bold text-[#ec028b] uppercase tracking-wider">Project Pulse</span>
                         </div>
                         <h2 className="text-3xl font-bold text-white mb-1">124 Maple Street</h2>
-                        <p className="text-gray-300 font-mono text-sm">PRJ-88492 • Residential Replacement</p>
+                        <p className="text-gray-300 font-mono text-base">PRJ-88492 • Residential Replacement</p>
                     </div>
                 </div>
 
@@ -46,7 +46,7 @@ const CustomerProjectPulse: React.FC = () => {
                         
                         {/* Active Line Progress */}
                         <div 
-                            className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-[#00D1FF] transition-all duration-1000 shadow-[0_0_10px_#00D1FF]"
+                            className="absolute top-1/2 left-0 h-1 -translate-y-1/2 bg-[var(--rhive-blue)] transition-all duration-1000 shadow-[0_0_10px_var(--rhive-blue)]"
                             style={{ width: '50%' }}
                         />
 
@@ -62,19 +62,19 @@ const CustomerProjectPulse: React.FC = () => {
                                         <div 
                                             className={`
                                                 w-8 h-8 rounded-full flex items-center justify-center relative z-10 transition-colors duration-300
-                                                ${isCompleted ? 'bg-[#00D1FF] text-black shadow-[0_0_15px_rgba(0,209,255,0.4)]' : ''}
-                                                ${isActive ? 'bg-black border-2 border-[#00D1FF] text-[#00D1FF] shadow-[0_0_20px_rgba(0,209,255,0.6)]' : ''}
+                                                ${isCompleted ? 'bg-[var(--rhive-blue)] text-white shadow-[0_0_15px_rgba(8,19,124,0.8)]' : ''}
+                                                ${isActive ? 'bg-black border-2 border-[var(--rhive-blue)] text-white shadow-[0_0_20px_rgba(8,19,124,0.8)]' : ''}
                                                 ${isPending ? 'bg-black border border-white/20 text-gray-500' : ''}
                                             `}
                                         >
                                             {isCompleted && <Check className="w-4 h-4 font-bold" />}
-                                            {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#00D1FF] animate-pulse" />}
-                                            {isPending && <span className="text-xs font-mono">{index + 1}</span>}
+                                            {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[var(--rhive-blue)] animate-pulse" />}
+                                            {isPending && <span className="text-base font-mono">{index + 1}</span>}
                                         </div>
                                         <span 
                                             className={`
-                                                mt-2 text-xs font-bold uppercase tracking-wider absolute top-8 whitespace-nowrap
-                                                ${isActive ? 'text-[#00D1FF]' : 'text-gray-400'}
+                                                mt-2 text-base font-bold uppercase tracking-wider absolute top-8 whitespace-nowrap
+                                                ${isActive ? 'bg-gradient-to-t from-[var(--rhive-blue)] to-white bg-clip-text text-transparent' : 'text-gray-400'}
                                             `}
                                         >
                                             {stage.label}
@@ -86,12 +86,12 @@ const CustomerProjectPulse: React.FC = () => {
                     </div>
                     
                     <div className="mt-12 bg-black/40 backdrop-blur border border-white/10 p-4 rounded-lg flex items-start gap-4">
-                        <div className="bg-[#00D1FF]/10 p-2 rounded text-[#00D1FF]">
-                            <Clock className="w-5 h-5" />
+                        <div className="bg-[var(--rhive-blue)]/20 p-2 rounded text-blue-400">
+                            <Clock className="w-5 h-5" color="url(#blue-white-grad)" />
                         </div>
                         <div>
-                            <h4 className="text-white text-sm font-bold mb-1">Current Status: Quote Development</h4>
-                            <p className="text-gray-400 text-xs">Your dedicated estimator is finalizing the material takeoff. Expect the final quote within 24 hours.</p>
+                            <h4 className="text-white text-base font-bold mb-1">Current Status: Quote Development</h4>
+                            <p className="text-gray-400 text-base">Your dedicated estimator is finalizing the material takeoff. Expect the final quote within 24 hours.</p>
                         </div>
                     </div>
                 </div>

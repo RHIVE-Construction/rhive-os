@@ -131,6 +131,8 @@ body {
     color: white;
 }
 
+
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
@@ -145,3 +147,5 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--rhive-pink);
 }
+@keyframes metallicShineVertical { 0% { background-position: 0% 0%; } 50% { background-position: 0% 100%; } 100% { background-position: 0% 0%; } }
+.animate-metallic-shine-vertical { animation: metallicShineVertical 6s ease-in-out infinite; background-size: 100% 200%; }

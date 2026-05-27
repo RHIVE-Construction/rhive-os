@@ -24,7 +24,7 @@ const statusText: Record<StatusBadgeProps['status'], string> = {
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   return (
-    <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${statusStyles[status]}`}>
+    <span className={`px-3 py-1 text-base font-semibold rounded-full border ${statusStyles[status]}`}>
       {statusText[status]}
     </span>
   );

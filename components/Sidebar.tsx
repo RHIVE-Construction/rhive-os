@@ -48,7 +48,9 @@ const getIconForPage = (id: string) => {
     if (id === 'P-09') return <IdentificationIcon className="h-5 w-5" />;
     if (id === 'P-10' || id === 'P-11') return <DocumentTextIcon className="h-5 w-5" />;
     if (id === 'P-12') return <CalculatorIcon className="h-5 w-5" />;
+    if (id === 'P-Landing') return <SparklesIcon className="h-5 w-5" />;
     if (id === 'P-00') return <SparklesIcon className="h-5 w-5" />;
+    if (id === 'P-00-V2') return <SparklesIcon className="h-5 w-5" />;
     if (id === 'P-00a') return <BoltIcon className="h-5 w-5" />;
 
     // ADMIN (A-Series)
@@ -173,7 +175,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                         <div key={groupIdx} className="mb-8 px-4">
                             {group.label && (
                                 <div className="px-4 mb-3">
-                                    <span className="text-[10px] bg-gray-900/50 border border-gray-800 px-2 py-1 rounded-full text-gray-500 group-hover:text-[#ec028b] group-hover:border-[#ec028b]/30">
+                                    <span className="text-base bg-gray-900/50 border border-gray-800 px-2 py-1 rounded-full text-gray-500 group-hover:text-[#ec028b] group-hover:border-[#ec028b]/30">
                                         {group.label}
                                     </span>
                                 </div>
@@ -188,7 +190,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                                 onClick={() => navigateToPage(page.id)}
 
                                                 className={cn(
-                                                    "flex items-center w-full px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                                                    "flex items-center w-full px-4 py-2 rounded-full text-base font-medium transition-all duration-200",
                                                     activePageId === page.id
                                                         ? "bg-[#ec028b]/20 text-[#ec028b] border border-[#ec028b]/30"
                                                         : "text-gray-400 hover:bg-gray-800 hover:text-white"
@@ -211,7 +213,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                             <button
                                                 onClick={() => toggleCategory(cat)}
                                                 className={cn(
-                                                    "flex items-center justify-between w-full px-4 py-2 rounded-full text-sm font-bold transition-all",
+                                                    "flex items-center justify-between w-full px-4 py-2 rounded-full text-base font-bold transition-all",
                                                     isAnyActive ? "text-white" : "text-gray-500 hover:text-gray-300"
                                                 )}
                                             >
@@ -233,7 +235,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                                             onClick={() => navigateToPage(page.id)}
 
                                                             className={cn(
-                                                                "flex items-center w-full px-4 py-1.5 rounded-full text-[13px] font-medium transition-all",
+                                                                "flex items-center w-full px-4 py-1.5 rounded-full text-base font-medium transition-all",
                                                                 activePageId === page.id
                                                                     ? "text-[#ec028b]"
                                                                     : "text-gray-500 hover:text-gray-200"
@@ -255,17 +257,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
 
             <div className={cn("p-4 border-t transition-colors duration-500", isDark ? "border-white/5 bg-black/40" : "border-black/5 bg-white/40")}>
                 <div className="flex items-center mb-4 px-2">
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border transition-colors", isDark ? "bg-gray-800 text-white border-gray-700" : "bg-gray-100 text-black border-gray-200")}>
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-base border transition-colors", isDark ? "bg-gray-800 text-white border-gray-700" : "bg-gray-100 text-black border-gray-200")}>
                         {currentUser.name.charAt(0)}
                     </div>
                     <div className="ml-3 overflow-hidden">
-                        <p className={cn("text-sm font-medium truncate transition-colors", isDark ? "text-white" : "text-black")}>{currentUser.name}</p>
-                        <p className="text-xs text-[#ec028b] truncate">{currentUser.role}</p>
+                        <p className={cn("text-base font-medium truncate transition-colors", isDark ? "text-white" : "text-black")}>{currentUser.name}</p>
+                        <p className="text-base text-[#ec028b] truncate">{currentUser.role}</p>
                     </div>
                 </div>
                 <button
                     onClick={logout}
-                    className="w-full py-2 px-4 bg-gray-900 hover:bg-red-900/20 border border-gray-700 hover:border-red-500/50 rounded-full text-gray-400 hover:text-red-400 text-sm transition-all flex items-center justify-center gap-2"
+                    className="w-full py-2 px-4 bg-gray-900 hover:bg-red-900/20 border border-gray-700 hover:border-red-500/50 rounded-full text-gray-400 hover:text-red-400 text-base transition-all flex items-center justify-center gap-2"
                 >
                     <ArrowLeftIcon className="w-4 h-4" />
                     Sign Out

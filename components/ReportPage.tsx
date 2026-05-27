@@ -15,7 +15,7 @@ const StatCard: React.FC<{ title: string; value: string; unit: string; icon?: Re
   <div className="bg-gray-800 p-4 rounded-lg flex items-center">
     {icon && <div className="mr-4 text-[#ec028b]">{icon}</div>}
     <div>
-      <div className="text-gray-400 text-sm">{title}</div>
+      <div className="text-gray-400 text-base">{title}</div>
       <div className="text-white text-2xl font-bold">
         {value} <span className="text-lg text-gray-300">{unit}</span>
       </div>
@@ -27,11 +27,11 @@ const ReportHeader: React.FC<{ onNewEstimate: () => void; onDownload: () => void
     <header className="flex justify-between items-center p-4 md:p-6">
         <RhiveLogo className="h-7" />
         <div className="flex items-center space-x-6">
-             <button onClick={onDownload} className="flex items-center text-sm font-semibold text-white hover:text-[#ec028b] transition-colors">
+             <button onClick={onDownload} className="flex items-center text-base font-semibold text-white hover:text-[#ec028b] transition-colors">
                 <DownloadIcon className="h-4 w-4 mr-2" />
                 Download Report
             </button>
-            <button onClick={onNewEstimate} className="text-sm font-semibold text-white hover:text-[#ec028b] transition-colors">
+            <button onClick={onNewEstimate} className="text-base font-semibold text-white hover:text-[#ec028b] transition-colors">
                 Start New Estimate
             </button>
         </div>
@@ -114,7 +114,7 @@ export const ReportPage: React.FC<{ report: RoofReport; address: string; onNewEs
                            </div>
                            <div className="mt-6">
                                <h3 className="font-semibold mb-2">Pitch & Facet Breakdown</h3>
-                               <div className="bg-gray-900 p-3 rounded-md space-y-2 text-sm">
+                               <div className="bg-gray-900 p-3 rounded-md space-y-2 text-base">
                                    {report.pitchAnalysis.map(({ pitch, areaSqFt }) => (
                                        <div key={pitch} className="flex justify-between items-center">
                                            <span>{pitch}/12 Pitch</span>
@@ -136,20 +136,20 @@ export const ReportPage: React.FC<{ report: RoofReport; address: string; onNewEs
                                 <SnowflakeIcon className="h-6 w-6 text-blue-400"/>
                             </div>
                             <div className="mt-4 space-y-2">
-                                <div className="grid grid-cols-3 gap-4 items-center text-sm">
+                                <div className="grid grid-cols-3 gap-4 items-center text-base">
                                     <div className="flex items-center"><HailIcon className="h-5 w-5 mr-2 text-red-400"/> Hail</div>
                                     <div className="text-gray-400">June 15, 2023</div>
-                                    <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full text-center">1.25-inch hail</div>
+                                    <div className="bg-red-500 text-white text-base font-bold px-2 py-1 rounded-full text-center">1.25-inch hail</div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-4 items-center text-sm">
+                                <div className="grid grid-cols-3 gap-4 items-center text-base">
                                     <div className="flex items-center"><WindIcon className="h-5 w-5 mr-2 text-[#e2ab49]"/> Wind</div>
                                     <div className="text-gray-400">August 28, 2022</div>
-                                    <div className="bg-[#e2ab49] text-black text-xs font-bold px-2 py-1 rounded-full text-center">55 mph gusts</div>
+                                    <div className="bg-[#e2ab49] text-black text-base font-bold px-2 py-1 rounded-full text-center">55 mph gusts</div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-4 items-center text-sm">
+                                <div className="grid grid-cols-3 gap-4 items-center text-base">
                                     <div className="flex items-center"><SnowflakeIcon className="h-5 w-5 mr-2 text-[#08137C]"/> Ice Storm</div>
                                     <div className="text-gray-400">January 25, 2022</div>
-                                    <div className="bg-[#08137C] text-white text-xs font-bold px-2 py-1 rounded-full text-center truncate">Significant ice storm</div>
+                                    <div className="bg-[#08137C] text-white text-base font-bold px-2 py-1 rounded-full text-center truncate">Significant ice storm</div>
                                 </div>
                             </div>
                         </div>
@@ -159,7 +159,7 @@ export const ReportPage: React.FC<{ report: RoofReport; address: string; onNewEs
                         {/* Roof Options (Mockup) */}
                         <div className="bg-gray-800 rounded-lg p-6">
                             <h2 className="text-xl font-bold mb-4">Roof Options</h2>
-                            <div className="space-y-3 text-sm">
+                            <div className="space-y-3 text-base">
                                 <div className="flex justify-between items-center">
                                     <span>How many layers are on your project?</span>
                                     <span className="text-gray-400">2</span>
@@ -181,7 +181,7 @@ export const ReportPage: React.FC<{ report: RoofReport; address: string; onNewEs
                          {/* Gutter Options (Mockup) */}
                          <div className="bg-gray-800 rounded-lg p-6">
                             <h2 className="text-xl font-bold mb-4">Gutter Options</h2>
-                             <div className="space-y-3 text-sm">
+                             <div className="space-y-3 text-base">
                                 <div className="flex justify-between items-center">
                                     <span>How many feet of gutters?</span>
                                     <span className="text-gray-400">Ex: 120</span>

@@ -205,8 +205,6 @@ const HunniChatWidget: React.FC = () => {
                         
                         <MessageSquare className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
                         
-                        <span className="absolute bottom-1.5 text-white font-black text-[8px] tracking-widest">HUNNI</span>
-
                         {/* Animated Pulse */}
                         <div className="absolute inset-0 border border-rhive-pink rounded-full animate-ping opacity-20" />
                     </div>

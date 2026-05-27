@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Gauge,
@@ -25,7 +26,11 @@ export const FloatingEstimator: React.FC = () => {
     const [address, setAddress] = useState('');
     const [activeProtocol, setActiveProtocol] = useState<string | null>(null);
 
-    React.useEffect(() => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const autocompleteRef = useRef<any>(null);
+    const isApiReady = useGoogleMapsApi();
+
+    useEffect(() => {
         const handleOpen = (e: any) => {
             setActiveProtocol(e.detail?.protocol || null);
             setIsOpen(true);
@@ -34,6 +39,38 @@ export const FloatingEstimator: React.FC = () => {
         window.addEventListener('open-estimator', handleOpen);
         return () => window.removeEventListener('open-estimator', handleOpen);
     }, []);
+
+    useEffect(() => {
+        if (!isApiReady || !inputRef.current || !window.google || !window.google.maps.places) return;
+        if (autocompleteRef.current) return;
+
+        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+            types: ['address'],
+            fields: ['formatted_address'],
+            componentRestrictions: { country: 'us' }
+        });
+
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+                setAddress(place.formatted_address);
+            } else if (inputRef.current) {
+                setAddress(inputRef.current.value);
+            }
+        });
+
+        autocompleteRef.current = autocomplete;
+
+        return () => {
+            if (autocompleteRef.current) {
+                window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+                autocompleteRef.current = null;
+            }
+            // Remove pac-containers only if they persist
+            const pacContainers = document.querySelectorAll('.pac-container');
+            pacContainers.forEach((el) => el.remove());
+        };
+    }, [isApiReady, step, isOpen]);
 
     const steps = [
         { id: 'address', label: 'Identity' },
@@ -57,7 +94,7 @@ export const FloatingEstimator: React.FC = () => {
                 }}
                 whileHover={{ scale: 1.05, x: -10 }}
                 whileTap={{ scale: 0.95 }}
-                className="fixed right-0 top-1/2 -translate-y-1/2 z-[600] flex items-center gap-3 bg-[var(--rhive-bg)] text-[var(--rhive-text)] px-4 py-10 rounded-l-3xl shadow-[0_20px_60px_rgba(236,2,139,0.4)] hover:shadow-pink-glow transition-all group overflow-hidden border border-[var(--rhive-border)] outline-none"
+                className="fixed right-0 top-1/2 -translate-y-1/2 z-[600] flex items-center gap-3 bg-[var(--rhive-bg)] text-[var(--rhive-text)] px-4 py-10 rounded-l-3xl shadow-[-20px_0_40px_rgba(236,2,139,0.3)] hover:shadow-[-30px_0_60px_rgba(236,2,139,0.6)] transition-all group overflow-hidden border border-[var(--rhive-border)] outline-none"
                 initial={{ x: 100 }}
                 animate={{ x: 0 }}
                 transition={{ type: 'spring', damping: 20, stiffness: 100 }}
@@ -65,7 +102,7 @@ export const FloatingEstimator: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-rhive-pink/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex flex-col items-center gap-2 relative z-10">
                     <Zap size={20} className="text-rhive-pink animate-pulse" />
-                    <span className="[writing-mode:vertical-lr] font-black text-[10px] uppercase tracking-[0.6em] rotate-180">
+                    <span className="[writing-mode:vertical-lr] font-black text-base uppercase tracking-[0.6em] rotate-180">
                         System Scan
                     </span>
                 </div>
@@ -113,7 +150,7 @@ export const FloatingEstimator: React.FC = () => {
                                 <motion.span
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    className="text-rhive-pink font-black text-[10px] uppercase tracking-[0.6em] mb-2"
+                                    className="text-rhive-pink font-black text-base uppercase tracking-[0.6em] mb-2"
                                 >
                                     {activeProtocol ? `Protocol ${activeProtocol} // Locked` : 'Quantum Intake Terminal'}
                                 </motion.span>
@@ -144,17 +181,17 @@ export const FloatingEstimator: React.FC = () => {
                                             </div>
                                             <div>
                                                 <h3 className="text-2xl font-black uppercase tracking-tighter italic">RHIVE AI Architect</h3>
-                                                <p className="text-rhive-pink font-black text-[8px] uppercase tracking-[0.4em]">Neural Network Operational</p>
+                                                <p className="text-rhive-pink font-black text-base uppercase tracking-[0.4em]">Neural Network Operational</p>
                                             </div>
                                         </div>
-                                        <p className="text-[var(--text-muted)] text-sm leading-relaxed">
+                                        <p className="text-[var(--text-muted)] text-base leading-relaxed">
                                             I am the strategic engine of RHIVE OS. How can I assist your deployment today?
                                         </p>
                                     </div>
 
                                     <div className="flex-grow space-y-4 overflow-y-auto pr-2 scrollbar-hide">
                                         <div className="bg-white/5 border border-white/10 p-4 rounded-2xl rounded-tl-none max-w-[85%]">
-                                            <p className="text-xs text-white/90 leading-relaxed">
+                                            <p className="text-base text-white/90 leading-relaxed">
                                                 Welcome to the ecosystem. I can help you with:
                                                 <br /><br />
                                                 • Instant geometric roof analysis
@@ -169,7 +206,7 @@ export const FloatingEstimator: React.FC = () => {
 
                                         <div className="flex justify-end">
                                             <div className="bg-rhive-pink/20 border border-rhive-pink/30 p-4 rounded-2xl rounded-tr-none max-w-[85%]">
-                                                <p className="text-xs text-white/90 leading-relaxed">
+                                                <p className="text-base text-white/90 leading-relaxed">
                                                     I'm interested in a metal roof for a 2,500 sq ft property.
                                                 </p>
                                             </div>
@@ -181,16 +218,16 @@ export const FloatingEstimator: React.FC = () => {
                                             <input
                                                 type="text"
                                                 placeholder="COMMAND THE AI..."
-                                                className="w-full bg-black/40 border-2 border-white/10 p-5 pr-16 text-xs font-black uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-white placeholder-white/20"
+                                                className="w-full bg-black/40 border-2 border-white/10 p-5 pr-16 text-base font-black uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-white placeholder-white/20"
                                             />
                                             <button className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-rhive-pink text-white rounded-xl shadow-pink-glow hover:scale-110 transition-transform">
                                                 <Send size={16} />
                                             </button>
                                         </div>
                                         <div className="grid grid-cols-3 gap-2 mt-4">
-                                            <button onClick={() => setStep('address')} className="text-[8px] font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase">Start Estimate</button>
-                                            <button className="text-[8px] font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase">View Process</button>
-                                            <button className="text-[8px] font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase">Insurance FAQ</button>
+                                            <button onClick={() => setStep('address')} className="text-base font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase">Start Estimate</button>
+                                            <button className="text-base font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase">View Process</button>
+                                            <button className="text-base font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase">Insurance FAQ</button>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -203,8 +240,8 @@ export const FloatingEstimator: React.FC = () => {
                                 >
                                     {activeProtocol && (
                                         <div className="bg-rhive-pink/10 border border-rhive-pink/30 p-4 rounded-xl">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-rhive-pink mb-1">Active Protocol: {activeProtocol}</p>
-                                            <p className="text-[10px] text-white/70 italic leading-relaxed">
+                                            <p className="text-base font-black uppercase tracking-widest text-rhive-pink mb-1">Active Protocol: {activeProtocol}</p>
+                                            <p className="text-base text-white/70 italic leading-relaxed">
                                                 {activeProtocol === 'CERTIFIED QUOTE'
                                                     ? "This protocol involves a deep neural sweep and human-verified geometric validation for 100% price certainty."
                                                     : "Initializing rapid satellite scanning for an instant ball-park estimation."}
@@ -214,7 +251,7 @@ export const FloatingEstimator: React.FC = () => {
 
                                     <div className="space-y-4">
                                         <h3 className="text-4xl font-black uppercase tracking-tighter leading-none italic">Where are we <br /> deploying?</h3>
-                                        <p className="text-[var(--text-muted)] text-sm">Input your address to initialize geospatial mapping and high-resolution aerial analysis.</p>
+                                        <p className="text-[var(--text-muted)] text-base">Input your address to initialize geospatial mapping and high-resolution aerial analysis.</p>
                                     </div>
 
                                     <div className="relative group">
@@ -222,11 +259,12 @@ export const FloatingEstimator: React.FC = () => {
                                             <Search size={22} />
                                         </div>
                                         <input
+                                            ref={inputRef}
                                             type="text"
-                                            placeholder="STREET ADDRESS..."
+                                            placeholder={isApiReady ? "STREET ADDRESS..." : "INITIALIZING..."}
                                             value={address}
                                             onChange={(e) => setAddress(e.target.value)}
-                                            className="w-full bg-[var(--rhive-bg)] border-2 border-[var(--rhive-border)] py-6 pl-16 pr-8 text-sm font-black uppercase tracking-widest outline-none focus:border-rhive-pink transition-all placeholder-[var(--rhive-text-muted)] text-[var(--rhive-text)]"
+                                            className="w-full bg-[var(--rhive-bg)] border-2 border-[var(--rhive-border)] py-6 pl-16 pr-8 text-base font-black uppercase tracking-widest outline-none focus:border-rhive-pink transition-all placeholder-[var(--rhive-text-muted)] text-[var(--rhive-text)]"
                                         />
                                     </div>
 
@@ -237,7 +275,7 @@ export const FloatingEstimator: React.FC = () => {
                                         ].map((item, i) => (
                                             <div key={i} className="glass-dark p-4 border-[var(--rhive-border)] flex flex-col items-center gap-2 opacity-50">
                                                 <item.icon size={20} className="text-rhive-pink" />
-                                                <span className="text-[8px] font-black uppercase tracking-widest text-[var(--rhive-text)]">{item.label}</span>
+                                                <span className="text-base font-black uppercase tracking-widest text-[var(--rhive-text)]">{item.label}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -245,7 +283,7 @@ export const FloatingEstimator: React.FC = () => {
                                     <button
                                         onClick={() => setStep('specs')}
                                         disabled={!address}
-                                        className="w-full btn-tech py-6 text-xs shadow-pink-glow disabled:opacity-20 disabled:grayscale transition-all"
+                                        className="w-full btn-tech py-6 text-base shadow-pink-glow disabled:opacity-20 disabled:grayscale transition-all"
                                     >
                                         Initialize Analysis
                                     </button>
@@ -261,10 +299,10 @@ export const FloatingEstimator: React.FC = () => {
 
                                     <div className="space-y-6">
                                         <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Shingle Profile</label>
+                                            <label className="text-base font-black uppercase tracking-widest opacity-50">Shingle Profile</label>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {['Duration', 'Designer', 'Metal', 'Slate'].map(s => (
-                                                    <button key={s} className="p-4 glass-dark border-white/5 text-[10px] font-black uppercase tracking-widest hover:border-rhive-pink transition-all">
+                                                    <button key={s} className="p-4 glass-dark border-white/5 text-base font-black uppercase tracking-widest hover:border-rhive-pink transition-all">
                                                         {s}
                                                     </button>
                                                 ))}
@@ -272,10 +310,10 @@ export const FloatingEstimator: React.FC = () => {
                                         </div>
 
                                         <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-50">Pitch Assessment</label>
+                                            <label className="text-base font-black uppercase tracking-widest opacity-50">Pitch Assessment</label>
                                             <div className="grid grid-cols-3 gap-3">
                                                 {['Low', 'Medium', 'Steep'].map(p => (
-                                                    <button key={p} className="p-3 glass-dark border-white/5 text-[9px] font-black uppercase tracking-widest hover:border-rhive-pink transition-all">
+                                                    <button key={p} className="p-3 glass-dark border-white/5 text-base font-black uppercase tracking-widest hover:border-rhive-pink transition-all">
                                                         {p}
                                                     </button>
                                                 ))}
@@ -285,7 +323,7 @@ export const FloatingEstimator: React.FC = () => {
 
                                     <button
                                         onClick={() => setStep('lead')}
-                                        className="w-full btn-tech py-6 text-xs shadow-pink-glow"
+                                        className="w-full btn-tech py-6 text-base shadow-pink-glow"
                                     >
                                         Generate Range
                                     </button>
@@ -298,17 +336,17 @@ export const FloatingEstimator: React.FC = () => {
                                     className="space-y-8"
                                 >
                                     <h3 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Secure My Quote<span className="text-rhive-pink">.</span></h3>
-                                    <p className="text-[var(--text-muted)] text-sm">Where should we deliver the detailed technical analysis and NDL warranty certification?</p>
+                                    <p className="text-[var(--text-muted)] text-base">Where should we deliver the detailed technical analysis and NDL warranty certification?</p>
 
                                     <div className="space-y-4">
-                                        <input type="text" placeholder="FULL NAME" className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-xs font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]" />
-                                        <input type="email" placeholder="EMAIL ADDRESS" className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-xs font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]" />
-                                        <input type="tel" placeholder="PHONE NUMBER" className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-xs font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]" />
+                                        <input type="text" placeholder="FULL NAME" className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-base font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]" />
+                                        <input type="email" placeholder="EMAIL ADDRESS" className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-base font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]" />
+                                        <input type="tel" placeholder="PHONE NUMBER" className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-base font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]" />
                                     </div>
 
                                     <button
                                         onClick={() => setStep('result')}
-                                        className="w-full btn-tech py-6 text-xs shadow-pink-glow"
+                                        className="w-full btn-tech py-6 text-base shadow-pink-glow"
                                     >
                                         Execute Delivery
                                     </button>
@@ -328,25 +366,25 @@ export const FloatingEstimator: React.FC = () => {
 
                                     <div className="space-y-2">
                                         <h3 className="text-5xl font-black uppercase tracking-tighter italic">Analysis <br /> Complete<span className="text-rhive-pink">.</span></h3>
-                                        <p className="text-rhive-pink font-black text-[10px] uppercase tracking-[0.4em]">Integrated Estimate Ready</p>
+                                        <p className="text-rhive-pink font-black text-base uppercase tracking-[0.4em]">Integrated Estimate Ready</p>
                                     </div>
 
                                     <div className="glass-dark p-10 border-rhive-pink/30 relative overflow-hidden">
                                         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-4 block">Calculated Result Range</span>
+                                        <span className="text-base font-black uppercase tracking-widest opacity-40 mb-4 block">Calculated Result Range</span>
                                         <div className="text-6xl font-black tracking-tighter text-white mb-2">
                                             $14.2K - $16.8K
                                         </div>
-                                        <div className="text-rhive-pink text-[9px] font-bold uppercase tracking-widest">Includes 10% RPSP Efficiency Credit</div>
+                                        <div className="text-rhive-pink text-base font-bold uppercase tracking-widest">Includes 10% RPSP Efficiency Credit</div>
                                     </div>
 
-                                    <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                                    <p className="text-base text-[var(--text-muted)] leading-relaxed">
                                         Your detailed PDF breakdown has been sent. A local engineer will confirm the drone mapping data within 24 hours.
                                     </p>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <button className="btn-tech py-4 text-[10px]">Call Support</button>
-                                        <button onClick={toggleDrawer} className="btn-tech-outline py-4 text-[10px]">Finish</button>
+                                        <button className="btn-tech py-4 text-base">Call Support</button>
+                                        <button onClick={toggleDrawer} className="btn-tech-outline py-4 text-base">Finish</button>
                                     </div>
                                 </motion.div>
                             )}
@@ -356,9 +394,9 @@ export const FloatingEstimator: React.FC = () => {
                         <div className="p-6 bg-black/40 border-t border-[var(--border-color)] flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]" />
-                                <span className="text-[8px] font-black uppercase tracking-widest opacity-40">OS Channel Sec-1</span>
+                                <span className="text-base font-black uppercase tracking-widest opacity-40">OS Channel Sec-1</span>
                             </div>
-                            <span className="text-[8px] font-mono text-[var(--text-muted)] opacity-30 italic">Encryption: AES-256 Enabled</span>
+                            <span className="text-base font-mono text-[var(--text-muted)] opacity-30 italic">Encryption: AES-256 Enabled</span>
                         </div>
                     </motion.div>
                 )}

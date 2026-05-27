@@ -38,7 +38,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                     <div>
                         <div className="flex items-center gap-3 mb-2">
                             <Target className="w-5 h-5 text-[var(--rhive-pink)]" />
-                            <span className="text-[var(--rhive-pink)] font-mono text-[10px] uppercase tracking-[0.3em]">Intelligence Division</span>
+                            <span className="text-[var(--rhive-pink)] font-mono text-base uppercase tracking-[0.3em]">Intelligence Division</span>
                         </div>
                         <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
                             CAPEX DIAGNOSTIC <span className="text-gray-500">INTAKE</span>
@@ -63,7 +63,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                             
                             <div className="space-y-8">
                                 <div>
-                                    <label className="block text-gray-500 text-xs font-bold uppercase tracking-widest mb-4">Primary Asset Classification</label>
+                                    <label className="block text-gray-500 text-base font-bold uppercase tracking-widest mb-4">Primary Asset Classification</label>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         {['Multi-Family / HOA', 'Industrial / Commercial', 'Government / Municipal'].map((type) => (
                                             <button
@@ -73,14 +73,14 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                                                 style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
                                             >
                                                 <Building2 className={`w-5 h-5 mb-3 ${formData.propertyType === type ? 'text-[var(--rhive-pink)]' : 'text-gray-600'}`} />
-                                                <div className="font-bold text-sm tracking-wide">{type}</div>
+                                                <div className="font-bold text-base tracking-wide">{type}</div>
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-gray-500 text-xs font-bold uppercase tracking-widest mb-4">Estimated Footprint (Sq Ft)</label>
+                                    <label className="block text-gray-500 text-base font-bold uppercase tracking-widest mb-4">Estimated Footprint (Sq Ft)</label>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {['< 50k', '50k - 250k', '250k - 1M', '1M+'].map((size) => (
                                             <button
@@ -88,7 +88,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                                                 onClick={() => setFormData({ ...formData, portfolioSize: size })}
                                                 className={`py-3 px-4 border text-center transition-all ${formData.portfolioSize === size ? 'border-[var(--rhive-pink)] bg-[var(--rhive-pink)]/10 text-white' : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-white'}`}
                                             >
-                                                <div className="font-mono font-bold text-sm">{size}</div>
+                                                <div className="font-mono font-bold text-base">{size}</div>
                                             </button>
                                         ))}
                                     </div>
@@ -99,7 +99,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                                 <button
                                     onClick={handleNext}
                                     disabled={!isStep1Valid}
-                                    className={`px-8 py-4 font-black uppercase tracking-[0.2em] text-sm transition-all ${isStep1Valid ? 'bg-[var(--rhive-pink)] text-white hover:bg-white hover:text-black' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}`}
+                                    className={`px-8 py-4 font-black uppercase tracking-[0.2em] text-base transition-all ${isStep1Valid ? 'bg-[var(--rhive-pink)] text-white hover:bg-white hover:text-black' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}`}
                                     style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                                 >
                                     Proceed to Credentials
@@ -114,7 +114,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
-                                    <label className="block text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Company / Organization</label>
+                                    <label className="block text-gray-500 text-base font-bold uppercase tracking-widest mb-2">Company / Organization</label>
                                     <input 
                                         type="text" 
                                         className="w-full bg-black/50 border border-white/10 text-white p-4 font-mono focus:border-[var(--rhive-pink)] focus:outline-none transition-colors"
@@ -124,7 +124,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Direct Contact Name</label>
+                                    <label className="block text-gray-500 text-base font-bold uppercase tracking-widest mb-2">Direct Contact Name</label>
                                     <input 
                                         type="text" 
                                         className="w-full bg-black/50 border border-white/10 text-white p-4 font-mono focus:border-[var(--rhive-pink)] focus:outline-none transition-colors"
@@ -134,7 +134,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Corporate Email</label>
+                                    <label className="block text-gray-500 text-base font-bold uppercase tracking-widest mb-2">Corporate Email</label>
                                     <input 
                                         type="email" 
                                         className="w-full bg-black/50 border border-white/10 text-white p-4 font-mono focus:border-[var(--rhive-pink)] focus:outline-none transition-colors"
@@ -144,7 +144,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Direct Line</label>
+                                    <label className="block text-gray-500 text-base font-bold uppercase tracking-widest mb-2">Direct Line</label>
                                     <input 
                                         type="tel" 
                                         className="w-full bg-black/50 border border-white/10 text-white p-4 font-mono focus:border-[var(--rhive-pink)] focus:outline-none transition-colors"
@@ -158,7 +158,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                             <div className="mt-12 flex justify-between">
                                 <button
                                     onClick={handleBack}
-                                    className="px-8 py-4 bg-transparent border border-white/20 text-white font-black uppercase tracking-[0.2em] text-sm hover:border-[var(--rhive-pink)] hover:text-[var(--rhive-pink)] transition-all"
+                                    className="px-8 py-4 bg-transparent border border-white/20 text-white font-black uppercase tracking-[0.2em] text-base hover:border-[var(--rhive-pink)] hover:text-[var(--rhive-pink)] transition-all"
                                     style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                                 >
                                     Back
@@ -166,7 +166,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                                 <button
                                     onClick={handleNext}
                                     disabled={!formData.contactName || !formData.email}
-                                    className={`px-8 py-4 font-black uppercase tracking-[0.2em] text-sm transition-all ${formData.contactName && formData.email ? 'bg-[var(--rhive-pink)] text-white hover:bg-white hover:text-black' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}`}
+                                    className={`px-8 py-4 font-black uppercase tracking-[0.2em] text-base transition-all ${formData.contactName && formData.email ? 'bg-[var(--rhive-pink)] text-white hover:bg-white hover:text-black' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}`}
                                     style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                                 >
                                     Initialize Diagnostic
@@ -187,7 +187,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                             </p>
                             <button
                                 onClick={onClose}
-                                className="px-12 py-4 bg-white text-black font-black uppercase tracking-[0.2em] text-sm shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all"
+                                className="px-12 py-4 bg-white text-black font-black uppercase tracking-[0.2em] text-base shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all"
                                 style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                             >
                                 CLOSE DASHBOARD

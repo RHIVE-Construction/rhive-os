@@ -29,7 +29,7 @@ export const LoadingSpinner: React.FC = () => {
             {messages[currentMessageIndex]}
          </p>
       </div>
-      <p className="text-sm text-slate-500">This may take a few moments. Please wait.</p>
+      <p className="text-base text-slate-500">This may take a few moments. Please wait.</p>
     </div>
   );
 };

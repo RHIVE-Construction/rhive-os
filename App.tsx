@@ -20,6 +20,7 @@ const AppContentAuthenticated: React.FC = () => {
     const { currentUser } = useMockDB();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const mainRef = React.useRef<HTMLElement>(null);
 
     // Refresh the 24-hour session window on any user activity
     useEffect(() => {
@@ -36,12 +37,15 @@ const AppContentAuthenticated: React.FC = () => {
 
     useEffect(() => {
         console.log('App: activePageId changed to:', activePageId);
+        if (mainRef.current) {
+            mainRef.current.scrollTop = 0;
+        }
     }, [activePageId]);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const pageCode = params.get('page');
-        if (pageCode && pageCode !== activePageId) {
+        if (pageCode) {
             setActivePageId(pageCode);
         }
 
@@ -50,7 +54,17 @@ const AppContentAuthenticated: React.FC = () => {
         };
         window.addEventListener('nav-page', handleCustomNav);
         return () => window.removeEventListener('nav-page', handleCustomNav);
-    }, [activePageId, setActivePageId]);
+    }, []); // Run only on mount
+
+    useEffect(() => {
+        if (activePageId) {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('page') !== activePageId) {
+                const newUrl = `${window.location.pathname}?page=${activePageId}`;
+                window.history.pushState({ path: newUrl }, '', newUrl);
+            }
+        }
+    }, [activePageId]);
 
     useEffect(() => {
         if (currentUser && !activePageId) {
@@ -84,7 +98,9 @@ const AppContentAuthenticated: React.FC = () => {
 
             <div className="relative z-10 flex h-full w-full pt-12">
                 <Sidebar />
-                <main className={cn(
+                <main 
+                    ref={mainRef}
+                    className={cn(
                     "flex-1 h-full overflow-y-auto relative border-l transition-colors duration-500",
                     isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-black/5"
                 )}>

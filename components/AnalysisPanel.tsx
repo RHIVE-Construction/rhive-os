@@ -40,7 +40,7 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ buildingData, surv
                     </div>
                 </div>
                 <div>
-                    <label className="text-sm font-medium text-gray-400">Select buildings to include in estimate:</label>
+                    <label className="text-base font-medium text-gray-400">Select buildings to include in estimate:</label>
                     <div className="mt-2 space-y-2">
                         {buildingData.buildings.map(building => {
                             const isSelected = surveyState.includedBuildingIds.includes(building.id);

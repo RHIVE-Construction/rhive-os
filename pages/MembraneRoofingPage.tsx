@@ -37,7 +37,7 @@ const MembraneRoofingPage = () => {
             name: 'GAF PVC 60 MIL',
             type: 'CHEMICAL RESISTANCE',
             description: 'Specialized chemical-resistant base. Highly resistant to fats, oils, and grease in demanding commercial or restaurant environments.',
-            color: '#00D1FF',
+            color: 'var(--rhive-blue)',
             features: ['20-Year NDL Warranty', 'Superior Chemical Defense', 'Grease Resistant'],
             cta: 'View PVC Specs',
             action: () => setActivePageId('P-02b-3')
@@ -91,28 +91,28 @@ const MembraneRoofingPage = () => {
                 <div className="relative z-30 text-center px-4 max-w-5xl">
                     <div className="inline-flex items-center gap-2 border border-[var(--rhive-pink)]/30 px-6 py-2 bg-[var(--rhive-pink)]/10 mb-8 backdrop-blur-md">
                         <Activity className="w-4 h-4 text-[var(--rhive-pink)]" />
-                        <span className="text-[var(--rhive-pink)] font-black text-xs uppercase tracking-[0.4em]">Membrane Architecture</span>
+                        <span className="text-[var(--rhive-pink)] font-black text-base uppercase tracking-[0.4em]">Membrane Architecture</span>
                     </div>
 
                     <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-8 text-white leading-none drop-shadow-2xl font-sans">
                         MEMBRANE <br /> <span className="text-[var(--rhive-pink)]">ROOFING</span>
                     </h1>
 
-                    <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+                    <p className="text-xl md:text-2xl text-gray-300 font-sans mb-12 max-w-prose mx-auto leading-relaxed drop-shadow-lg">
                         Commercial-grade membrane systems engineered for the flat roof challenges of the West. Every seam, every detail, built for a lifetime.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <button
                             onClick={() => window.location.href = '#quote'}
-                            className="group relative px-10 py-5 bg-[var(--rhive-pink)] text-white font-black uppercase text-sm tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(236,2,139,0.3)]"
+                            className="group relative px-10 py-5 bg-[var(--rhive-pink)] text-white font-black uppercase text-base tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(236,2,139,0.3)]"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >
                             Request Membrane Quote
                         </button>
                         <button
                             onClick={scrollToSystems}
-                            className="px-10 py-5 border border-white/10 text-white font-bold uppercase text-xs tracking-[0.2em] hover:bg-white/5 transition-all"
+                            className="px-10 py-5 border border-white/10 text-white font-bold uppercase text-base tracking-[0.2em] hover:bg-white/5 transition-all"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >
                             System Overview
@@ -129,11 +129,11 @@ const MembraneRoofingPage = () => {
                 <div className="max-w-[85rem] mx-auto px-6 mb-12 text-center relative z-20">
                     <div className="flex items-center justify-center gap-3 mb-4">
                         <div className="w-8 h-[2px] bg-[var(--rhive-pink)]"></div>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--rhive-pink)] font-bold">Structural Diagnostics</span>
+                        <span className="font-mono text-base uppercase tracking-[0.3em] text-[var(--rhive-pink)] font-bold">Structural Diagnostics</span>
                         <div className="w-8 h-[2px] bg-[var(--rhive-pink)]"></div>
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase font-display tracking-tight mb-4">Membrane Anatomy<span className="text-[var(--rhive-pink)]">.</span></h2>
-                    <p className="text-gray-400 font-serif max-w-2xl mx-auto text-lg italic">
+                    <h2 className="text-4xl md:text-5xl leading-tight font-black text-white uppercase font-display tracking-tight mb-4">Membrane Anatomy<span className="text-[var(--rhive-pink)]">.</span></h2>
+                    <p className="text-gray-400 font-serif max-w-prose mx-auto text-base md:text-lg leading-relaxed italic">
                         Low-slope roofing is engineering, not just installation. Explore the precision layers of a RHIVE certified membrane system.
                     </p>
                 </div>
@@ -149,7 +149,7 @@ const MembraneRoofingPage = () => {
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-12 h-[2px] bg-[var(--rhive-pink)]"></div>
-                            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)] drop-shadow-[0_0_8px_rgba(236,2,139,0.5)]">
+                            <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)] drop-shadow-[0_0_8px_rgba(236,2,139,0.5)]">
                                 Base Commercial Package
                             </span>
                         </div>
@@ -157,7 +157,7 @@ const MembraneRoofingPage = () => {
                         <h1 className="text-5xl md:text-5xl lg:text-6xl font-black text-white uppercase tracking-tighter mb-8 font-display leading-[0.85]">
                             GAF TPO 60 mil <br /><span className="text-[var(--rhive-pink)]">Roofing Package.</span>
                         </h1>
-                        <p className="text-xl text-gray-400 font-serif leading-loose mb-12 italic">
+                        <p className="text-xl text-gray-400 font-serif leading-relaxed max-w-prose mb-12 italic">
                             Superior Durability and Performance. Featuring GAF EverGuard® 60 mil TPO—an industry-proven, highly reflective membrane. Engineered for maximum thermal performance and secured by a manufacturer-backed guarantee.
                         </p>
 
@@ -167,8 +167,8 @@ const MembraneRoofingPage = () => {
                                     <ShieldCheck className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h4 className="text-white font-black text-xs uppercase tracking-widest mb-1">20-Year NDL Warranty</h4>
-                                    <p className="text-gray-500 text-xs">GAF EverGuard® System Limited Warranty including 20 years of non-prorated material and labor coverage.</p>
+                                    <h4 className="text-white font-black text-base uppercase tracking-widest mb-1">20-Year NDL Warranty</h4>
+                                    <p className="text-gray-500 text-base">GAF EverGuard® System Limited Warranty including 20 years of non-prorated material and labor coverage.</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-6 group">
@@ -176,15 +176,15 @@ const MembraneRoofingPage = () => {
                                     <HardHat className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h4 className="text-white font-black text-xs uppercase tracking-widest mb-1">Total Engineering Assurance</h4>
-                                    <p className="text-gray-500 text-xs">Full GAF Engineer Project Submittal and certified installation by safety-audited RHIVE crews.</p>
+                                    <h4 className="text-white font-black text-base uppercase tracking-widest mb-1">Total Engineering Assurance</h4>
+                                    <p className="text-gray-500 text-base">Full GAF Engineer Project Submittal and certified installation by safety-audited RHIVE crews.</p>
                                 </div>
                             </div>
                         </div>
 
                         <button
                             onClick={() => setActivePageId('P-02b-1')}
-                            className="flex items-center gap-3 text-white font-black text-xs uppercase tracking-[0.3em] group"
+                            className="flex items-center gap-3 text-white font-black text-base uppercase tracking-[0.3em] group"
                         >
                             Explore TPO 60 Specs <ArrowRight className="w-4 h-4 text-[var(--rhive-pink)] group-hover:translate-x-2 transition-transform" />
                         </button>
@@ -225,7 +225,7 @@ const MembraneRoofingPage = () => {
                                         <div className="text-[var(--rhive-pink)] group-hover/item:text-white transition-colors">
                                             {item.icon}
                                         </div>
-                                        <span className="text-sm font-bold text-gray-200 uppercase font-sans tracking-widest group-hover/item:text-white transition-colors">{item.text}</span>
+                                        <span className="text-base font-bold text-gray-200 uppercase font-sans tracking-widest group-hover/item:text-white transition-colors">{item.text}</span>
                                     </div>
                                 ))}
                             </div>
@@ -238,8 +238,8 @@ const MembraneRoofingPage = () => {
             <section className="py-20 bg-[#050505]">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="text-center mb-32">
-                        <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-6">CUSTOMIZE FOR <span className="text-[var(--rhive-pink)]">PERFORMANCE</span></h2>
-                        <p className="text-gray-400 font-serif italic uppercase text-[10px] tracking-[0.5em]">Selection by environment</p>
+                        <h2 className="text-4xl md:text-5xl leading-tight font-black uppercase tracking-tighter text-white mb-6">CUSTOMIZE FOR <span className="text-[var(--rhive-pink)]">PERFORMANCE</span></h2>
+                        <p className="text-gray-400 font-serif italic uppercase text-base tracking-[0.5em]">Selection by environment</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -248,23 +248,23 @@ const MembraneRoofingPage = () => {
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                 <div className="mb-12 text-left">
-                                    <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: opt.color }}>{opt.type}</div>
+                                    <div className="text-base font-black uppercase tracking-widest mb-2" style={{ color: opt.color }}>{opt.type}</div>
                                     <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-4">{opt.name}</h3>
-                                    <p className="text-gray-500 text-xs font-serif italic leading-relaxed">{opt.description}</p>
+                                    <p className="text-gray-300 text-base font-sans leading-relaxed">{opt.description}</p>
                                 </div>
 
                                 <div className="space-y-4 mb-12">
                                     {opt.features.map((f, i) => (
                                         <div key={i} className="flex items-center gap-3">
                                             <div className="w-1 h-1 rounded-full" style={{ backgroundColor: opt.color }} />
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{f}</span>
+                                            <span className="text-base font-bold text-gray-400 uppercase tracking-widest">{f}</span>
                                         </div>
                                     ))}
                                 </div>
 
                                 <button
                                     onClick={opt.action}
-                                    className="w-full py-5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+                                    className="w-full py-5 border border-white/10 text-white font-black text-base uppercase tracking-widest hover:bg-white hover:text-black transition-all"
                                     style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                                 >
                                     {opt.cta}

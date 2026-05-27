@@ -8,11 +8,11 @@ interface ProfileCardProps {
 
 const Metric: React.FC<{ label: string; value: string | number; subValue?: string | number; unit?: string; children?: React.ReactNode }> = ({ label, value, subValue, unit, children }) => (
     <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 flex-1">
-        <div className="text-sm text-gray-400">{label}</div>
+        <div className="text-base text-gray-400">{label}</div>
         <div className="flex items-baseline mt-1">
             <span className="text-3xl font-bold text-white">{value}</span>
             {unit && <span className="text-lg text-gray-300 ml-1">{unit}</span>}
-             {subValue && <span className="text-sm text-gray-400 ml-2">{subValue}</span>}
+             {subValue && <span className="text-base text-gray-400 ml-2">{subValue}</span>}
         </div>
         {children}
     </div>
@@ -30,12 +30,12 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ calcResult, buildingDa
                 <Metric label="Year Constructed" value={buildingData.yearConstructed} subValue={`Est. Layers: ${estimatedLayers}`} />
              </div>
              <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-                <div className="text-sm text-gray-400">Pitch & Facet Breakdown</div>
+                <div className="text-base text-gray-400">Pitch & Facet Breakdown</div>
                 <div className="flex items-baseline mt-1">
                     <span className="text-3xl font-bold text-white">{totalFacets}</span>
                     <span className="text-lg text-gray-300 ml-2">Facets</span>
                 </div>
-                <div className="mt-2 space-y-1 text-sm border-t border-gray-700 pt-2">
+                <div className="mt-2 space-y-1 text-base border-t border-gray-700 pt-2">
                     {pitchBreakdown.map(({ pitch, sq }) => (
                         <div key={pitch} className="flex justify-between">
                             <span className="text-gray-300">{pitch}/12 Pitch</span>

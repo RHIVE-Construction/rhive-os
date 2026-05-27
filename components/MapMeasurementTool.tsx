@@ -153,7 +153,7 @@ export const MapMeasurementTool: React.FC<MapMeasurementToolProps> = ({ center, 
       <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/70 to-transparent">
         <div className="flex justify-between items-center bg-black/50 p-2 rounded-lg backdrop-blur-sm">
             <div>
-                <p className="text-sm text-gray-300">Total Measured Length</p>
+                <p className="text-base text-gray-300">Total Measured Length</p>
                 <p className="text-xl font-bold text-pink-400">{totalLength.toFixed(1)} ft</p>
             </div>
             <div className="flex items-center space-x-2">
@@ -171,7 +171,7 @@ export const MapMeasurementTool: React.FC<MapMeasurementToolProps> = ({ center, 
           </ControlButton>
       </div>
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-center">
-          <p className="text-white text-xs bg-black/50 px-3 py-1 rounded-full">
+          <p className="text-white text-base bg-black/50 px-3 py-1 rounded-full">
             {drawingMode === 'polyline' ? 'Click on map to draw. Double-click to finish line.' : 'Click and drag to pan the map.'}
           </p>
       </div>

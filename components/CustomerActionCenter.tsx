@@ -67,7 +67,7 @@ const ActionCard: React.FC<{ item: ActionItem }> = ({ item }) => {
                         <item.icon className="w-6 h-6" />
                     </div>
                     {isHigh && (
-                        <div className="flex items-center gap-1.5 px-2 py-1 bg-red-500/20 rounded text-red-400 text-[10px] font-bold uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-red-500/20 rounded text-red-400 text-base font-bold uppercase tracking-wider">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                             Action Required
                         </div>
@@ -75,9 +75,9 @@ const ActionCard: React.FC<{ item: ActionItem }> = ({ item }) => {
                 </div>
                 
                 <h4 className="text-white font-bold mb-1">{item.title}</h4>
-                <p className="text-sm text-gray-400 mb-6 flex-grow">{item.description}</p>
+                <p className="text-base text-gray-400 mb-6 flex-grow">{item.description}</p>
                 
-                <button className={`w-full py-2.5 text-sm font-bold transition-all ${isHigh ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'}`}>
+                <button className={`w-full py-2.5 text-base font-bold transition-all ${isHigh ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'}`}>
                     {item.actionText}
                 </button>
             </div>
@@ -90,7 +90,7 @@ const CustomerActionCenter: React.FC = () => {
         <div className="mb-8">
             <h2 className="text-lg font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
                 Action Center
-                <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full flex items-center justify-center">2</span>
+                <span className="bg-red-500 text-white text-base px-2 py-0.5 rounded-full flex items-center justify-center">2</span>
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {actions.map(action => (

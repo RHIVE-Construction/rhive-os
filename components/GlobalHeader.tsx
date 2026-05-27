@@ -26,7 +26,7 @@ export const GlobalHeader: React.FC = () => {
                 <RhiveLogo className={cn("h-6 transition-colors", isDark ? "text-white" : "text-black")} />
                 <div className={cn("h-4 w-[1px]", isDark ? "bg-white/10" : "bg-black/10")} />
                 <span className={cn(
-                    "text-[10px] font-black uppercase tracking-[0.3em]",
+                    "text-base font-black uppercase tracking-[0.3em]",
                     isDark ? "text-white/40" : "text-black/40"
                 )}>
                     {t('system_title')}
@@ -43,7 +43,7 @@ export const GlobalHeader: React.FC = () => {
                                 key={lang.code}
                                 onClick={() => setLocale(lang.code)}
                                 className={cn(
-                                    "px-1.5 py-0.5 text-[8px] font-black tracking-widest transition-all rounded",
+                                    "px-1.5 py-0.5 text-base font-black tracking-widest transition-all rounded",
                                     locale === lang.code
                                         ? "bg-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.3)]"
                                         : (isDark ? "text-white/40 hover:text-white" : "text-black/40 hover:text-black")
@@ -68,14 +68,14 @@ export const GlobalHeader: React.FC = () => {
                     title={isDark ? t('theme_light') : t('theme_dark')}
                 >
                     {isDark ? <SunIcon className="w-3.5 h-3.5" /> : <MoonIcon className="w-3.5 h-3.5" />}
-                    <span className="text-[9px] font-black uppercase tracking-widest">
+                    <span className="text-base font-black uppercase tracking-widest">
                         {isDark ? 'LIGHT' : 'DARK'}
                     </span>
                 </button>
 
                 <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]" />
-                    <span className="text-[8px] font-black text-green-500/80 uppercase tracking-widest leading-none">{t('system_active')}</span>
+                    <span className="text-base font-black text-green-500/80 uppercase tracking-widest leading-none">{t('system_active')}</span>
                 </div>
             </div>
         </header>

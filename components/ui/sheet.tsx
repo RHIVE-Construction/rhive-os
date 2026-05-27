@@ -78,7 +78,7 @@ const SheetTitle: React.FC<{ children: React.ReactNode; className?: string }> = 
 );
 
 const SheetDescription: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
-    <p className={cn('text-sm text-gray-400', className)}>{children}</p>
+    <p className={cn('text-base text-gray-400', className)}>{children}</p>
 );
 
 export { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription };

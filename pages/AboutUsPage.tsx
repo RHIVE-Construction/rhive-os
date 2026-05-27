@@ -6,6 +6,7 @@ import PlexusShape from '../components/PlexusShape';
 import { AddressScanInput } from '../components/AddressScanInput';
 import { AboutUsLightbox } from '../components/AboutUsLightbox';
 import { AboutUsHeroPreview } from '../components/AboutUsHero';
+import { GoogleTestimonials } from '../components/GoogleTestimonials';
 
 // --- Reusable Glitch Text Component ---
 const GlitchText = ({ text, className }: { text: string, className?: string }) => {
@@ -46,15 +47,15 @@ const AuthenticFounderCard = ({ name, role, tagline, bio, image, colorClass = "r
             </div>
             <div className={cn("flex flex-col text-center", isFlipped ? "md:text-right md:items-end" : "md:text-left md:items-start")}>
                 <h3 className={cn(
-                    "font-display text-5xl font-black uppercase mb-2 tracking-tighter text-white transition-colors duration-500",
-                    colorClass === "rhive-pink" ? "group-hover:text-rhive-pink" : "group-hover:text-rhive-blue"
+                    "font-display text-5xl leading-tight font-black uppercase mb-2 tracking-tighter text-white transition-colors duration-500",
+                    colorClass === "rhive-pink" ? "group-hover:text-rhive-pink" : "group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-t group-hover:from-rhive-blue group-hover:to-white"
                 )}>{name}</h3>
                 <p className="text-white text-md font-bold tracking-widest uppercase mb-2 bg-white/10 px-4 py-1 inline-block rounded-full">{role}</p>
                 <p className={cn(
                     "text-xl font-bold font-serif italic mb-6",
-                    colorClass === "rhive-pink" ? "text-rhive-pink" : "text-rhive-blue"
+                    colorClass === "rhive-pink" ? "text-rhive-pink" : "bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent"
                 )}>"{tagline}"</p>
-                <div className="text-[var(--rhive-text-muted)] text-lg leading-relaxed max-w-2xl font-serif space-y-4">
+                <div className="text-[var(--rhive-text-muted)] text-lg leading-relaxed max-w-prose font-serif space-y-4">
                     {bio.map((paragraph: string, idx: number) => (
                         <p key={idx}>{paragraph}</p>
                     ))}
@@ -67,7 +68,7 @@ const AuthenticFounderCard = ({ name, role, tagline, bio, image, colorClass = "r
 // --- Styled Section Header ---
 const SectionHeader = ({ title, subtitle }: { title: string, subtitle?: string }) => (
     <div className="mb-12">
-        <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-4">{title}</h2>
+        <h2 className="text-4xl md:text-5xl leading-tight font-black uppercase tracking-tighter text-white mb-4">{title}</h2>
         {subtitle && <p className="text-xl md:text-2xl font-serif italic text-rhive-pink">{subtitle}</p>}
     </div>
 );
@@ -78,12 +79,21 @@ const AboutUsPage: React.FC = () => {
 
     return (
         <div className="relative w-full min-h-screen font-sans bg-[var(--rhive-bg)] overflow-hidden">
+            {/* Gradient Definition for Icons */}
+            <svg width="0" height="0" className="absolute pointer-events-none">
+                <defs>
+                    <linearGradient id="blue-white-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+                        <stop offset="0%" stopColor="#08137C" />
+                        <stop offset="100%" stopColor="#ffffff" />
+                    </linearGradient>
+                </defs>
+            </svg>
 
             {/* L-01 Lightbox Trigger CTA (Internal Testing) */}
             <div className="fixed top-24 right-6 z-50 flex flex-col gap-4 items-end">
                 <button
                     onClick={() => setIsLightboxOpen(true)}
-                    className="bg-rhive-pink/10 hover:bg-rhive-pink/20 border border-rhive-pink/50 text-rhive-pink px-4 py-2 font-bold text-xs uppercase tracking-widest backdrop-blur-md transition-all group overflow-hidden shadow-[0_0_15px_rgba(236,2,139,0.2)] hover:shadow-[0_0_25px_rgba(236,2,139,0.4)] relative"
+                    className="bg-rhive-pink/10 hover:bg-rhive-pink/20 border border-rhive-pink/50 text-rhive-pink px-4 py-2 font-bold text-base uppercase tracking-widest backdrop-blur-md transition-all group overflow-hidden shadow-[0_0_15px_rgba(236,2,139,0.2)] hover:shadow-[0_0_25px_rgba(236,2,139,0.4)] relative"
                     style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
                 >
                     <span className="relative z-10 flex items-center gap-2">
@@ -95,12 +105,12 @@ const AboutUsPage: React.FC = () => {
 
                 <button
                     onClick={() => setIsHeroPreviewOpen(true)}
-                    className="bg-rhive-blue/10 hover:bg-rhive-blue/20 border border-rhive-blue/50 text-rhive-blue px-4 py-2 font-bold text-xs uppercase tracking-widest backdrop-blur-md transition-all group overflow-hidden shadow-[0_0_15px_rgba(8,19,124,0.2)] hover:shadow-[0_0_25px_rgba(8,19,124,0.4)] relative"
+                    className="bg-rhive-blue/10 hover:bg-rhive-blue/20 border border-rhive-blue/50 px-4 py-2 font-bold text-base uppercase tracking-widest backdrop-blur-md transition-all group overflow-hidden shadow-[0_0_15px_rgba(8,19,124,0.2)] hover:shadow-[0_0_25px_rgba(8,19,124,0.4)] relative"
                     style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
                 >
                     <span className="relative z-10 flex items-center gap-2">
-                        <Zap size={14} className="group-hover:animate-pulse" />
-                        Preview H-01 Hero
+                        <Zap size={14} color="url(#blue-white-grad)" className="group-hover:animate-pulse" />
+                        <span className="bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent">Preview H-01 Hero</span>
                     </span>
                     <div className="absolute inset-0 bg-rhive-blue/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-0" />
                 </button>
@@ -122,15 +132,15 @@ const AboutUsPage: React.FC = () => {
                     <div className="absolute top-1/2 left-0 md:left-24 -translate-y-1/2 w-96 h-96 bg-rhive-pink/30 blur-[100px] rounded-full z-[-1] animate-[pulse_4s_cubic-bezier(0.4,0,0.6,1)_infinite]" />
 
                     <div className="inline-block border border-rhive-pink/30 px-6 py-2 rounded-full bg-rhive-pink/10 mb-4 shadow-[0_0_20px_rgba(236,2,139,0.3)]">
-                        <span className="text-rhive-pink font-bold text-sm tracking-[0.4em] uppercase">The Core Mission</span>
+                        <span className="text-rhive-pink font-bold text-base tracking-[0.4em] uppercase">The Core Mission</span>
                     </div>
                     <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-tight drop-shadow-2xl relative">
                         <GlitchText text="FINISH ON TOP." className="text-white drop-shadow-[0_0_30px_rgba(236,2,139,0.6)]" />
                     </h1>
-                    <p className="text-3xl font-serif italic text-white/90">
+                    <p className="text-3xl leading-snug font-serif italic text-white/90">
                         We're not just a roofing company. <br />We're a revolution in construction.
                     </p>
-                    <div className="text-[var(--rhive-text-muted)] text-xl leading-relaxed font-serif max-w-4xl space-y-6 relative z-10">
+                    <div className="text-[var(--rhive-text-muted)] text-xl leading-relaxed font-serif max-w-prose space-y-6 relative z-10">
                         <p>RHIVE Construction is a proudly female-owned and operated company specializing in residential and commercial roofing. But roofing is only the beginning of our story.</p>
                         <p>We were built to challenge an industry known for inflated pricing, vague bids, poor communication, and short-lived warranties. RHIVE exists to flip that script—with honesty, precision, and care. We bring a new standard to the industry: one rooted in transparency, technology, and trust.</p>
                     </div>
@@ -153,7 +163,7 @@ const AboutUsPage: React.FC = () => {
                 {/* WHY WE EXIST */}
                 <section>
                     <SectionHeader title="Why We Exist" subtitle="We’re not just a roofing company—we’re a revolution in construction." />
-                    <div className="text-[var(--rhive-text-muted)] text-2xl leading-relaxed font-serif max-w-4xl space-y-6">
+                    <div className="text-[var(--rhive-text-muted)] text-2xl leading-relaxed font-serif max-w-prose space-y-6">
                         <p>We saw that doing business all the ways we saw they were being done were wasting time, money, value, and expectations, and in return, it cut the potential of scaling to a larger picture idea.</p>
                         <p>With RHIVE, we have broken the bounds of residential, commercial, industrial, and into government projects as well. We are setting the pace to change roofing by providing sustainable, transparent cost + value replacement bids with local installers and locally purchased materials for every project.</p>
                     </div>
@@ -172,47 +182,8 @@ const AboutUsPage: React.FC = () => {
                     </div>
 
                     <SectionHeader title="How We Do It" subtitle="We’re not just a roofing company. We’re a revolution in construction." />
-                    <div className="flex flex-col lg:flex-row gap-12 items-center relative z-10">
-                        <div className="flex-1 space-y-6 text-lg text-[var(--rhive-text-muted)]">
-                            <ul className="space-y-6 list-none">
-                                <li className="flex items-start gap-6 p-6 glass-dark bg-black/60 border border-rhive-pink/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(236,2,139,0.1)] hover:-translate-y-1 transition-transform">
-                                    <CpuChipIcon className="w-8 h-8 text-rhive-pink shrink-0" />
-                                    <div>
-                                        <strong className="text-xl text-rhive-pink block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Advanced Technology</strong>
-                                        <span className="font-serif leading-relaxed text-white">Remote inspections powered by cutting-edge aerial tech and AI-driven tools.</span>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-6 p-6 glass-dark bg-black/60 border border-[#22d3ee]/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(34,211,238,0.1)] hover:-translate-y-1 transition-transform">
-                                    <ShieldCheckIcon className="w-8 h-8 text-[#22d3ee] shrink-0" />
-                                    <div>
-                                        <strong className="text-xl text-[#22d3ee] block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Transparent Pricing</strong>
-                                        <span className="font-serif leading-relaxed text-white">Clearly itemized costs (materials, labor, overhead, profit).</span>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-6 p-6 glass-dark bg-black/60 border border-rhive-pink/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(236,2,139,0.1)] hover:-translate-y-1 transition-transform">
-                                    <BuildingOfficeIcon className="w-8 h-8 text-rhive-pink shrink-0" />
-                                    <div>
-                                        <strong className="text-xl text-rhive-pink block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Lifetime Warranties</strong>
-                                        <span className="font-serif leading-relaxed text-white">Guaranteed, reliable coverage you can trust.</span>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-6 p-6 glass-dark bg-black/60 border border-[#22d3ee]/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(34,211,238,0.1)] hover:-translate-y-1 transition-transform">
-                                    <Zap className="w-8 h-8 text-[#22d3ee] shrink-0" />
-                                    <div>
-                                        <strong className="text-xl text-[#22d3ee] block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Flexible Financing</strong>
-                                        <span className="font-serif leading-relaxed text-white">0% APR for 18 months, transparent options tailored to your needs.</span>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-6 p-6 glass-dark bg-black/60 border border-rhive-pink/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(236,2,139,0.1)] hover:-translate-y-1 transition-transform">
-                                    <HeartIcon className="w-8 h-8 text-rhive-pink shrink-0" />
-                                    <div>
-                                        <strong className="text-xl text-rhive-pink block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Community Commitment</strong>
-                                        <span className="font-serif leading-relaxed text-white">Every project supports veterans, teachers, and families in need.</span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        <div className="flex-[1.5] w-full p-[2px] bg-gradient-to-br from-rhive-pink via-[#08137C] to-[#22d3ee] shadow-[0_0_80px_rgba(236,2,139,0.2)] relative aspect-video group transform-gpu hover:scale-[1.02] transition-all duration-700"
+                    <div className="flex flex-col gap-12 items-center relative z-10">
+                        <div className="w-full max-w-5xl p-[2px] bg-gradient-to-br from-rhive-pink via-[#08137C] to-[#22d3ee] shadow-[0_0_80px_rgba(236,2,139,0.2)] relative aspect-video group transform-gpu hover:scale-[1.02] transition-all duration-700"
                             style={{ clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)' }}>
                             <div className="w-full h-full overflow-hidden bg-black relative z-10"
                                 style={{ clipPath: 'polygon(23px 0, 100% 0, 100% calc(100% - 23px), calc(100% - 23px) 100%, 0 100%, 0 23px)' }}>
@@ -222,11 +193,50 @@ const AboutUsPage: React.FC = () => {
                                     controls
                                     poster="https://static.wixstatic.com/media/c5862a_28b9264eb7464935b430c16685d190dc~mv2.png/v1/fill/w_784,h_441,al_c,q_85,usm_0.33_1.00_0.01,enc_avif,quality_auto/c5862a_28b9264eb7464935b430c16685d190dc~mv2.png"
                                 >
-                                    <source src="/vidupload/TRADESHOW MARKETING VIDEO.mp4" type="video/mp4" />
+                                    <source src="https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FVideo%2FKara's%20website%20video.mp4?alt=media&token=2e8a2e63-a46c-4b52-adb8-04526e99d757" type="video/mp4" />
                                     Your browser does not support the video tag.
                                 </video>
                             </div>
                             <div className="absolute inset-0 bg-rhive-pink/20 blur-2xl -z-10 group-hover:opacity-100 opacity-0 transition-opacity duration-700" />
+                        </div>
+                        <div className="w-full text-lg text-[var(--rhive-text-muted)]">
+                            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 list-none">
+                                <li className="flex flex-col items-start gap-4 p-6 glass-dark bg-black/60 border border-rhive-pink/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(236,2,139,0.1)] hover:-translate-y-1 transition-transform">
+                                    <CpuChipIcon className="w-8 h-8 text-rhive-pink shrink-0" />
+                                    <div>
+                                        <strong className="text-xl text-rhive-pink block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Advanced Technology</strong>
+                                        <span className="font-serif leading-relaxed text-white">Remote inspections powered by cutting-edge aerial tech and AI-driven tools.</span>
+                                    </div>
+                                </li>
+                                <li className="flex flex-col items-start gap-4 p-6 glass-dark bg-black/60 border border-[#22d3ee]/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(34,211,238,0.1)] hover:-translate-y-1 transition-transform">
+                                    <ShieldCheckIcon className="w-8 h-8 shrink-0" color="url(#blue-white-grad)" />
+                                    <div>
+                                        <strong className="text-xl bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Transparent Pricing</strong>
+                                        <span className="font-serif leading-relaxed text-white">Clearly itemized costs (materials, labor, overhead, profit).</span>
+                                    </div>
+                                </li>
+                                <li className="flex flex-col items-start gap-4 p-6 glass-dark bg-black/60 border border-rhive-pink/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(236,2,139,0.1)] hover:-translate-y-1 transition-transform">
+                                    <BuildingOfficeIcon className="w-8 h-8 text-rhive-pink shrink-0" />
+                                    <div>
+                                        <strong className="text-xl text-rhive-pink block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Lifetime Warranties</strong>
+                                        <span className="font-serif leading-relaxed text-white">Guaranteed, reliable coverage you can trust.</span>
+                                    </div>
+                                </li>
+                                <li className="flex flex-col items-start gap-4 p-6 glass-dark bg-black/60 border border-[#22d3ee]/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(34,211,238,0.1)] hover:-translate-y-1 transition-transform">
+                                    <Zap className="w-8 h-8 shrink-0" color="url(#blue-white-grad)" />
+                                    <div>
+                                        <strong className="text-xl bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Flexible Financing</strong>
+                                        <span className="font-serif leading-relaxed text-white">0% APR for 18 months, transparent options tailored to your needs.</span>
+                                    </div>
+                                </li>
+                                <li className="flex flex-col items-start gap-4 p-6 glass-dark bg-black/60 border border-rhive-pink/30 rounded-2xl backdrop-blur-xl shadow-[0_0_30px_rgba(236,2,139,0.1)] hover:-translate-y-1 transition-transform">
+                                    <HeartIcon className="w-8 h-8 text-rhive-pink shrink-0" />
+                                    <div>
+                                        <strong className="text-xl text-rhive-pink block mb-1 font-display tracking-widest uppercase shadow-black drop-shadow-md">Community Commitment</strong>
+                                        <span className="font-serif leading-relaxed text-white">Every project supports veterans, teachers, and families in need.</span>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </section>
@@ -241,40 +251,22 @@ const AboutUsPage: React.FC = () => {
                                 <span className="text-white font-bold text-xl uppercase tracking-widest">Manufacturer-Certified Installations (OC for Asphalt, GAF for Commercial/Flat)</span>
                             </div>
                             <div className="flex gap-4 items-center">
-                                <ArrowRightIcon className="w-6 h-6 text-[#22d3ee]" />
-                                <span className="text-white font-bold text-xl uppercase tracking-widest">Comprehensive Analysis Reports for Quote, Installation, & Annual Inspections INCLUDED</span>
+                                <ArrowRightIcon className="w-6 h-6" color="url(#blue-white-grad)" />
+                                <span className="bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent font-bold text-xl uppercase tracking-widest">Comprehensive Analysis Reports for Quote, Installation, & Annual Inspections INCLUDED</span>
                             </div>
                             <div className="flex gap-4 items-center">
                                 <ArrowRightIcon className="w-6 h-6 text-rhive-pink" />
                                 <span className="text-white font-bold text-xl uppercase tracking-widest">NO SALESMAN MARKUP — Material, Labor, Overhead & Profit Shown on Every Quote</span>
                             </div>
 
-                            <p className="mt-8 italic text-white/90 font-serif text-xl border-l-4 border-rhive-pink pl-6 py-2 bg-gradient-to-r from-rhive-pink/10 to-transparent">
+                            <p className="mt-8 leading-relaxed max-w-prose italic text-white/90 font-serif text-xl border-l-4 border-rhive-pink pl-6 py-2 bg-gradient-to-r from-rhive-pink/10 to-transparent">
                                 RHIVE is more than construction—it’s a commitment. Every project reinvests into our communities, fuels workforce development, and pioneers AI-driven change to eliminate waste and elevate standards.
                             </p>
-                            <p className="font-bold text-rhive-pink text-xl drop-shadow-[0_0_10px_rgba(236,2,139,0.5)]">
+                            <p className="font-bold leading-relaxed max-w-prose text-rhive-pink text-xl drop-shadow-[0_0_10px_rgba(236,2,139,0.5)]">
                                 When you choose RHIVE, you join a movement defined by integrity, transparency, and lasting impact.
                             </p>
                         </div>
-                        <div className="flex-[1.2] w-full p-[2px] bg-gradient-to-tr from-rhive-blue via-transparent to-rhive-pink shadow-[0_0_60px_rgba(8,19,124,0.4)] relative aspect-video group transform-gpu hover:-translate-y-2 transition-transform duration-700"
-                            style={{ clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)' }}>
-                            <div className="w-full h-full overflow-hidden bg-black relative z-10"
-                                style={{ clipPath: 'polygon(23px 0, 100% 0, 100% calc(100% - 23px), calc(100% - 23px) 100%, 0 100%, 0 23px)' }}>
-                                {/* Embedded Video using Wix MP4 fallback pattern */}
-                                <video
-                                    className="w-full h-full object-cover filter contrast-110 saturate-125"
-                                    autoPlay
-                                    muted
-                                    loop
-                                    playsInline
-                                    poster="https://static.wixstatic.com/media/c5862a_28b9264eb7464935b430c16685d190dc~mv2.png/v1/fill/w_784,h_441,al_c,q_85,usm_0.33_1.00_0.01,enc_avif,quality_auto/c5862a_28b9264eb7464935b430c16685d190dc~mv2.png"
-                                >
-                                    <source src="https://video.wixstatic.com/video/c5862a_28b9264eb7464935b430c16685d190dc/720p/mp4/file.mp4" type="video/mp4" />
-                                    Your browser does not support the video tag.
-                                </video>
-                            </div>
-                            <div className="absolute inset-0 bg-[#22d3ee]/20 blur-2xl -z-10 group-hover:opacity-100 opacity-0 transition-opacity duration-700" />
-                        </div>
+
                     </div>
                 </section>
 
@@ -292,8 +284,8 @@ const AboutUsPage: React.FC = () => {
                     <div className="glass-dark p-12 border border-[var(--rhive-border)] shadow-xl relative z-10 max-w-5xl mx-auto"
                         style={{ clipPath: 'polygon(40px 0, 100% 0, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%, 0 40px)' }}>
                         <div className="flex flex-col">
-                            <h2 className="text-4xl font-black uppercase tracking-tighter text-white mb-6">"Our Hive" Is a Movement</h2>
-                            <div className="text-[var(--rhive-text-muted)] text-xl leading-relaxed space-y-6">
+                            <h2 className="text-4xl leading-tight font-black uppercase tracking-tighter text-white mb-6">"Our Hive" Is a Movement</h2>
+                            <div className="text-[var(--rhive-text-muted)] text-xl leading-relaxed max-w-prose space-y-6">
                                 <p>Every roof we install supports a bigger mission. At RHIVE, a percentage of every project goes directly into community reinvestment, workforce development, and giving back.</p>
                                 <p>We're trailblazers in construction. Using AI to eliminate waste, improve outcomes, and drive real change in an industry long overdue for it.</p>
                                 <p>We’re growing across the U.S., expanding our reach with a clear goal: redefine what it means to hire a contractor. Because when you work with RHIVE, you’re not just buying a roof. You’re joining a movement for transparency, integrity, and long-lasting impact.</p>
@@ -325,8 +317,8 @@ const AboutUsPage: React.FC = () => {
                             style={{ clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)' }}>
                             <div className="absolute top-0 right-0 w-32 h-32 bg-rhive-blue/20 blur-3xl z-0" />
                             <div className="relative z-10 text-center mb-6">
-                                <h3 className="text-3xl font-black uppercase tracking-tighter text-white mb-1">Unforeseen Expenses</h3>
-                                <p className="text-[var(--rhive-text-muted)] text-sm font-serif italic">
+                                <h3 className="text-3xl leading-tight font-black uppercase tracking-tighter text-white mb-1">Unforeseen Expenses</h3>
+                                <p className="text-[var(--rhive-text-muted)] text-base leading-relaxed max-w-prose mx-auto font-serif italic">
                                     Be wary of low bids with hidden costs—we show you all expenses upfront.
                                 </p>
                             </div>
@@ -335,10 +327,10 @@ const AboutUsPage: React.FC = () => {
                                 <div className="space-y-4">
                                     <div className="bg-[#111] border border-[#374151] p-4 text-white hover:border-rhive-pink/50 transition-colors">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="font-bold text-rhive-pink uppercase tracking-widest text-[11px]">Difficult Access</span>
-                                            <span className="text-[10px] text-[#9CA3AF]">Add-On / SQ</span>
+                                            <span className="font-bold text-rhive-pink uppercase tracking-widest text-base">Difficult Access</span>
+                                            <span className="text-base text-[#9CA3AF]">Add-On / SQ</span>
                                         </div>
-                                        <ul className="text-[11px] text-[#9CA3AF] space-y-2">
+                                        <ul className="text-base text-[#9CA3AF] space-y-2">
                                             <li className="flex justify-between"><span>2 Stories or greater</span><span>$15.00</span></li>
                                             <li className="flex justify-between"><span>High Pitch &gt; 7/12</span><span>$45.00</span></li>
                                             <li className="flex justify-between"><span>Poor Access</span><span>$22.50</span></li>
@@ -347,10 +339,10 @@ const AboutUsPage: React.FC = () => {
                                     </div>
                                     <div className="bg-[#111] border border-[#374151] p-4 text-white hover:border-rhive-blue/50 transition-colors">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="font-bold text-rhive-blue uppercase tracking-widest text-[11px]">Decking</span>
-                                            <span className="text-[10px] text-[#9CA3AF]">Add-On</span>
+                                            <span className="font-bold bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent uppercase tracking-widest text-base">Decking</span>
+                                            <span className="text-base text-[#9CA3AF]">Add-On</span>
                                         </div>
-                                        <ul className="text-[11px] text-[#9CA3AF] space-y-2">
+                                        <ul className="text-base text-[#9CA3AF] space-y-2">
                                             <li className="flex justify-between"><span>R&R OSB / SH</span><span>$78.13</span></li>
                                             <li className="flex justify-between"><span>ReDeck OSB / SQ</span><span className="text-rhive-pink font-bold">INCLUDED</span></li>
                                         </ul>
@@ -359,12 +351,12 @@ const AboutUsPage: React.FC = () => {
 
                                 {/* Right Column */}
                                 <div className="space-y-4">
-                                    <div className="bg-[#111] border border-[#374151] p-4 text-white hover:border-[#22d3ee]/50 transition-colors">
+                                    <div className="bg-[#111] border border-[#374151] p-4 text-white hover:border-rhive-blue/50 transition-colors">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="font-bold text-[#22d3ee] uppercase tracking-widest text-[11px]">Ventilation</span>
-                                            <span className="text-[10px] text-[#9CA3AF]">Add-On / EA</span>
+                                            <span className="font-bold bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent uppercase tracking-widest text-base">Ventilation</span>
+                                            <span className="text-base text-[#9CA3AF]">Add-On / EA</span>
                                         </div>
-                                        <ul className="text-[11px] text-[#9CA3AF] space-y-2">
+                                        <ul className="text-base text-[#9CA3AF] space-y-2">
                                             <li className="flex justify-between"><span>Ridge Vent</span><span className="text-rhive-pink font-bold">INCLUDED</span></li>
                                             <li className="flex justify-between"><span>Install Turtle Vent</span><span>$32.81</span></li>
                                             <li className="flex justify-between"><span>Install Power Vent</span><span>$100.00</span></li>
@@ -372,10 +364,10 @@ const AboutUsPage: React.FC = () => {
                                     </div>
                                     <div className="bg-[#111] border border-[#374151] p-4 text-white hover:border-rhive-pink/50 transition-colors">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="font-bold text-rhive-pink uppercase tracking-widest text-[11px]">Flashing</span>
-                                            <span className="text-[10px] text-[#9CA3AF]">Add-On</span>
+                                            <span className="font-bold text-rhive-pink uppercase tracking-widest text-base">Flashing</span>
+                                            <span className="text-base text-[#9CA3AF]">Add-On</span>
                                         </div>
-                                        <ul className="text-[11px] text-[#9CA3AF] space-y-2">
+                                        <ul className="text-base text-[#9CA3AF] space-y-2">
                                             <li className="flex justify-between"><span>Step Flashing</span><span className="text-rhive-pink font-bold">INCLUDED</span></li>
                                             <li className="flex justify-between"><span>L Flashing</span><span className="text-rhive-pink font-bold">INCLUDED</span></li>
                                             <li className="flex justify-between"><span>Chimney Flashing</span><span>$259.90</span></li>
@@ -385,6 +377,11 @@ const AboutUsPage: React.FC = () => {
                             </div>
                         </div>
                     </div>
+                </section>
+
+                {/* GOOGLE REVIEWS / TESTIMONIALS */}
+                <section className="pt-16 border-t border-[var(--rhive-border)]">
+                    <GoogleTestimonials />
                 </section>
 
                 {/* MEET OUR FOUNDERS */}
@@ -423,12 +420,12 @@ const AboutUsPage: React.FC = () => {
 
                 {/* CALL TO ACTION */}
                 <section className="py-24 text-center border-t border-[var(--rhive-border)]">
-                    <h3 className="text-4xl md:text-5xl font-black uppercase text-white mb-6 tracking-tighter">Enter Your Project Address</h3>
-                    <p className="text-[var(--rhive-text-muted)] mb-12 max-w-2xl mx-auto font-serif italic text-[1.4rem] leading-snug">
+                    <h3 className="text-4xl md:text-5xl leading-tight font-black uppercase text-white mb-6 tracking-tighter">Enter Your Project Address</h3>
+                    <p className="text-[var(--rhive-text-muted)] mb-12 max-w-prose mx-auto font-serif italic text-[1.4rem] leading-relaxed">
                         See what the RHIVE experience looks like and get numbers on your project today!
                     </p>
                     <AddressScanInput id="about-us-scanner" />
-                    <p className="mt-8 text-xs font-mono text-gray-500 uppercase">©2025 RHIVE CONSTRUCTION | POWERED BY RHIVE'S AI ARCHITECT</p>
+                    <p className="mt-8 text-base font-mono text-gray-500 uppercase">©2025 RHIVE CONSTRUCTION | POWERED BY RHIVE'S AI ARCHITECT</p>
                 </section>
 
             </div>

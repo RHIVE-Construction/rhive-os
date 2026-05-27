@@ -25,25 +25,25 @@ const ServiceHero = ({ id, title, subtitle, bgImage, ctaText, ctaThemeColor, ali
         </div>
 
         {/* Content Container */}
-        <div className={`max-w-[85rem] mx-auto px-6 w-full relative z-20 flex flex-col ${align === 'left' ? 'items-start text-left' : 'items-end text-right'}`}>
+        <div className={`max-w-[85rem] mx-auto px-6 w-full relative z-20 flex flex-col ${align === 'left' ? 'items-start text-left' : 'items-end text-right pr-20 lg:pr-64'}`}>
 
             {/* Tech Accent Label */}
             <div className={`flex items-center gap-3 mb-6 ${align === 'right' ? 'flex-row-reverse' : ''}`}>
                 <div className="w-8 h-[2px]" style={{ backgroundColor: ctaThemeColor }}></div>
-                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-white/50">RHIVE Architecture</span>
+                <span className="font-mono text-base font-bold uppercase tracking-[0.3em] text-white/50">RHIVE Architecture</span>
             </div>
 
             <h2 className="text-5xl md:text-7xl lg:text-[5.5rem] font-black text-white uppercase tracking-tighter mb-6 font-display max-w-4xl leading-[0.9] drop-shadow-2xl transition-transform duration-700 group-hover:translate-x-2">
                 {title}
             </h2>
 
-            <p className="text-gray-300 font-serif text-xl md:text-2xl leading-relaxed max-w-2xl mb-12 drop-shadow-lg font-medium">
+            <p className="text-gray-300 font-serif text-xl md:text-2xl leading-relaxed max-w-prose mb-12 drop-shadow-lg font-medium">
                 {subtitle}
             </p>
 
             <button
                 onClick={onCtaClick}
-                className="group/btn relative overflow-hidden bg-black/40 backdrop-blur-md border px-10 py-5 font-black uppercase tracking-widest text-xs transition-all duration-500 text-white flex items-center gap-4 hover:border-transparent"
+                className="group/btn relative overflow-hidden bg-black/40 backdrop-blur-md border px-10 py-5 font-black uppercase tracking-widest text-base transition-all duration-500 text-white flex items-center gap-4 hover:border-transparent"
                 style={{
                     clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)',
                     borderColor: 'rgba(255,255,255,0.2)'
@@ -95,11 +95,11 @@ const OurServicesPage: React.FC = () => {
                 <div className="max-w-[85rem] mx-auto px-6 mb-12 text-center relative z-20">
                     <div className="flex items-center justify-center gap-3 mb-4">
                         <div className="w-8 h-[2px] bg-[var(--rhive-pink)]"></div>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--rhive-pink)] font-bold">System Diagnostics</span>
+                        <span className="font-mono text-base uppercase tracking-[0.3em] text-[var(--rhive-pink)] font-bold">System Diagnostics</span>
                         <div className="w-8 h-[2px] bg-[var(--rhive-pink)]"></div>
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase font-display tracking-tight mb-4">Know Your System<span className="text-[var(--rhive-pink)]">.</span></h2>
-                    <p className="text-gray-400 font-serif max-w-2xl mx-auto text-lg hover:text-white transition-colors duration-300">
+                    <h2 className="text-4xl md:text-5xl leading-tight font-black text-white uppercase font-display tracking-tight mb-4">Know Your System<span className="text-[var(--rhive-pink)]">.</span></h2>
+                    <p className="text-gray-400 font-serif max-w-prose mx-auto text-base md:text-lg leading-relaxed hover:text-white transition-colors duration-300">
                         A roof is not just shingles. It is a multi-layered defense pipeline. Hover over the nodes below to understand the RHIVE standard of protection.
                     </p>
                 </div>
@@ -125,11 +125,11 @@ const OurServicesPage: React.FC = () => {
                 <div className="max-w-[85rem] mx-auto px-6 mb-12 text-center relative z-20">
                     <div className="flex items-center justify-center gap-3 mb-4">
                         <div className="w-8 h-[2px] bg-[var(--rhive-pink)]"></div>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--rhive-pink)] font-bold">Structural Diagnostics</span>
+                        <span className="font-mono text-base uppercase tracking-[0.3em] text-[var(--rhive-pink)] font-bold">Structural Diagnostics</span>
                         <div className="w-8 h-[2px] bg-[var(--rhive-pink)]"></div>
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase font-display tracking-tight mb-4">Know Your Membrane System<span className="text-[var(--rhive-pink)]">.</span></h2>
-                    <p className="text-gray-400 font-serif max-w-2xl mx-auto text-lg hover:text-white transition-colors duration-300">
+                    <h2 className="text-4xl md:text-5xl leading-tight font-black text-white uppercase font-display tracking-tight mb-4">Know Your Membrane System<span className="text-[var(--rhive-pink)]">.</span></h2>
+                    <p className="text-gray-400 font-serif max-w-prose mx-auto text-base md:text-lg leading-relaxed hover:text-white transition-colors duration-300">
                         Membrane roofing demands absolute precision. Hover over the nodes below to understand the monolithic structure of our flat environments.
                     </p>
                 </div>
@@ -164,11 +164,11 @@ const OurServicesPage: React.FC = () => {
             <div className="text-center pt-5 pb-10 border-t border-white/10 relative z-10 w-full px-6">
                 <div className="inline-block p-1 bg-gradient-to-r from-[var(--rhive-pink)] to-[var(--rhive-blue)] rounded-sm mb-8" style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}>
                     <div className="bg-black px-12 py-8" style={{ clipPath: 'polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)' }}>
-                        <h3 className="text-3xl font-black text-white uppercase font-display mb-4">Your Roof. Our Legacy.</h3>
-                        <p className="text-gray-400 font-serif max-w-xl mx-auto mb-6">
+                        <h3 className="text-3xl leading-tight font-black text-white uppercase font-display mb-4">Your Roof. Our Legacy.</h3>
+                        <p className="text-gray-400 font-serif text-base md:text-lg leading-relaxed max-w-prose mx-auto mb-6">
                             RHIVE Roofing is more than shingles and sealants. It’s a movement of trust, transformation, and transparency. Whether you're protecting your home, your business, or your legacy—you’re part of the Hive now.
                         </p>
-                        <button onClick={() => setActivePageId('P-12')} className="px-8 py-4 bg-white text-black hover:bg-[var(--rhive-pink)] hover:text-white font-black text-xs uppercase tracking-widest transition-colors" style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}>
+                        <button onClick={() => setActivePageId('P-12')} className="px-8 py-4 bg-white text-black hover:bg-[var(--rhive-pink)] hover:text-white font-black text-base uppercase tracking-widest transition-colors" style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}>
                             Join The Hive Today
                         </button>
                     </div>
