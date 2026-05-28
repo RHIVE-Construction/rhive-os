@@ -43,7 +43,7 @@ import { generateMockBuildingData } from '../lib/mockData';
 import { calculateEstimate } from '../lib/calculations';
 import { INITIAL_SURVEY_STATE } from '../lib/constants';
 import { WeatherReport } from '../components/WeatherReport';
-import type { User, BuildingData, CalculationResult, SurveyState, Contact, Property, EaveOverhang } from '../types';
+import type { User, BuildingData, CalculationResult, SurveyState, Contact, Property, EaveOverhang, ProjectStage } from '../types';
 
 // Mock Data for Utah Companies
 const MOCK_UTAH_COMPANIES = [
@@ -945,6 +945,9 @@ const SummaryDisplay = ({ items }: { items: { label: string, value: string | num
         ))}
     </div>
 );
+};
+
+// --- Main Page Component ---
 
 const CustomerInputPage: React.FC = () => {
     const { addUser, createProject, properties } = useMockDB();
@@ -1083,7 +1086,6 @@ const CustomerInputPage: React.FC = () => {
             setIsBillingCollapsed(true); 
         }
     }, [contacts, companyData, projectCategory, billingStatus, hasCustomBilling, propertyData, requiresOrganization]);
-
     useEffect(() => {
         if (propertyData.latitude !== 0) {
             const building = generateMockBuildingData(propertyData);
@@ -1181,11 +1183,7 @@ const CustomerInputPage: React.FC = () => {
 
         createProject(projectName, projectCategory, matchedProperty ? matchedProperty._id : propertyData.address, primaryContact.existingUserId || 'U-NEW');
         
-        setSubmissionSummary({
-            name: projectName,
-            type: isEstimateRequest ? "Estimate Sent" : "Project Created"
-        });
-        setIsSuccessModalOpen(true);
+        setActivePageId('E-18');
     };
 
     const handleGoToPropertyProfile = () => {

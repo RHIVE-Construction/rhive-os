@@ -407,6 +407,31 @@ const GlobalDispatchSearch: React.FC = () => {
     );
 };
 
+// Task Item Component
+const TaskItem = ({ label, initialStatus, badge }: { label: string; initialStatus: boolean; badge?: string }) => {
+    const [done, setDone] = React.useState(initialStatus);
+    return (
+        <li
+            onClick={() => setDone(d => !d)}
+            className={`flex items-center justify-between gap-3 p-2.5 rounded-lg border cursor-pointer transition-all duration-200 ${
+                done ? 'border-green-500/20 bg-green-500/5 opacity-60' : 'border-gray-800 bg-gray-900/40 hover:border-gray-700'
+            }`}
+        >
+            <div className="flex items-center gap-3 min-w-0">
+                <div className={`flex-none w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${done ? 'bg-green-500/30 border-green-500/50' : 'border-gray-600'}`}>
+                    {done && <div className="w-2 h-2 rounded-full bg-green-400" />}
+                </div>
+                <span className={`text-sm truncate ${done ? 'line-through text-gray-500' : 'text-gray-300'}`}>{label}</span>
+            </div>
+            {badge && !done && (
+                <span className="flex-none text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-orange-500/40 text-orange-400 bg-orange-500/10">
+                    {badge}
+                </span>
+            )}
+        </li>
+    );
+};
+
 // Compact Session Widget
 const SessionWidget = () => {
     const { currentUser } = useMockDB();

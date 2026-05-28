@@ -25,14 +25,21 @@ const CompanyPage: React.FC = () => {
         }
 
         const docRef = doc(db, 'accounts', selectedAccountId);
-        const unsub = onSnapshot(docRef, (snap) => {
-            if (snap.exists()) {
-                setAccount({ id: snap.id, ...snap.data() });
-            } else {
-                setAccount(null);
+        const unsub = onSnapshot(
+            docRef, 
+            (snap) => {
+                if (snap.exists()) {
+                    setAccount({ id: snap.id, ...snap.data() });
+                } else {
+                    setAccount(null);
+                }
+                setLoading(false);
+            },
+            (err) => {
+                console.warn("⚠️ [RHIVE QOS] Accounts Firestore listener failed (offline/mock):", err);
+                setLoading(false);
             }
-            setLoading(false);
-        });
+        );
 
         return () => unsub();
     }, [selectedAccountId]);

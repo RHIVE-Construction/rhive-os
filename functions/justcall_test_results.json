@@ -1,0 +1,26 @@
+[
+  {
+    "name": "v1 API | KEY:SECRET",
+    "success": false,
+    "status": 403,
+    "error": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\n<p>You don't have permission to access this resource.</p>\n<p>Additionally,"
+  },
+  {
+    "name": "v2 API | KEY:SECRET",
+    "success": false,
+    "status": 404,
+    "error": "[object Object]"
+  },
+  {
+    "name": "v2 API | Bearer KEY:SECRET",
+    "success": false,
+    "status": 404,
+    "error": "[object Object]"
+  },
+  {
+    "name": "v1 API | api_key+api_secret as params",
+    "success": false,
+    "status": 403,
+    "error": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\n<p>You don't have permission to access this resource.</p>\n<p>Additionally,"
+  }
+]

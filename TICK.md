@@ -11,7 +11,6 @@ SYSTEM_STATE: ACTIVE
 #   ARCHIVE: 1200+ tasks. Git log is source of truth.
 #   NEXT_AGENT: N1, N2, N3, N4, N5, N6
 backlog:
-  - "[N1] CRM_MAPPING: Map required info in 11 stages. QA_EXIT:0."
   - "[N2] QUOTE_SPEC: Write Beta Template input schema JSON. QA_EXIT:0."
   - "[N2] EMAIL_BID: Build email bid automation scraper. QA_EXIT:0."
   - "[N3] REPO_AUDIT: Compare old/current RHIVE OS branches. QA_EXIT:0."
@@ -35,6 +34,9 @@ done:
   - "[N1] CRM_Verification: Implement Global Search Lookup Verification and 13 scenario gate rules. QA_EXIT:0."
   - "[N1] DASHBOARD_UPGRADE: Interactive employee dashboard stat routing, weather lightbox, session breaks, customer search lookup, and emergency alert. QA_EXIT:0."
   - "[N1] LOCAL_BYPASS: Implement dummy bypass and session persistence. QA_EXIT:0."
+  - "[N1] CRM_SIDEBAR: Group 11 CRM stages in collapsible menu. QA_EXIT:0."
+  - "[N1] REPO_MOVE: Relocated repo to requested location. QA_EXIT:0."
+  - "[N1] CRM_MAPPING: Map required info in 11 stages. QA_EXIT:0."
   - "[COS] TACTICAL_ROADMAP: Prioritized and documented 9 strategic tasks. QA_EXIT:0."
   - "[N5] RECORDINGS_VAULT: Integrated Recordings Vault UI, fixed IndexedDB ready crash. QA_EXIT:0."
   - "[N1] SWARM_SWITCHER: Built agent switcher modal (Option B), updated main.py routing. QA_EXIT:0."

@@ -31,7 +31,8 @@ import {
     Squares2x2Icon,
     IdentificationIcon,
     ChartPieIcon,
-    ArrowLeftIcon
+    ArrowLeftIcon,
+    SparklesIcon
 } from './icons';
 import { cn } from '../lib/utils';
 
@@ -116,6 +117,8 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
     const { currentUser, logout } = useMockDB();
     const { activePageId, navigateToPage } = useNavigation();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     
     // State to track expanded categories
