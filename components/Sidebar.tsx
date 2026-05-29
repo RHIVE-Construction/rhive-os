@@ -114,17 +114,58 @@ interface SidebarProps {
     pageGroups?: PageGroup[];
 }
 
+// Hierarchy mapping: Each role can see their own groups plus everything below them
+const ROLE_HIERARCHY: Record<string, string[]> = {
+    'Super Admin': ['Super Admin', 'Admin', 'Employee'],
+    'Admin': ['Admin', 'Employee'],
+    'Employee': ['Employee'],
+    'Customer': ['Customer'],
+    'Contractor': ['Contractor'],
+    'Supplier': ['Supplier'],
+    'Public': ['Public']
+};
+
 export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
     const { currentUser, logout } = useMockDB();
     const { activePageId, navigateToPage } = useNavigation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
-    
     // State to track expanded categories
     const [expandedCategories, setExpandedCategories] = React.useState<Record<string, boolean>>({
         'Stages': true // Keep Stages expanded by default
     });
+
+    // Auto-expand categories containing active page
+    React.useEffect(() => {
+        if (!currentUser) return;
+        const sourceGroups = pageGroups || PAGE_GROUPS;
+        const allowedTypes = ROLE_HIERARCHY[currentUser.role] || [currentUser.role];
+        const userGroups = sourceGroups.filter(group => 
+            group.userType === 'All' || allowedTypes.includes(group.userType)
+        );
+
+        userGroups.forEach(group => {
+            group.pages.forEach(page => {
+                if (page.id === activePageId && page.category) {
+                    setExpandedCategories(prev => ({ ...prev, [page.category!]: true }));
+                }
+            });
+        });
+    }, [activePageId, currentUser, pageGroups]);
+
+    // Scroll active item into view
+    React.useEffect(() => {
+        if (activePageId) {
+            const timer = setTimeout(() => {
+                const activeEl = document.querySelector('[data-active="true"]');
+                if (activeEl) {
+                    activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [activePageId]);
 
     if (!currentUser) return null;
 
@@ -132,20 +173,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
         setExpandedCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
     };
 
-    // Hierarchy mapping: Each role can see their own groups plus everything below them
-    const roleHierarchy: Record<string, string[]> = {
-        'Super Admin': ['Super Admin', 'Admin', 'Employee'],
-        'Admin': ['Admin', 'Employee'],
-        'Employee': ['Employee'],
-        'Customer': ['Customer'],
-        'Contractor': ['Contractor'],
-        'Supplier': ['Supplier'],
-        'Public': ['Public']
-    };
-
     // Filter groups based on user role and hierarchy
     const sourceGroups = pageGroups || PAGE_GROUPS;
-    const allowedTypes = roleHierarchy[currentUser.role] || [currentUser.role];
+    const allowedTypes = ROLE_HIERARCHY[currentUser.role] || [currentUser.role];
     const userGroups = sourceGroups.filter(group => 
         group.userType === 'All' || allowedTypes.includes(group.userType)
     );
@@ -186,7 +216,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                             <button
                                                 key={page.id}
                                                 onClick={() => navigateToPage(page.id)}
-
+                                                data-active={activePageId === page.id}
                                                 className={cn(
                                                     "flex items-center w-full px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
                                                     activePageId === page.id
@@ -235,7 +265,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                                         <button
                                                             key={page.id}
                                                             onClick={() => navigateToPage(page.id)}
-
+                                                            data-active={activePageId === page.id}
                                                             className={cn(
                                                                 "flex items-center w-full px-4 py-1.5 rounded-full text-[13px] font-medium transition-all",
                                                                 activePageId === page.id

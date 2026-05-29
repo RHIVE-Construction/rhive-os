@@ -51,7 +51,9 @@ const AppContentAuthenticated: React.FC = () => {
     }, [activePageId, setActivePageId]);
 
     useEffect(() => {
-        if (currentUser && (!activePageId || activePageId === 'P-06')) {
+        const params = new URLSearchParams(window.location.search);
+        const hasPageParam = params.has('page');
+        if (currentUser && (!activePageId || activePageId === 'P-06') && !hasPageParam) {
             switch (currentUser.role) {
                 case 'Employee': setActivePageId('E-01'); break;
                 case 'Customer': setActivePageId('C-01'); break;
@@ -113,8 +115,8 @@ const LoginBridge: React.FC = () => {
 
     if (!currentUser) {
         const isLoginPage = activePageId === 'P-06';
-        const hasOwnHeader = activePageId === 'P-00' || activePageId === 'P-00a' || activePageId === 'P-00b';
-        const CurrentPage = pageComponentMap[activePageId] || (() => <div className="p-10 text-gray-400">Loading...</div>);
+        const hasOwnHeader = activePageId === 'P-00' || activePageId === 'P-00a' || activePageId === 'P-00b' || !activePageId;
+        const CurrentPage = pageComponentMap[activePageId] || pageComponentMap['P-00'];
 
         return (
             <div className={cn(
