@@ -20,6 +20,7 @@ todo:
 in-progress:
 review:
 done:
+  - "[N1] ADMIN_DASHBOARD_ROUTING_AND_SETTINGS_ACTION: Route Admin to Employee Dashboard, add Settings quick action to target A-01, rebuild walkthrough. QA_EXIT:0."
   - "[N1] ROUTING_AND_CREDENTIALS: Default homepage, credentials login, Michael admin seed. QA_EXIT:0."
   - "[N1] MULTI_PROPERTY_INTAKE_AND_HEADER_RESTORE: Add multi-property collapsible intake and restore weather/search header widgets. QA_EXIT:0."
   - "[N1] CONTACT_CARD_LAYOUT: Format saved contact card text layout to 3-line template. QA_EXIT:0."

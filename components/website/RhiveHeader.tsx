@@ -26,8 +26,8 @@ const RhiveHeader: React.FC = () => {
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
                 case 'Supplier': setActivePageId('S-01'); break;
-                case 'Admin': setActivePageId('A-01'); break;
-                case 'Super Admin': setActivePageId('A-01'); break;
+                case 'Admin': setActivePageId('E-01'); break;
+                case 'Super Admin': setActivePageId('E-01'); break;
                 default: logout();
             }
         } else {
@@ -44,8 +44,8 @@ const RhiveHeader: React.FC = () => {
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
                 case 'Supplier': setActivePageId('S-01'); break;
-                case 'Admin': setActivePageId('A-01'); break;
-                case 'Super Admin': setActivePageId('A-01'); break;
+                case 'Admin': setActivePageId('E-01'); break;
+                case 'Super Admin': setActivePageId('E-01'); break;
             }
         }
     };
