@@ -120,6 +120,40 @@ const FloatingInput: React.FC<{
 );
 
 // ─── Main Login Page ──────────────────────────────────────────────────────────
+const QuickBypassPanel: React.FC<{ onLogin: (role: any, password?: string, email?: string) => Promise<any> }> = ({ onLogin }) => {
+    const roles = ['Admin', 'Employee', 'Customer', 'Contractor', 'Supplier'] as const;
+    const colors: Record<string, string> = {
+        Admin: 'hover:border-blue-500 hover:text-blue-400 bg-blue-950/20 border-blue-900/40',
+        Employee: 'hover:border-green-500 hover:text-green-400 bg-green-950/20 border-green-900/40',
+        Customer: 'hover:border-purple-500 hover:text-purple-400 bg-purple-950/20 border-purple-900/40',
+        Contractor: 'hover:border-yellow-500 hover:text-yellow-400 bg-yellow-950/20 border-yellow-900/40',
+        Supplier: 'hover:border-pink-500 hover:text-pink-400 bg-pink-950/20 border-pink-900/40',
+    };
+
+    return (
+        <div className="mt-8 pt-6 border-t border-white/5 w-full">
+            <p className="text-center text-[9px] font-black uppercase tracking-[0.35em] text-gray-500 mb-4">
+                DEVELOPER BYPASS (QUICK SIGN IN)
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+                {roles.map(role => (
+                    <button
+                        key={role}
+                        type="button"
+                        onClick={() => onLogin(role, 'bypass')}
+                        className={cn(
+                            "px-3 py-1.5 border rounded-lg text-[9px] font-extrabold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 text-gray-400",
+                            colors[role]
+                        )}
+                    >
+                        {role}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     const { theme } = useTheme();
     const { t } = useLanguage();
@@ -273,6 +307,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                 <span>Continue as Guest</span>
                                 <ArrowRightIcon className="w-4 h-4 ml-2" />
                             </Button>
+
+                            <QuickBypassPanel onLogin={onLogin} />
                         </div>
                     )}
 
@@ -360,6 +396,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                     </Button>
                                 </div>
                             </form>
+                            <QuickBypassPanel onLogin={onLogin} />
                         </div>
                     )}
 
@@ -455,6 +492,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                     </Button>
                                 </div>
                             </form>
+                            <QuickBypassPanel onLogin={onLogin} />
                         </div>
                     )}
 

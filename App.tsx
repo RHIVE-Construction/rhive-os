@@ -8,10 +8,13 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { Sidebar } from './components/Sidebar';
 import LoginPage from './pages/LoginPage';
 import { GlobalHeader } from './components/GlobalHeader';
+import RhiveHeader from './components/website/RhiveHeader';
 import { pageComponentMap } from './pageRegistry';
 import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
 import { DevNavigator } from './components/DevNavigator';
+import { GlobalCustomerLookupModal } from './components/GlobalCustomerLookupModal';
+import { GlobalWeatherModal } from './components/GlobalWeatherModal';
 import { cn } from './lib/utils';
 
 const AppContentAuthenticated: React.FC = () => {
@@ -27,8 +30,17 @@ const AppContentAuthenticated: React.FC = () => {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const pageCode = params.get('page');
-        if (pageCode && pageCode !== activePageId) {
-            setActivePageId(pageCode);
+        if (pageCode) {
+            if (pageCode !== activePageId) {
+                setActivePageId(pageCode);
+            } else {
+                // Only clean up the page query param once activePageId matches it
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.delete('page');
+                const newSearch = newParams.toString();
+                const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+                window.history.replaceState({}, '', newUrl);
+            }
         }
 
         const handleCustomNav = (e: any) => {
@@ -39,13 +51,15 @@ const AppContentAuthenticated: React.FC = () => {
     }, [activePageId, setActivePageId]);
 
     useEffect(() => {
-        if (currentUser && !activePageId) {
+        if (currentUser && (!activePageId || activePageId === 'P-06')) {
             switch (currentUser.role) {
                 case 'Employee': setActivePageId('E-01'); break;
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
                 case 'Supplier': setActivePageId('S-01'); break;
-                case 'Public': setActivePageId('P-00'); break;
+                case 'Admin': setActivePageId('A-01'); break;
+                case 'Super Admin': setActivePageId('A-01'); break;
+                default: setActivePageId('P-00'); break;
             }
         }
     }, [currentUser, setActivePageId, activePageId]);
@@ -76,6 +90,8 @@ const AppContentAuthenticated: React.FC = () => {
                 </main>
             </div>
             <FloatingEstimator />
+            <GlobalCustomerLookupModal />
+            <GlobalWeatherModal />
             {window.location.hostname === 'localhost' && <DevNavigator />}
         </div>
     );
@@ -83,17 +99,23 @@ const AppContentAuthenticated: React.FC = () => {
 
 const LoginBridge: React.FC = () => {
     const { currentUser, login } = useMockDB();
-    const { setActivePageId } = useNavigation();
+    const { activePageId, setActivePageId } = useNavigation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
     useEffect(() => {
         if (!currentUser) {
-            setActivePageId('');
+            if (!activePageId || !activePageId.startsWith('P-')) {
+                setActivePageId('P-00');
+            }
         }
-    }, [currentUser, setActivePageId]);
+    }, [currentUser, activePageId, setActivePageId]);
 
     if (!currentUser) {
+        const isLoginPage = activePageId === 'P-06';
+        const hasOwnHeader = activePageId === 'P-00' || activePageId === 'P-00a' || activePageId === 'P-00b';
+        const CurrentPage = pageComponentMap[activePageId] || (() => <div className="p-10 text-gray-400">Loading...</div>);
+
         return (
             <div className={cn(
                 "fixed inset-0 w-screen h-screen overflow-hidden transition-colors duration-500",
@@ -104,11 +126,26 @@ const LoginBridge: React.FC = () => {
                     dotColor={isDark ? "#ec028b" : "#ec028b"}
                     lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
                 />
-                <GlobalHeader />
-                <main className="relative z-10 w-full h-full pt-12 flex items-center justify-center overflow-auto px-4">
-                    <LoginPage onLogin={login} />
+                
+                {/* Render RhiveHeader for public pages that don't embed it */}
+                {!isLoginPage && !hasOwnHeader && <RhiveHeader />}
+
+                <main className={cn(
+                    "relative z-10 w-full h-full overflow-y-auto relative transition-colors duration-500",
+                    !isLoginPage && !hasOwnHeader && "pt-12"
+                )}>
+                    {isLoginPage ? (
+                        <div className="w-full h-full flex items-center justify-center p-4">
+                            <LoginPage onLogin={login} />
+                        </div>
+                    ) : (
+                        <CurrentPage />
+                    )}
                 </main>
                 <FloatingEstimator />
+                <GlobalCustomerLookupModal />
+                <GlobalWeatherModal />
+                {window.location.hostname === 'localhost' && <DevNavigator />}
             </div>
         );
     }

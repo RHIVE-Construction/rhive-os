@@ -44,8 +44,9 @@ import LineItemCatalogPage from './pages/LineItemCatalogPage'; // A-05 / E-19
 import LineItemProfilePage from './pages/LineItemProfilePage'; // A-06 / E-20
 import ContactsVendorsPage from './pages/ContactsVendorsPage'; // E-24
 import ContactVendorProfilePage from './pages/ContactVendorProfilePage'; // E-25
-import CompanyPage from './pages/CompanyPage'; // E-12 (Property Profile)
-import PropertyPage from './pages/PropertyPage'; // E-12
+import CompanyPage from './pages/CompanyPage';
+import PropertyProfilePage from './pages/PropertyProfilePage'; // E-12 Property Profile
+import PropertyPage from './pages/PropertyPage'; // E-12 Fallback List
 import WeatherGuideWidgetPage from './pages/WeatherGuideWidgetPage'; // E-38
 import CustomerProjectMapPage from './pages/CustomerProjectMapPage'; // E-06
 import CustomerHomepage from './pages/CustomerHomepage'; // C-01
@@ -136,7 +137,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-09': () => <Placeholder name="MY CONTACTS (CRM)" />,
   'E-10': ContactVendorProfilePage,
   'E-11': () => <Placeholder name="MY PROPERTIES (CRM)" />,
-  'E-12': PropertyPage,
+  'E-12': PropertyProfilePage,
   'E-14': () => <Placeholder name="PROJECT HUB" />,
   'E-15': () => <Placeholder name="PROJECT PROFILE" />,
   'E-16': IncomeActionatorPage,

@@ -9,6 +9,9 @@ import { propertyService, contactService, projectService } from '../lib/firebase
 import { cn } from '../lib/utils';
 import PropertyPage from './PropertyPage';
 import { getMapsApiKey } from '../lib/mapsConfig';
+import { useMockDB } from '../contexts/MockDatabaseContext';
+import Button from '../components/Button';
+import { X, Check } from 'lucide-react';
 
 const stageBadgeColor = (stage?: string) => {
     const s = (stage || '').toLowerCase();
@@ -25,6 +28,7 @@ const stageBadgeColor = (stage?: string) => {
 
 const PropertyProfilePage: React.FC = () => {
     const { selectedPropertyId, setActivePageId, setSelectedContactId, setSelectedProjectId } = useNavigation();
+    const { properties: allProperties, projects: allProjects, updateProperty } = useMockDB();
 
     const handleContactClick = (contactId: string) => {
         setSelectedContactId(contactId);
@@ -34,54 +38,44 @@ const PropertyProfilePage: React.FC = () => {
     const [property, setProperty] = useState<any>(null);
     const [contacts, setContacts] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
-    const [allProperties, setAllProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [mapsKey, setMapsKey] = useState('');
+    const [isManageModalOpen, setIsManageModalOpen] = useState(false);
 
     useEffect(() => { getMapsApiKey().then(setMapsKey); }, []);
 
-    // Load all properties and subscribe to updates
+    // Resolve the active property and projects
     useEffect(() => {
-        setLoading(true);
-        const unsubProperties = propertyService.subscribe((data: any[]) => {
-            setAllProperties(data);
+        if (allProperties.length === 0) {
             setLoading(false);
-        });
-        return () => unsubProperties();
-    }, []);
-
-    // Resolve the active property (selected or fallback to most recent)
-    useEffect(() => {
-        if (allProperties.length === 0) return;
+            return;
+        }
         if (selectedPropertyId) {
-            const found = allProperties.find(p => p.id === selectedPropertyId);
+            const found = allProperties.find(p => p._id === selectedPropertyId || p.id === selectedPropertyId);
             setProperty(found || null);
+            if (found) {
+                const filteredProjects = allProjects.filter(p => p.property_id === found._id || p.property_id === found.id);
+                setProjects(filteredProjects);
+            }
         } else {
             setProperty(null);
+            setProjects([]);
         }
-    }, [allProperties, selectedPropertyId]);
+        setLoading(false);
+    }, [allProperties, allProjects, selectedPropertyId]);
 
-    // Load contacts & projects linked to this property
+    // Load contacts linked to this property
     useEffect(() => {
         if (!property) return;
 
-        // Filter contacts by property_id
-        const unsubContacts = contactService.getAll().then(res => {
+        contactService.getAll().then(res => {
             if (res.success) {
                 const filtered = (res.data as any[]).filter(
-                    c => c.property_id === property.id || c.project_id === property.id
+                    c => c.property_id === property._id || c.property_id === property.id || c.project_id === property._id || c.project_id === property.id
                 );
                 setContacts(filtered);
             }
         });
-
-        // Subscribe to projects and filter by property_id
-        const unsubProjects = projectService.subscribe((data: any[]) => {
-            const filtered = data.filter(p => p.property_id === property.id);
-            setProjects(filtered);
-        });
-
-        return () => unsubProjects();
     }, [property]);
 
     const addressForMap = property?.address_full || property?.property_address;
@@ -193,6 +187,14 @@ const PropertyProfilePage: React.FC = () => {
                                     </div>
                                 </div>
                             )}
+                            <button
+                                id="btn-manage-buildings"
+                                onClick={() => setIsManageModalOpen(true)}
+                                className="w-full mt-4 bg-[#ec028b] hover:bg-[#ec028b]/80 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-all shadow-[0_0_15px_rgba(236,2,139,0.3)] hover:shadow-[0_0_25px_rgba(236,2,139,0.5)] text-sm"
+                            >
+                                <BuildingStorefrontIcon className="w-5 h-5 mr-2" />
+                                Manage Buildings
+                            </button>
                         </div>
                     </Card>
 
@@ -236,47 +238,218 @@ const PropertyProfilePage: React.FC = () => {
                             </div>
                         ) : (
                             <div className="space-y-3 p-4">
-                                {projects.map((proj: any) => (
-                                    <div key={proj.id}
-                                        onClick={() => {
-                                            setSelectedProjectId(proj.id);
-                                            setActivePageId('E-15'); // Go to Project details
-                                        }}
-                                        className="flex items-center justify-between p-4 bg-gray-900/40 border border-gray-800/50 rounded-xl hover:border-[#ec028b]/30 transition-all group cursor-pointer">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-lg bg-gray-900 border border-gray-800 flex items-center justify-center text-[#ec028b] group-hover:border-[#ec028b]/50 transition-all">
-                                                <BriefcaseIcon className="w-5 h-5" />
+                                {projects.map((proj: any) => {
+                                    const projId = proj._id || proj.id || '';
+                                    return (
+                                        <div key={projId}
+                                            onClick={() => {
+                                                setSelectedProjectId(projId);
+                                                setActivePageId('E-15'); // Go to Project details
+                                            }}
+                                            className="flex items-center justify-between p-4 bg-gray-900/40 border border-gray-800/50 rounded-xl hover:border-[#ec028b]/30 transition-all group cursor-pointer">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-lg bg-gray-900 border border-gray-800 flex items-center justify-center text-[#ec028b] group-hover:border-[#ec028b]/50 transition-all">
+                                                    <BriefcaseIcon className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-white font-bold">{proj.name || 'Unnamed Project'}</p>
+                                                    <p className="text-gray-500 text-xs font-mono mt-0.5">
+                                                        {proj.project_type || ''} • {projId.slice(-8)}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-white font-bold">{proj.name || 'Unnamed Project'}</p>
-                                                <p className="text-gray-500 text-xs font-mono mt-0.5">
-                                                    {proj.project_type || ''} • {proj.id.slice(-8)}
-                                                </p>
+                                            <div className="flex items-center gap-4">
+                                                {proj.current_stage && (
+                                                    <span className={cn(
+                                                        'text-[10px] px-2 py-1 rounded border font-black uppercase tracking-widest',
+                                                        stageBadgeColor(proj.current_stage)
+                                                    )}>
+                                                        {proj.current_stage}
+                                                    </span>
+                                                )}
+                                                {proj.quote?.total && (
+                                                    <span className="font-mono text-sm font-bold text-[#ec028b]">
+                                                        ${proj.quote.total.toLocaleString()}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4">
-                                            {proj.current_stage && (
-                                                <span className={cn(
-                                                    'text-[10px] px-2 py-1 rounded border font-black uppercase tracking-widest',
-                                                    stageBadgeColor(proj.current_stage)
-                                                )}>
-                                                    {proj.current_stage}
-                                                </span>
-                                            )}
-                                            {proj.quote?.total && (
-                                                <span className="font-mono text-sm font-bold text-[#ec028b]">
-                                                    ${proj.quote.total.toLocaleString()}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </CollapsibleSection>
                 </div>
             </div>
+
+            {isManageModalOpen && (
+                <ManageBuildingsModal
+                    property={property}
+                    isOpen={isManageModalOpen}
+                    onClose={() => setIsManageModalOpen(false)}
+                    onSave={async (newBuildings) => {
+                        const pId = property._id || property.id;
+                        const bldgs = newBuildings.map(b => ({
+                            id: b.id,
+                            name: b.name,
+                            coordinates: b.coordinates || { lat: property.latitude || 40.0, lng: property.longitude || -105.0 }
+                        }));
+                        
+                        updateProperty(pId, { buildings: bldgs });
+                        
+                        try {
+                            await propertyService.update(pId, { buildings: bldgs });
+                        } catch (e) {
+                            console.warn("Failed to sync updated buildings to Firestore:", e);
+                        }
+                        setIsManageModalOpen(false);
+                    }}
+                    mapsKey={mapsKey}
+                />
+            )}
         </PageContainer>
+    );
+};
+
+interface ManageBuildingsModalProps {
+    property: any;
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (buildings: any[]) => void;
+    mapsKey: string;
+}
+
+const ManageBuildingsModal: React.FC<ManageBuildingsModalProps> = ({
+    property,
+    isOpen,
+    onClose,
+    onSave,
+    mapsKey
+}) => {
+    const [buildings, setBuildings] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (isOpen && property) {
+            setBuildings(property.buildings || [{
+                id: `BLDG-${Date.now()}-1`,
+                name: 'Building 1',
+                coordinates: { lat: property.latitude || 40.0, lng: property.longitude || -105.0 }
+            }]);
+        }
+    }, [isOpen, property]);
+
+    if (!isOpen || !property) return null;
+
+    const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        setBuildings(prev => {
+            const nextIndex = prev.length + 1;
+            const newBldg = {
+                id: `BLDG-${Date.now()}-${nextIndex}-${Math.random().toString(36).substr(2, 5)}`,
+                name: `Building ${nextIndex}`,
+                coordinates: { lat: property.latitude || 40.0, lng: property.longitude || -105.0 },
+                x,
+                y
+            };
+            return [...prev, newBldg];
+        });
+    };
+
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-fade-in">
+            <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl relative overflow-hidden">
+                <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900 z-10">
+                    <div>
+                        <h3 className="text-white font-bold text-lg">Manage Buildings</h3>
+                        <p className="text-gray-400 text-xs">Tap the map to add building targets</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 bg-gray-800 rounded-full text-gray-400 hover:text-white transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+                
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-y-auto">
+                    {/* Interactive Map */}
+                    <div 
+                        id="manage-google-map"
+                        className="h-96 md:h-[400px] bg-black rounded-lg overflow-hidden relative cursor-crosshair border border-gray-800"
+                        onClick={handleMapClick}
+                    >
+                        <img 
+                            src={`https://maps.googleapis.com/maps/api/staticmap?center=${property.latitude || 40.0},${property.longitude || -105.0}&zoom=19&size=640x640&maptype=satellite&key=${mapsKey}`} 
+                            className="w-full h-full object-cover select-none pointer-events-none" 
+                            alt="Satellite View"
+                        />
+                        {/* Pins overlay */}
+                        {buildings.map((b, idx) => {
+                            const x = b.x ?? (50 + (idx * 35) % 250);
+                            const y = b.y ?? (50 + Math.floor(idx / 8) * 45);
+                            return (
+                                <div 
+                                    key={b.id}
+                                    className="absolute w-6 h-6 -ml-3 -mt-6 pointer-events-none"
+                                    style={{ left: x, top: y }}
+                                >
+                                    <div className="w-3 h-3 rounded-full bg-[#ec028b] border-2 border-white shadow-[0_0_8px_rgba(236,2,139,0.8)] animate-bounce" />
+                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/85 border border-[#ec028b] px-1.5 py-0.5 rounded text-[8px] font-bold text-white whitespace-nowrap">
+                                        {b.name}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Building List Inputs */}
+                    <div className="flex flex-col h-full justify-between">
+                        <div className="space-y-3 overflow-y-auto max-h-80 pr-2">
+                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Building Designations</h4>
+                            {buildings.map((b, idx) => (
+                                <div key={b.id} className="flex items-center gap-2 bg-black/30 p-2 rounded border border-gray-800/80">
+                                    <span className="text-xs text-gray-500 font-mono w-16">#{idx + 1}</span>
+                                    <input
+                                        type="text"
+                                        value={b.name}
+                                        onChange={(e) => {
+                                            const newName = e.target.value;
+                                            setBuildings(prev => prev.map(item => 
+                                                item.id === b.id ? { ...item, name: newName } : item
+                                            ));
+                                        }}
+                                        className="flex-1 bg-black/50 border border-gray-700 rounded px-2.5 py-1 text-white text-sm focus:border-[#ec028b] focus:outline-none"
+                                    />
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setBuildings(prev => prev.filter(item => item.id !== b.id));
+                                        }}
+                                        className="text-gray-500 hover:text-red-500 p-1"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-800 flex justify-end gap-3 shrink-0">
+                            <button 
+                                onClick={onClose}
+                                className="px-4 py-2 bg-gray-800 text-white rounded font-bold hover:bg-gray-700 transition-colors text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={() => onSave(buildings)}
+                                className="px-4 py-2 bg-[#ec028b] text-white rounded font-bold hover:bg-[#ec028b]/80 transition-all text-sm shadow-[0_0_15px_rgba(236,2,139,0.3)]"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
 
