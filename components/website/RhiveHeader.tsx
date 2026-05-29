@@ -227,7 +227,13 @@ const RhiveHeader: React.FC = () => {
 
                     {/* AVATAR / PROFILE BUTTON */}
                     <button
-                        onClick={() => setIsProfileOpen(!isProfileOpen)}
+                        onClick={() => {
+                            if (!currentUser) {
+                                setActivePageId('P-06');
+                            } else {
+                                setIsProfileOpen(!isProfileOpen);
+                            }
+                        }}
                         className={cn(
                             "w-9 h-9 rounded-full flex items-center justify-center border transition-all pointer-events-auto bg-black/50 text-white/80 hover:brightness-110",
                             isProfileOpen ? "border-rhive-pink text-rhive-pink shadow-[0_0_12px_rgba(236,2,139,0.3)] scale-105" : "border-white/10 hover:border-rhive-pink/50"
