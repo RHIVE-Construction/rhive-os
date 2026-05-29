@@ -1420,6 +1420,24 @@ const CustomerInputPage: React.FC = () => {
             });
         }
 
+        /* 
+           ========================================================================
+           DEVELOPER NOTE FOR BACKEND INTEGRATION:
+           This section supports intake of multiple properties per client session.
+           Currently, the primary property is saved as 'targetPropertyId' and linked 
+           to the main project.
+           
+           For backend integration:
+           1. Loop through 'additionalProperties' and register each property to the 
+              database (linked to the same client 'owner_id').
+           2. Set up a relation table (e.g. 'ProjectProperties') or store an array 
+              of property IDs in the Project document if a project spans multiple 
+              locations.
+           3. Real-time geocoding and coordinates validation should be handled on the 
+              server or using the configured geocoding hook.
+           ========================================================================
+        */
+
         // Also save additional properties to mock DB so they are persistent and searchable
         additionalProperties.forEach((prop, idx) => {
             if (!prop.propertyData.address) return;
