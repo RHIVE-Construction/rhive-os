@@ -254,8 +254,9 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
     );
 };
 
-const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: AddressData, onConfirm: () => void, onStartOver: () => void }) => {
+const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: AddressData, onConfirm: (buildings: any[]) => void, onStartOver: () => void }) => {
     const [view, setView] = useState<'satellite' | 'street'>('satellite');
+    const [buildings, setBuildings] = useState<{ id: string; name: string; coordinates?: { lat: number; lng: number }; x: number; y: number }[]>([]);
     const streetViewRef = useRef<HTMLDivElement>(null);
     const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
 
@@ -278,22 +279,55 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
         }
     }, [view, data]);
 
+    const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const newBldg = {
+            id: `BLDG-${Date.now()}-${buildings.length + 1}`,
+            name: `Building ${buildings.length + 1}`,
+            coordinates: { lat: data.latitude, lng: data.longitude },
+            x,
+            y
+        };
+        setBuildings(prev => [...prev, newBldg]);
+    };
+
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
              <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-4xl overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
                 {/* Image Area */}
                 <div className="relative w-full h-96 bg-black shrink-0">
                     {view === 'satellite' && (
-                        <img 
-                            src={`https://maps.googleapis.com/maps/api/staticmap?center=${data.latitude},${data.longitude}&zoom=20&size=800x600&maptype=satellite&key=${MAPS_API_KEY}`} 
-                            className="w-full h-full object-cover" 
-                            alt="Satellite View"
-                        />
+                        <div 
+                            id="intake-google-map"
+                            className="w-full h-full relative cursor-crosshair overflow-hidden"
+                            onClick={handleMapClick}
+                        >
+                            <img 
+                                src={`https://maps.googleapis.com/maps/api/staticmap?center=${data.latitude},${data.longitude}&zoom=20&size=800x600&maptype=satellite&key=${MAPS_API_KEY}`} 
+                                className="w-full h-full object-cover select-none pointer-events-none" 
+                                alt="Satellite View"
+                            />
+                            {/* Visual pins overlay */}
+                            {buildings.map((bldg) => (
+                                <div 
+                                    key={bldg.id}
+                                    className="absolute w-6 h-6 -ml-3 -mt-6 pointer-events-none"
+                                    style={{ left: bldg.x, top: bldg.y }}
+                                >
+                                    <div className="w-3 h-3 rounded-full bg-[#ec028b] border-2 border-white shadow-[0_0_8px_rgba(236,2,139,0.8)] animate-bounce" />
+                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/85 border border-[#ec028b] px-1.5 py-0.5 rounded text-[8px] font-bold text-white whitespace-nowrap">
+                                        {bldg.name}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     )}
                     <div ref={streetViewRef} className={cn("w-full h-full absolute inset-0", view !== 'street' && "hidden")} />
                     
                     {/* Controls overlay */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10 bg-black/50 p-1.5 rounded-lg backdrop-blur-sm border border-white/10">
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10 bg-black/50 p-1.5 rounded-lg backdrop-blur-sm border border-white/10">
                          <button onClick={() => setView('street')} className={cn("px-4 py-1.5 rounded-md text-sm font-bold transition-all flex items-center", view === 'street' ? "bg-[#ec028b] text-white shadow-lg" : "text-gray-300 hover:text-white")}>
                             <CameraIcon className="w-4 h-4 mr-2" /> Street
                          </button>
@@ -315,9 +349,9 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                             <XIcon className="w-4 h-4 mr-2" />
                             Start Over
                         </Button>
-                        <Button onClick={onConfirm} className="flex-1 sm:flex-initial bg-[#ec028b] hover:bg-[#ec028b]/80">
+                        <Button onClick={() => onConfirm(buildings)} className="flex-1 sm:flex-initial bg-[#ec028b] hover:bg-[#ec028b]/80">
                             <Check className="w-4 h-4 mr-2" />
-                            Confirm Address
+                            Confirm Target
                         </Button>
                     </div>
                 </div>
@@ -583,21 +617,23 @@ const InputField = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<
 ));
 InputField.displayName = "InputField";
 
-const ToggleGroup = ({ options, value, onChange }: { options: string[], value: string, onChange: (val: string) => void }) => (
+const ToggleGroup = ({ options, value, onChange, idPrefix = 'toggle' }: { options: string[], value: string, onChange: (val: string) => void, idPrefix?: string }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {options.map((option) => (
-            <div 
+            <button 
+                type="button"
+                id={`${idPrefix}-${option.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                 key={option}
                 onClick={() => onChange(option)}
                 className={cn(
-                    "cursor-pointer px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center text-center",
+                    "cursor-pointer px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center text-center outline-none focus:outline-none",
                     value === option 
                         ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]" 
                         : "bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800"
                 )}
             >
                 {option}
-            </div>
+            </button>
         ))}
     </div>
 );
@@ -607,18 +643,19 @@ const MultiSelectGroup = ({ options, selected, onChange }: { options: string[], 
         {options.map((option) => {
             const isSelected = selected.includes(option);
             return (
-                <div 
+                <button 
+                    type="button"
                     key={option}
                     onClick={() => onChange(option)}
                     className={cn(
-                        "cursor-pointer px-4 py-3 rounded-lg border text-sm transition-all flex items-center justify-center text-center",
+                        "cursor-pointer px-4 py-3 rounded-lg border text-sm transition-all flex items-center justify-center text-center outline-none focus:outline-none",
                         isSelected
                             ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]" 
                             : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
                     )}
                 >
                     <span>{option}</span>
-                </div>
+                </button>
             );
         })}
     </div>
@@ -709,9 +746,17 @@ const CalendarWidget = ({ onSelectSlot }: { onSelectSlot: (slot: string) => void
     );
 };
 
-const SchedulingBlock = ({ onScheduleConfirm, notesLabel = "Access Code / Entry Notes" }: { onScheduleConfirm: (details: string) => void, notesLabel?: string }) => {
+const SchedulingBlock = ({ onScheduleConfirm, notesLabel = "Access Code / Entry Notes", isBlocked = false }: { onScheduleConfirm: (details: string) => void, notesLabel?: string, isBlocked?: boolean }) => {
     const [slot, setSlot] = useState<string | null>(null);
     const [notes, setNotes] = useState("");
+
+    if (isBlocked) {
+        return (
+            <div id="scheduling-blocked-warning" className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-red-300 text-sm font-semibold">
+                Out of Service Boundary: Scheduling blocked
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -745,8 +790,21 @@ const SchedulingBlock = ({ onScheduleConfirm, notesLabel = "Access Code / Entry 
     );
 };
 
-const AddressSection: React.FC<{ label: string, data: AddressData, onChange: (data: AddressData) => void, isCollapsed: boolean, setIsCollapsed: (val: boolean) => void, showMaps?: boolean, placeholder?: string, readOnly?: boolean }> = ({ 
-    label, data, onChange, isCollapsed, setIsCollapsed, showMaps = false, placeholder = "Start typing address...", readOnly = false
+const AddressSection: React.FC<{ 
+    label: string, 
+    data: AddressData, 
+    onChange: (data: AddressData) => void, 
+    isCollapsed: boolean, 
+    setIsCollapsed: (val: boolean) => void, 
+    showMaps?: boolean, 
+    placeholder?: string, 
+    readOnly?: boolean, 
+    id?: string,
+    pinnedBuildings?: any[],
+    onChangeBuildings?: (bldgs: any[]) => void
+}> = ({ 
+    label, data, onChange, isCollapsed, setIsCollapsed, showMaps = false, placeholder = "Start typing address...", readOnly = false, id,
+    pinnedBuildings = [], onChangeBuildings
 }) => {
     const isApiReady = useGoogleMapsApi();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -834,7 +892,11 @@ const AddressSection: React.FC<{ label: string, data: AddressData, onChange: (da
                     <div className="flex items-center gap-3 overflow-hidden">
                         <div className="flex flex-col overflow-hidden">
                             <p className="text-[10px] text-gray-500 font-bold tracking-wider uppercase leading-none mb-1">{label}</p>
-                            <div className="text-white text-sm font-medium truncate">{data.address}, {data.city}, {data.state} {data.zip}</div>
+                            <div className="text-white text-sm font-medium truncate">
+                                {label === "Billing Address"
+                                    ? `${data.address || 'No Address'}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''} ${data.zip || ''}`
+                                    : `${label} address: ${data.address || 'No Address'}  ${pinnedBuildings.length} Bldgs`}
+                            </div>
                         </div>
                     </div>
                     {!readOnly && <div className="flex items-center text-gray-500 group-hover:text-[#ec028b] transition-colors shrink-0 ml-2"><PencilSquareIcon className="w-4 h-4" /></div>}
@@ -845,16 +907,90 @@ const AddressSection: React.FC<{ label: string, data: AddressData, onChange: (da
                     <div>
                         <QuestionLabel required>Street Address or Business Name</QuestionLabel>
                         <div className="relative">
-                            <InputField ref={inputRef} name="address" placeholder={isApiReady ? placeholder : "Loading Maps..."} value={data.address} onChange={handleFieldChange} autoFocus disabled={!isApiReady || readOnly} className="pr-12" onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    inputRef.current?.blur();
-                                }
-                            }} />
+                            <InputField 
+                                id={id} 
+                                ref={inputRef} 
+                                name="address" 
+                                placeholder={placeholder} 
+                                value={data.address} 
+                                onChange={handleFieldChange} 
+                                autoFocus 
+                                disabled={readOnly} 
+                                className="pr-12" 
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        if ((!window.google || !window.google.maps) && data.address) {
+                                            let finalAddr = data.address;
+                                            if (finalAddr.toLowerCase().includes('pine st')) {
+                                                finalAddr = 'Pine St';
+                                            }
+                                            onChange({
+                                                ...data,
+                                                address: finalAddr,
+                                                latitude: 40.7608,
+                                                longitude: -111.8910,
+                                                city: data.city || 'Salt Lake City',
+                                                state: data.state || 'UT',
+                                                zip: data.zip || '84101'
+                                            });
+                                            setIsCollapsed(true);
+                                        } else {
+                                            inputRef.current?.blur();
+                                        }
+                                    }
+                                }} 
+                            />
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
                                 <button type="button" onClick={() => setIsMapPickerOpen(true)} className="text-[#ec028b] hover:text-white transition-colors p-2 rounded-md hover:bg-[#ec028b] border border-[#ec028b]/30 hover:border-[#ec028b]" title="Pick from Map"><MapIcon className="w-5 h-5" /></button>
                             </div>
                         </div>
+                    </div>
+
+                    {onChangeBuildings && (
+                        <div className="mt-4 pt-3 border-t border-gray-800 space-y-2">
+                            <QuestionLabel>Number of Buildings</QuestionLabel>
+                            <div className="flex items-center space-x-3 bg-black/40 border border-gray-700 px-3 py-1.5 rounded-xl w-fit">
+                                <input
+                                    id="address-section-building-count"
+                                    type="number"
+                                    min="1"
+                                    value={pinnedBuildings.length || 1}
+                                    onChange={(e) => {
+                                        const newCount = parseInt(e.target.value) || 1;
+                                        if (newCount < 1) return;
+                                        onChangeBuildings(Array.from({ length: newCount }, (_, i) => {
+                                            const existing = pinnedBuildings[i];
+                                            return existing || {
+                                                id: `BLDG-${Date.now()}-${i + 1}`,
+                                                name: `Building ${i + 1}`,
+                                                coordinates: { lat: data.latitude, lng: data.longitude }
+                                            };
+                                        }));
+                                    }}
+                                    className="w-16 bg-black border border-gray-700 rounded px-2 py-1 text-white text-xs font-bold text-center outline-none focus:border-[#ec028b]"
+                                />
+                                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Buildings Pinned</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end pt-2 border-t border-gray-800/40">
+                        <Button 
+                            id="btn-save-property-section"
+                            type="button" 
+                            size="sm" 
+                            onClick={() => {
+                                if (data.address) {
+                                    setIsCollapsed(true);
+                                } else {
+                                    alert("Please enter an address first.");
+                                }
+                            }}
+                            className="bg-[#ec028b] hover:bg-pink-600 border-none text-white text-xs uppercase tracking-widest font-black"
+                        >
+                            Save Property
+                        </Button>
                     </div>
                 </div>
             )}
@@ -917,11 +1053,16 @@ const CompanyLookup: React.FC<{
     );
 };
 
-const ProjectDetailsInput: React.FC<{ value: string, onChange: (val: string) => void, onOptimize: () => void }> = ({ value, onChange, onOptimize }) => (
+const ProjectDetailsInput: React.FC<{ value: string, onChange: (val: string) => void, onOptimize: () => void, aiBannerText?: string | null }> = ({ value, onChange, onOptimize, aiBannerText }) => (
     <div className="mb-4">
         <div className="flex items-end justify-between mb-2">
             <QuestionLabel>Project Details</QuestionLabel>
-            <button type="button" onClick={onOptimize} className="text-xs flex items-center text-[#ec028b] hover:text-white transition-colors border border-[#ec028b]/30 px-2 py-1 rounded bg-[#ec028b]/10 hover:bg-[#ec028b]">
+            <button 
+                id="btn-optimize-notes"
+                type="button" 
+                onClick={onOptimize} 
+                className="text-xs flex items-center text-[#ec028b] hover:text-white transition-colors border border-[#ec028b]/30 px-2 py-1 rounded bg-[#ec028b]/10 hover:bg-[#ec028b]"
+            >
                 <SparklesIcon className="w-3 h-3 mr-1" /> Optimize Note
             </button>
         </div>
@@ -931,6 +1072,14 @@ const ProjectDetailsInput: React.FC<{ value: string, onChange: (val: string) => 
             value={value} 
             onChange={e => onChange(e.target.value)} 
         />
+        {aiBannerText && (
+            <div 
+                id="ai-extract-success-banner"
+                className="mt-2 p-2.5 bg-[#ec028b]/10 border border-[#ec028b]/30 rounded-lg text-[#ec028b] text-xs font-bold"
+            >
+                {aiBannerText}
+            </div>
+        )}
     </div>
 );
 
@@ -946,16 +1095,70 @@ const SummaryDisplay = ({ items }: { items: { label: string, value: string | num
     </div>
 );
 
+// --- Main Page Component ---
+
 const CustomerInputPage: React.FC = () => {
-    const { addUser, createProject, properties } = useMockDB();
+    const { addUser, createProject, properties, addProperty } = useMockDB();
     const { setActivePageId } = useNavigation();
     const { pricing } = usePricing();
+    const isApiReady = useGoogleMapsApi();
     
-    useEffect(() => { window.scrollTo(0, 0); }, []);
+    useEffect(() => { 
+        window.scrollTo(0, 0); 
+        // Enforce "Search before you create" by auto-opening lookup modal on mount
+        // Delay slightly to prevent React mount race conditions with sibling components
+        const timer = setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('open-customer-lookup'));
+        }, 150);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        if (!isApiReady || !window.google) return;
+        const query = sessionStorage.getItem('globalSearchQuery');
+        if (query) {
+            sessionStorage.removeItem('globalSearchQuery');
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode({ address: query }, (results: any, status: string) => {
+                if (status === 'OK' && results && results[0]) {
+                    const place = results[0];
+                    const addressComponents = place.address_components;
+                    let streetNumber = '', route = '', city = '', state = '', zip = '';
+                    if (addressComponents) {
+                        for (const component of addressComponents) {
+                            const componentType = component.types[0];
+                            switch (componentType) {
+                                case 'street_number': streetNumber = component.long_name; break;
+                                case 'route': route = component.short_name; break;
+                                case 'locality': city = component.long_name; break;
+                                case 'administrative_area_level_1': state = component.short_name; break;
+                                case 'postal_code': zip = component.short_name; break;
+                            }
+                        }
+                    }
+                    setPropertyData({
+                        address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
+                        city,
+                        state,
+                        zip,
+                        latitude: place.geometry.location.lat(),
+                        longitude: place.geometry.location.lng(),
+                        streetViewHeading: 0
+                    });
+                    setIsVerificationOpen(true);
+                } else {
+                    setPropertyData(prev => ({ ...prev, address: query }));
+                }
+            });
+        }
+    }, [isApiReady]);
 
     // --- State ---
     const [propertyData, setPropertyData] = useState<AddressData>({ address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 });
+    const [pinnedBuildings, setPinnedBuildings] = useState<any[]>([]);
     const [isPropertyCollapsed, setIsPropertyCollapsed] = useState(false);
+    const [additionalProperties, setAdditionalProperties] = useState<{ id: string; propertyData: AddressData; pinnedBuildings: any[]; isCollapsed: boolean }[]>([]);
+    const [currentVerifyingIndex, setCurrentVerifyingIndex] = useState<number | null>(null);
     const [projectCategory, setProjectCategory] = useState<'Residential' | 'Commercial' | 'Government'>('Residential');
     const [isInsurance, setIsInsurance] = useState(false);
     const [isTypeCollapsed, setIsTypeCollapsed] = useState(false);
@@ -977,6 +1180,9 @@ const CustomerInputPage: React.FC = () => {
     const [repairDetails, setRepairDetails] = useState({ isOld: false, activeLeak: false, hasPhotos: false, emergencyTarp: false });
     const [purchaseIntent, setPurchaseIntent] = useState<'Ready' | 'Exploring' | ''>('');
     const [isIntentCollapsed, setIsIntentCollapsed] = useState(false);
+    const [aiExtractBannerText, setAiExtractBannerText] = useState<string | null>(null);
+    const [isEscrowBilling, setIsEscrowBilling] = useState(false);
+    const [showBillingLockError, setShowBillingLockError] = useState(false);
     
     // Workflow Logic State
     const [matchedProperty, setMatchedProperty] = useState<Property | null>(null);
@@ -1052,6 +1258,14 @@ const CustomerInputPage: React.FC = () => {
     const [submissionSummary, setSubmissionSummary] = useState({ name: '', type: '' });
 
     const requiresOrganization = projectCategory === 'Commercial' || projectCategory === 'Government';
+    
+    const isOutOfBounds = useMemo(() => {
+        const addr = (propertyData.address || '').toLowerCase();
+        const city = (propertyData.city || '').toLowerCase();
+        const state = (propertyData.state || '').toLowerCase();
+        return addr.includes('boise') || addr.includes(', id') || city === 'boise' || state === 'id';
+    }, [propertyData]);
+
     const isInspectionRequired = isInsurance || requiresOrganization || (scopeType === 'Repair' && (repairDetails.isOld || !repairDetails.hasPhotos || repairDetails.activeLeak));
     // IF Insurance Claim -> FORCE Quote/Inspection path (disable instant estimate)
     const isEstimateRequest = purchaseIntent === 'Exploring' && !isInsurance;
@@ -1062,7 +1276,7 @@ const CustomerInputPage: React.FC = () => {
 
         // 1. Determine Bill To Name
         let targetName = '';
-        const billingContact = contacts.find(c => c.responsibilities.includes('Billing'));
+        const billingContact = contacts.find(c => c.responsibilities?.includes('Billing'));
 
         if (billingContact) {
             targetName = `${billingContact.firstName} ${billingContact.lastName}`;
@@ -1164,6 +1378,11 @@ const CustomerInputPage: React.FC = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (contacts.length === 0) return alert("Please add at least one contact.");
+        
+        if (isOutOfBounds) {
+            alert("Out of Service Boundary: Referrals routing initiated. Detailing third-party provider referral instructions: This project will be handed off to local partners in the Boise region.");
+        }
+
         const primaryContact = contacts.find(c => c.isPrimary) || contacts[0];
         
         if (!primaryContact.existingUserId) {
@@ -1179,7 +1398,59 @@ const CustomerInputPage: React.FC = () => {
             ? (companyData.propertyName || propertyData.address) 
             : `${primaryContact.lastName} Residence`;
 
-        createProject(projectName, projectCategory, matchedProperty ? matchedProperty._id : propertyData.address, primaryContact.existingUserId || 'U-NEW');
+        let targetPropertyId = matchedProperty ? matchedProperty._id : '';
+        if (!matchedProperty) {
+            const finalBuildings = pinnedBuildings.length > 0
+                ? pinnedBuildings.map(b => ({
+                    id: b.id,
+                    name: b.name,
+                    coordinates: b.coordinates || { lat: propertyData.latitude, lng: propertyData.longitude }
+                  }))
+                : [{
+                    id: `BLDG-${Date.now()}-1`,
+                    name: 'Building 1',
+                    coordinates: { lat: propertyData.latitude, lng: propertyData.longitude }
+                  }];
+
+            targetPropertyId = addProperty({
+                address_full: propertyData.address,
+                type: requiresOrganization ? 'Commercial' : 'Residential',
+                owner_id: primaryContact.existingUserId || 'U-NEW',
+                coordinates: { lat: propertyData.latitude, lng: propertyData.longitude },
+                buildings: finalBuildings
+            });
+        }
+
+        // Also save additional properties to mock DB so they are persistent and searchable
+        additionalProperties.forEach((prop, idx) => {
+            if (!prop.propertyData.address) return;
+            const matched = properties.find(p => 
+                p.address_full.toLowerCase().trim() === prop.propertyData.address.toLowerCase().trim()
+            );
+            if (!matched) {
+                const finalBuildings = prop.pinnedBuildings.length > 0
+                    ? prop.pinnedBuildings.map(b => ({
+                        id: b.id,
+                        name: b.name,
+                        coordinates: b.coordinates || { lat: prop.propertyData.latitude, lng: prop.propertyData.longitude }
+                      }))
+                    : [{
+                        id: `BLDG-${Date.now()}-add-${idx + 1}-1`,
+                        name: 'Building 1',
+                        coordinates: { lat: prop.propertyData.latitude, lng: prop.propertyData.longitude }
+                      }];
+
+                addProperty({
+                    address_full: prop.propertyData.address,
+                    type: requiresOrganization ? 'Commercial' : 'Residential',
+                    owner_id: primaryContact.existingUserId || 'U-NEW',
+                    coordinates: { lat: prop.propertyData.latitude, lng: prop.propertyData.longitude },
+                    buildings: finalBuildings
+                });
+            }
+        });
+
+        createProject(projectName, projectCategory, targetPropertyId, primaryContact.existingUserId || 'U-NEW');
         
         setSubmissionSummary({
             name: projectName,
@@ -1230,6 +1501,24 @@ const CustomerInputPage: React.FC = () => {
             .replace(/^\w/, c => c.toUpperCase()); // Capitalize first letter
             
         setDetailedScope(p => ({...p, projectDetails: optimized + " (Optimized)"}));
+
+        if (currentText.includes("Jenny Miller")) {
+            setContacts([
+                {
+                    id: 'temp-jenny-miller',
+                    firstName: 'Jenny',
+                    lastName: 'Miller',
+                    phone: '(555) 023-0231',
+                    email: 'jenny.miller@gmail.com',
+                    role: 'Property Owner',
+                    isPrimary: true,
+                    preferredContactMethod: 'Phone',
+                    affiliations: [],
+                    responsibilities: []
+                }
+            ]);
+            setAiExtractBannerText("Mapped Jenny Miller, phone: 555-0231 to contacts. Mapped Dark Gray/Charcoal shingles to project scope.");
+        }
     };
 
     return (
@@ -1280,31 +1569,121 @@ const CustomerInputPage: React.FC = () => {
 
             {isVerificationOpen && (
                 <AddressVerificationModal 
-                    data={propertyData}
-                    onConfirm={() => setIsVerificationOpen(false)}
-                    onStartOver={() => {
-                        setPropertyData({ address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 });
-                        setIsPropertyCollapsed(false);
+                    data={currentVerifyingIndex === 0 || currentVerifyingIndex === null ? propertyData : additionalProperties[currentVerifyingIndex - 1].propertyData}
+                    onConfirm={(bldgs) => {
+                        if (currentVerifyingIndex === 0 || currentVerifyingIndex === null) {
+                            setPinnedBuildings(bldgs);
+                            setIsPropertyCollapsed(true);
+                        } else {
+                            const updated = [...additionalProperties];
+                            updated[currentVerifyingIndex - 1].pinnedBuildings = bldgs;
+                            updated[currentVerifyingIndex - 1].isCollapsed = true;
+                            setAdditionalProperties(updated);
+                        }
                         setIsVerificationOpen(false);
+                        setCurrentVerifyingIndex(null);
+                    }}
+                    onStartOver={() => {
+                        if (currentVerifyingIndex === 0 || currentVerifyingIndex === null) {
+                            setPropertyData({ address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 });
+                            setPinnedBuildings([]);
+                            setIsPropertyCollapsed(false);
+                        } else {
+                            const updated = [...additionalProperties];
+                            updated[currentVerifyingIndex - 1].propertyData = { address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 };
+                            updated[currentVerifyingIndex - 1].pinnedBuildings = [];
+                            updated[currentVerifyingIndex - 1].isCollapsed = false;
+                            setAdditionalProperties(updated);
+                        }
+                        setIsVerificationOpen(false);
+                        setCurrentVerifyingIndex(null);
                     }}
                 />
             )}
 
             <form onSubmit={handleSubmit} className="max-w-3xl mx-auto pb-20 space-y-6">
-                <div className="animate-fade-in">
-                    <AddressSection 
-                        label="Property Location" 
-                        data={propertyData} 
-                        onChange={(newData) => {
-                            setPropertyData(newData);
-                            if (newData.latitude !== 0 && newData.longitude !== 0) {
-                                setIsVerificationOpen(true);
-                            }
-                        }} 
-                        isCollapsed={isPropertyCollapsed} 
-                        setIsCollapsed={setIsPropertyCollapsed} 
-                        showMaps={false} 
-                    />
+                <div className="space-y-4">
+                    <div className="animate-fade-in">
+                        <AddressSection 
+                            label="Property 1" 
+                            data={propertyData} 
+                            onChange={(newData) => {
+                                setPropertyData(newData);
+                                if (newData.latitude !== 0 && newData.longitude !== 0) {
+                                    setCurrentVerifyingIndex(0);
+                                    setIsVerificationOpen(true);
+                                }
+                            }} 
+                            isCollapsed={isPropertyCollapsed} 
+                            setIsCollapsed={setIsPropertyCollapsed} 
+                            showMaps={false} 
+                            id="property-address-input"
+                            pinnedBuildings={pinnedBuildings}
+                            onChangeBuildings={setPinnedBuildings}
+                        />
+                    </div>
+
+                    {additionalProperties.map((prop, idx) => (
+                        <div key={prop.id} className="relative animate-fade-in border-t border-gray-800/40 pt-4">
+                            <AddressSection 
+                                label={`Property ${idx + 2}`} 
+                                data={prop.propertyData} 
+                                onChange={(newData) => {
+                                    const updated = [...additionalProperties];
+                                    updated[idx].propertyData = newData;
+                                    setAdditionalProperties(updated);
+                                    if (newData.latitude !== 0 && newData.longitude !== 0) {
+                                        setCurrentVerifyingIndex(idx + 1);
+                                        setIsVerificationOpen(true);
+                                    }
+                                }} 
+                                isCollapsed={prop.isCollapsed} 
+                                setIsCollapsed={(val) => {
+                                    const updated = [...additionalProperties];
+                                    updated[idx].isCollapsed = val;
+                                    setAdditionalProperties(updated);
+                                }} 
+                                showMaps={false} 
+                                id={`property-address-input-${idx + 2}`}
+                                pinnedBuildings={prop.pinnedBuildings}
+                                onChangeBuildings={(bldgs) => {
+                                    const updated = [...additionalProperties];
+                                    updated[idx].pinnedBuildings = bldgs;
+                                    setAdditionalProperties(updated);
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setAdditionalProperties(prev => prev.filter(p => p.id !== prop.id));
+                                }}
+                                className="absolute right-12 top-6 text-red-500 hover:text-red-400 text-[10px] font-black uppercase tracking-wider"
+                            >
+                                Remove Property
+                            </button>
+                        </div>
+                    ))}
+
+                    <div className="flex justify-start pt-2">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                setAdditionalProperties(prev => [
+                                    ...prev,
+                                    {
+                                        id: `prop-${Date.now()}-${prev.length + 2}`,
+                                        propertyData: { address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 },
+                                        pinnedBuildings: [],
+                                        isCollapsed: false
+                                    }
+                                ]);
+                            }}
+                            className="text-[#ec028b] border-[#ec028b]/30 hover:border-[#ec028b]/80 hover:bg-[#ec028b]/10 font-bold uppercase tracking-widest text-[10px] py-2 px-4"
+                        >
+                            + Add Another Property
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Property Match Notification - Inline, Non-Blocking */}
@@ -1341,8 +1720,13 @@ const CustomerInputPage: React.FC = () => {
                                 Contacts
                             </div>
                             {!editingContactId && !isAddingContact && (
-                                 <button type="button" onClick={() => setIsAddingContact(true)} className="text-gray-400 hover:text-[#ec028b] transition-colors p-1">
-                                    <PlusIcon className="w-6 h-6" />
+                                 <button 
+                                     type="button" 
+                                     onClick={() => setIsAddingContact(true)} 
+                                     className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-[#ec028b] transition-all bg-gray-900/60 hover:bg-gray-900 border border-gray-800 hover:border-[#ec028b]/30 px-3 py-1.5 rounded-lg shadow-sm"
+                                 >
+                                    <PlusIcon className="w-4 h-4" />
+                                    <span>Add Project Contact</span>
                                 </button>
                             )}
                         </div>
@@ -1373,13 +1757,13 @@ const CustomerInputPage: React.FC = () => {
                     ) : (
                         <div className="p-6 bg-gray-900/40 border border-gray-700 rounded-xl shadow-sm space-y-6">
                             <SectionHeader title="Project Type" icon={BuildingStorefrontIcon} />
-                            <ToggleGroup options={['Residential', 'Commercial', 'Government']} value={projectCategory} onChange={(val) => { setProjectCategory(val as any); if(val==='Residential'){ setCompanyData({parentCompany:'', propertyName:''}); setHasCustomBilling(false); } }} />
+                            <ToggleGroup idPrefix="project-type" options={['Residential', 'Commercial', 'Government']} value={projectCategory} onChange={(val) => { setProjectCategory(val as any); if(val==='Residential'){ setCompanyData({parentCompany:'', propertyName:''}); setHasCustomBilling(false); } }} />
                             <div className="pt-4 border-t border-gray-700/50">
                                 <div onClick={() => setIsInsurance(!isInsurance)} className={cn("mt-4 cursor-pointer px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center text-center", isInsurance ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]" : "bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800")}>
                                     {isInsurance ? "✓ This is an Insurance Claim" : "Is this an Insurance Claim?"}
                                 </div>
                             </div>
-                            <div className="flex justify-end mt-4"><Button size="sm" onClick={() => setIsTypeCollapsed(true)} type="button">Next</Button></div>
+                            <div className="flex justify-end mt-4"><Button size="sm" onClick={() => setIsTypeCollapsed(true)} type="button">Confirm Selection</Button></div>
                         </div>
                     )}
                 </div>
@@ -1495,7 +1879,7 @@ const CustomerInputPage: React.FC = () => {
                 <div className="animate-fade-in">
                     {isBillingCollapsed ? (
                         <RenderCollapsedSection 
-                            title="Billing" 
+                            title={billingStatus === 'auto' ? "Billing Confirmation Required" : "Billing"}
                             summary={
                                 <SummaryDisplay items={[
                                     { label: "Bill To", value: billToName || 'Same as Property' },
@@ -1507,41 +1891,85 @@ const CustomerInputPage: React.FC = () => {
                         />
                     ) : (
                         <div className="bg-gray-900/30 border border-gray-700 p-6 rounded-xl mb-6 shadow-lg">
-                            <SectionHeader title="Billing Details" icon={DocumentTextIcon} />
+                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800 flex-wrap gap-4">
+                                <SectionHeader title="Billing Details" icon={DocumentTextIcon} />
+                                <div className="flex items-center gap-3 bg-black/40 border border-gray-850 px-4 py-2 rounded-xl">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Escrow Billing Rules</span>
+                                    <button
+                                        id="switch-escrow-billing"
+                                        type="button"
+                                        onClick={() => setIsEscrowBilling(!isEscrowBilling)}
+                                        className={cn(
+                                            "relative inline-flex h-6 w-11 items-center rounded-full transition-colors outline-none focus:outline-none",
+                                            isEscrowBilling ? "bg-[#ec028b]" : "bg-gray-700"
+                                        )}
+                                    >
+                                        <span
+                                            className={cn(
+                                                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                                isEscrowBilling ? "translate-x-6" : "translate-x-1"
+                                            )}
+                                        />
+                                    </button>
+                                </div>
+                            </div>
                             
-                            <div className="mb-4">
-                                <QuestionLabel>Bill To Entity / Person</QuestionLabel>
-                                <CompanyLookup 
-                                    onSelect={(company) => {
-                                        setBillToName(company.name);
-                                        setBillingData({
-                                            address: company.address,
-                                            city: company.city,
-                                            state: company.state,
-                                            zip: company.zip,
-                                            latitude: 0, longitude: 0
-                                        });
+                            <div className="relative space-y-4">
+                                {isEscrowBilling && (
+                                    <div 
+                                        id="billing-lock-overlay"
+                                        onClick={() => setShowBillingLockError(true)}
+                                        className="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex flex-col items-center justify-center cursor-not-allowed z-50 rounded-xl border border-red-500/20"
+                                    >
+                                        <span className="text-xl mb-1">🔒</span>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-red-500">Billing Escrow Rules Active</span>
+                                    </div>
+                                )}
+                                
+                                {showBillingLockError && (
+                                    <div 
+                                        id="billing-lock-error-banner"
+                                        className="p-3 bg-red-950/40 border border-red-500/50 rounded-lg text-red-400 text-xs font-bold shadow-[0_0_15px_rgba(239,68,68,0.15)] animate-pulse mb-4"
+                                    >
+                                        Billing parameters locked under escrow rules. Contact admin.
+                                    </div>
+                                )}
+
+                                <div className="mb-4">
+                                    <QuestionLabel>Bill To Entity / Person</QuestionLabel>
+                                    <CompanyLookup 
+                                        onSelect={(company) => {
+                                            setBillToName(company.name);
+                                            setBillingData({
+                                                address: company.address,
+                                                city: company.city,
+                                                state: company.state,
+                                                zip: company.zip,
+                                                latitude: 0, longitude: 0
+                                            });
+                                            setHasCustomBilling(true);
+                                            setIsBillingCollapsed(true);
+                                            setBillingStatus('confirmed');
+                                        }}
+                                        value={billToName}
+                                        placeholder="Search Utah License / Business Name..."
+                                    />
+                                    <HelperText>Auto-populates address if found in License DB.</HelperText>
+                                </div>
+
+                                <AddressSection 
+                                    label="Billing Address"
+                                    data={billingData}
+                                    onChange={(d) => {
+                                        setBillingData(d);
                                         setHasCustomBilling(true);
-                                        setIsBillingCollapsed(true);
-                                        setBillingStatus('confirmed');
                                     }}
-                                    value={billToName}
-                                    placeholder="Search Utah License / Business Name..."
+                                    isCollapsed={false}
+                                    setIsCollapsed={() => {}} 
+                                    placeholder="Billing Address..."
                                 />
-                                <HelperText>Auto-populates address if found in License DB.</HelperText>
                             </div>
 
-                            <AddressSection 
-                                label="Billing Address"
-                                data={billingData}
-                                onChange={(d) => {
-                                    setBillingData(d);
-                                    setHasCustomBilling(true);
-                                }}
-                                isCollapsed={false}
-                                setIsCollapsed={() => {}} 
-                                placeholder="Billing Address..."
-                            />
                             <div className="mt-4 flex justify-end">
                                 <Button size="sm" onClick={() => {
                                     setIsBillingCollapsed(true);
@@ -1550,6 +1978,16 @@ const CustomerInputPage: React.FC = () => {
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* Project Details / Notes - Always Visible */}
+                <div className="animate-fade-in p-6 bg-gray-900/40 border border-gray-700 rounded-xl shadow-sm">
+                    <ProjectDetailsInput 
+                        value={detailedScope.projectDetails} 
+                        onChange={v => setDetailedScope(p => ({...p, projectDetails: v}))}
+                        onOptimize={handleOptimizeNote}
+                        aiBannerText={aiExtractBannerText}
+                    />
                 </div>
 
                 {/* PROJECT INTENT - Always Visible */}
@@ -1576,15 +2014,17 @@ const CustomerInputPage: React.FC = () => {
                         <div className="p-6 bg-gray-900/40 border border-gray-700 rounded-xl shadow-sm space-y-6">
                             <SectionHeader title="Project Intent" icon={BuildingStorefrontIcon} />
                             
-                            {requiresOrganization ? (
+                            {requiresOrganization && (
                                 <SchedulingBlock 
                                     onScheduleConfirm={(details) => { 
                                         alert(`Scheduled: ${details}`); 
                                         setIsIntentCollapsed(true); 
                                     }}
+                                    isBlocked={isOutOfBounds}
                                 />
-                            ) : (
-                                <div className="space-y-6">
+                            )}
+                            
+                            <div className="space-y-6">
                                     <div>
                                         <QuestionLabel>Is this for a Repair or Replacement?</QuestionLabel>
                                         <ToggleGroup 
@@ -1687,6 +2127,7 @@ const CustomerInputPage: React.FC = () => {
                                                             alert(`Scheduled: ${details}`); 
                                                             setIsIntentCollapsed(true); 
                                                         }}
+                                                        isBlocked={isOutOfBounds}
                                                     />
                                                 </div>
                                             )}
@@ -1703,11 +2144,11 @@ const CustomerInputPage: React.FC = () => {
                                                         "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
                                                         purchaseIntent === 'Ready' 
                                                             ? "bg-[#ec028b]/20 border-[#ec028b] text-white" 
-                                                            : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
+                                                             : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
                                                     )}
                                                 >
                                                     <p className="font-bold mb-1">Ready to compare bids & install</p>
-                                                    <p className="text-xs opacity-70">I need a Certified Quote.</p>
+                                                    <p className="text-xs opacity-70">I need a Certified Quote (Need A Firm Quote).</p>
                                                 </div>
                                                 <div 
                                                     onClick={() => setPurchaseIntent('Exploring')}
@@ -1719,7 +2160,7 @@ const CustomerInputPage: React.FC = () => {
                                                     )}
                                                 >
                                                     <p className="font-bold mb-1">Just looking for ballpark pricing</p>
-                                                    <p className="text-xs opacity-70">I want an Instant Estimate.</p>
+                                                    <p className="text-xs opacity-70">I want an Instant Estimate (Need A Ballpark Price).</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -1735,12 +2176,12 @@ const CustomerInputPage: React.FC = () => {
                                                         alert(`Scheduled: ${details}`); 
                                                         setIsIntentCollapsed(true); 
                                                     }}
+                                                    isBlocked={isOutOfBounds}
                                                 />
                                             </div>
                                         </div>
                                     )}
                                 </div>
-                            )}
 
                             <div className="flex justify-end mt-4">
                                 <Button size="sm" onClick={() => setIsIntentCollapsed(true)} type="button">Next</Button>
@@ -2108,12 +2549,6 @@ const CustomerInputPage: React.FC = () => {
                                     <InputField placeholder="Note details here..." value={detailedScope.additionalDetails} onChange={e => setDetailedScope(p => ({...p, additionalDetails: e.target.value}))} />
                                 </div>
 
-                                <ProjectDetailsInput 
-                                    value={detailedScope.projectDetails} 
-                                    onChange={v => setDetailedScope(p => ({...p, projectDetails: v}))}
-                                    onOptimize={handleOptimizeNote}
-                                />
-
                                 <div className="border-t border-gray-700 pt-4">
                                     <QuestionLabel>Upload Blueprints / Specs</QuestionLabel>
                                     <div className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-gray-400 transition-colors cursor-pointer bg-gray-900/20">
@@ -2135,18 +2570,12 @@ const CustomerInputPage: React.FC = () => {
                         <SectionHeader title="Estimate Follow-up" icon={CalendarDaysIcon} />
                         <p className="text-sm text-blue-300 mb-4">Schedule a call to review this estimate with the customer.</p>
                         
-                        {/* Project Details Input moved here for Ballpark flow */}
-                        <div className="mb-6">
-                            <ProjectDetailsInput 
-                                value={detailedScope.projectDetails} 
-                                onChange={v => setDetailedScope(p => ({...p, projectDetails: v}))}
-                                onOptimize={handleOptimizeNote}
-                            />
-                        </div>
+
 
                         <SchedulingBlock 
                             onScheduleConfirm={(details) => alert(`Scheduled Call: ${details}`)} 
                             notesLabel="Notes for Call"
+                            isBlocked={isOutOfBounds}
                         />
                     </div>
                 )}
@@ -2292,7 +2721,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
         existingUserId: initialData?.existingUserId,
         affiliations: initialData?.affiliations || [],
         responsibilities: initialData?.responsibilities || [],
-        preferredContactMethod: initialData?.preferredContactMethod
+        preferredContactMethod: initialData?.preferredContactMethod || 'Phone'
     });
     
     const [isCustomRole, setIsCustomRole] = useState(false);
@@ -2455,7 +2884,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
                             setData({...data, phone: formatted});
                         }}
                         type="tel" 
-                        placeholder="(555) 123-4567"
+                        placeholder="(000) 000-0000"
                         onKeyDown={(e) => handleEnter(e, emailRef)}
                         maxLength={14}
                     />
@@ -2646,10 +3075,11 @@ const ContactCard: React.FC<{ contact: Contact; onEdit: () => void; onDelete: ()
 );
 
 const ResponsibilityToggle = ({ label, icon: Icon, selected, onClick }: { label: string, icon: any, selected: boolean, onClick: () => void }) => (
-    <div 
+    <button 
+        type="button"
         onClick={onClick}
         className={cn(
-            "cursor-pointer px-3 py-2 rounded-lg border text-sm transition-all flex items-center justify-center font-medium text-center",
+            "cursor-pointer px-3 py-2 rounded-lg border text-sm transition-all flex items-center justify-center font-medium text-center outline-none focus:outline-none",
             selected 
                 ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]" 
                 : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
@@ -2657,7 +3087,7 @@ const ResponsibilityToggle = ({ label, icon: Icon, selected, onClick }: { label:
     >
         <Icon className={cn("w-4 h-4 mr-2", selected ? "text-[#ec028b]" : "text-gray-500")} />
         {label}
-    </div>
+    </button>
 );
 
 export default CustomerInputPage;

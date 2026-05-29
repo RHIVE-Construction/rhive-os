@@ -218,7 +218,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                                 )}
                                             >
                                                 <div className="flex items-center">
-                                                    <BriefcaseIcon className="h-4 w-4 mr-3 opacity-50" />
+                                                    {cat === 'Website' ? (
+                                                        <SparklesIcon className="h-4 w-4 mr-3 text-rhive-pink drop-shadow-[0_0_3px_rgba(236,2,139,0.4)] animate-pulse" />
+                                                    ) : (
+                                                        <BriefcaseIcon className="h-4 w-4 mr-3 opacity-50" />
+                                                    )}
                                                     <span>{cat}</span>
                                                 </div>
                                                 <ChevronRightIcon className={cn(

@@ -10,7 +10,7 @@ export const DevNavigator: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     // Extract all public pages from PAGE_GROUPS
-    const publicGroup = PAGE_GROUPS.find(g => g.userType === 'All');
+    const publicGroup = PAGE_GROUPS.find(g => g.userType === 'Public' || g.label === 'PUBLIC WEBSITE');
     const publicPages = publicGroup ? publicGroup.pages.filter(p => p.id.startsWith('P-')) : [];
 
     // Also include a few developer utility links to jump back to portal

@@ -205,6 +205,7 @@ export interface Property {
   type: 'Residential' | 'Commercial' | 'Government';
   coordinates: { lat: number; lng: number };
   features: string[];
+  buildings?: { id: string; name: string; coordinates?: { lat: number; lng: number } }[];
 }
 
 export type ProjectStage = 

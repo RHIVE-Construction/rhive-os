@@ -33,7 +33,7 @@ export const PROJECT_STAGES: ProjectStage[] = [
 
 export const PAGE_GROUPS: PageGroup[] = [
     {
-        userType: 'All',
+        userType: 'Public',
         pages: [
             { id: 'P-Landing', name: 'Landing Page', userType: 'Public', description: 'Universal Entry Point' },
             { id: 'P-00-V2', name: 'Landing Page 2.0', userType: 'Public', description: 'DISC Structured Entry' },
@@ -171,6 +171,23 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'S-02', name: 'MY PRICE LISTS', userType: 'Supplier', description: 'Pricing Management' },
             { id: 'S-03', name: 'PURCHASE ORDERS', userType: 'Supplier', description: 'Project Fulfillment' },
             { id: 'S-04', name: 'MY COMPANY PROFILE', userType: 'Supplier', description: 'Business & Legal Data' },
+        ]
+    },
+    {
+        userType: 'All',
+        label: 'PUBLIC WEBSITE',
+        pages: [
+            { id: 'P-00', name: 'Home', userType: 'Public', description: 'RHIVE Main Gateway', category: 'Website' },
+            { id: 'P-01', name: 'About Us', userType: 'Public', description: 'Mission, Vision & Values', category: 'Website' },
+            { id: 'P-02', name: 'Our Services', userType: 'Public', description: 'Residential & Commercial Solutions', category: 'Website' },
+            { id: 'P-03', name: 'Our Process', userType: 'Public', description: 'The 10-Stage Journey', category: 'Website' },
+            { id: 'P-04', name: 'Financing', userType: 'Public', description: 'RPSP & Payment Options', category: 'Website' },
+            { id: 'P-05', name: 'Contact', userType: 'Public', description: 'Directory & Lead Gen', category: 'Website' },
+            { id: 'P-09', name: 'CONTRACTOR SIGNUP', userType: 'Public', description: 'Vendor Vetting & Onboarding', category: 'Website' },
+            { id: 'P-10', name: 'PUBLIC CAREERS', userType: 'Public', description: 'Recruitment & Brand Manifesto', category: 'Website' },
+            { id: 'P-11', name: 'JOB APPLICATION', userType: 'Public', description: 'Candidate Intake Wizard', category: 'Website' },
+            { id: 'P-12', name: 'ESTIMATE TOOL', userType: 'Public', description: 'Instant Pricing Engine', category: 'Website' },
+            { id: 'P-13', name: 'INSURANCE', userType: 'Public', description: 'Insurance Protection', category: 'Website' }
         ]
     }
 ];

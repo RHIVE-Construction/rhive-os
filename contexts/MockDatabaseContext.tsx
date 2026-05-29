@@ -17,7 +17,8 @@ interface MockDatabaseContextType {
     // Actions
     createProject: (name: string, type: any, propertyId: string, accountId: string) => string;
     addUser: (user: Partial<User>) => void;
-    addProperty: (property: Partial<Property>) => void;
+    addProperty: (property: Partial<Property>) => string;
+    updateProperty: (propertyId: string, updates: Partial<Property>) => void;
     addCommunication: (type: 'email' | 'text' | 'file', targetId: string, content: string) => void;
     updateProjectStage: (projectId: string, stage: ProjectStage) => void;
     saveQuote: (projectId: string, total: number, items: any[]) => void;
@@ -110,13 +111,44 @@ const SEED_PROJECTS: Project[] = [
 
 
 export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [users, setUsers] = useState<User[]>([]);
-    const [properties, setProperties] = useState<Property[]>(SEED_PROPERTIES);
-    const [projects, setProjects] = useState<Project[]>(SEED_PROJECTS);
+    const [users, setUsers] = useState<User[]>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('rhive_db_users');
+            if (saved) return JSON.parse(saved);
+        }
+        return SEED_USERS;
+    });
+    const [properties, setProperties] = useState<Property[]>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('rhive_db_properties');
+            if (saved) return JSON.parse(saved);
+        }
+        return SEED_PROPERTIES;
+    });
+    const [projects, setProjects] = useState<Project[]>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('rhive_db_projects');
+            if (saved) return JSON.parse(saved);
+        }
+        return SEED_PROJECTS;
+    });
     const [loading, setLoading] = useState(true);
 
     // initialUser is read at MODULE LOAD TIME (before React) — guaranteed no timing issues
-    const [currentUser, setCurrentUser] = useState<User | null>(initialUser);
+    const [currentUser, setCurrentUser] = useState<User | null>(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const bypassRole = params.get('bypass');
+            if (bypassRole) {
+                const candidate = SEED_USERS.find(u => u.role.toLowerCase() === bypassRole.toLowerCase());
+                if (candidate) {
+                    session.write(candidate);
+                    return candidate;
+                }
+            }
+        }
+        return initialUser;
+    });
     const [currentProjectId, setCurrentProjectId] = useState<string | null>(localStorage.getItem('rhive_project_id'));
 
     // Use a ref so the subscription callback always has the latest currentUser
@@ -125,11 +157,28 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
     useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
 
     useEffect(() => {
+        localStorage.setItem('rhive_db_users', JSON.stringify(users));
+    }, [users]);
+
+    useEffect(() => {
+        localStorage.setItem('rhive_db_properties', JSON.stringify(properties));
+    }, [properties]);
+
+    useEffect(() => {
+        localStorage.setItem('rhive_db_projects', JSON.stringify(projects));
+    }, [projects]);
+
+    useEffect(() => {
         const unsub = userService.subscribe((data) => {
             if (data && data.length > 0) {
                 setUsers(data as User[]);
             } else {
-                setUsers(SEED_USERS);
+                const saved = localStorage.getItem('rhive_db_users');
+                if (saved) {
+                    setUsers(JSON.parse(saved));
+                } else {
+                    setUsers(SEED_USERS);
+                }
             }
             setLoading(false);
             // Sync currentUser if their Firestore record changed
@@ -221,6 +270,32 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         // -------------------------------------------------------
+        // DUMMY BYPASS FOR LOCAL TESTING / QUICK SWITCH
+        // -------------------------------------------------------
+        if (password === 'bypass' || !password) {
+            let foundUser: User | undefined;
+            if (email) {
+                const norm = email.toLowerCase().trim();
+                foundUser = users.find(u => u.email?.toLowerCase().trim() === norm) ||
+                            SEED_USERS.find(u => u.email?.toLowerCase().trim() === norm);
+            }
+            if (!foundUser) {
+                foundUser = users.find(u => u.role === role) ||
+                            SEED_USERS.find(u => u.role === role);
+            }
+            if (foundUser) {
+                const sessionUser = { ...foundUser };
+                // Ensure correct role is bound if user is a Super Admin switching roles
+                if (foundUser.role === 'Super Admin' && role !== 'Super Admin') {
+                    sessionUser.role = role as any;
+                }
+                setSessionUser(sessionUser);
+                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in via developer bypass`, { role: sessionUser.role }, sessionUser);
+                return { success: true };
+            }
+        }
+
+        // -------------------------------------------------------
         // ALL AUTHENTICATED ROLES — look up in Firestore users collection
         // Works for: Admin, Super Admin, Employee, Customer, Contractor, Supplier
         // -------------------------------------------------------
@@ -298,8 +373,21 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // --- ACTIONS ---
 
     const addUser = (user: Partial<User>) => {
-        userService.create(user);
-        userLogService.logAction('ADD_USER', `User profile created: ${user.name || 'Unnamed'} (${user.email || 'no email'})`, { user });
+        const newId = user.id || 'U-NEW';
+        const newUser: User = {
+            id: newId,
+            name: user.name || 'Unnamed',
+            role: user.role || 'Customer',
+            email: user.email || '',
+            phone: user.phone || '',
+            avatarUrl: user.avatarUrl || ''
+        };
+        setUsers(prev => {
+            const filtered = prev.filter(u => u.id !== newId);
+            return [...filtered, newUser];
+        });
+        userService.create(newUser);
+        userLogService.logAction('ADD_USER', `User profile created: ${newUser.name} (${newUser.email || 'no email'})`, { user: newUser });
     };
 
     const addProperty = (property: Partial<Property>) => {
@@ -310,10 +398,19 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             type: property.type || 'Residential',
             owner_id: property.owner_id || 'Unknown',
             coordinates: { lat: 0, lng: 0 },
-            features: []
+            features: property.features || [],
+            buildings: property.buildings || []
         };
         setProperties(prev => [...prev, newProperty]);
         userLogService.logAction('ADD_PROPERTY', `Property added: ${newProperty.address_full} (ID: ${newId})`, { propertyId: newId, property: newProperty });
+        return newId;
+    };
+
+    const updateProperty = (propertyId: string, updates: Partial<Property>) => {
+        setProperties(prev => prev.map(p =>
+            p._id === propertyId ? { ...p, ...updates } : p
+        ));
+        userLogService.logAction('UPDATE_PROPERTY', `Property updated (ID: ${propertyId})`, { propertyId, updates });
     };
 
     const addCommunication = (type: 'email' | 'text' | 'file', targetId: string, content: string) => {
@@ -398,6 +495,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             logout,
             addUser,
             addProperty,
+            updateProperty,
             addCommunication,
             createProject,
             updateProjectStage,

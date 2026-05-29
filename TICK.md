@@ -21,6 +21,7 @@ todo:
 in-progress:
 review:
 done:
+  - "[N1] MULTI_PROPERTY_INTAKE_AND_HEADER_RESTORE: Add multi-property collapsible intake and restore weather/search header widgets. QA_EXIT:0."
   - "[N1] CONTACT_CARD_LAYOUT: Format saved contact card text layout to 3-line template. QA_EXIT:0."
   - "[N1] CUSTOM_ROLE_AND_ADDITIONAL_PROPERTIES: Support custom project roles and additional properties/buildings on intake. QA_EXIT:0."
   - "[N1] GUTTER_HEAT_TRACE_COLLAPSED_AUTO_ENABLE: Automatically enable gutters/heat trace on collapsed card click. QA_EXIT:0."

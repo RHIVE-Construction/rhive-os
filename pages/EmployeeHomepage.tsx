@@ -776,10 +776,10 @@ const EmployeeHomepage: React.FC = () => {
                             <Button
                                 variant="secondary"
                                 className="flex-col h-24 hover:bg-gray-900 hover:border-[#ec028b]/50 hover:shadow-[0_0_15px_rgba(236,2,139,0.15)] transition-all bg-black/40 border-gray-700"
-                                onClick={() => setActivePageId('E-02a')}
+                                onClick={() => window.dispatchEvent(new CustomEvent('open-customer-lookup'))}
                             >
                                 <UserIcon className="w-6 h-6 mb-2 text-[#ec028b]" />
-                                <span className="text-xs uppercase font-bold tracking-wide">New Intake</span>
+                                <span className="text-xs uppercase font-bold tracking-wide">New Project</span>
                             </Button>
                             <Button
                                 variant="secondary"

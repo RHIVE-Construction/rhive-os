@@ -38,6 +38,7 @@ const DEFAULT_HISTORY = ["Salt Lake City, UT", "Denver, CO", "Boulder, CO", "Log
 
 export const GlobalWeatherModal: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(true);
     const [activeCity, setActiveCity] = useState("Salt Lake City, UT");
     const [searchInput, setSearchInput] = useState("");
     const [isLocating, setIsLocating] = useState(false);
@@ -61,6 +62,7 @@ export const GlobalWeatherModal: React.FC = () => {
             setActiveCity(cached);
             setSearchInput("");
             setIsOpen(true);
+            setIsMinimized(true); // default minimize down
         };
         window.addEventListener('open-weather-forecast', handleOpen);
         return () => window.removeEventListener('open-weather-forecast', handleOpen);
@@ -78,7 +80,6 @@ export const GlobalWeatherModal: React.FC = () => {
         // Update rolling history to keep the last 5
         setWeatherHistory(prev => {
             const cleanCity = city.trim();
-            // Prepend new city, filter out occurrences of it from rest, slice to 5
             const nextHistory = [cleanCity, ...prev.filter(c => c.toLowerCase() !== cleanCity.toLowerCase())].slice(0, 5);
             localStorage.setItem('rhive_weather_history', JSON.stringify(nextHistory));
             return nextHistory;
@@ -112,7 +113,6 @@ export const GlobalWeatherModal: React.FC = () => {
                     } else if (Math.abs(lat - 33.4484) < 3 && Math.abs(lon - -112.074) < 3) {
                         resolvedCity = "Phoenix, AZ";
                     } else {
-                        // Fallback coordinates city string
                         resolvedCity = `Salt Lake City, UT`;
                     }
                     
@@ -136,11 +136,45 @@ export const GlobalWeatherModal: React.FC = () => {
         }
     };
 
+    // Minimized Floating Glassmorphic view in bottom-right
+    if (isMinimized) {
+        return (
+            <div 
+                className="fixed bottom-6 right-6 w-[320px] bg-black/85 backdrop-blur-md border border-gray-800 rounded-xl shadow-2xl z-[9999] p-3 flex items-center justify-between cursor-pointer hover:border-[#ec028b]/50 hover:shadow-[0_0_15px_rgba(236,2,139,0.2)] transition-all animate-fade-in select-none"
+                onClick={() => setIsMinimized(false)}
+                style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+            >
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#ec028b] to-transparent"></div>
+                <div className="flex items-center gap-3">
+                    <div className="text-xl">
+                        {weather.condition === 'Storm Alert' ? '🌨️' : weather.condition === 'Sunny' ? '🌤️' : '☁️'}
+                    </div>
+                    <div>
+                        <div className="text-xs font-black text-white uppercase tracking-wider">{weather.city}</div>
+                        <div className="text-[10px] text-[#ec028b] font-bold uppercase tracking-wider">{weather.condition}</div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <span className="text-lg font-black text-white font-mono">{weather.temp}</span>
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsOpen(false);
+                        }}
+                        className="text-gray-400 hover:text-white p-1 hover:bg-white/5 rounded-lg transition-colors outline-none"
+                    >
+                        <CloseIcon className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[9999] flex items-center justify-center p-4 select-none">
             {/* Modal Container with 24px Chamfer */}
             <div 
-                className="bg-[#050505] border border-gray-800 w-full max-w-xl overflow-hidden shadow-2xl relative"
+                className="bg-[#050505] border border-gray-800 w-full max-w-xl overflow-hidden shadow-2xl relative animate-fade-in"
                 style={{ clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)' }}
             >
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#ec028b] to-transparent"></div>
@@ -151,9 +185,19 @@ export const GlobalWeatherModal: React.FC = () => {
                         <h3 className="text-lg font-black uppercase tracking-wider text-white">Geospatial Weather Outlook</h3>
                         <p className="text-xs text-gray-400 mt-0.5 font-semibold tracking-wide">RHIVE Climate Intel Center</p>
                     </div>
-                    <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white p-1 hover:bg-white/5 transition-colors">
-                        <CloseIcon className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {/* Header minimize (▼) button */}
+                        <button 
+                            onClick={() => setIsMinimized(true)} 
+                            className="text-gray-400 hover:text-white p-1 hover:bg-white/5 rounded-lg transition-colors outline-none"
+                            title="Minimize weather view"
+                        >
+                            <span className="text-sm font-black">▼</span>
+                        </button>
+                        <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white p-1 hover:bg-white/5 transition-colors outline-none">
+                            <CloseIcon className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="p-6 space-y-6">
@@ -202,7 +246,7 @@ export const GlobalWeatherModal: React.FC = () => {
                                         "px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold transition-all border",
                                         activeCity.toLowerCase() === city.toLowerCase()
                                             ? "bg-[#ec028b]/15 text-[#ec028b] border-[#ec028b]/40 shadow-[0_0_8px_rgba(236,2,139,0.2)]"
-                                            : "bg-black text-gray-400 border-gray-850 hover:border-gray-750"
+                                             : "bg-black text-gray-400 border-gray-850 hover:border-gray-750"
                                     )}
                                     style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                 >
