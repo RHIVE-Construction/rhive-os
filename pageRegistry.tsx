@@ -29,7 +29,6 @@ import ContractorSignupPage from './pages/ContractorSignupPage'; // P-09
 import PublicCareersPage from './pages/PublicCareersPage'; // P-10
 import JobApplicationPage from './pages/JobApplicationPage'; // P-11
 import EmployeeHomepage from './pages/EmployeeHomepage'; // E-01
-import GlobalNavCustomerLookup from './pages/GlobalNavCustomerLookup'; // E-02
 import CustomerInputPage from './pages/CustomerInputPage'; // E-02a
 import EmployeePipelinePage from './pages/EmployeePipelinePage'; // E-05
 import IncomeActionatorPage from './pages/IncomeActionatorPage'; // E-16
@@ -59,7 +58,7 @@ import NewProjectBidsPage from './pages/NewProjectBidsPage'; // CO-05
 import SupplierHomepage from './pages/SupplierHomepage'; // S-01
 import SupplierProfilePage from './pages/SupplierProfilePage'; // S-04
 import CustomerTrackerPage from './pages/CustomerTrackerPage'; // C-Tracker
-import SimulationGuidePage from './pages/SimulationGuidePage'; // (Simulation)
+// Removed SimulationGuidePage import
 import RHIVEBrandingPage from './pages/RHIVEBrandingPage'; // E-39
 import InsurancePage from './pages/InsurancePage'; // P-13
 
@@ -126,7 +125,6 @@ export const pageComponentMap: Record<string, React.FC> = {
 
   // Employee (Employee World Section 2)
   'E-01': EmployeeHomepage,
-  'E-02': GlobalNavCustomerLookup,
   'E-02a': CustomerInputPage,
   'E-03': () => <Placeholder name="AI ASSISTANT (GLOBAL)" />,
   'E-04': EmployeeTimeoffPage,
@@ -191,5 +189,5 @@ export const pageComponentMap: Record<string, React.FC> = {
 
   // Simulation
   'SA-01': RoleManagementPage,
-  'E-SIM-GUIDE': SimulationGuidePage,
+
 };

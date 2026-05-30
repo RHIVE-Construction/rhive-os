@@ -346,4 +346,48 @@ When submitting any intake project, the system automatically triages the record 
 * **Expected Outcome:** Saved successfully. The project is created and routes the lead correctly.
 
 ---
+
+### 👤 Scenario 14: OPER-SMART-MERGE-CONTACT (Jane Hansen contact merge)
+* **Goal:** Verify that submitting a new contact via the intake form for an existing property with an active project merges the contact details instead of creating a duplicate project card.
+* **Testing Steps:**
+  1. Open **New Project** search.
+  2. Search for: `1290 East Appledale Rd` (Verify "Existing Record Found - Address Collision Detected (Linda Hansen)").
+  3. Click the green **Merge / Relate to Existing** button.
+  4. Fill in the intake form with a new contact:
+     * First Name: `Jane`, Last Name: `Hansen`, Phone: `(208) 555-9999`, Email: `jane.hansen@gmail.com`.
+     * Click **Save Contact**.
+  5. Select **Replacement** -> **Need A Ballpark Price**.
+  6. Click **Submit Project**.
+* **Expected Outcome:** Displays a smart merge confirmation alert. Jane Hansen is registered as a user and associated with the existing property file, and a communication log is written to the active Appledale project instead of spawning a new card.
+
+---
+
+### 🏢 Scenario 15: OPER-SMART-COMPANY-PROP (Summit Horizon Company Property Association)
+* **Goal:** Verify that submitting a new property under a parent company automatically resolves the company ID and associates/links the property to the company profile in the database.
+* **Testing Steps:**
+  1. Open **New Project** search.
+  2. Search for: `888 Landmark Boulevard` (Verify "No matching record").
+  3. Click **Initiate New Project**.
+  4. Select **Commercial** -> Click **Confirm Selection**.
+  5. Enter Address: `888 Landmark Boulevard`.
+  6. Set Parent Company: `Summit Horizon Real Estate` (resolves to existing company user).
+  7. Fill in the contact:
+     * First Name: `Tom`, Last Name: `Brady`, Phone: `(208) 555-7777`, Email: `tom@summithorizon.com`.
+     * Click **Save Contact**.
+  8. Click **Submit Project**.
+* **Expected Outcome:** The new property is created and its owner_id resolves to Summit Horizon's existing user profile ID, linking the property to the corporate account.
+
+---
+
+### 🏗️ Scenario 16: OPER-SMART-ADD-BUILDING (Landmark building addition merge)
+* **Goal:** Verify that pinning a new building for an existing property on the intake form appends/merges the new building to the existing property's building list.
+* **Testing Steps:**
+  1. Open **New Project** search.
+  2. Search for: `1290 East Appledale Rd`.
+  3. Click the green **Merge / Relate to Existing** button.
+  4. In the map/property building layout section, add a new building name: `Detached Garage`.
+  5. Click **Submit Project**.
+* **Expected Outcome:** The existing property at `1290 East Appledale Rd` is updated to include the `Detached Garage` in its buildings list without duplicating the property or project entry.
+
+---
 *RHIVE-OS Version 1.0 sovereign execution build.*

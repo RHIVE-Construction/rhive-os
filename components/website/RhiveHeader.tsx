@@ -1,11 +1,13 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sun, Moon, LogOut, Menu, X, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMockDB } from '../../contexts/MockDatabaseContext';
 import PlexusShape from '../PlexusShape';
+
+
 
 const RhiveHeader: React.FC = () => {
     const { setActivePageId, activePageId, lastPortalPageId } = useNavigation();
@@ -20,7 +22,6 @@ const RhiveHeader: React.FC = () => {
         if (lastPortalPageId) {
             setActivePageId(lastPortalPageId);
         } else if (currentUser) {
-            // Fallback dashboard based on role
             switch (currentUser.role) {
                 case 'Employee': setActivePageId('E-01'); break;
                 case 'Customer': setActivePageId('C-01'); break;
@@ -66,18 +67,16 @@ const RhiveHeader: React.FC = () => {
 
     const roles = ['Admin', 'Employee', 'Customer', 'Contractor', 'Supplier'] as const;
 
-    const navLinks = [
-        { label: 'ABOUT', target: 'hero' },
+    const leftLinks = [
         { label: 'SERVICES', target: 'services' },
-        { label: 'PROCESS', target: 'process' },
-        { label: 'FINANCING', target: 'financing' },
-        { label: 'INSURANCE', target: 'insurance' },
-        { label: 'FAQ', target: 'faq' },
-        { label: 'CONTACT', target: 'contact' },
+        { label: 'ABOUT US', target: 'about' }
+    ];
+
+    const rightLinks = [
+        { label: 'FINANCING', target: 'financing' }
     ];
 
     const scrollToSection = (id: string) => {
-        // Dispatch virtual navigation events for sub-pages in OS recreation mode
         if (id === 'hero' || id === 'about') {
             window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'about' } }));
             return;
@@ -95,10 +94,8 @@ const RhiveHeader: React.FC = () => {
             return;
         }
 
-        // Standard scrolling logic for live mode / external pages
         if (activePageId !== 'P-00' && activePageId !== 'P-01') {
             setActivePageId('P-00');
-            // Give it a moment to mount before scrolling
             setTimeout(() => {
                 const element = document.getElementById(id);
                 element?.scrollIntoView({ behavior: 'smooth' });
@@ -145,7 +142,7 @@ const RhiveHeader: React.FC = () => {
             </div>
 
             <nav className="flex-1 flex justify-end gap-6 z-10">
-                {navLinks.slice(0, 3).map((link) => (
+                {leftLinks.map((link) => (
                     <button
                         key={link.target}
                         onClick={() => scrollToSection(link.target)}
@@ -178,7 +175,7 @@ const RhiveHeader: React.FC = () => {
             <div className="mx-16 w-[140px] shrink-0" />
 
             <nav className="flex-1 flex justify-start gap-6 items-center z-10">
-                {navLinks.slice(3).map((link) => (
+                {rightLinks.map((link) => (
                     <button
                         key={link.target}
                         onClick={() => scrollToSection(link.target)}
@@ -188,7 +185,6 @@ const RhiveHeader: React.FC = () => {
                     </button>
                 ))}
 
-                <div className="h-6 w-[1px] bg-white/25 mx-4" />
 
                 <div className="flex items-center gap-3 relative">
                     <button
@@ -407,6 +403,8 @@ const RhiveHeader: React.FC = () => {
                     </div>
                 </div>
             )}
+
+
         </header>
     );
 };

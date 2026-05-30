@@ -17,11 +17,11 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-type Step = 'address' | 'specs' | 'lead' | 'result' | 'chat';
+type Step = 'menu' | 'address' | 'specs' | 'lead' | 'result' | 'chat';
 
 export const FloatingEstimator: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [step, setStep] = useState<Step>('address');
+    const [step, setStep] = useState<Step>('menu');
     const [address, setAddress] = useState('');
     const [activeProtocol, setActiveProtocol] = useState<string | null>(null);
 
@@ -29,7 +29,7 @@ export const FloatingEstimator: React.FC = () => {
         const handleOpen = (e: any) => {
             setActiveProtocol(e.detail?.protocol || null);
             setIsOpen(true);
-            setStep('address');
+            setStep('menu');
         };
         window.addEventListener('open-estimator', handleOpen);
         return () => window.removeEventListener('open-estimator', handleOpen);
@@ -44,7 +44,7 @@ export const FloatingEstimator: React.FC = () => {
 
     const toggleDrawer = () => {
         setIsOpen(!isOpen);
-        if (!isOpen) setStep('address');
+        if (!isOpen) setStep('menu');
     };
 
     return (
@@ -52,13 +52,17 @@ export const FloatingEstimator: React.FC = () => {
             {/* 1. SIDE TAB BUTTON */}
             <motion.button
                 onClick={() => {
-                    setStep('chat');
+                    setStep('menu');
                     setIsOpen(true);
                 }}
-                whileHover={{ scale: 1.05, x: -10 }}
+                onMouseEnter={() => {
+                    setStep('menu');
+                    setIsOpen(true);
+                }}
+                whileHover={{ scale: 1.05, x: 10 }}
                 whileTap={{ scale: 0.95 }}
-                className="fixed right-0 top-1/2 -translate-y-1/2 z-[600] flex items-center gap-3 bg-[var(--rhive-bg)] text-[var(--rhive-text)] px-4 py-10 rounded-l-3xl shadow-[0_20px_60px_rgba(236,2,139,0.4)] hover:shadow-pink-glow transition-all group overflow-hidden border border-[var(--rhive-border)] outline-none"
-                initial={{ x: 100 }}
+                className="fixed left-0 top-1/2 -translate-y-1/2 z-[600] flex items-center gap-3 bg-[var(--rhive-bg)] text-[var(--rhive-text)] px-4 py-10 rounded-r-3xl shadow-[0_20px_60px_rgba(236,2,139,0.4)] hover:shadow-pink-glow transition-all group overflow-hidden border border-[var(--rhive-border)] outline-none"
+                initial={{ x: -100 }}
                 animate={{ x: 0 }}
                 transition={{ type: 'spring', damping: 20, stiffness: 100 }}
             >
@@ -88,10 +92,10 @@ export const FloatingEstimator: React.FC = () => {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        className="fixed top-0 right-0 h-full w-full max-w-lg bg-[var(--rhive-bg)] z-[800] shadow-[-40px_0_80px_rgba(0,0,0,0.8)] border-l border-[var(--rhive-border)] overflow-hidden flex flex-col pt-12"
-                        initial={{ x: '100%' }}
+                        className="fixed top-0 left-0 h-full w-full max-w-lg bg-[var(--rhive-bg)] z-[800] shadow-[40px_0_80px_rgba(0,0,0,0.8)] border-r border-[var(--rhive-border)] overflow-hidden flex flex-col pt-12"
+                        initial={{ x: '-100%' }}
                         animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
+                        exit={{ x: '-100%' }}
                         transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
                     >
                         <div className="absolute top-0 left-0 w-full h-1.5 bg-rhive-pink/10">
@@ -130,7 +134,90 @@ export const FloatingEstimator: React.FC = () => {
                         </div>
 
                         {/* Content Area */}
-                        <div className="flex-grow p-8 overflow-y-auto flex flex-col">
+                        <div className="flex-grow p-8 overflow-y-auto flex flex-col justify-center">
+                            {step === 'menu' && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex flex-col gap-6 w-full text-left"
+                                >
+                                    <div className="space-y-2 mb-4">
+                                        <div className="inline-block border border-rhive-pink/30 text-rhive-pink px-3 py-1 rounded-full text-[8px] font-black tracking-[0.25em] uppercase bg-rhive-pink/5">
+                                            ACTIVE OPERATIONAL RADAR
+                                        </div>
+                                        <h3 className="text-2xl font-black uppercase tracking-tighter text-white">Select Action Lane</h3>
+                                        <p className="text-gray-400 text-xs leading-normal">
+                                            Execute one of our primary project onboarding configurations:
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col gap-4">
+                                        {/* Option 1: Active Leak */}
+                                        <button
+                                            onClick={() => {
+                                                setIsOpen(false);
+                                                window.dispatchEvent(new CustomEvent('open-emergency-triage'));
+                                            }}
+                                            className="group flex flex-col items-start p-5 bg-red-950/20 hover:bg-red-900/35 border border-red-900/40 hover:border-red-500/60 rounded-xl text-left transition-all duration-300 shadow-md relative overflow-hidden"
+                                            style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                                        >
+                                            <div className="absolute top-0 right-0 bg-red-500 text-black text-[8px] font-black px-2 py-0.5 uppercase tracking-widest rounded-bl-lg">
+                                                Level 1 Priority
+                                            </div>
+                                            <span className="text-red-400 text-xs font-black uppercase tracking-widest mb-1 group-hover:text-red-300">
+                                                ACTIVE LEAK // EMERGENCY
+                                            </span>
+                                            <span className="text-[10px] text-gray-500 group-hover:text-gray-400 font-medium">
+                                                Bypasses standard planning. Dispatches emergency field team within 120 minutes.
+                                            </span>
+                                        </button>
+
+                                        {/* Option 2: Instant Estimate */}
+                                        <button
+                                            onClick={() => {
+                                                setIsOpen(false);
+                                                window.dispatchEvent(new CustomEvent('open-roof-configurator', { detail: { mode: 'estimate' } }));
+                                            }}
+                                            className="group flex flex-col items-start p-5 bg-black/60 hover:bg-rhive-pink/10 border border-rhive-pink/30 hover:border-rhive-pink/60 rounded-xl text-left transition-all duration-300 shadow-lg relative overflow-hidden"
+                                            style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                                        >
+                                            <span className="text-rhive-pink text-xs font-black uppercase tracking-widest mb-1 group-hover:text-white transition-colors">
+                                                INSTANT ESTIMATE // AI SCAN
+                                            </span>
+                                            <span className="text-[10px] text-gray-500 group-hover:text-gray-400 font-medium">
+                                                Google Solar API geospatial analysis. Generate shingle & solar viability projection.
+                                            </span>
+                                        </button>
+
+                                        {/* Option 3: Certified Quote */}
+                                        <button
+                                            onClick={() => {
+                                                setIsOpen(false);
+                                                window.dispatchEvent(new CustomEvent('open-roof-configurator', { detail: { mode: 'quote' } }));
+                                            }}
+                                            className="group flex flex-col items-start p-5 bg-black/60 hover:bg-rhive-blue/20 border border-rhive-blue/30 hover:border-rhive-blue/60 rounded-xl text-left transition-all duration-300 shadow-lg relative overflow-hidden"
+                                            style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                                        >
+                                            <span className="text-white text-xs font-black uppercase tracking-widest mb-1 group-hover:text-cyan-400 transition-colors">
+                                                CERTIFIED QUOTE // PARTNER PROJ
+                                            </span>
+                                            <span className="text-[10px] text-gray-500 group-hover:text-gray-400 font-medium">
+                                                Verifies all structural details. Locks in guaranteed fixed price packet for 14 days.
+                                            </span>
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="flex justify-center mt-4">
+                                        <button
+                                            onClick={() => setStep('chat')}
+                                            className="text-[9px] font-black tracking-widest border border-white/10 py-2.5 px-4 hover:border-rhive-pink transition-all uppercase rounded-lg text-gray-400 hover:text-white"
+                                        >
+                                            Speak to AI Assistant
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+
                             {step === 'chat' && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
