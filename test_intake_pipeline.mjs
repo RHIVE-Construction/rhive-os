@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import * as fs from 'fs';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://localhost:3001';
 const screenshotsDir = 'C:\\Users\\mjrob\\.gemini\\antigravity\\brain\\a8707e63-7c28-4d28-8bd0-01caacf0c810\\test-proofs';
 
 if (!fs.existsSync(screenshotsDir)) {
@@ -17,9 +17,9 @@ async function runTests() {
     page.on('console', msg => console.log(`[BROWSER CONSOLE] ${msg.type().toUpperCase()}: ${msg.text()}`));
     page.on('pageerror', err => console.error(`[BROWSER ERROR]: ${err.message}`));
 
-    // Clear localStorage to reset the mock database state for a fresh test run
+    // Clear localStorage and sessionStorage to reset the mock database state for a fresh test run
     await page.goto(`${BASE_URL}/?bypass=Employee&page=E-02a`);
-    await page.evaluate(() => window.localStorage.clear());
+    await page.evaluate(() => { window.localStorage.clear(); window.sessionStorage.clear(); });
 
     // Auto-accept alert dialogs
     page.on('dialog', async dialog => {
@@ -32,6 +32,8 @@ async function runTests() {
     // Helper to reload/reset page
     const resetToPage = async () => {
         await page.goto(`${BASE_URL}/?bypass=Employee&page=E-02a`);
+        await page.evaluate(() => { window.sessionStorage.clear(); });
+        await page.reload();
         await page.waitForTimeout(1000);
     };
 
@@ -591,12 +593,12 @@ async function runTests() {
         await page.waitForTimeout(3000);
         console.log("Intake satellite map displayed. Dropping 13 safe pins...");
 
-        // Click 13 times at safe offset points on the satellite map (avoiding controls)
+        // Click 13 times at safe offset points on the satellite map (avoiding controls and marker overlap)
         for (let i = 0; i < 13; i++) {
-            const xOffset = 100 + (i * 35);
-            const yOffset = 350;
+            const xOffset = 80 + (i * 55);
+            const yOffset = 150 + (i * 20);
             await page.click('#intake-google-map', { position: { x: xOffset, y: yOffset }, force: true });
-            await page.waitForTimeout(250);
+            await page.waitForTimeout(450);
         }
 
         // Capture intake preview screenshot
