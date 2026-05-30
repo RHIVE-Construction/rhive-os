@@ -43,6 +43,7 @@ import { generateMockBuildingData } from '../lib/mockData';
 import { calculateEstimate } from '../lib/calculations';
 import { INITIAL_SURVEY_STATE } from '../lib/constants';
 import { WeatherReport } from '../components/WeatherReport';
+import CircuitryCard from '../components/CircuitryCard';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, Property, EaveOverhang, ProjectStage } from '../types';
 
 // Mock Data for Utah Companies
@@ -255,14 +256,57 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
 };
 
 const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: AddressData, onConfirm: (buildings: any[]) => void, onStartOver: () => void }) => {
+    const isApiReady = useGoogleMapsApi();
     const [view, setView] = useState<'satellite' | 'street'>('satellite');
-    const [buildings, setBuildings] = useState<{ id: string; name: string; coordinates?: { lat: number; lng: number }; x: number; y: number }[]>([]);
+    const [buildings, setBuildings] = useState<{ id: string; name: string; lat: number; lng: number }[]>([]);
+    
+    const mapContainerRef = useRef<HTMLDivElement>(null);
     const streetViewRef = useRef<HTMLDivElement>(null);
-    const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+    const [map, setMap] = useState<any>(null);
+    const markersRef = useRef<Record<string, any>>({});
 
+    // Initialize Map
     useEffect(() => {
-        if (view === 'street' && streetViewRef.current && window.google) {
-             const panorama = new window.google.maps.StreetViewPanorama(
+        if (!isApiReady || !mapContainerRef.current || map || !window.google) return;
+
+        const center = { lat: data.latitude || 40.7608, lng: data.longitude || -111.8910 };
+        const mapInstance = new window.google.maps.Map(mapContainerRef.current, {
+            center: center,
+            zoom: 20,
+            mapTypeId: 'satellite',
+            tilt: 0,
+            clickableIcons: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            mapTypeControl: false,
+            zoomControl: true,
+            disableDoubleClickZoom: true,
+        });
+
+        setMap(mapInstance);
+
+        mapInstance.addListener('click', (e: any) => {
+            const latLng = e.latLng;
+            const newBldg = {
+                id: `BLDG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                name: `Building ${Date.now()}`,
+                lat: latLng.lat(),
+                lng: latLng.lng()
+            };
+            setBuildings(prev => {
+                const count = prev.length + 1;
+                return [...prev, { ...newBldg, name: `Building ${count}` }];
+            });
+        });
+    }, [isApiReady, data.latitude, data.longitude, map]);
+
+    // Handle view changes (Satellite vs Street View)
+    useEffect(() => {
+        if (!map) return;
+        if (view === 'satellite') {
+            map.setMapTypeId('satellite');
+        } else if (view === 'street' && streetViewRef.current && window.google) {
+            new window.google.maps.StreetViewPanorama(
                 streetViewRef.current,
                 {
                     position: { lat: data.latitude, lng: data.longitude },
@@ -277,82 +321,197 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                 }
             );
         }
-    }, [view, data]);
+    }, [view, map, data]);
 
-    const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const newBldg = {
-            id: `BLDG-${Date.now()}-${buildings.length + 1}`,
-            name: `Building ${buildings.length + 1}`,
-            coordinates: { lat: data.latitude, lng: data.longitude },
-            x,
-            y
+    // Sync markers
+    useEffect(() => {
+        if (!map) return;
+
+        // Clear markers no longer in buildings list
+        Object.keys(markersRef.current).forEach(id => {
+            if (!buildings.find(b => b.id === id)) {
+                markersRef.current[id].setMap(null);
+                delete markersRef.current[id];
+            }
+        });
+
+        // Add/Update markers
+        buildings.forEach((b, idx) => {
+            if (!markersRef.current[b.id]) {
+                const marker = new window.google.maps.Marker({
+                    position: { lat: b.lat, lng: b.lng },
+                    map: map,
+                    label: {
+                        text: String(idx + 1),
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '11px'
+                    },
+                    icon: {
+                        path: window.google.maps.SymbolPath.CIRCLE,
+                        scale: 11,
+                        fillColor: '#ec028b',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                    }
+                });
+                markersRef.current[b.id] = marker;
+            } else {
+                markersRef.current[b.id].setLabel({
+                    text: String(idx + 1),
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '11px'
+                });
+            }
+        });
+    }, [buildings, map]);
+
+    // Cleanup markers on unmount
+    useEffect(() => {
+        return () => {
+            Object.keys(markersRef.current).forEach(id => {
+                markersRef.current[id].setMap(null);
+            });
+            markersRef.current = {};
         };
-        setBuildings(prev => [...prev, newBldg]);
+    }, []);
+
+    const handleDeleteBuilding = (id: string) => {
+        setBuildings(prev => {
+            const filtered = prev.filter(b => b.id !== id);
+            return filtered.map((b, idx) => ({
+                ...b,
+                name: `Building ${idx + 1}`
+            }));
+        });
     };
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
-             <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-4xl overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]">
-                {/* Image Area */}
-                <div className="relative w-full h-96 bg-black shrink-0">
-                    {view === 'satellite' && (
+             <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-6xl h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
+                
+                {/* Two Column Layout (Map + Sidebar) */}
+                <div className="flex-1 flex overflow-hidden relative">
+                    
+                    {/* Left Column: Interactive Map */}
+                    <div className="flex-1 relative bg-black">
                         <div 
                             id="intake-google-map"
-                            className="w-full h-full relative cursor-crosshair overflow-hidden"
-                            onClick={handleMapClick}
-                        >
-                            <img 
-                                src={`https://maps.googleapis.com/maps/api/staticmap?center=${data.latitude},${data.longitude}&zoom=20&size=800x600&maptype=satellite&key=${MAPS_API_KEY}`} 
-                                className="w-full h-full object-cover select-none pointer-events-none" 
-                                alt="Satellite View"
-                            />
-                            {/* Visual pins overlay */}
-                            {buildings.map((bldg) => (
-                                <div 
-                                    key={bldg.id}
-                                    className="absolute w-6 h-6 -ml-3 -mt-6 pointer-events-none"
-                                    style={{ left: bldg.x, top: bldg.y }}
-                                >
-                                    <div className="w-3 h-3 rounded-full bg-[#ec028b] border-2 border-white shadow-[0_0_8px_rgba(236,2,139,0.8)] animate-bounce" />
-                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/85 border border-[#ec028b] px-1.5 py-0.5 rounded text-[8px] font-bold text-white whitespace-nowrap">
-                                        {bldg.name}
-                                    </div>
-                                </div>
-                            ))}
+                            ref={mapContainerRef} 
+                            className={cn("absolute inset-0 w-full h-full", view !== 'satellite' && 'pointer-events-none opacity-0')} 
+                        />
+                        <div 
+                            ref={streetViewRef} 
+                            className={cn("absolute inset-0 w-full h-full", view !== 'street' && 'pointer-events-none opacity-0')} 
+                        />
+                    </div>
+
+                    {/* Right Column: Sidebar */}
+                    <div className="w-80 border-l border-gray-800 bg-gray-950/60 flex flex-col p-5 z-10 overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-white font-black text-xs tracking-widest uppercase">Mapped Buildings</h3>
+                            <div className="bg-[#ec028b] text-white text-[10px] font-black px-2 py-0.5 rounded-sm">
+                                {buildings.length}
+                            </div>
                         </div>
-                    )}
-                    <div ref={streetViewRef} className={cn("w-full h-full absolute inset-0", view !== 'street' && "hidden")} />
-                    
-                    {/* Controls overlay */}
-                    <div className="absolute top-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10 bg-black/50 p-1.5 rounded-lg backdrop-blur-sm border border-white/10">
-                         <button onClick={() => setView('street')} className={cn("px-4 py-1.5 rounded-md text-sm font-bold transition-all flex items-center", view === 'street' ? "bg-[#ec028b] text-white shadow-lg" : "text-gray-300 hover:text-white")}>
-                            <CameraIcon className="w-4 h-4 mr-2" /> Street
-                         </button>
-                         <button onClick={() => setView('satellite')} className={cn("px-4 py-1.5 rounded-md text-sm font-bold transition-all flex items-center", view === 'satellite' ? "bg-[#ec028b] text-white shadow-lg" : "text-gray-300 hover:text-white")}>
-                            <SatelliteIcon className="w-4 h-4 mr-2" /> Satellite
-                         </button>
+                        <p className="text-[11px] text-gray-500 mb-6 uppercase tracking-wider font-bold">Click satellite map to place pins</p>
+                        
+                        {buildings.length === 0 ? (
+                            <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-gray-800 rounded-lg p-6 text-center text-gray-500">
+                                <p className="text-xs font-black uppercase tracking-wider mb-2">0 Buildings Pinned</p>
+                                <p className="text-[10px] text-gray-600">Submit to generate 1 default building</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3 overflow-y-auto flex-1 pr-1">
+                                {buildings.map((b, idx) => (
+                                    <div 
+                                        key={b.id} 
+                                        className="bg-black/45 border border-gray-800 rounded-lg p-3 flex justify-between items-center transition-all hover:border-[#ec028b]/40"
+                                    >
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-5 h-5 rounded-full bg-[#ec028b] flex items-center justify-center text-[10px] font-black text-white">
+                                                {idx + 1}
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-white font-bold">{b.name}</p>
+                                                <p className="text-[9px] text-gray-500 font-mono">
+                                                    {b.lat.toFixed(5)}, {b.lng.toFixed(5)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => handleDeleteBuilding(b.id)} 
+                                            className="text-gray-500 hover:text-red-500 transition-colors p-1"
+                                            title="Delete Building"
+                                        >
+                                            <TrashIcon className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
-                
-                {/* Footer / Actions */}
-                <div className="p-6 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-900">
-                    <div className="text-center sm:text-left">
-                        <h3 className="text-white font-bold text-lg">Verify Location</h3>
-                        <p className="text-gray-400 text-sm">{data.address}</p>
-                        <p className="text-gray-500 text-xs">{data.city}, {data.state} {data.zip}</p>
+
+                {/* Bottom Bar: Action buttons & View togglers */}
+                <div className="p-4 bg-black border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0">
+                    <div className="flex space-x-2 w-full sm:w-auto">
+                        <button 
+                            type="button"
+                            onClick={() => setView('street')} 
+                            className={cn(
+                                "px-4 py-2 border rounded text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center min-w-[120px]", 
+                                view === 'street' 
+                                    ? "bg-[#ec028b] border-[#ec028b] text-white shadow-pink-glow-sm" 
+                                    : "bg-black border-gray-800 text-gray-400 hover:text-white hover:border-gray-600"
+                            )}
+                        >
+                            <CameraIcon className="w-3.5 h-3.5 mr-1.5" /> Street View
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => setView('satellite')} 
+                            className={cn(
+                                "px-4 py-2 border rounded text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center min-w-[120px]", 
+                                view === 'satellite' 
+                                    ? "bg-[#ec028b] border-[#ec028b] text-white shadow-pink-glow-sm" 
+                                    : "bg-black border-gray-800 text-gray-400 hover:text-white hover:border-gray-600"
+                            )}
+                        >
+                            <SatelliteIcon className="w-3.5 h-3.5 mr-1.5" /> Satellite Map
+                        </button>
                     </div>
-                    <div className="flex space-x-3 w-full sm:w-auto">
-                        <Button variant="secondary" onClick={onStartOver} className="flex-1 sm:flex-initial">
-                            <XIcon className="w-4 h-4 mr-2" />
+
+                    <div className="hidden lg:flex flex-col items-center max-w-md text-center">
+                        <span className="text-[9px] text-gray-500 font-black tracking-widest uppercase">Universal Intake Target</span>
+                        <span className="text-xs text-white font-bold tracking-tight truncate w-full max-w-sm">
+                            {data.address}, {data.city}, {data.state} {data.zip}
+                        </span>
+                    </div>
+
+                    <div className="flex space-x-3 w-full sm:w-auto shrink-0 justify-end">
+                        <button 
+                            type="button"
+                            onClick={onStartOver} 
+                            className="px-4 py-2 border border-gray-800 bg-black hover:bg-gray-900 rounded text-xs font-black uppercase tracking-wider text-gray-400 hover:text-white transition-colors"
+                        >
                             Start Over
-                        </Button>
-                        <Button onClick={() => onConfirm(buildings)} className="flex-1 sm:flex-initial bg-[#ec028b] hover:bg-[#ec028b]/80">
-                            <Check className="w-4 h-4 mr-2" />
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => {
+                                const finalBldgs = buildings.length > 0 
+                                    ? buildings.map(b => ({ id: b.id, name: b.name, coordinates: { lat: b.lat, lng: b.lng } })) 
+                                    : [{ id: 'BLDG-DEFAULT', name: 'Main Building', coordinates: { lat: data.latitude, lng: data.longitude } }];
+                                onConfirm(finalBldgs);
+                            }} 
+                            className="px-5 py-2 bg-[#ec028b] hover:bg-pink-600 rounded text-xs font-black uppercase tracking-widest text-white shadow-pink-glow transition-all"
+                        >
                             Confirm Target
-                        </Button>
+                        </button>
                     </div>
                 </div>
              </div>
@@ -826,7 +985,7 @@ const AddressSection: React.FC<{
     }, [isApiReady, isCollapsed, readOnly]);
 
     const handlePlaceSelected = (place: any) => {
-        if (!place.geometry) return;
+        if (!place || !place.geometry) return;
         const addressComponents = place.address_components;
         let streetNumber = '', route = '', city = '', state = '';
         let zip = '';
@@ -888,111 +1047,165 @@ const AddressSection: React.FC<{
             )}
 
             {isCollapsed ? (
-                <div onClick={() => !readOnly && setIsCollapsed(false)} className={cn("bg-gray-900/40 border border-gray-700 px-4 py-3 rounded-xl flex items-center justify-between shadow-lg transition-all", !readOnly ? "cursor-pointer hover:bg-gray-900/60 group hover:border-[#ec028b]/50" : "cursor-default")}>
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="flex flex-col overflow-hidden">
-                            <p className="text-[10px] text-gray-500 font-bold tracking-wider uppercase leading-none mb-1">{label}</p>
-                            <div className="text-white text-sm font-medium truncate">
-                                {label === "Billing Address"
-                                    ? `${data.address || 'No Address'}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''} ${data.zip || ''}`
-                                    : `${label} address: ${data.address || 'No Address'}  ${pinnedBuildings.length} Bldgs`}
-                            </div>
+                <div 
+                    onClick={() => !readOnly && setIsCollapsed(false)} 
+                    className={cn(
+                        "w-full bg-black/60 border-y border-gray-800/80 py-4 px-5 flex items-center justify-between transition-all group font-sans rounded-none",
+                        !readOnly ? "cursor-pointer hover:bg-gray-900/60" : "cursor-default"
+                    )}
+                >
+                    <div className="flex items-center min-w-0 mr-4 flex-wrap sm:flex-nowrap">
+                        <span className="text-xs text-white font-black uppercase tracking-wider whitespace-nowrap mr-2">
+                            {label === "Billing Address" ? "BILLING ADDRESS" : label.toUpperCase().includes("PROPERTY") ? "PROPERTY LOCATION" : "PROPERTY LOCATION"}
+                        </span>
+                        <span className="text-xs text-gray-500 mr-2">—</span>
+                        <div className="text-xs text-gray-400 font-medium truncate">
+                            {`${data.address || 'No Address'}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''} ${data.zip || ''}`}
                         </div>
                     </div>
-                    {!readOnly && <div className="flex items-center text-gray-500 group-hover:text-[#ec028b] transition-colors shrink-0 ml-2"><PencilSquareIcon className="w-4 h-4" /></div>}
+                    
+                    <div className="flex items-center space-x-3 shrink-0">
+                        {label !== "Billing Address" && (
+                            <div className="flex items-center space-x-1.5 text-[#ec028b] font-black text-xs uppercase tracking-wider">
+                                <span>{pinnedBuildings.length} {pinnedBuildings.length === 1 ? 'BUILDING' : 'BUILDINGS'}</span>
+                                <svg className="w-4 h-4 animate-[spin_8s_linear_infinite]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <circle cx="12" cy="12" r="9" strokeDasharray="3 3" />
+                                    <circle cx="12" cy="12" r="5" />
+                                </svg>
+                            </div>
+                        )}
+                        {!readOnly && (
+                            <div className="text-gray-600 group-hover:text-[#ec028b] transition-colors">
+                                <PencilSquareIcon className="w-4 h-4" />
+                            </div>
+                        )}
+                    </div>
                 </div>
             ) : (
-                <div className="space-y-4 animate-fade-in bg-gray-900/30 p-4 rounded-xl border border-gray-700/50">
-                    <h4 className="text-sm font-medium text-gray-400 uppercase">{label} Search</h4>
-                    <div>
-                        <QuestionLabel required>Street Address or Business Name</QuestionLabel>
-                        <div className="relative">
-                            <InputField 
-                                id={id} 
-                                ref={inputRef} 
-                                name="address" 
-                                placeholder={placeholder} 
-                                value={data.address} 
-                                onChange={handleFieldChange} 
-                                autoFocus 
-                                disabled={readOnly} 
-                                className="pr-12" 
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        if ((!window.google || !window.google.maps) && data.address) {
-                                            let finalAddr = data.address;
-                                            if (finalAddr.toLowerCase().includes('pine st')) {
-                                                finalAddr = 'Pine St';
+                <CircuitryCard title={`${label === "Billing Address" ? "Billing Address" : "Property Address"} Details`} icon={<MapPinIcon className="w-5 h-5" />}>
+                    <div className="space-y-4">
+                        <div>
+                            <QuestionLabel required>Street Address or Business Name</QuestionLabel>
+                            <div className="relative">
+                                <InputField 
+                                    id={id} 
+                                    ref={inputRef} 
+                                    name="address" 
+                                    placeholder={placeholder} 
+                                    value={data.address} 
+                                    onChange={handleFieldChange} 
+                                    autoFocus 
+                                    disabled={readOnly} 
+                                    className="pr-12" 
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            if ((!window.google || !window.google.maps) && data.address) {
+                                                let finalAddr = data.address;
+                                                if (finalAddr.toLowerCase().includes('pine st')) {
+                                                    finalAddr = 'Pine St';
+                                                }
+                                                onChange({
+                                                    ...data,
+                                                    address: finalAddr,
+                                                    latitude: 40.7608,
+                                                    longitude: -111.8910,
+                                                    city: data.city || 'Salt Lake City',
+                                                    state: data.state || 'UT',
+                                                    zip: data.zip || '84101'
+                                                });
+                                                setIsCollapsed(true);
+                                            } else if (window.google && window.google.maps && data.address) {
+                                                const geocoder = new window.google.maps.Geocoder();
+                                                geocoder.geocode({ address: data.address }, (results: any, status: string) => {
+                                                    if (status === 'OK' && results && results[0]) {
+                                                        const place = results[0];
+                                                        const addressComponents = place.address_components;
+                                                        let streetNumber = '', route = '', city = '', state = '', zip = '';
+                                                        if (addressComponents) {
+                                                            for (const component of addressComponents) {
+                                                                const componentType = component.types[0];
+                                                                switch (componentType) {
+                                                                    case 'street_number': streetNumber = component.long_name; break;
+                                                                    case 'route': route = component.short_name; break;
+                                                                    case 'locality': city = component.long_name; break;
+                                                                    case 'administrative_area_level_1': state = component.short_name; break;
+                                                                    case 'postal_code': zip = component.short_name; break;
+                                                                }
+                                                            }
+                                                        }
+                                                        onChange({
+                                                            ...data,
+                                                            address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
+                                                            city,
+                                                            state,
+                                                            zip,
+                                                            latitude: place.geometry.location.lat(),
+                                                            longitude: place.geometry.location.lng(),
+                                                            streetViewHeading: 0
+                                                        });
+                                                    }
+                                                });
+                                                inputRef.current?.blur();
+                                            } else {
+                                                inputRef.current?.blur();
                                             }
-                                            onChange({
-                                                ...data,
-                                                address: finalAddr,
-                                                latitude: 40.7608,
-                                                longitude: -111.8910,
-                                                city: data.city || 'Salt Lake City',
-                                                state: data.state || 'UT',
-                                                zip: data.zip || '84101'
-                                            });
-                                            setIsCollapsed(true);
-                                        } else {
-                                            inputRef.current?.blur();
                                         }
-                                    }
-                                }} 
-                            />
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
-                                <button type="button" onClick={() => setIsMapPickerOpen(true)} className="text-[#ec028b] hover:text-white transition-colors p-2 rounded-md hover:bg-[#ec028b] border border-[#ec028b]/30 hover:border-[#ec028b]" title="Pick from Map"><MapIcon className="w-5 h-5" /></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {onChangeBuildings && (
-                        <div className="mt-4 pt-3 border-t border-gray-800 space-y-2">
-                            <QuestionLabel>Number of Buildings</QuestionLabel>
-                            <div className="flex items-center space-x-3 bg-black/40 border border-gray-700 px-3 py-1.5 rounded-xl w-fit">
-                                <input
-                                    id="address-section-building-count"
-                                    type="number"
-                                    min="1"
-                                    value={pinnedBuildings.length || 1}
-                                    onChange={(e) => {
-                                        const newCount = parseInt(e.target.value) || 1;
-                                        if (newCount < 1) return;
-                                        onChangeBuildings(Array.from({ length: newCount }, (_, i) => {
-                                            const existing = pinnedBuildings[i];
-                                            return existing || {
-                                                id: `BLDG-${Date.now()}-${i + 1}`,
-                                                name: `Building ${i + 1}`,
-                                                coordinates: { lat: data.latitude, lng: data.longitude }
-                                            };
-                                        }));
-                                    }}
-                                    className="w-16 bg-black border border-gray-700 rounded px-2 py-1 text-white text-xs font-bold text-center outline-none focus:border-[#ec028b]"
+                                    }} 
                                 />
-                                <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Buildings Pinned</span>
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                                    <button type="button" onClick={() => setIsMapPickerOpen(true)} className="text-[#ec028b] hover:text-white transition-colors p-2 rounded-md hover:bg-[#ec028b] border border-[#ec028b]/30 hover:border-[#ec028b]" title="Pick from Map"><MapIcon className="w-5 h-5" /></button>
+                                </div>
                             </div>
                         </div>
-                    )}
 
-                    <div className="flex justify-end pt-2 border-t border-gray-800/40">
-                        <Button 
-                            id="btn-save-property-section"
-                            type="button" 
-                            size="sm" 
-                            onClick={() => {
-                                if (data.address) {
-                                    setIsCollapsed(true);
-                                } else {
-                                    alert("Please enter an address first.");
-                                }
-                            }}
-                            className="bg-[#ec028b] hover:bg-pink-600 border-none text-white text-xs uppercase tracking-widest font-black"
-                        >
-                            Save Property
-                        </Button>
+                        {onChangeBuildings && (
+                            <div className="mt-4 pt-3 border-t border-gray-800 space-y-2">
+                                <QuestionLabel>Number of Buildings</QuestionLabel>
+                                <div className="flex items-center space-x-3 bg-black/40 border border-gray-700 px-3 py-1.5 rounded-xl w-fit">
+                                    <input
+                                        id="address-section-building-count"
+                                        type="number"
+                                        min="1"
+                                        value={pinnedBuildings.length || 1}
+                                        onChange={(e) => {
+                                            const newCount = parseInt(e.target.value) || 1;
+                                            if (newCount < 1) return;
+                                            onChangeBuildings(Array.from({ length: newCount }, (_, i) => {
+                                                const existing = pinnedBuildings[i];
+                                                return existing || {
+                                                    id: `BLDG-${Date.now()}-${i + 1}`,
+                                                    name: `Building ${i + 1}`,
+                                                    coordinates: { lat: data.latitude, lng: data.longitude }
+                                                };
+                                            }));
+                                        }}
+                                        className="w-16 bg-black border border-gray-700 rounded px-2 py-1 text-white text-xs font-bold text-center outline-none focus:border-[#ec028b]"
+                                    />
+                                    <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Buildings Pinned</span>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex justify-end pt-2 border-t border-gray-800/40">
+                            <Button 
+                                id="btn-save-property-section"
+                                type="button" 
+                                size="sm" 
+                                onClick={() => {
+                                    if (data.address) {
+                                        setIsCollapsed(true);
+                                    } else {
+                                        alert("Please enter an address first.");
+                                    }
+                                }}
+                                className="bg-[#ec028b] hover:bg-pink-600 border-none text-white text-xs uppercase tracking-widest font-black"
+                            >
+                                Save Property
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                </CircuitryCard>
             )}
         </div>
     );
@@ -1835,28 +2048,36 @@ const CustomerInputPage: React.FC = () => {
                 <div className="animate-fade-in">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between border-b border-gray-800 pb-2 mb-6">
-                             <div className="flex items-center text-white font-semibold text-lg">
-                                <UserIcon className="w-5 h-5 mr-2 text-gray-400" />
-                                Contacts
+                             <div className="flex items-center text-white font-black text-sm tracking-widest uppercase">
+                                <UserIcon className="w-4 h-4 mr-2 text-gray-400" />
+                                CONTACT DIRECTORY
                             </div>
-                            {!editingContactId && !isAddingContact && (
-                                 <button 
-                                     type="button" 
-                                     onClick={() => setIsAddingContact(true)} 
-                                     className="flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-[#ec028b] transition-all bg-gray-900/60 hover:bg-gray-900 border border-gray-800 hover:border-[#ec028b]/30 px-3 py-1.5 rounded-lg shadow-sm"
-                                 >
-                                    <PlusIcon className="w-4 h-4" />
-                                    <span>Add Project Contact</span>
-                                </button>
-                            )}
                         </div>
-                        {contacts.map(c => (
-                            editingContactId === c.id ? 
-                            <ContactForm key={c.id} initialData={c} onSave={(upd) => { setContacts(prev => prev.map(ex => ex.id === upd.id ? upd : ex)); setEditingContactId(null); }} onCancel={() => setEditingContactId(null)} isPrimary={c.isPrimary} isCommercial={requiresOrganization} companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} /> :
-                            <ContactCard key={c.id} contact={c} onEdit={() => setEditingContactId(c.id)} onDelete={() => setContacts(prev => prev.filter(x => x.id !== c.id))} />
-                        ))}
+                        
+                        <div className="space-y-3">
+                            {contacts.map(c => (
+                                editingContactId === c.id ? 
+                                <ContactForm key={c.id} initialData={c} onSave={(upd) => { setContacts(prev => prev.map(ex => ex.id === upd.id ? upd : ex)); setEditingContactId(null); }} onCancel={() => setEditingContactId(null)} isPrimary={c.isPrimary} isCommercial={requiresOrganization} companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} /> :
+                                <ContactCard key={c.id} contact={c} onEdit={() => setEditingContactId(c.id)} onDelete={() => setContacts(prev => prev.filter(x => x.id !== c.id))} />
+                            ))}
+                        </div>
+
                         {(isAddingContact || contacts.length === 0) && !editingContactId && (
                             <ContactForm onSave={(c) => { setContacts(prev => [...prev, c]); setIsAddingContact(false); }} onCancel={() => setIsAddingContact(false)} isPrimary={contacts.length === 0} isCommercial={requiresOrganization} companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} />
+                        )}
+
+                        {!editingContactId && !isAddingContact && (
+                             <button 
+                                 type="button" 
+                                 onClick={() => setIsAddingContact(true)} 
+                                 className="w-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#ec028b] transition-all bg-black/40 hover:bg-gray-900 border border-gray-800 hover:border-[#ec028b]/30 py-3.5 rounded-lg mt-4 shadow-sm"
+                             >
+                                 <svg className="w-4 h-4 animate-[spin_10s_linear_infinite] text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                     <circle cx="12" cy="12" r="8" strokeDasharray="3 3" />
+                                     <path d="M12 9v6M9 12h6" />
+                                 </svg>
+                                 <span>Add Project Contact</span>
+                             </button>
                         )}
                     </div>
                 </div>
@@ -1866,25 +2087,21 @@ const CustomerInputPage: React.FC = () => {
                     {isTypeCollapsed ? (
                         <RenderCollapsedSection 
                             title="Project Type" 
-                            summary={
-                                <SummaryDisplay items={[
-                                    { label: "Category", value: projectCategory },
-                                    { label: "Insurance Claim", value: isInsurance ? "Yes" : "No" }
-                                ]} />
-                            } 
+                            summary={`${projectCategory} ${isInsurance ? '[Insurance]' : '[Non-Insurance]'}`}
                             onEdit={() => setIsTypeCollapsed(false)} 
                         />
                     ) : (
-                        <div className="p-6 bg-gray-900/40 border border-gray-700 rounded-xl shadow-sm space-y-6">
-                            <SectionHeader title="Project Type" icon={BuildingStorefrontIcon} />
-                            <ToggleGroup idPrefix="project-type" options={['Residential', 'Commercial', 'Government']} value={projectCategory} onChange={(val) => { setProjectCategory(val as any); if(val==='Residential'){ setCompanyData({parentCompany:'', propertyName:''}); setHasCustomBilling(false); } }} />
-                            <div className="pt-4 border-t border-gray-700/50">
-                                <div onClick={() => setIsInsurance(!isInsurance)} className={cn("mt-4 cursor-pointer px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center text-center", isInsurance ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]" : "bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800")}>
-                                    {isInsurance ? "✓ This is an Insurance Claim" : "Is this an Insurance Claim?"}
+                        <CircuitryCard title="Project Type" icon={<BuildingStorefrontIcon className="w-5 h-5" />}>
+                            <div className="space-y-6">
+                                <ToggleGroup idPrefix="project-type" options={['Residential', 'Commercial', 'Government']} value={projectCategory} onChange={(val) => { setProjectCategory(val as any); if(val==='Residential'){ setCompanyData({parentCompany:'', propertyName:''}); setHasCustomBilling(false); } }} />
+                                <div className="pt-4 border-t border-gray-700/50">
+                                    <div onClick={() => setIsInsurance(!isInsurance)} className={cn("mt-4 cursor-pointer px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center text-center", isInsurance ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]" : "bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800")}>
+                                        {isInsurance ? "✓ This is an Insurance Claim" : "Is this an Insurance Claim?"}
+                                    </div>
                                 </div>
+                                <div className="flex justify-end mt-4"><Button size="sm" onClick={() => setIsTypeCollapsed(true)} type="button">Confirm Selection</Button></div>
                             </div>
-                            <div className="flex justify-end mt-4"><Button size="sm" onClick={() => setIsTypeCollapsed(true)} type="button">Confirm Selection</Button></div>
-                        </div>
+                        </CircuitryCard>
                     )}
                 </div>
 
@@ -1893,56 +2110,52 @@ const CustomerInputPage: React.FC = () => {
                         {isOrgCollapsed ? (
                             <RenderCollapsedSection 
                                 title="Organization" 
-                                summary={
-                                    <SummaryDisplay items={[
-                                        { label: "Parent Company", value: companyData.parentCompany },
-                                        { label: "Property Name", value: companyData.propertyName }
-                                    ]} />
-                                }
+                                summary={`${companyData.parentCompany}${companyData.propertyName ? ` • ${companyData.propertyName}` : ''}`}
                                 onEdit={() => setIsOrgCollapsed(false)} 
                             />
                         ) : (
-                            <div className="p-6 bg-gray-900/40 border border-blue-500/30 rounded-xl relative overflow-hidden">
-                                <SectionHeader title="Organization" icon={BriefcaseIcon} />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <QuestionLabel>Parent Company / Owner</QuestionLabel>
-                                        <CompanyLookup onSelect={handleCompanySelect} value={companyData.parentCompany} />
-                                        <HelperText>Search existing accounts or type new.</HelperText>
-                                    </div>
-                                    <div>
-                                        <QuestionLabel>Property Name / Site</QuestionLabel>
-                                        <div className="space-y-2">
-                                            <InputField 
-                                                placeholder="e.g. Willow Park Apartments"
-                                                value={companyData.propertyName}
-                                                onChange={e => setCompanyData({...companyData, propertyName: e.target.value})}
-                                            />
-                                            <div className="flex flex-wrap gap-2">
-                                                {propertyData.placeName && (
+                            <CircuitryCard title="Organization" icon={<BriefcaseIcon className="w-5 h-5" />}>
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <QuestionLabel>Parent Company / Owner</QuestionLabel>
+                                            <CompanyLookup onSelect={handleCompanySelect} value={companyData.parentCompany} />
+                                            <HelperText>Search existing accounts or type new.</HelperText>
+                                        </div>
+                                        <div>
+                                            <QuestionLabel>Property Name / Site</QuestionLabel>
+                                            <div className="space-y-2">
+                                                <InputField 
+                                                    placeholder="e.g. Willow Park Apartments"
+                                                    value={companyData.propertyName}
+                                                    onChange={e => setCompanyData({...companyData, propertyName: e.target.value})}
+                                                />
+                                                <div className="flex flex-wrap gap-2">
+                                                    {propertyData.placeName && (
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setCompanyData({...companyData, propertyName: propertyData.placeName!})}
+                                                            className="text-xs bg-blue-900/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30 hover:bg-blue-900/40 transition-colors"
+                                                        >
+                                                            Use "{propertyData.placeName}"
+                                                        </button>
+                                                    )}
                                                     <button 
                                                         type="button"
-                                                        onClick={() => setCompanyData({...companyData, propertyName: propertyData.placeName!})}
-                                                        className="text-xs bg-blue-900/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30 hover:bg-blue-900/40 transition-colors"
+                                                        onClick={() => setCompanyData({...companyData, propertyName: propertyData.address})}
+                                                        className="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded border border-gray-700 hover:bg-gray-700 transition-colors"
                                                     >
-                                                        Use "{propertyData.placeName}"
+                                                        Use Address
                                                     </button>
-                                                )}
-                                                <button 
-                                                    type="button"
-                                                    onClick={() => setCompanyData({...companyData, propertyName: propertyData.address})}
-                                                    className="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded border border-gray-700 hover:bg-gray-700 transition-colors"
-                                                >
-                                                    Use Address
-                                                </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <div className="flex justify-end mt-4">
+                                        <Button size="sm" onClick={() => setIsOrgCollapsed(true)} type="button">Next</Button>
+                                    </div>
                                 </div>
-                                <div className="flex justify-end mt-4">
-                                    <Button size="sm" onClick={() => setIsOrgCollapsed(true)} type="button">Next</Button>
-                                </div>
-                            </div>
+                            </CircuitryCard>
                         )}
                     </div>
                 )}
@@ -1952,45 +2165,37 @@ const CustomerInputPage: React.FC = () => {
                         {isInsuranceInfoCollapsed ? (
                             <RenderCollapsedSection 
                                 title="Insurance Details" 
-                                summary={
-                                    <SummaryDisplay items={[
-                                        { label: "Carrier", value: insuranceInfo.carrier },
-                                        { label: "Claim #", value: insuranceInfo.claimNumber },
-                                        { label: "Status", value: insuranceStatus },
-                                        { label: "Deductible", value: insuranceInfo.deductible },
-                                        { label: "Date of Loss", value: insuranceInfo.dateOfLoss },
-                                        { label: "Damage", value: damageType.join(', ') }
-                                    ]} />
-                                } 
+                                summary={`${insuranceInfo.carrier || 'No Carrier'} • Claim #${insuranceInfo.claimNumber || 'N/A'} (${insuranceStatus})${damageType.length > 0 ? ` • Damage: ${damageType.join(', ')}` : ''}`}
                                 onEdit={() => setIsInsuranceInfoCollapsed(false)} 
                             />
                         ) : (
-                            <div className="p-6 bg-gray-900/40 border border-pink-500/30 rounded-xl">
-                                <SectionHeader title="Insurance Information" icon={ShieldCheckIcon} />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div><QuestionLabel>Insurance Carrier</QuestionLabel><InputField ref={carrierRef} placeholder="e.g. State Farm" value={insuranceInfo.carrier} onChange={e => setInsuranceInfo({...insuranceInfo, carrier: capitalize(e.target.value)})} onKeyDown={(e) => handleEnter(e, claimRef)} /></div>
-                                    <div><QuestionLabel>Claim Status</QuestionLabel><ToggleGroup options={['Approved', 'In Process', 'Interested', 'Not Sure']} value={insuranceStatus} onChange={setInsuranceStatus} /></div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><QuestionLabel>Claim Number</QuestionLabel><InputField ref={claimRef} placeholder="Claim #" value={insuranceInfo.claimNumber} onChange={e => setInsuranceInfo({...insuranceInfo, claimNumber: e.target.value})} onKeyDown={(e) => handleEnter(e, deductibleRef)} /></div>
-                                    <div><QuestionLabel>Deductible</QuestionLabel><InputField ref={deductibleRef} type="number" placeholder="$1000" value={insuranceInfo.deductible} onChange={e => setInsuranceInfo({...insuranceInfo, deductible: e.target.value})} onKeyDown={(e) => handleEnter(e, dateOfLossRef)} /></div>
-                                </div>
-                                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <QuestionLabel>Type of Damage <span className="text-xs text-gray-500 ml-2 font-normal">(Wind: missing shingles | Hail: dented metals | Mechanical: worker damage)</span></QuestionLabel>
-                                        <MultiSelectGroup options={['Wind', 'Hail', 'Mechanical']} selected={damageType} onChange={v => setDamageType(p => p.includes(v) ? p.filter(x=>x!==v) : [...p, v])} />
+                            <CircuitryCard title="Insurance Information" icon={<ShieldCheckIcon className="w-5 h-5" />}>
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><QuestionLabel>Insurance Carrier</QuestionLabel><InputField ref={carrierRef} placeholder="e.g. State Farm" value={insuranceInfo.carrier} onChange={e => setInsuranceInfo({...insuranceInfo, carrier: capitalize(e.target.value)})} onKeyDown={(e) => handleEnter(e, claimRef)} /></div>
+                                        <div><QuestionLabel>Claim Status</QuestionLabel><ToggleGroup options={['Approved', 'In Process', 'Interested', 'Not Sure']} value={insuranceStatus} onChange={setInsuranceStatus} /></div>
                                     </div>
-                                    <div>
-                                        <QuestionLabel>Date of Loss</QuestionLabel>
-                                        <InputField ref={dateOfLossRef} type="date" value={insuranceInfo.dateOfLoss} onChange={e => setInsuranceInfo({...insuranceInfo, dateOfLoss: e.target.value})} />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><QuestionLabel>Claim Number</QuestionLabel><InputField ref={claimRef} placeholder="Claim #" value={insuranceInfo.claimNumber} onChange={e => setInsuranceInfo({...insuranceInfo, claimNumber: e.target.value})} onKeyDown={(e) => handleEnter(e, deductibleRef)} /></div>
+                                        <div><QuestionLabel>Deductible</QuestionLabel><InputField ref={deductibleRef} type="number" placeholder="$1000" value={insuranceInfo.deductible} onChange={e => setInsuranceInfo({...insuranceInfo, deductible: e.target.value})} onKeyDown={(e) => handleEnter(e, dateOfLossRef)} /></div>
                                     </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <QuestionLabel>Type of Damage <span className="text-xs text-gray-500 ml-2 font-normal">(Wind: missing shingles | Hail: dented metals | Mechanical: worker damage)</span></QuestionLabel>
+                                            <MultiSelectGroup options={['Wind', 'Hail', 'Mechanical']} selected={damageType} onChange={v => setDamageType(p => p.includes(v) ? p.filter(x=>x!==v) : [...p, v])} />
+                                        </div>
+                                        <div>
+                                            <QuestionLabel>Date of Loss</QuestionLabel>
+                                            <InputField ref={dateOfLossRef} type="date" value={insuranceInfo.dateOfLoss} onChange={e => setInsuranceInfo({...insuranceInfo, dateOfLoss: e.target.value})} />
+                                        </div>
+                                    </div>
+                                    <div className="border-t border-gray-700 pt-4">
+                                        <QuestionLabel>Storm History (Click row to set Date of Loss)</QuestionLabel>
+                                        <WeatherReport onDateSelect={(date) => setInsuranceInfo(prev => ({...prev, dateOfLoss: date}))} />
+                                    </div>
+                                    <div className="flex justify-end"><Button size="sm" onClick={() => setIsInsuranceInfoCollapsed(true)} type="button">Next</Button></div>
                                 </div>
-                                <div className="mt-6 border-t border-gray-700 pt-4">
-                                    <QuestionLabel>Storm History (Click row to set Date of Loss)</QuestionLabel>
-                                    <WeatherReport onDateSelect={(date) => setInsuranceInfo(prev => ({...prev, dateOfLoss: date}))} />
-                                </div>
-                                <div className="flex justify-end mt-4"><Button size="sm" onClick={() => setIsInsuranceInfoCollapsed(true)} type="button">Next</Button></div>
-                            </div>
+                            </CircuitryCard>
                         )}
                     </div>
                 )}
@@ -2000,19 +2205,15 @@ const CustomerInputPage: React.FC = () => {
                     {isBillingCollapsed ? (
                         <RenderCollapsedSection 
                             title={billingStatus === 'auto' ? "Billing Confirmation Required" : "Billing"}
-                            summary={
-                                <SummaryDisplay items={[
-                                    { label: "Bill To", value: billToName || 'Same as Property' },
-                                    { label: "Address", value: billingData.address || '-' }
-                                ]} />
-                            } 
+                            summary={`Bill To: ${billToName || 'Same as Property'}${billingData.address ? ` • ${billingData.address}` : ''}`}
                             onEdit={() => setIsBillingCollapsed(false)} 
                             variant={billingStatus === 'auto' ? 'pink' : 'green'}
                         />
                     ) : (
-                        <div className="bg-gray-900/30 border border-gray-700 p-6 rounded-xl mb-6 shadow-lg">
-                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800 flex-wrap gap-4">
-                                <SectionHeader title="Billing Details" icon={DocumentTextIcon} />
+                        <CircuitryCard 
+                            title="Billing Details" 
+                            icon={<DocumentTextIcon className="w-5 h-5" />}
+                            headerAccessory={
                                 <div className="flex items-center gap-3 bg-black/40 border border-gray-850 px-4 py-2 rounded-xl">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Escrow Billing Rules</span>
                                     <button
@@ -2032,9 +2233,9 @@ const CustomerInputPage: React.FC = () => {
                                         />
                                     </button>
                                 </div>
-                            </div>
-                            
-                            <div className="relative space-y-4">
+                            }
+                        >
+                            <div className="space-y-6 relative">
                                 {isEscrowBilling && (
                                     <div 
                                         id="billing-lock-overlay"
@@ -2055,7 +2256,7 @@ const CustomerInputPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                <div className="mb-4">
+                                <div>
                                     <QuestionLabel>Bill To Entity / Person</QuestionLabel>
                                     <CompanyLookup 
                                         onSelect={(company) => {
@@ -2088,26 +2289,28 @@ const CustomerInputPage: React.FC = () => {
                                     setIsCollapsed={() => {}} 
                                     placeholder="Billing Address..."
                                 />
-                            </div>
 
-                            <div className="mt-4 flex justify-end">
-                                <Button size="sm" onClick={() => {
-                                    setIsBillingCollapsed(true);
-                                    setBillingStatus('confirmed');
-                                }} type="button">Confirm Billing</Button>
+                                <div className="flex justify-end pt-2">
+                                    <Button size="sm" onClick={() => {
+                                        setIsBillingCollapsed(true);
+                                        setBillingStatus('confirmed');
+                                    }} type="button">Confirm Billing</Button>
+                                </div>
                             </div>
-                        </div>
+                        </CircuitryCard>
                     )}
                 </div>
 
                 {/* Project Details / Notes - Always Visible */}
-                <div className="animate-fade-in p-6 bg-gray-900/40 border border-gray-700 rounded-xl shadow-sm">
-                    <ProjectDetailsInput 
-                        value={detailedScope.projectDetails} 
-                        onChange={v => setDetailedScope(p => ({...p, projectDetails: v}))}
-                        onOptimize={handleOptimizeNote}
-                        aiBannerText={aiExtractBannerText}
-                    />
+                <div className="animate-fade-in">
+                    <CircuitryCard title="Project Details / Notes" icon={<DocumentTextIcon className="w-5 h-5" />}>
+                        <ProjectDetailsInput 
+                            value={detailedScope.projectDetails} 
+                            onChange={v => setDetailedScope(p => ({...p, projectDetails: v}))}
+                            onOptimize={handleOptimizeNote}
+                            aiBannerText={aiExtractBannerText}
+                        />
+                    </CircuitryCard>
                 </div>
 
                 {/* PROJECT INTENT - Always Visible */}
@@ -2115,133 +2318,188 @@ const CustomerInputPage: React.FC = () => {
                     {isIntentCollapsed ? (
                         <RenderCollapsedSection 
                             title="Project Intent" 
-                            summary={
-                                <SummaryDisplay items={[
-                                    { label: "Scope Type", value: scopeType },
-                                    ...(scopeType === 'Repair' ? [
-                                        { label: "Active Leak", value: repairDetails.activeLeak ? "Yes" : "No" },
-                                        { label: "Old Roof", value: repairDetails.isOld ? "Yes" : "No" },
-                                        { label: "Photos", value: repairDetails.hasPhotos ? "Yes" : "No" },
-                                        { label: "Tarp Needed", value: repairDetails.emergencyTarp ? "Yes" : "No" }
-                                    ] : [
-                                        { label: "Intent", value: purchaseIntent }
-                                    ])
-                                ]} />
-                            }
+                            summary={`${scopeType}${scopeType === 'Repair' ? ` • Active Leak: ${repairDetails.activeLeak ? 'Yes' : 'No'}${repairDetails.emergencyTarp ? ' • Tarping Needed' : ''}` : ` • Intent: ${purchaseIntent || 'Researching'}`}`}
                             onEdit={() => setIsIntentCollapsed(false)} 
                         />
                     ) : (
-                        <div className="p-6 bg-gray-900/40 border border-gray-700 rounded-xl shadow-sm space-y-6">
-                            <SectionHeader title="Project Intent" icon={BuildingStorefrontIcon} />
-                            
-                            {requiresOrganization && (
-                                <SchedulingBlock 
-                                    onScheduleConfirm={(details) => { 
-                                        alert(`Scheduled: ${details}`); 
-                                        setIsIntentCollapsed(true); 
-                                    }}
-                                    isBlocked={isOutOfBounds}
-                                />
-                            )}
-                            
+                        <CircuitryCard title="Project Intent" icon={<BuildingStorefrontIcon className="w-5 h-5" />}>
                             <div className="space-y-6">
-                                    <div>
-                                        <QuestionLabel>Is this for a Repair or Replacement?</QuestionLabel>
-                                        <ToggleGroup 
-                                            options={['Replacement', 'Repair']}
-                                            value={scopeType}
-                                            onChange={(val) => setScopeType(val as any)}
-                                        />
-                                    </div>
+                                {requiresOrganization && (
+                                    <SchedulingBlock 
+                                        onScheduleConfirm={(details) => { 
+                                            alert(`Scheduled: ${details}`); 
+                                            setIsIntentCollapsed(true); 
+                                        }}
+                                        isBlocked={isOutOfBounds}
+                                    />
+                                )}
+                                
+                                <div className="space-y-6">
+                                        <div>
+                                            <QuestionLabel>Is this for a Repair or Replacement?</QuestionLabel>
+                                            <ToggleGroup 
+                                                options={['Replacement', 'Repair']}
+                                                value={scopeType}
+                                                onChange={(val) => setScopeType(val as any)}
+                                            />
+                                        </div>
 
-                                    {scopeType === 'Repair' && (
-                                        <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg space-y-4 animate-fade-in">
-                                            <div>
-                                                <QuestionLabel>Do you have an active leak?</QuestionLabel>
-                                                <ToggleGroup 
-                                                    options={['Yes', 'No']}
-                                                    value={repairDetails.activeLeak ? 'Yes' : 'No'}
-                                                    onChange={(val) => setRepairDetails(p => ({...p, activeLeak: val === 'Yes'}))}
-                                                />
-                                            </div>
+                                        {scopeType === 'Repair' && (
+                                            <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg space-y-4 animate-fade-in">
+                                                <div>
+                                                    <QuestionLabel>Do you have an active leak?</QuestionLabel>
+                                                    <ToggleGroup 
+                                                        options={['Yes', 'No']}
+                                                        value={repairDetails.activeLeak ? 'Yes' : 'No'}
+                                                        onChange={(val) => setRepairDetails(p => ({...p, activeLeak: val === 'Yes'}))}
+                                                    />
+                                                </div>
 
-                                            {repairDetails.activeLeak && (
-                                                <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg space-y-3 animate-fade-in">
-                                                    <div className="text-red-300 text-sm font-semibold">
-                                                        We recommend immediate inspection. We offer an Emergency Tarping Service for standard roof damage (up to desk size).
+                                                {repairDetails.activeLeak && (
+                                                    <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg space-y-3 animate-fade-in">
+                                                        <div className="text-red-300 text-sm font-semibold">
+                                                            We recommend immediate inspection. We offer an Emergency Tarping Service for standard roof damage (up to desk size).
+                                                        </div>
+                                                        <div>
+                                                            <QuestionLabel>Add Emergency Tarp Service?</QuestionLabel>
+                                                            <ToggleGroup 
+                                                                options={['Yes, I need tarping', 'No, just inspection']}
+                                                                value={repairDetails.emergencyTarp ? 'Yes, I need tarping' : 'No, just inspection'}
+                                                                onChange={(val) => setRepairDetails(p => ({...p, emergencyTarp: val.includes('Yes')}))}
+                                                            />
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <QuestionLabel>Add Emergency Tarp Service?</QuestionLabel>
-                                                        <ToggleGroup 
-                                                            options={['Yes, I need tarping', 'No, just inspection']}
-                                                            value={repairDetails.emergencyTarp ? 'Yes, I need tarping' : 'No, just inspection'}
-                                                            onChange={(val) => setRepairDetails(p => ({...p, emergencyTarp: val.includes('Yes')}))}
+                                                )}
+
+                                                <div className="pt-2 border-t border-gray-700">
+                                                    <QuestionLabel>Is the roof younger than 15 years old?</QuestionLabel>
+                                                    <ToggleGroup 
+                                                        options={['Yes (<15 Years)', 'No (>15 Years)']}
+                                                        value={!repairDetails.isOld ? 'Yes (<15 Years)' : 'No (>15 Years)'}
+                                                        onChange={(val) => setRepairDetails(p => ({...p, isOld: val === 'No (>15 Years)'}))}
+                                                    />
+                                                </div>
+
+                                                {repairDetails.isOld && (
+                                                    <div className="p-4 bg-yellow-900/10 border border-yellow-500/20 rounded text-sm text-yellow-200 italic">
+                                                        "Typically with roofs over 15 years, materials become unserviceable and can cause high repair costs. 
+                                                        I can schedule a repair inspection to verify if we can repair it or if it requires replacement."
+                                                    </div>
+                                                )}
+
+                                                {!repairDetails.isOld && (
+                                                    <div className="space-y-4 pt-2">
+                                                        <div className="text-gray-300 text-sm">
+                                                            "If the roof is relatively new, a good photo can help us quote the repair faster. Do you have high quality photos you can send now?"
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <Button 
+                                                                variant={repairDetails.hasPhotos ? 'primary' : 'secondary'}
+                                                                onClick={() => setRepairDetails(p => ({...p, hasPhotos: true}))}
+                                                                type="button"
+                                                            >
+                                                                Yes, I have photos
+                                                            </Button>
+                                                            <Button 
+                                                                variant={!repairDetails.hasPhotos ? 'primary' : 'secondary'}
+                                                                onClick={() => setRepairDetails(p => ({...p, hasPhotos: false}))}
+                                                                type="button"
+                                                            >
+                                                                No photos yet
+                                                            </Button>
+                                                        </div>
+                                                        
+                                                        {!repairDetails.hasPhotos && (
+                                                            <Button 
+                                                                className="w-full border border-[#ec028b] bg-black hover:bg-[#ec028b] text-[#ec028b] hover:text-white transition-all"
+                                                                onClick={() => alert("Sent upload link to primary contact via text/email.")}
+                                                                type="button"
+                                                            >
+                                                                <ShareIcon className="w-4 h-4 mr-2" />
+                                                                Send Photo Upload Link to Customer
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                
+                                                <div className="text-yellow-400 text-sm font-medium flex items-center mt-2">
+                                                    <BoltIcon className="w-4 h-4 mr-2" />
+                                                    {!repairDetails.isOld && repairDetails.hasPhotos 
+                                                        ? "Create Quote Request based on Photos." 
+                                                        : "No instant pricing available without on-site inspection or property photos."}
+                                                </div>
+
+                                                {isInspectionRequired && !isInsurance && (
+                                                    <div className="mt-4 pt-4 border-t border-gray-700">
+                                                        <h4 className="text-[#ec028b] font-bold mb-4 uppercase text-sm">Inspection Required</h4>
+                                                        <SchedulingBlock 
+                                                            onScheduleConfirm={(details) => { 
+                                                                alert(`Scheduled: ${details}`); 
+                                                                setIsIntentCollapsed(true); 
+                                                            }}
+                                                            isBlocked={isOutOfBounds}
                                                         />
                                                     </div>
-                                                </div>
-                                            )}
-
-                                            <div className="pt-2 border-t border-gray-700">
-                                                <QuestionLabel>Is the roof younger than 15 years old?</QuestionLabel>
-                                                <ToggleGroup 
-                                                    options={['Yes (<15 Years)', 'No (>15 Years)']}
-                                                    value={!repairDetails.isOld ? 'Yes (<15 Years)' : 'No (>15 Years)'}
-                                                    onChange={(val) => setRepairDetails(p => ({...p, isOld: val === 'No (>15 Years)'}))}
-                                                />
+                                                )}
                                             </div>
+                                        )}
 
-                                            {repairDetails.isOld && (
-                                                <div className="p-4 bg-yellow-900/10 border border-yellow-500/20 rounded text-sm text-yellow-200 italic">
-                                                    "Typically with roofs over 15 years, materials become unserviceable and can cause high repair costs. 
-                                                    I can schedule a repair inspection to verify if we can repair it or if it requires replacement."
-                                                </div>
-                                            )}
-
-                                            {!repairDetails.isOld && (
-                                                <div className="space-y-4 pt-2">
-                                                    <div className="text-gray-300 text-sm">
-                                                        "If the roof is relatively new, a good photo can help us quote the repair faster. Do you have high quality photos you can send now?"
+                                        {scopeType === 'Replacement' && !isInsurance && (
+                                            <div>
+                                                <QuestionLabel>What is your goal today?</QuestionLabel>
+                                                <div className="grid grid-cols-1 gap-3">
+                                                    <div 
+                                                        onClick={() => setPurchaseIntent('Ready')}
+                                                        className={cn(
+                                                            "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
+                                                            purchaseIntent === 'Ready' 
+                                                                ? "bg-[#ec028b]/20 border-[#ec028b] text-white" 
+                                                                : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
+                                                        )}
+                                                    >
+                                                        <p className="font-bold mb-1">Ready to compare bids & install</p>
+                                                        <p className="text-xs opacity-70">I need a Certified Quote (Need A Firm Quote).</p>
                                                     </div>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        <Button 
-                                                            variant={repairDetails.hasPhotos ? 'primary' : 'secondary'}
-                                                            onClick={() => setRepairDetails(p => ({...p, hasPhotos: true}))}
-                                                            type="button"
-                                                        >
-                                                            Yes, I have photos
-                                                        </Button>
-                                                        <Button 
-                                                            variant={!repairDetails.hasPhotos ? 'primary' : 'secondary'}
-                                                            onClick={() => setRepairDetails(p => ({...p, hasPhotos: false}))}
-                                                            type="button"
-                                                        >
-                                                            No photos yet
-                                                        </Button>
+                                                    <div 
+                                                        onClick={() => setPurchaseIntent('Exploring')}
+                                                        className={cn(
+                                                            "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
+                                                            purchaseIntent === 'Exploring' 
+                                                                ? "bg-[#ec028b]/20 border-[#ec028b] text-white" 
+                                                                : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
+                                                        )}
+                                                    >
+                                                        <p className="font-bold mb-1">Just looking for ballpark pricing</p>
+                                                        <p className="text-xs opacity-70">I want an Instant Estimate (Need A Ballpark Price).</p>
                                                     </div>
-                                                    
-                                                    {!repairDetails.hasPhotos && (
-                                                        <Button 
-                                                            className="w-full border border-[#ec028b] bg-black hover:bg-[#ec028b] text-[#ec028b] hover:text-white transition-all"
-                                                            onClick={() => alert("Sent upload link to primary contact via text/email.")}
-                                                            type="button"
-                                                        >
-                                                            <ShareIcon className="w-4 h-4 mr-2" />
-                                                            Send Photo Upload Link to Customer
-                                                        </Button>
-                                                    )}
                                                 </div>
-                                            )}
-                                            
-                                            <div className="text-yellow-400 text-sm font-medium flex items-center mt-2">
-                                                <BoltIcon className="w-4 h-4 mr-2" />
-                                                {!repairDetails.isOld && repairDetails.hasPhotos 
-                                                    ? "Create Quote Request based on Photos." 
-                                                    : "No instant pricing available without on-site inspection or property photos."}
+                                                {purchaseIntent && (
+                                                    <div className="flex justify-center -mb-2 mt-4 animate-fade-in">
+                                                        <svg className="w-6 h-10 overflow-visible" viewBox="0 0 24 40">
+                                                            <path 
+                                                                d="M 12,0 L 12,40" 
+                                                                stroke="#ec028b" 
+                                                                strokeWidth="3" 
+                                                                strokeDasharray="6, 6"
+                                                                className="animate-[dash_1s_linear_infinite]"
+                                                                style={{ filter: 'drop-shadow(0 0 6px #ec028b)' }}
+                                                            />
+                                                        </svg>
+                                                        <style>{`
+                                                            @keyframes dash {
+                                                                to { stroke-dashoffset: -12; }
+                                                            }
+                                                        `}</style>
+                                                    </div>
+                                                )}
                                             </div>
-
-                                            {isInspectionRequired && !isInsurance && (
-                                                <div className="mt-4 pt-4 border-t border-gray-700">
-                                                    <h4 className="text-[#ec028b] font-bold mb-4 uppercase text-sm">Inspection Required</h4>
+                                        )}
+                                        
+                                        {isInsurance && (
+                                            <div className="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg space-y-4 animate-fade-in">
+                                                <p className="text-blue-300 text-sm">Insurance claims require specific documentation and pricing structures. We will skip the instant estimate and proceed directly to data collection for a formal quote.</p>
+                                                <div className="pt-4 border-t border-blue-500/30">
+                                                    <h4 className="text-[#ec028b] font-bold mb-4 uppercase text-sm">Insurance Inspection Required</h4>
                                                     <SchedulingBlock 
                                                         onScheduleConfirm={(details) => { 
                                                             alert(`Scheduled: ${details}`); 
@@ -2250,82 +2508,15 @@ const CustomerInputPage: React.FC = () => {
                                                         isBlocked={isOutOfBounds}
                                                     />
                                                 </div>
-                                            )}
-                                        </div>
-                                    )}
+                                            </div>
+                                        )}
+                                    </div>
 
-                                    {scopeType === 'Replacement' && !isInsurance && (
-                                        <div>
-                                            <QuestionLabel>What is your goal today?</QuestionLabel>
-                                            <div className="grid grid-cols-1 gap-3">
-                                                <div 
-                                                    onClick={() => setPurchaseIntent('Ready')}
-                                                    className={cn(
-                                                        "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
-                                                        purchaseIntent === 'Ready' 
-                                                            ? "bg-[#ec028b]/20 border-[#ec028b] text-white" 
-                                                             : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
-                                                    )}
-                                                >
-                                                    <p className="font-bold mb-1">Ready to compare bids & install</p>
-                                                    <p className="text-xs opacity-70">I need a Certified Quote (Need A Firm Quote).</p>
-                                                </div>
-                                                <div 
-                                                    onClick={() => setPurchaseIntent('Exploring')}
-                                                    className={cn(
-                                                        "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
-                                                        purchaseIntent === 'Exploring' 
-                                                            ? "bg-[#ec028b]/20 border-[#ec028b] text-white" 
-                                                             : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
-                                                    )}
-                                                >
-                                                    <p className="font-bold mb-1">Just looking for ballpark pricing</p>
-                                                    <p className="text-xs opacity-70">I want an Instant Estimate (Need A Ballpark Price).</p>
-                                                </div>
-                                            </div>
-                                            {purchaseIntent && (
-                                                <div className="flex justify-center -mb-2 mt-4 animate-fade-in">
-                                                    <svg className="w-6 h-10 overflow-visible" viewBox="0 0 24 40">
-                                                        <path 
-                                                            d="M 12,0 L 12,40" 
-                                                            stroke="#ec028b" 
-                                                            strokeWidth="3" 
-                                                            strokeDasharray="6, 6"
-                                                            className="animate-[dash_1s_linear_infinite]"
-                                                            style={{ filter: 'drop-shadow(0 0 6px #ec028b)' }}
-                                                        />
-                                                    </svg>
-                                                    <style>{`
-                                                        @keyframes dash {
-                                                            to { stroke-dashoffset: -12; }
-                                                        }
-                                                    `}</style>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                    
-                                    {isInsurance && (
-                                        <div className="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg space-y-4 animate-fade-in">
-                                            <p className="text-blue-300 text-sm">Insurance claims require specific documentation and pricing structures. We will skip the instant estimate and proceed directly to data collection for a formal quote.</p>
-                                            <div className="pt-4 border-t border-blue-500/30">
-                                                <h4 className="text-[#ec028b] font-bold mb-4 uppercase text-sm">Insurance Inspection Required</h4>
-                                                <SchedulingBlock 
-                                                    onScheduleConfirm={(details) => { 
-                                                        alert(`Scheduled: ${details}`); 
-                                                        setIsIntentCollapsed(true); 
-                                                    }}
-                                                    isBlocked={isOutOfBounds}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
+                                <div className="flex justify-end mt-4">
+                                    <Button size="sm" onClick={() => setIsIntentCollapsed(true)} type="button">Next</Button>
                                 </div>
-
-                            <div className="flex justify-end mt-4">
-                                <Button size="sm" onClick={() => setIsIntentCollapsed(true)} type="button">Next</Button>
                             </div>
-                        </div>
+                        </CircuitryCard>
                     )}
                 </div>
                 
@@ -2336,28 +2527,17 @@ const CustomerInputPage: React.FC = () => {
                             <RenderCollapsedSection 
                                 title={isEstimateRequest ? "Estimate Data" : "Roof Analysis"} 
                                 summary={
-                                    isEstimateRequest ? (
-                                        <SummaryDisplay items={[
-                                            { label: "Layers", value: analysisData.layerConfig.count },
-                                            { label: "Features", value: `Chim: ${estimateInputs.roofFeatures?.chimneys}, Sky: ${estimateInputs.roofFeatures?.skylights}, Swamp: ${estimateInputs.roofFeatures?.swampCoolers}` },
-                                            { label: "Gutters", value: estimateInputs.gutters?.enabled ? `${estimateInputs.gutters.length}ft / ${estimateInputs.gutters.miters} miters` : 'No' },
-                                            { label: "Heat Trace", value: estimateInputs.heatTrace?.enabled ? `${estimateInputs.heatTrace.length}ft` : 'No' }
-                                        ]} />
-                                    ) : (
-                                        <SummaryDisplay items={[
-                                            { label: "Total SQ", value: analysisData.result.finalSq.toFixed(2) },
-                                            { label: "Facets", value: analysisData.result.roofEstimate.totalFacets },
-                                            { label: "Pitch", value: `${analysisData.result.dominantPitch}/12` },
-                                            { label: "Access", value: analysisData.access.type },
-                                            { label: "Ladders", value: analysisData.ladders.join(', ') }
-                                        ]} />
-                                    )
+                                    isEstimateRequest 
+                                        ? `Layers: ${analysisData.layerConfig.count} • Features: Chim: ${estimateInputs.roofFeatures?.chimneys || 0}, Sky: ${estimateInputs.roofFeatures?.skylights || 0}, Swamp: ${estimateInputs.roofFeatures?.swampCoolers || 0}${estimateInputs.gutters?.enabled ? ` • Gutters: ${estimateInputs.gutters.length}ft` : ''}`
+                                        : `Total Area: ${analysisData.result.finalSq.toFixed(1)} SQ • Pitch: ${analysisData.result.dominantPitch}/12 • Access: ${analysisData.access.type}${analysisData.ladders.length > 0 ? ` • Ladders: ${analysisData.ladders.join(', ')}` : ''}`
                                 } 
                                 onEdit={() => setIsRoofAnalysisCollapsed(false)} 
                             />
                         ) : (
-                            <div className="p-6 bg-gray-900/40 border border-blue-500/30 rounded-xl shadow-sm space-y-6 relative">
-                                <SectionHeader title={isEstimateRequest ? "Estimate Data Collection" : "Roof Analysis & Access"} icon={RulerIcon} />
+                            <CircuitryCard 
+                                title={isEstimateRequest ? "Estimate Data Collection" : "Roof Analysis & Access"} 
+                                icon={<RulerIcon className="w-5 h-5" />}
+                            >
                                 
                                 {/* 3-Column Map Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -2428,7 +2608,7 @@ const CustomerInputPage: React.FC = () => {
                                         </div>
                                         
                                         {/* Gutter Details */}
-                                        <div className="p-6 bg-gray-900/40 border border-gray-700 rounded-xl space-y-6">
+                                        <div className="p-6 bg-black/40 border border-gray-800 rounded-xl space-y-6">
                                             <SectionHeader title="Gutter Details" icon={GutterIcon} />
                                             
                                             <div>
@@ -2493,7 +2673,7 @@ const CustomerInputPage: React.FC = () => {
                                         </div>
 
                                         {/* Heat Trace Details */}
-                                        <div className="p-6 bg-gray-900/40 border border-gray-700 rounded-xl space-y-6">
+                                        <div className="p-6 bg-black/40 border border-gray-800 rounded-xl space-y-6">
                                             <SectionHeader title="Heat Trace Details" icon={HeatTraceIcon} />
 
                                             {/* Length Input */}
@@ -2609,7 +2789,7 @@ const CustomerInputPage: React.FC = () => {
                                 )}
 
                                 <div className="flex justify-end pt-2"><Button size="sm" onClick={() => setIsRoofAnalysisCollapsed(true)}>Confirm Analysis</Button></div>
-                            </div>
+                            </CircuitryCard>
                         )}
                     </div>
                 )}
@@ -2621,21 +2801,14 @@ const CustomerInputPage: React.FC = () => {
                         {isDetailedScopeCollapsed ? (
                             <RenderCollapsedSection 
                                 title="Detailed Scope" 
-                                summary={
-                                    <SummaryDisplay items={[
-                                        { label: "Material", value: detailedScope.materialPreference },
-                                        { label: "Decking", value: detailedScope.deckingAction },
-                                        { label: "Satellite", value: detailedScope.satelliteAction },
-                                        { label: "Swamp Cooler", value: detailedScope.swampCoolerAction },
-                                        { label: "Solar", value: detailedScope.solarAction },
-                                        { label: "Notes", value: detailedScope.additionalDetails || detailedScope.projectDetails || '-' }
-                                    ]} />
-                                } 
+                                summary={`${detailedScope.materialPreference} • Decking: ${detailedScope.deckingAction} • Satellite: ${detailedScope.satelliteAction} • Solar: ${detailedScope.solarAction}`}
                                 onEdit={() => setIsDetailedScopeCollapsed(false)} 
                             />
                         ) : (
-                            <div className="p-6 bg-gray-900/40 border border-gray-700 rounded-xl space-y-6">
-                                <SectionHeader title="Detailed Scope" icon={ListBulletIcon} />
+                            <CircuitryCard 
+                                title="Detailed Scope" 
+                                icon={<ListBulletIcon className="w-5 h-5" />}
+                            >
                                 
                                 <AssessmentQuestion label="Roof Material Considering">
                                     <ToggleGroup options={['Asphalt Shingles', 'Metal', 'Tile', 'TPO/Membrane', 'Wood Shake']} value={detailedScope.materialPreference} onChange={v => setDetailedScope(p => ({...p, materialPreference: v}))} />
@@ -2698,15 +2871,17 @@ const CustomerInputPage: React.FC = () => {
                                 <div className="flex justify-end mt-4">
                                     <Button size="sm" onClick={() => setIsDetailedScopeCollapsed(true)} type="button">Next</Button>
                                 </div>
-                            </div>
+                            </CircuitryCard>
                         )}
                     </div>
                 )}
                 
                 {/* Estimate Follow-up Schedule - Always Visible */}
                 {isEstimateRequest && (
-                    <div className="p-6 bg-blue-900/20 border border-blue-500/30 rounded-xl">
-                        <SectionHeader title="Estimate Follow-up" icon={CalendarDaysIcon} />
+                    <CircuitryCard 
+                        title="Estimate Follow-up" 
+                        icon={<CalendarDaysIcon className="w-5 h-5" />}
+                    >
                         <p className="text-sm text-blue-300 mb-4">Schedule a call to review this estimate with the customer.</p>
                         
 
@@ -2716,29 +2891,23 @@ const CustomerInputPage: React.FC = () => {
                             notesLabel="Notes for Call"
                             isBlocked={isOutOfBounds}
                         />
-                    </div>
+                    </CircuitryCard>
                 )}
 
                 {/* CUSTOMER PROFILE (Psychographics) - Always Visible */}
                 {(purchaseIntent === 'Ready' && !isInsurance) && (
                     <div className="animate-fade-in">
-                        {isProfileCollapsed ? (
-                            <RenderCollapsedSection 
-                                title="Customer Profile" 
-                                summary={
-                                    <SummaryDisplay items={[
-                                        { label: "Concerns", value: customerProfile.concerns.join(', ') },
-                                        { label: "Criteria", value: customerProfile.decisionCriteria.join(', ') },
-                                        { label: "Familiarity", value: customerProfile.familiarity },
-                                        { label: "Style", value: customerProfile.investmentStyle },
-                                        { label: "Readiness", value: customerProfile.readiness }
-                                    ]} />
-                                } 
-                                onEdit={() => setIsProfileCollapsed(false)} 
-                            />
+                    {isProfileCollapsed ? (
+                        <RenderCollapsedSection 
+                            title="Customer Profile" 
+                            summary={`${customerProfile.familiarity} • ${customerProfile.investmentStyle} • Readiness: ${customerProfile.readiness}`}
+                            onEdit={() => setIsProfileCollapsed(false)} 
+                        />
                         ) : (
-                            <div className="p-6 bg-gray-900/40 border border-purple-500/30 rounded-xl space-y-6">
-                                <SectionHeader title="Customer Profile" icon={MegaphoneIcon} />
+                            <CircuitryCard 
+                                title="Customer Profile" 
+                                icon={<MegaphoneIcon className="w-5 h-5" />}
+                            >
                                 
                                 <div>
                                     <QuestionLabel>Main Concerns</QuestionLabel>
@@ -2775,7 +2944,7 @@ const CustomerInputPage: React.FC = () => {
                                 </div>
 
                                 <div className="flex justify-end mt-4"><Button size="sm" onClick={() => setIsProfileCollapsed(true)}>Finish Profile</Button></div>
-                            </div>
+                            </CircuitryCard>
                         )}
                     </div>
                 )}
@@ -2812,17 +2981,31 @@ const RenderCollapsedSection = ({
     onEdit: () => void,
     variant?: 'default' | 'pink' | 'green'
 }) => {
-    const borderClass = variant === 'pink' ? 'border-rhive-pink bg-rhive-pink/10' : 
-                       variant === 'green' ? 'border-green-500/50 bg-green-900/20' : 
-                       'border-gray-700 bg-gray-900/40 hover:border-rhive-pink/50';
-
     return (
-        <div onClick={onEdit} className={cn("border p-4 rounded-xl flex items-center justify-between shadow-sm cursor-pointer group transition-all mb-6", borderClass)}>
-            <div className="flex-1 min-w-0 mr-4">
-                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">{title}</p>
-                <div className="text-white font-medium">{summary}</div>
+        <div 
+            onClick={onEdit} 
+            className="w-full bg-black/60 border-y border-gray-800/85 py-4 px-5 flex items-center justify-between cursor-pointer hover:bg-gray-900/60 transition-all group font-sans rounded-none mb-1"
+        >
+            <div className="flex items-center min-w-0 mr-4 flex-wrap sm:flex-nowrap">
+                <span className="text-xs text-white font-black uppercase tracking-wider whitespace-nowrap mr-2">
+                    {title}
+                </span>
+                <span className="text-xs text-gray-500 mr-2">—</span>
+                <div className="text-xs text-gray-400 font-medium truncate">
+                    {summary}
+                </div>
             </div>
-            <div className="text-gray-600 group-hover:text-[#ec028b] transition-colors"><PencilSquareIcon className="w-5 h-5" /></div>
+            
+            <div className="flex items-center space-x-3 shrink-0">
+                {/* Tech Spinner Icon */}
+                <svg className="w-4 h-4 text-gray-700 group-hover:text-[#ec028b] transition-colors animate-[spin_8s_linear_infinite]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="12" cy="12" r="9" strokeDasharray="3 3" strokeWidth="1.5" />
+                    <circle cx="12" cy="12" r="5" strokeWidth="1.5" />
+                </svg>
+                <div className="text-gray-600 group-hover:text-[#ec028b] transition-colors">
+                    <PencilSquareIcon className="w-4 h-4" />
+                </div>
+            </div>
         </div>
     );
 };
@@ -2979,8 +3162,12 @@ const ContactForm: React.FC<ContactFormProps> = ({
     };
 
     return (
-        <div className="p-6 bg-gray-900/30 border border-gray-700 rounded-xl space-y-4 animate-fade-in relative shadow-inner">
-            {isPrimary && <h4 className="text-[#ec028b] font-bold text-sm uppercase tracking-wide mb-2">Primary Contact</h4>}
+        <CircuitryCard
+            title={isPrimary ? "Primary Contact" : "Contact Details"}
+            icon={<UserIcon className="w-5 h-5" />}
+            className="w-full animate-fade-in"
+        >
+            <div className="space-y-4 relative">
             
             {foundMatch && !data.existingUserId && (
                 <div className="absolute -top-3 left-0 right-0 mx-4 bg-blue-900/90 border border-blue-500 text-white p-3 rounded-lg shadow-lg flex justify-between items-center z-10 backdrop-blur-md animate-bounce-in">
@@ -3043,21 +3230,12 @@ const ContactForm: React.FC<ContactFormProps> = ({
 
             <div className="mt-2">
                 <QuestionLabel required>Preferred Contact Method</QuestionLabel>
-                <div className="flex gap-4">
-                    {['Phone', 'Text', 'Email'].map((method) => (
-                        <label key={method} className="flex items-center cursor-pointer">
-                            <input 
-                                type="radio" 
-                                name="contactMethod" 
-                                value={method} 
-                                checked={data.preferredContactMethod === method}
-                                onChange={(e) => setData({...data, preferredContactMethod: e.target.value as any})}
-                                className="mr-2 text-[#ec028b] focus:ring-[#ec028b] bg-gray-900 border-gray-600"
-                            />
-                            <span className="text-sm text-gray-300">{method}</span>
-                        </label>
-                    ))}
-                </div>
+                <ToggleGroup 
+                    options={['Phone', 'Text', 'Email']} 
+                    value={data.preferredContactMethod} 
+                    onChange={(v) => setData({...data, preferredContactMethod: v as any})} 
+                    idPrefix="preferred-contact"
+                />
             </div>
 
             {/* Commercial Logic: Affiliation - Only if companies exist */}
@@ -3183,35 +3361,71 @@ const ContactForm: React.FC<ContactFormProps> = ({
                 {!isPrimary && <Button variant="secondary" onClick={onCancel} type="button">Cancel</Button>}
                 <Button onClick={handleSave} type="button">{data.existingUserId ? 'Link & Save' : 'Save Contact'}</Button>
             </div>
-        </div>
+            </div>
+        </CircuitryCard>
     );
 };
 
-const ContactCard: React.FC<{ contact: Contact; onEdit: () => void; onDelete: () => void }> = ({ contact, onEdit, onDelete }) => (
-    <div onClick={onEdit} className="flex items-center justify-between p-4 bg-gray-900/50 border border-gray-700 rounded-xl hover:border-[#ec028b]/50 transition-all cursor-pointer group">
-        <div className="flex items-center space-x-4">
-            <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white font-bold border", contact.isPrimary ? "bg-[#ec028b]" : "bg-gray-700")}>{contact.firstName[0]}</div>
-            <div>
-                <h4 className="text-white font-bold text-sm">{contact.firstName} {contact.lastName}</h4>
-                <p className="text-xs text-gray-400">{contact.role} • {contact.phone} • <span className="text-[#ec028b]">{contact.preferredContactMethod}</span></p>
-                 <div className="flex flex-wrap gap-1 mt-1">
-                    {contact.responsibilities && contact.responsibilities.map((r: string) => (
-                        <span key={r} className="text-[10px] bg-gray-800 px-1.5 py-0.5 rounded text-gray-300 border border-gray-600">{r}</span>
-                    ))}
+const ContactCard: React.FC<{ contact: Contact; onEdit: () => void; onDelete: () => void }> = ({ contact, onEdit, onDelete }) => {
+    const initial = contact.firstName ? contact.firstName[0].toUpperCase() : 'C';
+    return (
+        <div 
+            onClick={onEdit} 
+            className="relative flex items-center justify-between p-5 bg-black/60 border border-gray-800 hover:border-[#ec028b]/50 transition-all cursor-pointer group rounded-xl overflow-hidden"
+        >
+            <div className="flex items-center space-x-5">
+                {/* Initial box with chamfer */}
+                <div className="relative w-12 h-12 flex items-center justify-center bg-gray-900 border border-gray-800 text-white font-black text-lg select-none rounded-lg overflow-hidden shrink-0">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-855 to-black opacity-40" />
+                    <span className="relative z-10">{initial}</span>
+                    {/* Tiny SVG tech accent on corner */}
+                    <svg className="absolute top-0 left-0 w-2 h-2 text-[#ec028b]" viewBox="0 0 8 8">
+                        <line x1="0" y1="0" x2="8" y2="0" stroke="currentColor" strokeWidth="2" />
+                        <line x1="0" y1="0" x2="0" y2="8" stroke="currentColor" strokeWidth="2" />
+                    </svg>
+                </div>
+                
+                <div className="space-y-1">
+                    <h4 className="text-white font-bold text-base tracking-tight leading-none">
+                        {contact.firstName} {contact.lastName}
+                    </h4>
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                        {contact.role || 'CONTACT'} • {contact.phone}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                        {contact.responsibilities && contact.responsibilities.map((r: string) => (
+                            <span 
+                                key={r} 
+                                className="text-[9px] font-black uppercase tracking-widest bg-gray-900 px-2 py-0.5 rounded-sm text-gray-400 border border-gray-800"
+                            >
+                                {r}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             </div>
+
+            <div className="flex items-center space-x-3 shrink-0">
+                {/* Tech Accent Spinner */}
+                <svg className="w-5 h-5 text-gray-700 group-hover:text-[#ec028b] transition-colors animate-[spin_6s_linear_infinite]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="12" cy="12" r="9" strokeDasharray="3 3" />
+                    <circle cx="12" cy="12" r="5" />
+                </svg>
+                
+                {!contact.isPrimary && (
+                    <button 
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onDelete(); }} 
+                        className="p-1.5 text-gray-550 hover:text-red-500 hover:bg-red-500/10 rounded-sm transition-colors"
+                        title="Delete Contact"
+                    >
+                        <TrashIcon className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
         </div>
-        {!contact.isPrimary && (
-            <button 
-                onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-                className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
-                title="Delete Contact"
-            >
-                <TrashIcon className="w-5 h-5" />
-            </button>
-        )}
-    </div>
-);
+    );
+};
 
 const ResponsibilityToggle = ({ label, icon: Icon, selected, onClick }: { label: string, icon: any, selected: boolean, onClick: () => void }) => (
     <button 
