@@ -278,9 +278,13 @@ export const projectService = {
         let projectsFired = false;
         let leadsFired = false;
         let dealsFired = false;
+        let notified = false;
 
         const notify = () => {
+            if (notified) return;
             if (!projectsFired || !leadsFired || !dealsFired) return;
+            notified = true;
+            clearTimeout(safetyTimer);
             const merged = [...projectDocs, ...leadDocs, ...dealDocs]
                 .sort((a, b) =>
                     new Date(b.updated_at || b.created_at || b._importedAt || 0).getTime() -
@@ -289,6 +293,15 @@ export const projectService = {
                 .slice(0, limitCount);
             callback(merged);
         };
+
+        const safetyTimer = setTimeout(() => {
+            if (!notified) {
+                projectsFired = true;
+                leadsFired = true;
+                dealsFired = true;
+                notify();
+            }
+        }, 800);
 
         const unsubP = onSnapshot(
             collection(db, 'projects'),
@@ -306,7 +319,12 @@ export const projectService = {
             () => { dealsFired = true; notify(); }
         );
 
-        return () => { unsubP(); unsubL(); unsubD(); };
+        return () => {
+            clearTimeout(safetyTimer);
+            unsubP();
+            unsubL();
+            unsubD();
+        };
     },
     getById: (id: string) => firestoreService.getDocument('projects', id),
     createBatch: (dataArray: any[]) => firestoreService.createBatch('projects', dataArray),

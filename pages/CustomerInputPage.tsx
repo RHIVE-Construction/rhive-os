@@ -1098,7 +1098,7 @@ const SummaryDisplay = ({ items }: { items: { label: string, value: string | num
 // --- Main Page Component ---
 
 const CustomerInputPage: React.FC = () => {
-    const { addUser, createProject, properties, addProperty } = useMockDB();
+    const { addUser, createProject, properties, addProperty, users, projects, updateProperty, addCommunication } = useMockDB();
     const { setActivePageId } = useNavigation();
     const { pricing } = usePricing();
     const isApiReady = useGoogleMapsApi();
@@ -1383,23 +1383,105 @@ const CustomerInputPage: React.FC = () => {
             alert("Out of Service Boundary: Referrals routing initiated. Detailing third-party provider referral instructions: This project will be handed off to local partners in the Boise region.");
         }
 
-        const primaryContact = contacts.find(c => c.isPrimary) || contacts[0];
-        
-        if (!primaryContact.existingUserId) {
-            addUser({
-                name: `${primaryContact.firstName} ${primaryContact.lastName}`,
-                email: primaryContact.email,
-                phone: primaryContact.phone,
-                role: 'Customer'
-            });
+        // 1. Resolve and register contacts
+        const resolvedContacts = contacts.map(contact => {
+            if (contact.existingUserId) {
+                return { ...contact, resolvedId: contact.existingUserId };
+            }
+            // Check if user already exists in DB by phone, email, or name
+            const match = users.find(u => 
+                (u.phone && contact.phone && u.phone.replace(/\D/g, '') === contact.phone.replace(/\D/g, '')) ||
+                (u.email && contact.email && u.email.toLowerCase().trim() === contact.email.toLowerCase().trim()) ||
+                (u.name && u.name.toLowerCase().trim() === `${contact.firstName} ${contact.lastName}`.toLowerCase().trim())
+            );
+            if (match) {
+                return { ...contact, resolvedId: match.id };
+            } else {
+                const newId = `U-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                addUser({
+                    id: newId,
+                    name: `${contact.firstName} ${contact.lastName}`,
+                    email: contact.email,
+                    phone: contact.phone,
+                    role: 'Customer'
+                });
+                return { ...contact, resolvedId: newId };
+            }
+        });
+
+        const primaryContact = resolvedContacts.find(c => c.isPrimary) || resolvedContacts[0];
+        const primaryContactId = primaryContact.resolvedId;
+
+        // 2. Resolve Company (if commercial / government)
+        let resolvedCompanyId = '';
+        if (requiresOrganization && companyData.parentCompany) {
+            const companyMatch = users.find(u => 
+                u.name.toLowerCase().trim() === companyData.parentCompany.toLowerCase().trim()
+            );
+            if (companyMatch) {
+                resolvedCompanyId = companyMatch.id;
+            } else {
+                resolvedCompanyId = `U-COMP-${Date.now()}`;
+                addUser({
+                    id: resolvedCompanyId,
+                    name: companyData.parentCompany,
+                    role: 'Customer',
+                    email: '',
+                    phone: ''
+                });
+            }
         }
 
-        const projectName = requiresOrganization 
-            ? (companyData.propertyName || propertyData.address) 
-            : `${primaryContact.lastName} Residence`;
+        // Determine owner ID for property/project
+        const ownerId = (requiresOrganization && resolvedCompanyId) ? resolvedCompanyId : primaryContactId;
 
-        let targetPropertyId = matchedProperty ? matchedProperty._id : '';
-        if (!matchedProperty) {
+        // 3. Resolve Property
+        const existingProperty = matchedProperty || properties.find(p => 
+            p.address_full.toLowerCase().trim() === propertyData.address.toLowerCase().trim()
+        );
+
+        let targetPropertyId = '';
+        
+        if (existingProperty) {
+            targetPropertyId = existingProperty._id;
+            
+            // Check if we need to update company relationship
+            if (requiresOrganization && resolvedCompanyId && existingProperty.owner_id !== resolvedCompanyId) {
+                updateProperty(existingProperty._id, { owner_id: resolvedCompanyId });
+                addCommunication('file', existingProperty._id, `Associated property with parent company ${companyData.parentCompany}`);
+            }
+
+            // Check if we need to merge building pinned layout
+            const currentBuildings = existingProperty.buildings || [];
+            const newBuildings = pinnedBuildings.filter(pb => 
+                !currentBuildings.some(cb => 
+                    cb.name.toLowerCase().trim() === pb.name.toLowerCase().trim()
+                )
+            );
+
+            if (newBuildings.length > 0) {
+                const updatedBuildings = [
+                    ...currentBuildings,
+                    ...newBuildings.map(b => ({
+                        id: b.id,
+                        name: b.name,
+                        coordinates: b.coordinates || { lat: propertyData.latitude, lng: propertyData.longitude }
+                    }))
+                ];
+                updateProperty(existingProperty._id, { buildings: updatedBuildings });
+                addCommunication('file', existingProperty._id, `Intake added building(s): ${newBuildings.map(b => b.name).join(', ')}`);
+            }
+
+            // Add any new contacts to the property file via log
+            resolvedContacts.forEach(rc => {
+                const isAlreadyOwner = existingProperty.owner_id === rc.resolvedId;
+                if (!isAlreadyOwner) {
+                    addCommunication('file', existingProperty._id, `Associated contact: ${rc.firstName} ${rc.lastName} (${rc.phone}) to property file.`);
+                }
+            });
+
+        } else {
+            // Create property
             const finalBuildings = pinnedBuildings.length > 0
                 ? pinnedBuildings.map(b => ({
                     id: b.id,
@@ -1415,37 +1497,37 @@ const CustomerInputPage: React.FC = () => {
             targetPropertyId = addProperty({
                 address_full: propertyData.address,
                 type: requiresOrganization ? 'Commercial' : 'Residential',
-                owner_id: primaryContact.existingUserId || 'U-NEW',
+                owner_id: ownerId,
                 coordinates: { lat: propertyData.latitude, lng: propertyData.longitude },
                 buildings: finalBuildings
             });
         }
 
-        /* 
-           ========================================================================
-           DEVELOPER NOTE FOR BACKEND INTEGRATION:
-           This section supports intake of multiple properties per client session.
-           Currently, the primary property is saved as 'targetPropertyId' and linked 
-           to the main project.
-           
-           For backend integration:
-           1. Loop through 'additionalProperties' and register each property to the 
-              database (linked to the same client 'owner_id').
-           2. Set up a relation table (e.g. 'ProjectProperties') or store an array 
-              of property IDs in the Project document if a project spans multiple 
-              locations.
-           3. Real-time geocoding and coordinates validation should be handled on the 
-              server or using the configured geocoding hook.
-           ========================================================================
-        */
-
-        // Also save additional properties to mock DB so they are persistent and searchable
+        // Save additional properties (if any)
         additionalProperties.forEach((prop, idx) => {
             if (!prop.propertyData.address) return;
             const matched = properties.find(p => 
                 p.address_full.toLowerCase().trim() === prop.propertyData.address.toLowerCase().trim()
             );
-            if (!matched) {
+            if (matched) {
+                // Update additional property details if merged
+                const currentBuildings = matched.buildings || [];
+                const newBuildings = prop.pinnedBuildings.filter(pb => 
+                    !currentBuildings.some(cb => cb.name.toLowerCase().trim() === pb.name.toLowerCase().trim())
+                );
+                if (newBuildings.length > 0) {
+                    const updatedBuildings = [
+                        ...currentBuildings,
+                        ...newBuildings.map(b => ({
+                            id: b.id,
+                            name: b.name,
+                            coordinates: b.coordinates || { lat: prop.propertyData.latitude, lng: prop.propertyData.longitude }
+                        }))
+                    ];
+                    updateProperty(matched._id, { buildings: updatedBuildings });
+                    addCommunication('file', matched._id, `Intake added additional property building(s): ${newBuildings.map(b => b.name).join(', ')}`);
+                }
+            } else {
                 const finalBuildings = prop.pinnedBuildings.length > 0
                     ? prop.pinnedBuildings.map(b => ({
                         id: b.id,
@@ -1461,20 +1543,41 @@ const CustomerInputPage: React.FC = () => {
                 addProperty({
                     address_full: prop.propertyData.address,
                     type: requiresOrganization ? 'Commercial' : 'Residential',
-                    owner_id: primaryContact.existingUserId || 'U-NEW',
+                    owner_id: ownerId,
                     coordinates: { lat: prop.propertyData.latitude, lng: prop.propertyData.longitude },
                     buildings: finalBuildings
                 });
             }
         });
 
-        createProject(projectName, projectCategory, targetPropertyId, primaryContact.existingUserId || 'U-NEW');
-        
-        setSubmissionSummary({
-            name: projectName,
-            type: isEstimateRequest ? "Estimate Sent" : "Project Created"
-        });
-        setIsSuccessModalOpen(true);
+        // 4. Resolve Active Project and Merge / Create
+        const activeProjectOnProp = existingProperty
+            ? projects.find(p => p.property_id === existingProperty._id && p.status === 'Active')
+            : null;
+
+        const projectName = requiresOrganization 
+            ? (companyData.propertyName || propertyData.address) 
+            : `${primaryContact.lastName} Residence`;
+
+        if (activeProjectOnProp) {
+            // MERGE INTO ACTIVE PROJECT: append contacts/notes, do NOT duplicate card
+            const contactNames = resolvedContacts.map(c => `${c.firstName} ${c.lastName}`).join(', ');
+            const infoMessage = `[Smart Intake Merge] Form submitted. New Contact(s): ${contactNames}. Category: ${projectCategory}. Scope Notes: ${detailedScope.projectDetails || 'None'}`;
+            
+            addCommunication('file', activeProjectOnProp._id, infoMessage);
+            
+            // Also associate new contacts with the active project via communication log
+            resolvedContacts.forEach(rc => {
+                addCommunication('file', activeProjectOnProp._id, `Linked contact to project: ${rc.firstName} ${rc.lastName} (${rc.phone})`);
+            });
+
+            alert(`Smart Merge Complete: Existing active project "${activeProjectOnProp.name}" found on property. New contacts and intake details have been merged into this project file (No duplicate card created).`);
+        } else {
+            // Create new project
+            createProject(projectName, projectCategory, targetPropertyId, ownerId);
+        }
+
+        setActivePageId('E-18');
     };
 
     const handleGoToPropertyProfile = () => {
@@ -2174,13 +2277,32 @@ const CustomerInputPage: React.FC = () => {
                                                         "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
                                                         purchaseIntent === 'Exploring' 
                                                             ? "bg-[#ec028b]/20 border-[#ec028b] text-white" 
-                                                            : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
+                                                             : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
                                                     )}
                                                 >
                                                     <p className="font-bold mb-1">Just looking for ballpark pricing</p>
                                                     <p className="text-xs opacity-70">I want an Instant Estimate (Need A Ballpark Price).</p>
                                                 </div>
                                             </div>
+                                            {purchaseIntent && (
+                                                <div className="flex justify-center -mb-2 mt-4 animate-fade-in">
+                                                    <svg className="w-6 h-10 overflow-visible" viewBox="0 0 24 40">
+                                                        <path 
+                                                            d="M 12,0 L 12,40" 
+                                                            stroke="#ec028b" 
+                                                            strokeWidth="3" 
+                                                            strokeDasharray="6, 6"
+                                                            className="animate-[dash_1s_linear_infinite]"
+                                                            style={{ filter: 'drop-shadow(0 0 6px #ec028b)' }}
+                                                        />
+                                                    </svg>
+                                                    <style>{`
+                                                        @keyframes dash {
+                                                            to { stroke-dashoffset: -12; }
+                                                        }
+                                                    `}</style>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                     

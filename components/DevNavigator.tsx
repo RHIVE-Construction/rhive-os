@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, X, ChevronRight, Code } from 'lucide-react';
+import { X, ChevronRight, Code } from 'lucide-react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { PAGE_GROUPS } from '../constants';
 import { cn } from '../lib/utils';
 
 export const DevNavigator: React.FC = () => {
-    const { activePageId, setActivePageId } = useNavigation();
+    const { activePageId, setActivePageId, showEditorMenu, setShowEditorMenu } = useNavigation();
     const [isOpen, setIsOpen] = useState(false);
 
     // Extract all public pages from PAGE_GROUPS
@@ -20,6 +20,12 @@ export const DevNavigator: React.FC = () => {
         { id: 'CO-01', name: 'Contractor Portal', description: 'Jump to Portal' },
     ];
 
+    useEffect(() => {
+        const handleToggle = () => setIsOpen(open => !open);
+        window.addEventListener('toggle-dev-navigator', handleToggle);
+        return () => window.removeEventListener('toggle-dev-navigator', handleToggle);
+    }, []);
+
     return (
         <div className="fixed bottom-6 left-6 z-[9999] font-sans">
             <AnimatePresence>
@@ -28,14 +34,22 @@ export const DevNavigator: React.FC = () => {
                         initial={{ opacity: 0, scale: 0.9, y: 20, originX: 0, originY: 1 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="absolute bottom-16 left-0 w-80 max-h-[70vh] flex flex-col bg-black/90 backdrop-blur-xl border border-[var(--rhive-pink)]/50 shadow-[0_0_30px_rgba(236,2,139,0.2)] rounded-xl overflow-hidden"
+                        className="absolute bottom-0 left-0 w-80 max-h-[70vh] flex flex-col bg-black/90 backdrop-blur-xl border border-[var(--rhive-pink)]/50 shadow-[0_0_30px_rgba(236,2,139,0.25)] rounded-xl overflow-hidden text-left"
                     >
                         <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
                             <div className="flex items-center gap-2">
                                 <Code size={16} className="text-[var(--rhive-pink)]" />
                                 <span className="text-base font-black uppercase tracking-widest text-white">Dev Navigator</span>
                             </div>
-                            <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                            <button 
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    if (activePageId.startsWith('P-')) {
+                                        setShowEditorMenu(false);
+                                    }
+                                }} 
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
                                 <X size={16} />
                             </button>
                         </div>
@@ -93,18 +107,6 @@ export const DevNavigator: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsOpen(!isOpen)}
-                className={cn(
-                    "flex items-center justify-center w-12 h-12 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-colors border",
-                    isOpen ? "bg-[var(--rhive-pink)] text-white border-[var(--rhive-pink)]" : "bg-black/80 backdrop-blur-md text-gray-400 hover:text-[var(--rhive-pink)] border-white/10 hover:border-[var(--rhive-pink)]/50"
-                )}
-            >
-                {isOpen ? <X size={20} /> : <Settings size={20} />}
-            </motion.button>
         </div>
     );
 };

@@ -279,24 +279,23 @@ export const GlobalWeatherModal: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Environment Details Grid with 12px Chamfer */}
                     <div 
                         className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-black/40 border border-gray-800"
                         style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                     >
-                        <div>
+                        <div className="flex flex-col items-center justify-center text-center">
                             <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Humidity</span>
                             <p className="text-sm font-bold text-white mt-1">{weather.humidity}</p>
                         </div>
-                        <div>
+                        <div className="flex flex-col items-center justify-center text-center">
                             <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Wind Velocity</span>
                             <p className="text-sm font-bold text-white mt-1">{weather.wind}</p>
                         </div>
-                        <div>
+                        <div className="flex flex-col items-center justify-center text-center">
                             <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">UV Index</span>
                             <p className="text-sm font-bold text-white mt-1">{weather.uv}</p>
                         </div>
-                        <div>
+                        <div className="flex flex-col items-center justify-center text-center">
                             <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Hail Risk</span>
                             <p className={cn(
                                 "text-sm font-bold mt-1",

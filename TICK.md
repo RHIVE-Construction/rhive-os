@@ -17,10 +17,13 @@ backlog:
   - "[N3] REPO_AUDIT: Compare old/current RHIVE OS branches. QA_EXIT:0."
   - "[N2] TEAM_SYNC: Transcribe recorded Same Page Meetings. QA_EXIT:0."
   - "[N9] CALENDAR_OPT: Restructure calendars for Martell color-blocks. QA_EXIT:0."
-todo:
-in-progress:
 review:
+  - "[N1] NAV_REFACTOR_AND_STAGE_REBRAND: Removed redundant login from header, updated Michael's phone number, re-branded 10 stages to homeowner-friendly names, aligned System Scan left / Hunni right, and re-rendered screenshots against active port 3001. QA_EXIT:0."
+  - "[N1] HOMEPAGE_OPTIMIZATION: Optimized header nav, breathing address input white glow, consolidated scan panels, loaded GSAP titles, trust links, and Hunni chat widget corner alignment. QA_EXIT:0."
+  - "[N1] SMART_INTAKE_MERGE_AND_COLLISION: Implemented smart merging of buildings, contacts, and parent company profiles inside intake submit to prevent duplicate cards and relate records dynamically. Appended Scenarios 14, 15, and 16. QA_EXIT:0."
+  - "[N1] EMPLOYEE_DASHBOARD_HOTFIX: Resolved SessionWidget cn runtime crash, added recent activity loading safety timeout, captured clean screenshots. QA_EXIT:0."
 done:
+  - "[N1] LOGIN_CLEANUP_AND_ELIMINATE_PAGES: Cleaned login gateway card, restored chamfers, added melting leak banner, collapsible sidebar, file buckets, clocks logger, and admin tabs. QA_EXIT:0."
   - "[N1] ADMIN_DASHBOARD_ROUTING_AND_SETTINGS_ACTION: Route Admin to Employee Dashboard, add Settings quick action to target A-01, rebuild walkthrough. QA_EXIT:0."
   - "[N1] ROUTING_AND_CREDENTIALS: Default homepage, credentials login, Michael admin seed. QA_EXIT:0."
   - "[N1] MULTI_PROPERTY_INTAKE_AND_HEADER_RESTORE: Add multi-property collapsible intake and restore weather/search header widgets. QA_EXIT:0."

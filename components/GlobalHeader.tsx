@@ -6,7 +6,7 @@ import { RhiveLogo, SunIcon2 as SunIcon, MoonIcon2 as MoonIcon, GlobeAlt as Glob
 import WeatherForecastStrip from './WeatherForecastStrip';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
-import { User } from 'lucide-react';
+import { User, Sparkles as SparklesIcon } from 'lucide-react';
 
 export const GlobalHeader: React.FC = () => {
     const { theme, setTheme } = useTheme();
@@ -34,6 +34,7 @@ export const GlobalHeader: React.FC = () => {
         }
     };
 
+    const [isWeatherOpen, setIsWeatherOpen] = React.useState(false);
     const languages: { code: Locale; label: string }[] = [
         { code: 'en', label: 'EN' },
         { code: 'es', label: 'ES' },
@@ -57,11 +58,40 @@ export const GlobalHeader: React.FC = () => {
                 </span>
             </div>
 
-            {/* Weather & Search Widgets */}
-            <div className="flex items-center gap-2 sm:gap-4">
-                <div className="hidden md:block">
-                    <WeatherForecastStrip />
+            {/* Weather, Search & AI Assistant Widgets */}
+            <div className="flex items-center gap-2 sm:gap-4 relative">
+                {/* Compact Weather Button */}
+                <div className="relative">
+                    <button
+                        onClick={() => setIsWeatherOpen(!isWeatherOpen)}
+                        id="header-weather-trigger-btn"
+                        className={cn(
+                            "px-3 py-1.5 bg-black/40 border border-gray-700/60 hover:border-[#ec028b]/50 rounded-full text-xs font-bold text-gray-300 hover:text-white flex items-center gap-1.5 cursor-pointer outline-none transition-all",
+                            isWeatherOpen && "border-[#ec028b] text-white shadow-[0_0_8px_rgba(236,2,139,0.3)] bg-[#ec028b]/10"
+                        )}
+                    >
+                        <span>🌤️</span>
+                        <span className="hidden sm:inline">Salt Lake City</span>
+                        <span className="font-mono text-[#ec028b]">78°F</span>
+                    </button>
+                    {isWeatherOpen && (
+                        <>
+                            <div className="fixed inset-0 z-[199]" onClick={() => setIsWeatherOpen(false)} />
+                            <div 
+                                className="absolute left-1/2 -translate-x-1/2 mt-2 p-3 bg-black/95 border border-[#ec028b]/40 rounded-xl shadow-[0_0_20px_rgba(236,2,139,0.25)] z-[200] backdrop-blur-xl"
+                                style={{ minWidth: '380px' }}
+                            >
+                                <div className="text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2 text-center border-b border-white/5 pb-1.5 flex justify-between items-center px-1">
+                                    <span>7-Day Command Forecast</span>
+                                    <span className="text-[8px] text-[#ec028b] font-mono">SLC Base</span>
+                                </div>
+                                <WeatherForecastStrip />
+                            </div>
+                        </>
+                    )}
                 </div>
+
+                {/* Search Button */}
                 <button
                     onClick={() => window.dispatchEvent(new CustomEvent('open-customer-lookup'))}
                     id="header-search-btn"
@@ -69,6 +99,19 @@ export const GlobalHeader: React.FC = () => {
                     title="Search Contacts & Properties"
                 >
                     <MagnifyingGlassIcon className="w-4 h-4" />
+                </button>
+
+                {/* AI Assistant Button */}
+                <button
+                    onClick={() => setActivePageId('E-03')}
+                    id="header-ai-assistant-btn"
+                    className={cn(
+                        "p-1.5 border hover:border-[#ec028b]/50 rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none",
+                        activePageId === 'E-03' ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10" : "bg-black/40 border-gray-700/60"
+                    )}
+                    title="AI Assistant"
+                >
+                    <SparklesIcon className="w-4 h-4" />
                 </button>
             </div>
 
@@ -188,6 +231,40 @@ export const GlobalHeader: React.FC = () => {
                                 </div>
 
                                 <div className="border-t border-white/10 pt-2 flex flex-col gap-1">
+                                    {currentUser && (
+                                        <button
+                                            onClick={() => {
+                                                setIsProfileOpen(false);
+                                                setActivePageId('E-03');
+                                            }}
+                                            className={cn(
+                                                "w-full px-3 py-1.5 rounded-lg border text-[9px] font-extrabold uppercase tracking-widest text-left transition-all",
+                                                activePageId === 'E-03'
+                                                    ? "bg-[#ec028b]/20 border-[#ec028b]/45 text-white"
+                                                    : cn("border-transparent text-gray-400 hover:text-white", isDark ? "bg-white/5 hover:bg-white/10" : "bg-black/5 hover:bg-black/10")
+                                            )}
+                                        >
+                                            My Profile
+                                        </button>
+                                    )}
+
+                                    {currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Super Admin') && (
+                                        <button
+                                            onClick={() => {
+                                                setIsProfileOpen(false);
+                                                setActivePageId('A-01');
+                                            }}
+                                            className={cn(
+                                                "w-full px-3 py-1.5 rounded-lg border text-[9px] font-extrabold uppercase tracking-widest text-left transition-all",
+                                                activePageId === 'A-01'
+                                                    ? "bg-[#ec028b]/20 border-[#ec028b]/45 text-white"
+                                                    : cn("border-transparent text-gray-400 hover:text-white", isDark ? "bg-white/5 hover:bg-white/10" : "bg-black/5 hover:bg-black/10")
+                                            )}
+                                        >
+                                            Control Room
+                                        </button>
+                                    )}
+
                                     <button
                                         onClick={() => {
                                             setIsProfileOpen(false);

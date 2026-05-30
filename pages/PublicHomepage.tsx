@@ -14,7 +14,13 @@ import {
     Droplets,
     ArrowRight,
     CheckCircle2,
-    ChevronRight
+    ChevronRight,
+    X,
+    Award,
+    Compass,
+    ShieldAlert,
+    UploadCloud,
+    Star
 } from 'lucide-react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -116,7 +122,10 @@ const FloatingCommandCenter = () => (
 
             <motion.button
                 whileHover={{ x: -10, scale: 1.05 }}
-                className="bg-black/80 backdrop-blur-xl border border-rhive-pink/50 rounded-l-full py-4 px-8 shadow-[0_0_30px_rgba(236,2,139,0.3)] flex items-center justify-between min-w-[240px] group/btn overflow-hidden relative"
+                className="bg-black/80 backdrop-blur-xl border border-rhive-pink/50 py-4 px-8 shadow-[0_0_30px_rgba(236,2,139,0.3)] flex items-center justify-between min-w-[240px] group/btn overflow-hidden relative"
+                style={{
+                    clipPath: 'polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)'
+                }}
             >
                 <div className="absolute inset-0 bg-rhive-pink/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                 <div className="flex items-center gap-3">
@@ -128,7 +137,10 @@ const FloatingCommandCenter = () => (
 
             <motion.button
                 whileHover={{ x: -10, scale: 1.05 }}
-                className="bg-rhive-blue/80 backdrop-blur-xl border border-rhive-blue/50 rounded-l-full py-4 px-8 shadow-[0_0_30px_rgba(8,19,124,0.3)] flex items-center justify-between min-w-[240px] group/btn overflow-hidden relative"
+                className="bg-rhive-blue/80 backdrop-blur-xl border border-rhive-blue/50 py-4 px-8 shadow-[0_0_30px_rgba(8,19,124,0.3)] flex items-center justify-between min-w-[240px] group/btn overflow-hidden relative"
+                style={{
+                    clipPath: 'polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)'
+                }}
             >
                 <div className="absolute inset-0 bg-rhive-blue/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                 <div className="flex items-center gap-3">
@@ -149,23 +161,224 @@ import { gsap } from 'gsap';
 
 const EmergencyBanner = () => {
     return (
-        <motion.button
-            whileHover={{ x: -10, scale: 1.05 }}
-            onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { protocol: 'EMERGENCY BREACH' } }))}
-            className="bg-red-600/90 backdrop-blur-xl border border-red-400/50 rounded-l-full py-3 px-6 shadow-[0_0_30px_rgba(239,68,68,0.3)] flex items-center justify-between min-w-[200px] max-w-[240px] group/btn overflow-hidden relative"
-        >
-            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-            <div className="flex items-center gap-3">
-                <Zap size={16} className="text-white" fill="currentColor" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-white">Active Leak [5 Drops]</span>
-            </div>
-            <ArrowRight size={14} className="text-white opacity-0 group-hover/btn:opacity-100 -translate-x-2 group-hover/btn:translate-x-0 transition-all" />
-        </motion.button>
+        <div className="relative z-20 min-w-[210px] max-w-[270px]">
+            <style>{`
+                @keyframes melt-drip-1 {
+                    0% { transform: translateY(0) scaleY(1); opacity: 0; }
+                    25% { transform: translateY(0) scaleY(1.6); opacity: 0.8; }
+                    55% { transform: translateY(35px) scaleY(0.9); opacity: 1; }
+                    100% { transform: translateY(90px) scale(0.2); opacity: 0; }
+                }
+                @keyframes melt-drip-2 {
+                    0% { transform: translateY(0) scaleY(1); opacity: 0; }
+                    35% { transform: translateY(0) scaleY(1.4); opacity: 0.8; }
+                    65% { transform: translateY(40px) scaleY(0.9); opacity: 1; }
+                    100% { transform: translateY(110px) scale(0.2); opacity: 0; }
+                }
+                @keyframes melt-drip-3 {
+                    0% { transform: translateY(0) scaleY(1); opacity: 0; }
+                    15% { transform: translateY(0) scaleY(1.5); opacity: 0.8; }
+                    45% { transform: translateY(28px) scaleY(0.9); opacity: 1; }
+                    100% { transform: translateY(80px) scale(0.2); opacity: 0; }
+                }
+                .melt-droplet-1 { animation: melt-drip-1 3.2s infinite linear; }
+                .melt-droplet-2 { animation: melt-drip-2 3.8s infinite linear; animation-delay: 1.1s; }
+                .melt-droplet-3 { animation: melt-drip-3 2.9s infinite linear; animation-delay: 2s; }
+            `}</style>
+            
+            <motion.button
+                whileHover={{ x: -10, scale: 1.05 }}
+                onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { protocol: 'EMERGENCY BREACH' } }))}
+                className="relative py-4 px-6 flex items-center justify-between w-full group/btn overflow-visible text-white select-none bg-transparent border-none outline-none"
+            >
+                {/* Custom Melting Liquid SVG Background */}
+                <div className="absolute inset-0 z-0 pointer-events-none w-full h-full">
+                    <svg 
+                        viewBox="0 0 250 56" 
+                        preserveAspectRatio="none" 
+                        className="w-full h-full text-red-600/90 fill-current drop-shadow-[0_0_20px_rgba(220,38,38,0.6)]"
+                    >
+                        <path d="M 12 0 H 238 Q 250 0, 250 12 V 36 C 230 45, 210 32, 195 46 C 185 36, 170 38, 160 48 C 145 34, 130 36, 115 50 C 95 35, 80 44, 70 38 C 55 46, 35 34, 20 44 L 0 36 V 12 Q 0 0, 12 0 Z" />
+                    </svg>
+                </div>
+
+                {/* SVG Droplets that physically fall downward */}
+                <svg className="absolute left-[115px] bottom-[-2px] w-3 h-4 overflow-visible pointer-events-none z-10">
+                    <path d="M6,0 C3.6,1.8 1.2,3.3 1.2,4.8 A2.4,2.4 0 0,0 10.8,4.8 C10.8,3.3 8.4,1.8 6,0 Z" className="fill-red-500/95 melt-droplet-1" />
+                </svg>
+                <svg className="absolute left-[160px] bottom-[-2px] w-3 h-4 overflow-visible pointer-events-none z-10">
+                    <path d="M6,0 C3.6,1.8 1.2,3.3 1.2,4.8 A2.4,2.4 0 0,0 10.8,4.8 C10.8,3.3 8.4,1.8 6,0 Z" className="fill-red-500/95 melt-droplet-2" />
+                </svg>
+                <svg className="absolute left-[195px] bottom-[-2px] w-3 h-4 overflow-visible pointer-events-none z-10">
+                    <path d="M6,0 C3.6,1.8 1.2,3.3 1.2,4.8 A2.4,2.4 0 0,0 10.8,4.8 C10.8,3.3 8.4,1.8 6,0 Z" className="fill-red-500/95 melt-droplet-3" />
+                </svg>
+
+                <div className="relative z-10 flex items-center gap-2">
+                    <Zap size={16} className="text-white animate-pulse" fill="currentColor" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white">Active Leak</span>
+                </div>
+                <ArrowRight size={14} className="relative z-10 text-white opacity-0 group-hover/btn:opacity-100 -translate-x-2 group-hover/btn:translate-x-0 transition-all" />
+            </motion.button>
+        </div>
     );
 };
 
 
-import { AddressScanInput } from '../components/AddressScanInput';
+const AddressScanInput = ({ 
+    value, 
+    onChange, 
+    onScan, 
+    id 
+}: { 
+    value: string; 
+    onChange: (val: string) => void; 
+    onScan: () => void; 
+    id?: string; 
+}) => {
+    const chamferSize = "16px";
+    const clipPathValue = `polygon(
+        ${chamferSize} 0,
+        100% 0,
+        100% calc(100% - ${chamferSize}),
+        calc(100% - ${chamferSize}) 100%,
+        0 100%,
+        0 ${chamferSize}
+    )`;
+
+    const fullText = "ENTER PROJECT ADDRESS";
+    const [placeholder, setPlaceholder] = useState("");
+    const [index, setIndex] = useState(0);
+    const [isFocused, setIsFocused] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+
+    useEffect(() => {
+        if (index < fullText.length) {
+            const timeout = setTimeout(() => {
+                setPlaceholder(prev => prev + fullText[index]);
+                setIndex(index + 1);
+            }, 50);
+            return () => clearTimeout(timeout);
+        } else {
+            const resetTimeout = setTimeout(() => {
+                setPlaceholder("");
+                setIndex(0);
+            }, 5000);
+            return () => clearTimeout(resetTimeout);
+        }
+    }, [index]);
+
+    const isGlowing = isFocused || isHovered;
+    const glowStyle = isGlowing 
+        ? { filter: `drop-shadow(0 0 ${isFocused ? '16px' : '10px'} rgba(236, 2, 139, 0.85))` } 
+        : { filter: 'drop-shadow(0 0 4px rgba(236, 2, 139, 0.45))' };
+
+    return (
+        <div 
+            id={id} 
+            className={cn(
+                "relative flex w-full max-w-2xl mx-auto h-16 group mt-8 scroll-mt-40 transition-all duration-300 isolate",
+                isFocused ? "scale-[1.01]" : "hover:scale-[1.005] input-breathe"
+            )}
+            style={{
+                ...glowStyle,
+                transition: 'filter 0.3s ease, transform 0.3s ease'
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <style>{`
+                @keyframes breathe-glow {
+                    0%, 100% { filter: drop-shadow(0 0 4px rgba(236, 2, 139, 0.4)); }
+                    50% { filter: drop-shadow(0 0 10px rgba(236, 2, 139, 0.75)); }
+                }
+                .input-breathe {
+                    animation: breathe-glow 3s infinite ease-in-out;
+                }
+            `}</style>
+
+            {/* 1. Background Layer (Clipped) */}
+            <div
+                className="absolute inset-0 bg-black/85 backdrop-blur-xl z-0"
+                style={{ clipPath: clipPathValue }}
+            />
+
+            {/* 2. CIRCUITRY BORDERS (Consistent with Design System) */}
+            {/* Left Border (Gray) + Animated Pixel */}
+            <div className="absolute left-0 top-4 bottom-0 w-[1px] bg-gray-700 z-10 overflow-hidden">
+                <motion.div
+                    className="absolute left-0 w-[2px] h-4 bg-rhive-pink shadow-[0_0_10px_rgba(236,2,139,1)]"
+                    animate={{ top: ["-20%", "120%"] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                />
+            </div>
+            {/* Top-Left Chamfer (Gray Base) */}
+            <svg className="absolute top-0 left-0 w-4 h-4 z-10 overflow-visible pointer-events-none">
+                <line x1="0" y1="16" x2="16" y2="0" stroke="#374151" strokeWidth="1" strokeLinecap="square" />
+            </svg>
+            {/* TL Chamfer Accent (Pink) */}
+            <svg className="absolute top-0 left-0 w-4 h-4 z-20 overflow-visible pointer-events-none">
+                <line x1="6" y1="10" x2="10" y2="6" stroke="#ec028b" strokeWidth="2" strokeLinecap="square" className="drop-shadow-[0_0_3px_rgba(236,2,139,0.8)]" />
+            </svg>
+
+            {/* Right Border (Gray) + Animated Pixel */}
+            <div className="absolute right-0 top-0 bottom-4 w-[1px] bg-gray-700 z-10 overflow-hidden">
+                <motion.div
+                    className="absolute right-0 w-[2px] h-4 bg-[#22d3ee] shadow-[0_0_10px_rgba(34,211,238,1)]"
+                    animate={{ top: ["120%", "-20%"] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "linear", delay: 0.5 }}
+                />
+            </div>
+            {/* Top Border (Gray) */}
+            <div className="absolute left-4 right-0 top-0 h-[1px] bg-gray-700 z-10" />
+            {/* Bottom Border (Gray) */}
+            <div className="absolute left-0 right-4 bottom-0 h-[1px] bg-gray-700 z-10" />
+            {/* Bottom-Right Chamfer (Gray Base) */}
+            <svg className="absolute bottom-0 right-0 w-4 h-4 z-10 overflow-visible pointer-events-none">
+                <line x1="0" y1="16" x2="16" y2="0" stroke="#374151" strokeWidth="1" strokeLinecap="square" />
+            </svg>
+            {/* BR Chamfer Accent (Pink) */}
+            <svg className="absolute bottom-0 right-0 w-4 h-4 z-20 overflow-visible pointer-events-none">
+                <line x1="6" y1="10" x2="10" y2="6" stroke="#ec028b" strokeWidth="2" strokeLinecap="square" className="drop-shadow-[0_0_3px_rgba(236,2,139,0.8)]" />
+            </svg>
+            {/* Pink Highlight Pulse (Top edge) */}
+            <div className="absolute top-0 left-12 right-12 h-[1px] bg-gradient-to-r from-transparent via-rhive-pink/40 to-transparent z-20" />
+
+            <div className="relative flex-grow flex items-center px-6 md:px-8 z-20">
+                {/* Colorful Google Maps Pin Icon */}
+                <svg viewBox="0 0 24 24" className="w-7 h-7 mr-4 shrink-0 transition-transform group-hover:scale-110 duration-500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.69 2 6 4.69 6 8C6 9.66 6.67 11.16 7.75 12.25L12 16.5L16.25 12.25C17.33 11.16 18 9.66 18 8C18 4.69 15.31 2 12 2Z" fill="#EA4335" />
+                    <path d="M12 16.5L7.75 12.25C6.67 11.16 6 9.66 6 8C6 7.68 6.03 7.37 6.08 7.07L12 16.5Z" fill="#34A853" />
+                    <path d="M12 2C13.25 2 14.41 2.38 15.38 3.03L12 7.5L8.62 3.03C9.59 2.38 10.75 2 12 2Z" fill="#F9BC05" />
+                    <path d="M12 16.5L16.25 12.25C17.33 11.16 18 9.66 18 8C18 7.68 17.97 7.37 17.92 7.07L12 16.5Z" fill="#4285F4" />
+                    <circle cx="12" cy="8" r="2.5" fill="#FFFFFF" />
+                    <circle cx="12" cy="8" r="1.2" fill="#4285F4" />
+                </svg>
+                <input
+                    type="text"
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    className="bg-transparent text-white w-full h-full outline-none placeholder-rhive-pink/60 font-black uppercase text-[12px] md:text-[14px] tracking-[0.2em] text-left animate-pulse-subtle"
+                />
+            </div>
+
+            {/* Premium Button Section */}
+            <button
+                onClick={onScan}
+                className="relative h-full px-8 md:px-12 flex items-center justify-center gap-2 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white font-black uppercase text-[13px] tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(236,2,139,0.2)] shrink-0 z-20"
+                style={{
+                    clipPath: `polygon(0 0, 100% 0, 100% calc(100% - ${chamferSize}), calc(100% - ${chamferSize}) 100%, 0 100%)`
+                }}
+            >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
+                <Zap size={18} fill="currentColor" className="text-white" />
+                <span className="relative z-10">Scan My Roof</span>
+            </button>
+        </div>
+    );
+};
 
 const FounderCard = ({ name, role, bio, image, colorClass = "rhive-pink" }: any) => (
     <Card className="flex flex-col md:flex-row items-center gap-8 group overflow-hidden relative isolate">
@@ -192,11 +405,789 @@ const FounderCard = ({ name, role, bio, image, colorClass = "rhive-pink" }: any)
     </Card>
 );
 
+const FinishOnTopTitle: React.FC = () => {
+    const textRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!textRef.current) return;
+        const chars = textRef.current.querySelectorAll('.char');
+        gsap.fromTo(chars, 
+            { opacity: 0, y: 40, rotateX: -30 },
+            { 
+                opacity: 1, 
+                y: 0, 
+                rotateX: 0,
+                duration: 0.8, 
+                stagger: 0.05, 
+                ease: 'power4.out',
+                onComplete: () => {
+                    gsap.to(textRef.current, {
+                        textShadow: '2px 2px 0px rgba(236,2,139,0.5), -2px -2px 0px rgba(8,19,124,0.5)',
+                        duration: 0.5,
+                        ease: 'power2.out'
+                    });
+                }
+            }
+        );
+    }, []);
+
+    const text = "FINISH ON TOP.";
+    const words = text.split(" ");
+
+    return (
+        <div ref={textRef} className="flex flex-wrap justify-center gap-x-6 select-none perspective-[1000px] overflow-hidden py-2">
+            {words.map((word, wordIdx) => (
+                <span key={wordIdx} className="char-word inline-block whitespace-nowrap">
+                    {word.split("").map((char, charIdx) => (
+                        <span 
+                            key={charIdx} 
+                            className="char inline-block font-display text-5xl sm:text-7xl md:text-9xl font-black uppercase leading-[0.85] text-white tracking-tighter"
+                            style={{ opacity: 0, transformOrigin: 'bottom center' }}
+                        >
+                            {char}
+                        </span>
+                    ))}
+                </span>
+            ))}
+        </div>
+    );
+};
+
+const FoundersCardLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[11000] flex items-center justify-center p-4">
+            <motion.div 
+                className="absolute inset-0 bg-black/85 backdrop-blur-md"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={onClose}
+            />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="relative max-w-2xl w-full bg-black/95 border border-rhive-pink/40 p-8 text-white z-10 overflow-hidden flex flex-col"
+                style={{
+                    clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)'
+                }}
+            >
+                <div className="absolute inset-0 z-0 pointer-events-none opacity-30">
+                    <PlexusShape
+                        backgroundColor="transparent"
+                        dotColor="#ec028b"
+                        lineColor="236, 2, 139"
+                        density={30}
+                        className="w-full h-full"
+                    />
+                </div>
+
+                <div className="relative z-10">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="text-rhive-pink p-2 bg-rhive-pink/10 rounded-sm border border-rhive-pink/20">
+                                <Award size={18} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black tracking-widest uppercase italic">The Founders Card</h3>
+                                <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em]">P-02 VERIFIED LEADERSHIP CREDENTIALS</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={onClose}
+                            className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8 text-left">
+                        <div className="border border-white/10 p-5 bg-white/5 relative" style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
+                            <div className="w-20 h-20 rounded-full overflow-hidden border border-rhive-pink mb-4">
+                                <img src="https://static.wixstatic.com/media/c5862a_591faf36d59c448e8c92b9caff471e96~mv2.png" alt="Kara Robinson" className="w-full h-full object-cover" />
+                            </div>
+                            <h4 className="text-md font-black uppercase text-white">Kara Robinson</h4>
+                            <p className="text-rhive-pink text-[9px] font-black uppercase tracking-widest mb-3">PRESIDENT // FOUNDER</p>
+                            <p className="text-[10px] text-gray-400 font-serif italic mb-4 leading-relaxed">
+                                Driving operational systems precision. Kara secures client alignment through strategic planning and dedicated execution safety.
+                            </p>
+                            <div className="text-[8px] font-mono text-gray-500 uppercase space-y-1">
+                                <p>Email: Point of Contact via HQ</p>
+                                <p>Phone: (435) 417-6637</p>
+                                <p className="text-rhive-gold font-bold">WBE Women-Owned Certified</p>
+                            </div>
+                        </div>
+
+                        <div className="border border-white/10 p-5 bg-white/5 relative" style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
+                            <div className="w-20 h-20 rounded-full overflow-hidden border border-rhive-blue mb-4">
+                                <img src="https://static.wixstatic.com/media/c5862a_f1b8b6616fe44f739664188e00d416ce~mv2.png" alt="Michael Robinson" className="w-full h-full object-cover" />
+                            </div>
+                            <h4 className="text-md font-black uppercase text-white">Michael Robinson</h4>
+                            <p className="text-rhive-pink text-[9px] font-black uppercase tracking-widest mb-3">CEO // STRATEGIC ARCHITECT</p>
+                            <p className="text-[10px] text-gray-400 font-serif italic mb-4 leading-relaxed">
+                                Championing technological infrastructure. Michael bridges AI-driven operating dynamics with high-performance physical builds.
+                            </p>
+                            <div className="text-[8px] font-mono text-gray-500 uppercase space-y-1">
+                                <p>Email: michael@rhiveconstruction.com</p>
+                                <p>Phone: 801-449-1451</p>
+                                <p className="text-rhive-gold font-bold">Owens Corning Preferred Builder</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="mt-6 border-t border-white/10 pt-4 flex justify-between items-center text-[8px] font-mono text-gray-500 uppercase tracking-widest">
+                        <span>RHIVE INDUSTRIES LLC • SALT LAKE CLUSTER</span>
+                        <span className="text-rhive-pink">VERIFIED STATUS: OK</span>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+const ProcessLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+    if (!isOpen) return null;
+    const stages = [
+        { stage: "STAGE 01", title: "DRONE SCAN", desc: "Digital intake & aerial assessment. We analyze your property's roof layout using high-resolution drone mapping before any work begins.", progress: "10%", check: "Drone flight scheduled" },
+        { stage: "STAGE 02", title: "BALLPARK ESTIMATE", desc: "Instant visual estimate. Our technology uses spatial data to generate an initial price estimate for your project.", progress: "20%", check: "Ballpark pricing generated" },
+        { stage: "STAGE 03", title: "CERTIFIED QUOTE", desc: "Certified fixed-price proposal. Our team reviews every detail to provide a guaranteed contract price valid for 14 days.", progress: "30%", check: "Fixed-price proposal finalized" },
+        { stage: "STAGE 04", title: "SECURE SIGN-OFF", desc: "Digital contract agreement. Review and sign your project agreement online to activate your project portal.", progress: "40%", check: "Secure digital agreement activated" },
+        { stage: "STAGE 05", title: "SCHEDULING", desc: "Permits & project timeline. We secure local permits and lock in your delivery and construction dates.", progress: "50%", check: "Project timeline confirmed" },
+        { stage: "STAGE 06", title: "PRE-CONSTRUCTION", desc: "Site preparation checklist. We coordinate with you to ensure property safety and zero disruptions on build day.", progress: "60%", check: "Pre-construction check completed" },
+        { stage: "STAGE 07", title: "INSTALLATION", desc: "The build phase. Real-time updates and photo progress sent directly to your homeowner portal as we work.", progress: "70%", check: "Live installation progress active" },
+        { stage: "STAGE 08", title: "QUALITY AUDIT", desc: "Detailed quality inspection. A thorough physical audit of your completed roof to guarantee it meets our standards.", progress: "80%", check: "Quality inspection approved" },
+        { stage: "STAGE 09", title: "FINAL REVIEW", desc: "Final walkthrough. Review of all work with you to ensure absolute satisfaction and sign off on completion.", progress: "90%", check: "Homeowner sign-off completed" },
+        { stage: "STAGE 10", title: "WARRANTY HANDOVER", desc: "System handover. We deliver your Lifetime No-Leak Warranty certificate and your digital documentation archive.", progress: "100%", check: "Lifetime warranty issued" }
+    ];
+
+    return (
+        <div className="fixed inset-0 z-[11000] flex items-center justify-center p-4">
+            <motion.div 
+                className="absolute inset-0 bg-black/85 backdrop-blur-md"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={onClose}
+            />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="relative max-w-lg w-full bg-black/95 border border-rhive-pink/40 p-8 text-white z-10 overflow-hidden flex flex-col max-h-[85vh]"
+                style={{
+                    clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)'
+                }}
+            >
+                <div className="relative z-10 flex flex-col h-full">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="text-rhive-pink p-2 bg-rhive-pink/10 rounded-sm border border-rhive-pink/20">
+                                <Compass size={18} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black tracking-widest uppercase italic text-left">Zero Surprises Process</h3>
+                                <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em]">P-04 10-STAGE VERTICAL PERFORMANCE INTEGRITY</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={onClose}
+                            className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-6 pr-2 scrollbar-thin scrollbar-thumb-rhive-pink scrollbar-track-white/5">
+                        <p className="text-xs text-gray-400 italic font-serif leading-relaxed text-left mb-4">
+                            We follow a strict 10-stage process architecture to eliminate cost overruns, schedule slips, and structural failure risks. Here is your roadmap:
+                        </p>
+
+                        {stages.map((st, idx) => (
+                            <div key={idx} className="flex gap-4 border-l border-white/15 pl-4 relative text-left">
+                                <div className="absolute -left-[9px] top-1 w-4.5 h-4.5 bg-black border border-rhive-pink/60 rounded-full flex items-center justify-center">
+                                    <div className="w-1.5 h-1.5 bg-rhive-pink rounded-full" />
+                                </div>
+                                <div className="space-y-1.5 w-full">
+                                    <div className="flex justify-between items-baseline">
+                                        <span className="text-[9px] font-mono text-rhive-pink font-black uppercase tracking-widest">{st.stage} // {st.title}</span>
+                                        <span className="text-[9px] font-mono text-gray-500">{st.progress}</span>
+                                    </div>
+                                    <p className="text-xs font-black text-white uppercase">{st.title}</p>
+                                    <p className="text-[10px] text-gray-400 leading-normal">{st.desc}</p>
+                                    <div className="bg-white/5 p-2 rounded text-[9px] font-mono text-rhive-gold uppercase border border-white/5">
+                                        System Check: {st.check}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-6 border-t border-white/10 pt-4 text-center">
+                        <button 
+                            onClick={onClose}
+                            className="px-6 py-2 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 text-white font-black text-[10px] uppercase tracking-widest"
+                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                        >
+                            Acknowledge Roadmap
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+const OmniBirdTriageLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+    const [phone, setPhone] = useState('(801) 555-0192');
+    const [severity, setSeverity] = useState<'critical' | 'severe' | 'drip'>('severe');
+    const [location, setLocation] = useState('Attic / Main Facet');
+    const [desc, setDesc] = useState('Active water intrusion during storm, dripping near electrical units');
+    const [triageStep, setTriageStep] = useState<'form' | 'success'>('form');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    if (!isOpen) return null;
+
+    const handleTriageSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setTimeout(() => {
+            setIsSubmitting(false);
+            setTriageStep('success');
+        }, 1200);
+    };
+
+    return (
+        <div className="fixed inset-0 z-[11000] flex items-center justify-center p-4">
+            <motion.div 
+                className="absolute inset-0 bg-black/85 backdrop-blur-md"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={onClose}
+            />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="relative max-w-md w-full bg-black/95 border border-red-500/40 p-8 text-white z-10 overflow-hidden flex flex-col"
+                style={{
+                    clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)'
+                }}
+            >
+                <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
+                    <PlexusShape
+                        backgroundColor="transparent"
+                        dotColor="#ef4444"
+                        lineColor="239, 68, 68"
+                        density={25}
+                        className="w-full h-full"
+                    />
+                </div>
+
+                <div className="relative z-10 text-left">
+                    <div className="flex items-center justify-between border-b border-red-500/20 pb-4 mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="text-red-500 p-2 bg-red-500/10 rounded-sm border border-red-500/20 animate-pulse">
+                                <ShieldAlert size={18} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black tracking-widest uppercase italic text-red-500">Emergency Restoration</h3>
+                                <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em]">P-06 OMNI-BIRD TRIAGE INTERNALS</p>
+                            </div>
+                        </div>
+                        <button 
+                            type="button"
+                            onClick={onClose}
+                            className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+
+                    {triageStep === 'form' ? (
+                        <form onSubmit={handleTriageSubmit} className="space-y-4">
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">CONTACT PHONE NUMBER</label>
+                                <input
+                                    type="tel"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    required
+                                    className="w-full bg-black/60 border border-white/15 p-4 rounded-lg text-xs font-bold text-white tracking-widest outline-none focus:border-red-500 transition-all"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">SEVERITY LEVEL</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { id: 'critical', label: 'CRITICAL' },
+                                        { id: 'severe', label: 'SEVERE' },
+                                        { id: 'drip', label: 'ACTIVE DRIP' }
+                                    ].map(item => (
+                                        <button
+                                            key={item.id}
+                                            type="button"
+                                            onClick={() => setSeverity(item.id as any)}
+                                            className={cn(
+                                                "py-2 text-[9px] font-black uppercase tracking-widest border rounded transition-all",
+                                                severity === item.id 
+                                                    ? "bg-red-500 border-red-500 text-black font-black"
+                                                    : "border-white/15 text-gray-400 hover:text-white hover:bg-white/5"
+                                            )}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">LEAK LOCATION</label>
+                                <input
+                                    type="text"
+                                    value={location}
+                                    onChange={(e) => setLocation(e.target.value)}
+                                    required
+                                    className="w-full bg-black/60 border border-white/15 p-4 rounded-lg text-xs font-bold text-white uppercase outline-none focus:border-red-500 transition-all"
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">SITUATION BRIEFING</label>
+                                <textarea
+                                    value={desc}
+                                    onChange={(e) => setDesc(e.target.value)}
+                                    required
+                                    className="w-full bg-black/60 border border-white/15 p-4 rounded-lg text-xs font-bold text-white outline-none focus:border-red-500 transition-all h-20 resize-none"
+                                />
+                            </div>
+
+                            <div className="border border-dashed border-white/15 hover:border-red-500/50 p-4 rounded-lg text-center bg-white/5 cursor-pointer flex flex-col items-center gap-1">
+                                <UploadCloud size={20} className="text-gray-400" />
+                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">DROP VISUAL DAMAGE FILES HERE</span>
+                                <span className="text-[7px] font-mono text-gray-600 uppercase">Supports images & videos</span>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full py-4 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all disabled:opacity-50"
+                            >
+                                {isSubmitting ? 'DISPATCHING SPECIALIST FORCE...' : 'DISPATCH EMERGENCY RESPONSE'}
+                            </button>
+                        </form>
+                    ) : (
+                        <div className="space-y-6 text-center py-4">
+                            <div className="flex justify-center">
+                                <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] animate-pulse">
+                                    <CheckCircle2 size={32} />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <h4 className="text-2xl font-black uppercase tracking-tight text-white">DISPATCH LOCKED</h4>
+                                <span className="text-red-400 font-mono text-[9px] font-black uppercase tracking-widest">Level 1 Emergency Triage Active</span>
+                            </div>
+                            <div className="bg-white/5 border border-red-500/20 p-4 rounded-xl text-left font-mono text-[9px] uppercase text-gray-400 space-y-1.5">
+                                <p><span className="text-white font-bold">Triage Token:</span> #LEAK-RESTORE-4890</p>
+                                <p><span className="text-white font-bold">Queue status:</span> Critical Priority 1</p>
+                                <p><span className="text-white font-bold">Response Crew:</span> Salt Lake Dispatch Unit 2</p>
+                                <p><span className="text-white font-bold">ETA Constraint:</span> Under 120 Minutes</p>
+                            </div>
+                            <p className="text-[10px] text-gray-400 leading-relaxed font-serif italic text-center">
+                                Emergency dispatchers are routing a drone scan and leak containment unit to your location. Keep your phone active.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="w-full py-3 border border-white/10 hover:border-white text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all"
+                            >
+                                CLOSE TRIAGE VIEW
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+const ConfiguratorLightbox = ({ 
+    isOpen, 
+    onClose, 
+    initialAddress,
+    mode 
+}: { 
+    isOpen: boolean; 
+    onClose: () => void; 
+    initialAddress: string;
+    mode: 'estimate' | 'quote';
+}) => {
+    const [step, setStep] = useState(1);
+    const [address, setAddress] = useState('');
+    const [roofType, setRoofType] = useState<'flat' | 'steep'>('steep');
+    const [material, setMaterial] = useState<'shingle' | 'metal' | 'pvc' | 'tpo'>('shingle');
+    const [facets, setFacets] = useState(12);
+    const [pitch, setPitch] = useState<'low' | 'medium' | 'steep'>('medium');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [customerName, setCustomerName] = useState('');
+    const [customerEmail, setCustomerEmail] = useState('');
+    const [customerPhone, setCustomerPhone] = useState('');
+
+    useEffect(() => {
+        if (initialAddress) {
+            setAddress(initialAddress);
+        } else {
+            setAddress('525 Aspen Meadow Dr, Logan, UT');
+        }
+    }, [initialAddress, isOpen]);
+
+    if (!isOpen) return null;
+
+    const calculateEstimate = () => {
+        let base = 12000;
+        if (material === 'metal') base = 26000;
+        if (material === 'pvc') base = 18000;
+        if (material === 'tpo') base = 16000;
+
+        if (pitch === 'steep') base *= 1.25;
+        if (roofType === 'flat') base *= 1.1;
+        base += facets * 200;
+
+        const low = Math.round(base * 0.9);
+        const high = Math.round(base * 1.1);
+
+        return {
+            low: low.toLocaleString(),
+            high: high.toLocaleString(),
+            viability: 'Optimal for Solar & High wind defense',
+            lifetime: 'Estimated service lifespan: 35-50 years'
+        };
+    };
+
+    const handleFinish = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setTimeout(() => {
+            setIsSubmitting(false);
+            setStep(5);
+        }, 1500);
+    };
+
+    const result = calculateEstimate();
+
+    return (
+        <div className="fixed inset-0 z-[11000] flex items-center justify-center p-4">
+            <motion.div 
+                className="absolute inset-0 bg-black/85 backdrop-blur-md"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={onClose}
+            />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="relative max-w-2xl w-full bg-black/95 border border-rhive-pink/40 p-8 text-white z-10 overflow-hidden flex flex-col max-h-[90vh]"
+                style={{
+                    clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)'
+                }}
+            >
+                <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
+                    <PlexusShape
+                        backgroundColor="transparent"
+                        dotColor="#ec028b"
+                        lineColor="236, 2, 139"
+                        density={30}
+                        className="w-full h-full"
+                    />
+                </div>
+
+                <div className="relative z-10 flex flex-col h-full text-left">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="text-rhive-pink p-2 bg-rhive-pink/10 rounded-sm border border-rhive-pink/20">
+                                <Zap size={18} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black tracking-widest uppercase italic">
+                                    {mode === 'quote' ? 'Certified Quote Engine' : 'Roof Configurator'}
+                                </h3>
+                                <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em]">P-01 GEOSPATIAL MULTI-DEPTH LIGHTBOX</p>
+                            </div>
+                        </div>
+                        <button 
+                            type="button"
+                            onClick={onClose}
+                            className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+
+                    {step < 5 && (
+                        <div className="grid grid-cols-4 gap-2 mb-8 text-center">
+                            {[1, 2, 3, 4].map(s => (
+                                <div key={s} className="flex flex-col gap-1">
+                                    <div className={cn(
+                                        "h-1.5 w-full rounded transition-all",
+                                        step >= s ? "bg-rhive-pink shadow-pink-glow" : "bg-white/10"
+                                    )} />
+                                    <span className={cn(
+                                        "text-[8px] font-black uppercase tracking-wider",
+                                        step === s ? "text-rhive-pink" : "text-gray-500"
+                                    )}>
+                                        {s === 1 ? 'SPECS' : s === 2 ? 'MATERIALS' : s === 3 ? 'GEOMETRY' : 'MAP DATA'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="flex-1 overflow-y-auto pr-2 min-h-[300px]">
+                        {step === 1 && (
+                            <div className="space-y-6 text-left">
+                                <h4 className="text-xl font-black uppercase tracking-tight text-white">Confirm Property Details</h4>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">DEPLOYMENT ADDRESS</label>
+                                    <input
+                                        type="text"
+                                        value={address}
+                                        onChange={(e) => setAddress(e.target.value)}
+                                        className="w-full bg-black/60 border border-white/15 p-4 rounded-lg text-xs font-bold text-white uppercase outline-none focus:border-rhive-pink transition-all"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">ROOF SLOPE CATEGORY</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setRoofType('steep')}
+                                            className={cn(
+                                                "py-4 text-[10px] font-black uppercase tracking-widest border rounded transition-all",
+                                                roofType === 'steep' ? "border-rhive-pink bg-rhive-pink/15 text-white" : "border-white/15 text-gray-400 hover:text-white"
+                                            )}
+                                        >
+                                            Steep Slope (Residential)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setRoofType('flat')}
+                                            className={cn(
+                                                "py-4 text-[10px] font-black uppercase tracking-widest border rounded transition-all",
+                                                roofType === 'flat' ? "border-rhive-pink bg-rhive-pink/15 text-white" : "border-white/15 text-gray-400 hover:text-white"
+                                            )}
+                                        >
+                                            Flat Roof (Commercial)
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex justify-end pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(2)}
+                                        className="btn-tech py-4 px-8 text-[10px] font-black tracking-widest uppercase"
+                                    >
+                                        Proceed to Materials
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 2 && (
+                            <div className="space-y-6 text-left">
+                                <h4 className="text-xl font-black uppercase tracking-tight text-white">Select Material Infrastructure</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {[
+                                        { id: 'shingle', label: 'Owens Corning Duration Shingle', desc: 'STEEP SLOPE // Storm proof self-sealing shingle, Lifetime Integrity.' },
+                                        { id: 'metal', label: 'Standing Seam Premium Metal', desc: 'STEEP/LOW // 24-Gauge structural steel panel, Lifetime integrity, 50-year warranty.' },
+                                        { id: 'pvc', label: 'Single-Ply PVC Molecular Membrane', desc: 'FLAT ROOF // Commercial standard, heat welded seams, high chemical resistance.' },
+                                        { id: 'tpo', label: 'TPO Single-Ply Membrane', desc: 'FLAT ROOF // High reflectivity rating, energy-efficient thermal shield.' }
+                                    ].map(item => (
+                                        <button
+                                            key={item.id}
+                                            type="button"
+                                            onClick={() => setMaterial(item.id as any)}
+                                            className={cn(
+                                                "p-4 border rounded text-left transition-all duration-300 flex flex-col gap-1.5 hover:bg-white/5",
+                                                material === item.id 
+                                                    ? "border-rhive-pink bg-rhive-pink/10 shadow-[0_0_15px_rgba(236,2,139,0.15)]" 
+                                                    : "border-white/15 bg-black/40 text-gray-400"
+                                            )}
+                                        >
+                                            <span className="text-[11px] font-black uppercase text-white tracking-wider">{item.label}</span>
+                                            <span className="text-[9px] leading-relaxed text-gray-400">{item.desc}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex justify-between pt-4">
+                                    <button type="button" onClick={() => setStep(1)} className="btn-tech-outline py-4 px-8 text-[10px] uppercase">Back</button>
+                                    <button type="button" onClick={() => setStep(3)} className="btn-tech py-4 px-8 text-[10px] uppercase">Proceed to Geometry</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 3 && (
+                            <div className="space-y-6 text-left">
+                                <h4 className="text-xl font-black uppercase tracking-tight text-white">Geospatial Geometry Verification</h4>
+                                <div className="space-y-4">
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">FACET COUNT (ROOF SECTIONS)</label>
+                                        <div className="flex items-center gap-4">
+                                            <button type="button" onClick={() => setFacets(Math.max(1, facets - 1))} className="w-12 h-12 bg-white/5 border border-white/15 text-lg font-bold flex items-center justify-center rounded-lg hover:border-rhive-pink">-</button>
+                                            <span className="text-xl font-mono font-black text-white w-12 text-center">{facets}</span>
+                                            <button type="button" onClick={() => setFacets(facets + 1)} className="w-12 h-12 bg-white/5 border border-white/15 text-lg font-bold flex items-center justify-center rounded-lg hover:border-rhive-pink">+</button>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">ROOF PITCH</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['low', 'medium', 'steep'].map(p => (
+                                                <button
+                                                    key={p}
+                                                    type="button"
+                                                    onClick={() => setPitch(p as any)}
+                                                    className={cn(
+                                                        "py-3 text-[9px] font-black uppercase tracking-widest border rounded transition-all",
+                                                        pitch === p ? "border-rhive-pink bg-rhive-pink/15 text-white" : "border-white/15 text-gray-400 hover:text-white"
+                                                    )}
+                                                >
+                                                    {p} pitch
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between pt-4">
+                                    <button type="button" onClick={() => setStep(2)} className="btn-tech-outline py-4 px-8 text-[10px] uppercase">Back</button>
+                                    <button type="button" onClick={() => setStep(4)} className="btn-tech py-4 px-8 text-[10px] uppercase">Initialize Map Radar</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 4 && (
+                            <div className="space-y-6 text-left">
+                                <h4 className="text-xl font-black uppercase tracking-tight text-white">Google Solar API Radar Sweep</h4>
+                                <div className="grid md:grid-cols-2 gap-6 items-center">
+                                    <div className="border border-rhive-pink/30 rounded-xl aspect-square bg-slate-950 relative overflow-hidden flex items-center justify-center shadow-lg">
+                                        <div className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-luminosity" style={{ backgroundImage: 'url(https://i.imgur.com/GscT2hY.png)' }} />
+                                        <div className="absolute inset-0 bg-radial-gradient opacity-80" style={{ background: 'radial-gradient(circle, rgba(236,2,139,0.15) 0%, rgba(8,13,124,0.05) 50%, transparent 100%)' }} />
+                                        
+                                        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full overflow-visible pointer-events-none drop-shadow-[0_0_8px_rgba(236,2,139,0.9)] animate-pulse">
+                                            <polygon points="25,30 75,30 85,75 15,75" fill="rgba(236, 2, 139, 0.1)" stroke="#ec028b" strokeWidth="1.5" />
+                                            <polygon points="50,15 75,30 25,30" fill="rgba(8, 19, 124, 0.15)" stroke="#08137c" strokeWidth="1" />
+                                        </svg>
+                                        <span className="absolute bottom-3 left-3 text-[7px] font-mono text-cyan-400 uppercase tracking-widest bg-black/60 px-2 py-0.5 rounded border border-cyan-400/20">
+                                            RADAR_GEOMETRY_LOCK: 99.8%
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="border border-white/10 p-4 bg-white/5 rounded-lg space-y-2 font-mono text-[9px] uppercase tracking-wider text-gray-400">
+                                            <p><span className="text-white font-bold">Viability:</span> {result.viability}</p>
+                                            <p><span className="text-white font-bold">Lifetime:</span> {result.lifetime}</p>
+                                            <p><span className="text-white font-bold">Scanned Area:</span> 2,840 sq ft</p>
+                                            <p><span className="text-white font-bold">Solar Exposure:</span> High (1,380 kWh/m²/yr)</p>
+                                        </div>
+                                        <div className="border border-rhive-pink/40 p-4 bg-rhive-pink/5 rounded-lg text-center shadow-pink-glow">
+                                            <span className="text-[9px] font-mono text-rhive-pink uppercase font-black block tracking-widest mb-1">PROJECT savings range</span>
+                                            <span className="text-3xl font-black text-white">${result.low} - ${result.high}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleFinish} className="space-y-4 pt-4 border-t border-white/10">
+                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">CLIENT DELIVERY SECURE DATA</span>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <input type="text" placeholder="NAME" required value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full bg-black/60 border border-white/15 p-3 rounded-lg text-[10px] font-bold outline-none focus:border-rhive-pink transition-all" />
+                                        <input type="email" placeholder="EMAIL" required value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} className="w-full bg-black/60 border border-white/15 p-3 rounded-lg text-[10px] font-bold outline-none focus:border-rhive-pink transition-all" />
+                                        <input type="tel" placeholder="PHONE" required value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="w-full bg-black/60 border border-white/15 p-3 rounded-lg text-[10px] font-bold outline-none focus:border-rhive-pink transition-all" />
+                                    </div>
+                                    <div className="flex justify-between pt-2">
+                                        <button type="button" onClick={() => setStep(3)} className="btn-tech-outline py-4 px-8 text-[10px] uppercase">Back</button>
+                                        <button type="submit" disabled={isSubmitting} className="btn-tech py-4 px-12 text-[10px] uppercase shadow-pink-glow">
+                                            {isSubmitting ? 'UPLOADING PORTAL CONFIG...' : 'LOCK IN MOCK ESTIMATE'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+
+                        {step === 5 && (
+                            <div className="space-y-8 text-center py-8">
+                                <div className="flex justify-center">
+                                    <div className="w-20 h-20 bg-rhive-pink rounded-full flex items-center justify-center text-white shadow-pink-glow animate-pulse">
+                                        <CheckCircle2 size={40} />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="text-3xl font-black uppercase tracking-tight text-white">PROJECT PORTAL OPEN</h4>
+                                    <span className="text-rhive-pink font-mono text-[9px] font-black uppercase tracking-widest">Mock Database Records Synced Successfully</span>
+                                </div>
+                                <p className="text-[11px] text-gray-400 leading-relaxed font-serif italic max-w-md mx-auto">
+                                    A project record has been created for <span className="text-white font-bold">{customerName}</span> at <span className="text-white font-bold">{address}</span>. The Owens Corning {material.toUpperCase()} estimation is locked.
+                                </p>
+                                <div className="flex justify-center gap-4">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => {
+                                            onClose();
+                                            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
+                                        }}
+                                        className="btn-tech-outline py-4 px-8 text-[10px] uppercase"
+                                    >
+                                        Return to Homepage
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            onClose();
+                                            window.location.href = "/?page=C-01";
+                                        }}
+                                        className="btn-tech py-4 px-8 text-[10px] uppercase shadow-pink-glow"
+                                    >
+                                        Enter Client Portal
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
 // --- Main Page ---
 
 const PublicHomepage: React.FC = () => {
     const { setActivePageId } = useNavigation();
     const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+    const [addressQuery, setAddressQuery] = useState('');
+    const [isP01Open, setIsP01Open] = useState(false);
+    const [isP02Open, setIsP02Open] = useState(false);
+    const [isP04Open, setIsP04Open] = useState(false);
+    const [isP06Open, setIsP06Open] = useState(false);
+    const [configuratorMode, setConfiguratorMode] = useState<'estimate' | 'quote'>('estimate');
+
+    useEffect(() => {
+        const handleEmergencyTriage = () => {
+            setIsP06Open(true);
+        };
+        const handleRoofConfigurator = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            if (customEvent.detail?.mode) {
+                setConfiguratorMode(customEvent.detail.mode);
+            }
+            if (customEvent.detail?.address) {
+                setAddressQuery(customEvent.detail.address);
+            }
+            setIsP01Open(true);
+        };
+
+        window.addEventListener('open-emergency-triage', handleEmergencyTriage);
+        window.addEventListener('open-roof-configurator', handleRoofConfigurator);
+
+        return () => {
+            window.removeEventListener('open-emergency-triage', handleEmergencyTriage);
+            window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
+        };
+    }, []);
 
     const services = [
         {
@@ -230,16 +1221,16 @@ const PublicHomepage: React.FC = () => {
     ];
 
     const stages = [
-        { stage: "STAGE 01", title: "LEAD", desc: "Digital intake & identification. We analyze your property's geometry via satellite data before we ever deploy a human.", progress: "10%" },
-        { stage: "STAGE 02", title: "ESTIMATE", desc: "Instant ballpark numbers. Our AI uses Google Solar data to generate a low-friction financial starting point.", progress: "20%" },
-        { stage: "STAGE 03", title: "QUOTE", desc: "Certified proposal. A human architect verifies every variable to provide a fixed-price packet valid for 14 days.", progress: "30%" },
-        { stage: "STAGE 04", title: "SIGN & VERIFY", desc: "Digital contract & 50% deposit. We generate your secure 'Ghost Link' and unlock the client portal.", progress: "40%" },
-        { stage: "STAGE 05", title: "SCHEDULE", desc: "Material & labor logistics. Permits are filed and the production queue is locked into our operational registry.", progress: "50%" },
-        { stage: "STAGE 06", title: "PRE-INSTALL", desc: "Site preparation & approvals. Final coordination with homeowners to ensure zero-friction deployment.", progress: "60%" },
-        { stage: "STAGE 07", title: "INSTALL", desc: "The build. Live photo feeds are streamed directly from your roof to your portal in real-time.", progress: "70%" },
-        { stage: "STAGE 08", title: "PUNCH LIST", desc: "Quality assurance. A multi-point structural audit ensures every detail exceeds our ineffable standard.", progress: "80%" },
-        { stage: "STAGE 09", title: "INVOICING", desc: "Final accounting. 10% payment trigger upon completion and verified client satisfaction.", progress: "90%" },
-        { stage: "STAGE 10", title: "COMPLETED", desc: "Asset handover. We deliver your Lifetime No-Leak Warranty and your Digital Property Vault.", progress: "100%" }
+        { stage: "STAGE 01", title: "DRONE SCAN", desc: "Digital intake & aerial assessment. We analyze your property's roof layout using high-resolution drone mapping before any work begins.", progress: "10%" },
+        { stage: "STAGE 02", title: "BALLPARK ESTIMATE", desc: "Instant visual estimate. Our technology uses spatial data to generate an initial price estimate for your project.", progress: "20%" },
+        { stage: "STAGE 03", title: "CERTIFIED QUOTE", desc: "Certified fixed-price proposal. Our team reviews every detail to provide a guaranteed contract price valid for 14 days.", progress: "30%" },
+        { stage: "STAGE 04", title: "SECURE SIGN-OFF", desc: "Digital contract agreement. Review and sign your project agreement online to activate your project portal.", progress: "40%" },
+        { stage: "STAGE 05", title: "SCHEDULING", desc: "Permits & project timeline. We secure local permits and lock in your delivery and construction dates.", progress: "50%" },
+        { stage: "STAGE 06", title: "PRE-CONSTRUCTION", desc: "Site preparation checklist. We coordinate with you to ensure property safety and zero disruptions on build day.", progress: "60%" },
+        { stage: "STAGE 07", title: "INSTALLATION", desc: "The build phase. Real-time updates and photo progress sent directly to your homeowner portal as we work.", progress: "70%" },
+        { stage: "STAGE 08", title: "QUALITY AUDIT", desc: "Detailed quality inspection. A thorough physical audit of your completed roof to guarantee it meets our standards.", progress: "80%" },
+        { stage: "STAGE 09", title: "FINAL REVIEW", desc: "Final walkthrough. Review of all work with you to ensure absolute satisfaction and sign off on completion.", progress: "90%" },
+        { stage: "STAGE 10", title: "WARRANTY HANDOVER", desc: "System handover. We deliver your Lifetime No-Leak Warranty certificate and your digital documentation archive.", progress: "100%" }
     ];
 
     const faqs = [
@@ -260,49 +1251,6 @@ const PublicHomepage: React.FC = () => {
             <ScrollProgress />
 
             {/* REMOVED: Fixed CTA. Moved to relative wrapper below. */}
-
-            {/* UPDATED COMMAND CENTER (Logic Bound to Scanner) */}
-            <motion.div
-                initial={{ x: 100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                className="fixed right-0 top-1/2 -translate-y-1/2 z-[100] group flex items-center transition-all px-4"
-            >
-                <div className="flex flex-col gap-3 mr-4 items-end">
-
-                    {/* MOVED: Emergency Banner as the top-priority action */}
-                    <div className="flex justify-end transform origin-right">
-                        <EmergencyBanner />
-                    </div>
-
-                    <motion.button
-                        whileHover={{ x: -10, scale: 1.05 }}
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { protocol: 'INSTANT ESTIMATE' } }))}
-                        className="bg-black/80 backdrop-blur-xl border border-rhive-pink/50 rounded-l-full py-3 px-6 shadow-[0_0_30px_rgba(236,2,139,0.3)] flex items-center justify-between min-w-[200px] max-w-[240px] group/btn overflow-hidden relative"
-                    >
-                        <div className="absolute inset-0 bg-rhive-pink/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                        <div className="flex items-center gap-3">
-                            <Zap size={16} className="text-rhive-pink" fill="currentColor" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Instant Estimate</span>
-                        </div>
-                        <ArrowRight size={14} className="text-rhive-pink opacity-0 group-hover/btn:opacity-100 -translate-x-2 group-hover/btn:translate-x-0 transition-all" />
-                    </motion.button>
-
-                    <motion.button
-                        whileHover={{ x: -10, scale: 1.05 }}
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { protocol: 'CERTIFIED QUOTE' } }))}
-                        className="bg-rhive-blue/80 backdrop-blur-xl border border-rhive-blue/50 rounded-l-full py-3 px-6 shadow-[0_0_30px_rgba(8,19,124,0.3)] flex items-center justify-between min-w-[200px] max-w-[240px] group/btn overflow-hidden relative"
-                    >
-                        <div className="absolute inset-0 bg-rhive-blue/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                        <div className="flex items-center gap-3">
-                            <CheckCircle2 size={16} className="text-white" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Certified Quote</span>
-                        </div>
-                        <ArrowRight size={14} className="text-white opacity-0 group-hover/btn:opacity-100 -translate-x-2 group-hover/btn:translate-x-0 transition-all" />
-                    </motion.button>
-                </div>
-
-                <div className="h-48 w-1 bg-gradient-to-b from-transparent via-rhive-pink to-transparent opacity-30" />
-            </motion.div>
 
             <div className="fixed inset-0 bg-circuit-pattern opacity-5 pointer-events-none z-0" />
             <RhiveHeader />
@@ -353,14 +1301,7 @@ const PublicHomepage: React.FC = () => {
                 </svg>
 
                 <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center mt-12">
-                    <motion.h1
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="font-display text-7xl md:text-9xl font-black uppercase leading-[0.85] mb-8 tracking-tighter text-white drop-shadow-2xl"
-                    >
-                        <GlitchText text="Finish On Top." className="text-white" />
-                    </motion.h1>
+                    <FinishOnTopTitle />
 
                     <motion.p
                         initial={{ y: 20, opacity: 0 }}
@@ -368,45 +1309,43 @@ const PublicHomepage: React.FC = () => {
                         transition={{ delay: 0.4 }}
                         className="font-sans text-lg md:text-xl text-white/90 max-w-2xl mx-auto mb-12 font-bold leading-tight tracking-wide"
                     >
-                        The first AI-enabled operating system for all high-performance roofing projects—residential, commercial, or emergency restoration. From drone scan to certified install in record time with zero surprises.
+                        Advanced aerial mapping to manufacturer-certified installation. 100% transparent costs, 100% satisfaction, zero surprises.
                     </motion.p>
+
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="flex flex-wrap justify-center gap-x-2 text-xs md:text-sm text-gray-400 font-medium tracking-wide mb-12 mt-[-24px] select-none"
+                    >
+                        <span>Built by </span>
+                        <button 
+                            onClick={() => setIsP02Open(true)}
+                            className="text-white hover:text-rhive-pink font-bold underline transition-colors outline-none bg-transparent border-none p-0 cursor-pointer"
+                        >
+                            RHIVE AI
+                        </button>
+                        <span> | View Our </span>
+                        <button 
+                            onClick={() => setIsP04Open(true)}
+                            className="text-white hover:text-rhive-pink font-bold underline transition-colors outline-none bg-transparent border-none p-0 cursor-pointer"
+                        >
+                            10-Stage 'Zero Surprises' Process →
+                        </button>
+                    </motion.div>
 
                     <div className="mt-8 w-full flex justify-center">
                         <div className="relative flex justify-center items-center w-full max-w-4xl">
-
-                            {/* HANDWRITING CTA + ARROW OVERLAY (Pinned Left) */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, x: -20 }}
-                                animate={{ opacity: 1, scale: 1, x: 0 }}
-                                transition={{ delay: 1.5, duration: 0.8 }}
-                                className="absolute right-full mr-[-125px] top-[-140px] z-[110] pointer-events-none hidden xl:flex flex-col items-end gap-0"
-                            >
-                                <div style={{ fontFamily: "'Caveat', cursive", whiteSpace: "nowrap" }} className="text-rhive-pink text-3xl lg:text-4xl -rotate-6 drop-shadow-[0_0_12px_rgba(236,2,139,0.8)] mr-16 mb-2">
-                                    Got a project? <br /> Start here!
-                                </div>
-                                {/* Precision Guided Arrow: Aiming for the absolute corner of the scanner */}
-                                <svg width="260" height="140" viewBox="0 0 260 140" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-0 overflow-visible">
-                                    <path
-                                        d="M10 20 Q 150 15 228 72"
-                                        stroke="#ec028b"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        fill="none"
-                                        className="drop-shadow-[0_0_10px_rgba(236,2,139,0.9)] opacity-90"
-                                    />
-                                    <path
-                                        d="M204 60 L228 72 L216 46"
-                                        stroke="#ec028b"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        fill="none"
-                                        className="drop-shadow-[0_0_10px_rgba(236,2,139,0.9)] opacity-90"
-                                    />
-                                </svg>
-                            </motion.div>
-
-                            <AddressScanInput id="property-scanner" />
+                            <AddressScanInput 
+                                id="property-scanner" 
+                                value={addressQuery}
+                                onChange={setAddressQuery}
+                                onScan={(address) => {
+                                    setAddressQuery(address);
+                                    setConfiguratorMode('estimate');
+                                    setIsP01Open(true);
+                                }}
+                            />
                         </div>
                     </div>
                 </div>
@@ -515,10 +1454,13 @@ const PublicHomepage: React.FC = () => {
                                     idx % 2 === 0 ? "md:text-left pl-8" : "md:text-right pr-8"
                                 )}>
                                     <h3 className="font-display text-xl font-bold text-[var(--rhive-text)] uppercase md:hidden mb-2">{stage.title}</h3>
-                                    <div className={cn(
-                                        "glass-dark p-6 rounded border-y-0 text-xs text-[var(--rhive-text-muted)]",
-                                        idx % 2 === 0 ? "border-l-4 border-rhive-pink" : "border-r-4 border-rhive-blue"
-                                    )}>
+                                    <div 
+                                        className={cn(
+                                            "glass-dark p-6 border-y-0 text-xs text-[var(--rhive-text-muted)]",
+                                            idx % 2 === 0 ? "border-l-4 border-rhive-pink" : "border-r-4 border-rhive-blue"
+                                        )}
+                                        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                                    >
                                         <div className="flex justify-between items-center mb-4">
                                             <span className="text-[10px] font-mono text-gray-500 uppercase">Verification Checksum</span>
                                             <span className="text-rhive-pink">OK</span>
@@ -563,13 +1505,16 @@ const PublicHomepage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <button className="px-10 py-5 bg-rhive-pink text-white font-bold uppercase tracking-widest text-sm glass-frosted hover:brightness-110 active:scale-95 transition-all w-fit">
+                             <button className="px-10 py-5 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white font-bold uppercase tracking-widest text-sm hover:brightness-110 active:scale-95 transition-all w-fit shadow-[0_0_15px_rgba(236,2,139,0.2)]" style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}>
                                 Review Economics
                             </button>
                         </div>
 
                         <div className="order-1 lg:order-2">
-                            <div className="glass-dark p-12 relative border-white/10 group overflow-hidden">
+                            <div 
+                                className="glass-dark p-12 relative border-white/10 group overflow-hidden"
+                                style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
+                            >
                                 <Shield size={40} className="text-rhive-pink mb-8" />
                                 <h3 className="text-3xl font-bold uppercase mb-8 text-[var(--rhive-text)] tracking-tight">System Integrity Protocol</h3>
                                 <div className="space-y-6 text-left">
@@ -611,7 +1556,11 @@ const PublicHomepage: React.FC = () => {
                                     { label: "Labor Certification", value: "Tier-1 Certified" },
                                     { label: "Warranty Hash", value: "SHA-256 Integrated" }
                                 ].map((item, i) => (
-                                    <div key={i} className="glass-dark p-6 flex justify-between items-center border-[var(--rhive-border)]">
+                                    <div 
+                                        key={i} 
+                                        className="glass-dark p-6 flex justify-between items-center border-[var(--rhive-border)]"
+                                        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                                    >
                                         <span className="text-xs font-bold uppercase tracking-widest text-[var(--rhive-text-muted)]">{item.label}</span>
                                         <span className="text-rhive-pink font-mono text-xs">{item.value}</span>
                                     </div>
@@ -621,8 +1570,11 @@ const PublicHomepage: React.FC = () => {
 
                         <div className="relative group">
                             <div className="absolute -inset-4 bg-rhive-pink/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                            <div className="glass-dark p-2 border-[var(--rhive-border)] relative">
-                                <div className="aspect-video bg-[var(--rhive-bg)] flex items-center justify-center overflow-hidden relative border border-[var(--rhive-border)]">
+                            <div 
+                                className="glass-dark p-2 border-[var(--rhive-border)] relative"
+                                style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                            >
+                                <div className="aspect-video bg-[var(--rhive-bg)] flex items-center justify-center overflow-hidden relative border border-[var(--rhive-border)]" style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}>
                                     <div className="absolute inset-0 bg-circuit-pattern opacity-10 scale-150" />
                                     <motion.div
                                         animate={{
@@ -662,7 +1614,10 @@ const PublicHomepage: React.FC = () => {
                             // RUNNING GEOSPATIAL ANALYSIS PKG: ESTIMATOR_V2.0
                         </p>
 
-                        <div className="bg-[var(--rhive-bg)] p-2 rounded-full flex flex-col md:flex-row max-w-3xl mx-auto shadow-2xl group border border-[var(--rhive-border)]">
+                        <div 
+                            className="bg-[var(--rhive-bg)] p-2 flex flex-col md:flex-row max-w-3xl mx-auto shadow-2xl group border border-[var(--rhive-border)]"
+                            style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
+                        >
                             <div className="flex-grow flex items-center px-10">
                                 <input
                                     type="text"
@@ -670,7 +1625,10 @@ const PublicHomepage: React.FC = () => {
                                     className="bg-transparent text-[var(--rhive-text)] w-full py-5 outline-none placeholder-[var(--rhive-text-muted)] font-bold uppercase text-sm tracking-widest text-left"
                                 />
                             </div>
-                            <button className="bg-rhive-pink text-white px-10 py-5 rounded-full font-bold uppercase text-sm hover:brightness-110 active:scale-95 transition-all tracking-widest whitespace-nowrap">
+                            <button 
+                                className="bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white px-10 py-5 font-bold uppercase text-sm active:scale-95 transition-all tracking-widest whitespace-nowrap shadow-[0_0_15px_rgba(236,2,139,0.2)]"
+                                style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                            >
                                 Analyze Now
                             </button>
                         </div>
@@ -743,7 +1701,10 @@ const PublicHomepage: React.FC = () => {
                             <p>Email: HQ@RHIVECONSTRUCTION.COM</p>
                         </div>
                     </div>
-                    <div className="flex-1 w-full bg-white/5 border border-white/10 p-10 rounded-3xl relative isolate overflow-hidden">
+                    <div 
+                        className="flex-1 w-full bg-white/5 border border-white/10 p-10 relative isolate overflow-hidden"
+                        style={{ clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)' }}
+                    >
                         <div className="absolute inset-0 bg-circuit-pattern opacity-5 pointer-events-none" />
                         <div className="space-y-6 relative z-10">
                             <input type="text" placeholder="NAME / IDENTIFIER" className="w-full bg-transparent border-b border-white/20 py-4 text-xs font-black uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-white" />
@@ -808,6 +1769,28 @@ const PublicHomepage: React.FC = () => {
                     </div>
                 </div>
             </footer>
+
+            <ConfiguratorLightbox 
+                isOpen={isP01Open} 
+                onClose={() => setIsP01Open(false)} 
+                initialAddress={addressQuery}
+                mode={configuratorMode}
+            />
+
+            <FoundersCardLightbox 
+                isOpen={isP02Open} 
+                onClose={() => setIsP02Open(false)} 
+            />
+
+            <ProcessLightbox 
+                isOpen={isP04Open} 
+                onClose={() => setIsP04Open(false)} 
+            />
+
+            <OmniBirdTriageLightbox 
+                isOpen={isP06Open} 
+                onClose={() => setIsP06Open(false)} 
+            />
         </div>
     );
 };

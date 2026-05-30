@@ -61,8 +61,7 @@ export const PAGE_GROUPS: PageGroup[] = [
         label: 'CORE COMMAND',
         pages: [
             { id: 'E-01', name: 'Dashboard', userType: 'Employee' },
-            { id: 'E-02', name: 'Customer Lookup', userType: 'Employee' },
-            { id: 'E-02a', name: 'Customer Input', userType: 'Employee' },
+            { id: 'E-02a', name: 'New Project', userType: 'Employee' },
             { id: 'E-03', name: 'AI Assistant', userType: 'Employee' },
             { id: 'E-04', name: 'Calendar', userType: 'Employee' },
         ]

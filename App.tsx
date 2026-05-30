@@ -12,6 +12,7 @@ import RhiveHeader from './components/website/RhiveHeader';
 import { pageComponentMap } from './pageRegistry';
 import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
+import HunniChatWidget from './components/website/HunniChatWidget';
 import { DevNavigator } from './components/DevNavigator';
 import { GlobalCustomerLookupModal } from './components/GlobalCustomerLookupModal';
 import { GlobalWeatherModal } from './components/GlobalWeatherModal';
@@ -19,7 +20,7 @@ import { cn } from './lib/utils';
 import { session } from './lib/session';
 
 const AppContentAuthenticated: React.FC = () => {
-    const { activePageId, setActivePageId } = useNavigation();
+    const { activePageId, setActivePageId, showEditorMenu } = useNavigation();
     const { currentUser } = useMockDB();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -49,6 +50,24 @@ const AppContentAuthenticated: React.FC = () => {
         const params = new URLSearchParams(window.location.search);
         const pageCode = params.get('page');
         if (pageCode) {
+            // If logged in and trying to go to login page P-06, redirect to dashboard directly
+            if (currentUser && pageCode === 'P-06') {
+                let target = 'E-01';
+                switch (currentUser.role) {
+                    case 'Customer': target = 'C-01'; break;
+                    case 'Contractor': target = 'CO-01'; break;
+                    case 'Supplier': target = 'S-01'; break;
+                }
+                setActivePageId(target);
+                // Clean up query param immediately
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.delete('page');
+                const newSearch = newParams.toString();
+                const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+                window.history.replaceState({}, '', newUrl);
+                return;
+            }
+
             if (pageCode !== activePageId) {
                 setActivePageId(pageCode);
             } else {
@@ -66,22 +85,10 @@ const AppContentAuthenticated: React.FC = () => {
         };
         window.addEventListener('nav-page', handleCustomNav);
         return () => window.removeEventListener('nav-page', handleCustomNav);
-    }, []); // Run only on mount
+    }, [activePageId, setActivePageId, currentUser]);
 
     useEffect(() => {
-        if (activePageId) {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('page') !== activePageId) {
-                const newUrl = `${window.location.pathname}?page=${activePageId}`;
-                window.history.pushState({ path: newUrl }, '', newUrl);
-            }
-        }
-    }, [activePageId]);
-
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const hasPageParam = params.has('page');
-        if (currentUser && (!activePageId || activePageId === 'P-06') && !hasPageParam) {
+        if (currentUser && (!activePageId || activePageId === 'P-06')) {
             switch (currentUser.role) {
                 case 'Super Admin': setActivePageId('SA-01'); break;
                 case 'Admin': setActivePageId('E-01'); break; // Unified entry point
@@ -110,20 +117,24 @@ const AppContentAuthenticated: React.FC = () => {
                 dotColor={isDark ? "#ec028b" : "#ec028b"}
                 lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
             />
-            <GlobalHeader />
+            {showEditorMenu && <GlobalHeader />}
 
-            <div className="relative z-10 flex h-full w-full pt-12">
-                <Sidebar />
-                <main 
-                    ref={mainRef}
-                    className={cn(
-                    "flex-1 h-full overflow-y-auto relative border-l transition-colors duration-500",
-                    isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-black/5"
+            <div className={cn(
+                "relative z-10 flex h-full w-full transition-all duration-300",
+                showEditorMenu ? "pt-12" : "pt-0"
+            )}>
+                {showEditorMenu && <Sidebar />}
+                <main className={cn(
+                    "flex-1 h-full overflow-y-auto relative transition-colors duration-500",
+                    showEditorMenu 
+                        ? (isDark ? "border-l bg-black/20 border-white/5" : "border-l bg-white/20 border-black/5") 
+                        : "border-l-0 bg-transparent"
                 )}>
                     <CurrentPage />
                 </main>
             </div>
             <FloatingEstimator />
+            <HunniChatWidget />
             <GlobalCustomerLookupModal />
             <GlobalWeatherModal />
             {window.location.hostname === 'localhost' && <DevNavigator />}
@@ -159,7 +170,24 @@ const LoginBridge: React.FC = () => {
     // Force non-public pages back to login/empty if logged out
     useEffect(() => {
         if (!currentUser) {
-            if (!activePageId || !activePageId.startsWith('P-')) {
+            const params = new URLSearchParams(window.location.search);
+            const pageCode = params.get('page');
+            if (pageCode) {
+                if (pageCode.startsWith('P-')) {
+                    if (pageCode !== activePageId) {
+                        setActivePageId(pageCode);
+                    } else {
+                        // Clean up page query param once activePageId matches it
+                        const newParams = new URLSearchParams(window.location.search);
+                        newParams.delete('page');
+                        const newSearch = newParams.toString();
+                        const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+                        window.history.replaceState({}, '', newUrl);
+                    }
+                } else {
+                    setActivePageId('P-00');
+                }
+            } else if (!activePageId || !activePageId.startsWith('P-')) {
                 setActivePageId('P-00');
             }
         }
@@ -197,6 +225,7 @@ const LoginBridge: React.FC = () => {
                     )}
                 </main>
                 <FloatingEstimator />
+                <HunniChatWidget />
                 <GlobalCustomerLookupModal />
                 <GlobalWeatherModal />
                 {window.location.hostname === 'localhost' && <DevNavigator />}

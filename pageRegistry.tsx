@@ -31,7 +31,6 @@ import ContractorSignupPage from './pages/ContractorSignupPage'; // P-09
 import PublicCareersPage from './pages/PublicCareersPage'; // P-10
 import JobApplicationPage from './pages/JobApplicationPage'; // P-11
 import EmployeeHomepage from './pages/EmployeeHomepage'; // E-01
-import GlobalNavCustomerLookup from './pages/GlobalNavCustomerLookup'; // E-02
 import CustomerInputPage from './pages/CustomerInputPage'; // E-02a
 import EmployeePipelinePage from './pages/EmployeePipelinePage'; // E-05
 import IncomeActionatorPage from './pages/IncomeActionatorPage'; // E-16
@@ -64,8 +63,7 @@ import UserManagementPage from './pages/UserManagementPage'; // A-02
 import AdminDashboardPage from './pages/AdminDashboardPage'; // A-01
 import RoleManagementPage from './pages/RoleManagementPage'; // SA-01
 import CustomerTrackerPage from './pages/CustomerTrackerPage'; // C-Tracker
-import SimulationGuidePage from './pages/SimulationGuidePage'; // (Simulation)
-import ChatbotTestingPage from './pages/ChatbotTestingPage'; // E-TEST
+// Removed SimulationGuidePage import
 import RHIVEBrandingPage from './pages/RHIVEBrandingPage'; // E-39
 import InsurancePage from './pages/InsurancePage'; // P-13
 import PreConversionRecordPage from './pages/PreConversionRecordPage'; // (Simulation)
@@ -138,7 +136,6 @@ export const pageComponentMap: Record<string, React.FC> = {
 
   // Employee (Employee World Section 2)
   'E-01': EmployeeHomepage,
-  'E-02': GlobalNavCustomerLookup,
   'E-02a': CustomerInputPage,
   'E-TEMP': PreConversionRecordPage,
   'E-03': () => <Placeholder name="AI ASSISTANT (GLOBAL)" />,
@@ -203,9 +200,6 @@ export const pageComponentMap: Record<string, React.FC> = {
   'S-04': SupplierProfilePage,
 
   // Simulation
-  'E-SIM-GUIDE': SimulationGuidePage,
-  'E-TEST': ChatbotTestingPage,
   'SA-01': RoleManagementPage,
-  'SA-02': () => <Placeholder name="Global Settings" />,
-  'DEBUG': FirestoreDebugPage,
+
 };
