@@ -1029,6 +1029,40 @@ const AddressSection: React.FC<{
         });
     };
 
+    const triggerGeocoding = (typedAddress: string) => {
+        if (!typedAddress || !window.google || !window.google.maps) return;
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: typedAddress }, (results: any, status: string) => {
+            if (status === 'OK' && results && results[0]) {
+                const place = results[0];
+                const addressComponents = place.address_components;
+                let streetNumber = '', route = '', city = '', state = '', zip = '';
+                if (addressComponents) {
+                    for (const component of addressComponents) {
+                        const componentType = component.types[0];
+                        switch (componentType) {
+                            case 'street_number': streetNumber = component.long_name; break;
+                            case 'route': route = component.short_name; break;
+                            case 'locality': city = component.long_name; break;
+                            case 'administrative_area_level_1': state = component.short_name; break;
+                            case 'postal_code': zip = component.short_name; break;
+                        }
+                    }
+                }
+                onChange({
+                    ...data,
+                    address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
+                    city,
+                    state,
+                    zip,
+                    latitude: place.geometry.location.lat(),
+                    longitude: place.geometry.location.lng(),
+                    streetViewHeading: 0
+                });
+            }
+        });
+    };
+
     const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         onChange({ ...data, [e.target.name]: e.target.value });
     };
@@ -1116,36 +1150,7 @@ const AddressSection: React.FC<{
                                                 });
                                                 setIsCollapsed(true);
                                             } else if (window.google && window.google.maps && data.address) {
-                                                const geocoder = new window.google.maps.Geocoder();
-                                                geocoder.geocode({ address: data.address }, (results: any, status: string) => {
-                                                    if (status === 'OK' && results && results[0]) {
-                                                        const place = results[0];
-                                                        const addressComponents = place.address_components;
-                                                        let streetNumber = '', route = '', city = '', state = '', zip = '';
-                                                        if (addressComponents) {
-                                                            for (const component of addressComponents) {
-                                                                const componentType = component.types[0];
-                                                                switch (componentType) {
-                                                                    case 'street_number': streetNumber = component.long_name; break;
-                                                                    case 'route': route = component.short_name; break;
-                                                                    case 'locality': city = component.long_name; break;
-                                                                    case 'administrative_area_level_1': state = component.short_name; break;
-                                                                    case 'postal_code': zip = component.short_name; break;
-                                                                }
-                                                            }
-                                                        }
-                                                        onChange({
-                                                            ...data,
-                                                            address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
-                                                            city,
-                                                            state,
-                                                            zip,
-                                                            latitude: place.geometry.location.lat(),
-                                                            longitude: place.geometry.location.lng(),
-                                                            streetViewHeading: 0
-                                                        });
-                                                    }
-                                                });
+                                                triggerGeocoding(data.address);
                                                 inputRef.current?.blur();
                                             } else {
                                                 inputRef.current?.blur();
