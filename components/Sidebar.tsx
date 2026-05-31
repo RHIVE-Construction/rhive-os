@@ -312,7 +312,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                                 key={page.id}
                                                 onClick={() => {
                                                     if (page.id === 'E-02a') {
-                                                        window.dispatchEvent(new CustomEvent('open-customer-lookup'));
+                                                        if (activePageId === 'E-02a') {
+                                                            const addrInput = document.getElementById('property-address-input');
+                                                            if (addrInput) addrInput.focus();
+                                                        } else {
+                                                            window.dispatchEvent(new CustomEvent('open-customer-lookup'));
+                                                        }
                                                     } else {
                                                         navigateToPage(page.id);
                                                     }

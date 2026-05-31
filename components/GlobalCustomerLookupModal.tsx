@@ -213,6 +213,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
             setIsOpen(false);
             if (searchQuery) {
                 sessionStorage.setItem('globalSearchQuery', searchQuery);
+                sessionStorage.setItem('globalSearchQueryType', queryType || '');
             }
             setActivePageId('E-02a');
         }
@@ -289,6 +290,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                                 setIsOpen(false);
                                 if (searchQuery) {
                                     sessionStorage.setItem('globalSearchQuery', searchQuery);
+                                    sessionStorage.setItem('globalSearchQueryType', queryType || '');
                                 }
                                 setActivePageId('E-02a');
                             }}

@@ -1364,55 +1364,81 @@ const CustomerInputPage: React.FC = () => {
     
     useEffect(() => { 
         window.scrollTo(0, 0); 
-        // Enforce "Search before you create" by auto-opening lookup modal on mount
-        // Delay slightly to prevent React mount race conditions with sibling components
-        const timer = setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('open-customer-lookup'));
-        }, 150);
-        return () => clearTimeout(timer);
     }, []);
 
+    // --- State ---
+    const [autofilledContactData, setAutofilledContactData] = useState<Partial<Contact>>({
+        firstName: '',
+        lastName: '',
+        phone: '',
+        email: ''
+    });
+
     useEffect(() => {
-        if (!isApiReady || !window.google) return;
         const query = sessionStorage.getItem('globalSearchQuery');
+        const qType = sessionStorage.getItem('globalSearchQueryType');
         if (query) {
+            if ((qType === 'Address' || !qType) && (!isApiReady || !window.google)) {
+                return; // Wait for Google Maps API to be ready before consuming Address query
+            }
+            
             sessionStorage.removeItem('globalSearchQuery');
-            const geocoder = new window.google.maps.Geocoder();
-            geocoder.geocode({ address: query }, (results: any, status: string) => {
-                if (status === 'OK' && results && results[0]) {
-                    const place = results[0];
-                    const addressComponents = place.address_components;
-                    let streetNumber = '', route = '', city = '', state = '', zip = '';
-                    if (addressComponents) {
-                        for (const component of addressComponents) {
-                            const componentType = component.types[0];
-                            switch (componentType) {
-                                case 'street_number': streetNumber = component.long_name; break;
-                                case 'route': route = component.short_name; break;
-                                case 'locality': city = component.long_name; break;
-                                case 'administrative_area_level_1': state = component.short_name; break;
-                                case 'postal_code': zip = component.short_name; break;
+            sessionStorage.removeItem('globalSearchQueryType');
+            
+            if (qType === 'Name') {
+                const parts = query.trim().split(/\s+/);
+                const first = parts[0] || '';
+                const last = parts.slice(1).join(' ') || '';
+                setAutofilledContactData({
+                    firstName: first,
+                    lastName: last,
+                    phone: '',
+                    email: ''
+                });
+            } else if (qType === 'Phone Number') {
+                setAutofilledContactData({
+                    firstName: '',
+                    lastName: '',
+                    phone: formatPhoneNumber(query),
+                    email: ''
+                });
+            } else if (qType === 'Address' || !qType) {
+                const geocoder = new window.google.maps.Geocoder();
+                geocoder.geocode({ address: query }, (results: any, status: string) => {
+                    if (status === 'OK' && results && results[0]) {
+                        const place = results[0];
+                        const addressComponents = place.address_components;
+                        let streetNumber = '', route = '', city = '', state = '', zip = '';
+                        if (addressComponents) {
+                            for (const component of addressComponents) {
+                                const componentType = component.types[0];
+                                switch (componentType) {
+                                    case 'street_number': streetNumber = component.long_name; break;
+                                    case 'route': route = component.short_name; break;
+                                    case 'locality': city = component.long_name; break;
+                                    case 'administrative_area_level_1': state = component.short_name; break;
+                                    case 'postal_code': zip = component.short_name; break;
+                                }
                             }
                         }
+                        setPropertyData({
+                            address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
+                            city,
+                            state,
+                            zip,
+                            latitude: place.geometry.location.lat(),
+                            longitude: place.geometry.location.lng(),
+                            streetViewHeading: 0
+                        });
+                        setIsVerificationOpen(true);
+                    } else {
+                        setPropertyData(prev => ({ ...prev, address: query }));
                     }
-                    setPropertyData({
-                        address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
-                        city,
-                        state,
-                        zip,
-                        latitude: place.geometry.location.lat(),
-                        longitude: place.geometry.location.lng(),
-                        streetViewHeading: 0
-                    });
-                    setIsVerificationOpen(true);
-                } else {
-                    setPropertyData(prev => ({ ...prev, address: query }));
-                }
-            });
+                });
+            }
         }
     }, [isApiReady]);
 
-    // --- State ---
     const [propertyData, setPropertyData] = useState<AddressData>({ address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 });
     const [pinnedBuildings, setPinnedBuildings] = useState<any[]>([]);
     const [isPropertyCollapsed, setIsPropertyCollapsed] = useState(false);
@@ -2138,7 +2164,15 @@ const CustomerInputPage: React.FC = () => {
                         </div>
 
                         {(isAddingContact || contacts.length === 0) && !editingContactId && (
-                            <ContactForm onSave={(c) => { setContacts(prev => [...prev, c]); setIsAddingContact(false); }} onCancel={() => setIsAddingContact(false)} isPrimary={contacts.length === 0} isCommercial={requiresOrganization} companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} />
+                            <ContactForm 
+                                key={contacts.length === 0 ? `new-primary-${autofilledContactData.firstName}-${autofilledContactData.lastName}-${autofilledContactData.phone}` : 'adding-contact'}
+                                initialData={contacts.length === 0 ? autofilledContactData : undefined}
+                                onSave={(c) => { setContacts(prev => [...prev, c]); setIsAddingContact(false); }} 
+                                onCancel={() => setIsAddingContact(false)} 
+                                isPrimary={contacts.length === 0} 
+                                isCommercial={requiresOrganization} 
+                                companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} 
+                            />
                         )}
 
                         {!editingContactId && !isAddingContact && (

@@ -903,8 +903,8 @@ const PublicHomepage: React.FC = () => {
 
 
                     <div className="mt-8 w-full flex flex-col items-center">
-                        {/* Selection Tabs - Half the height of the input field, sitting 10pt above the input field */}
-                        <div className="flex justify-center gap-3 mb-[10px] z-20 relative">
+                        {/* Selection Tabs - Half the height of the input field, sitting 5pt above the input field */}
+                        <div className="flex justify-center gap-3 mb-[5px] z-20 relative">
                             {[
                                 { id: 'leak', label: 'Emergency Leak', color: 'border-red-500/40 hover:border-red-500 text-red-500', activeBg: 'bg-red-500/20 text-red-400 border-red-500' },
                                 { id: 'estimate', label: 'Instant Estimate', color: 'border-rhive-pink/40 hover:border-rhive-pink text-rhive-pink', activeBg: 'bg-rhive-pink/20 text-rhive-pink border-rhive-pink' },
