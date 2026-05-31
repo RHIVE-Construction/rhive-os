@@ -110,10 +110,7 @@ const RhiveHeader: React.FC = () => {
         <header className="fixed top-0 left-0 right-0 z-[500] h-12 flex items-center px-12 transition-all duration-300 select-none">
 
             {/* 1. Header Glass Chassis (Full Width, Ultra-Subtle Gradient) */}
-            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/40 to-transparent backdrop-blur-sm pointer-events-none border-b border-white/5" />
-
-            {/* 2. Central Logo Chassis (The Notch) */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[320px] h-[100px] bg-black/60 backdrop-blur-xl rounded-b-[40px] pointer-events-none border-x border-b border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)]" />
+            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/40 to-transparent pointer-events-none border-b border-white/5" />
 
             {/* EXIT / MENU CONTROLS (Far Left) */}
             <div className="absolute left-10 flex items-center gap-4 z-30 pointer-events-auto">
@@ -154,7 +151,7 @@ const RhiveHeader: React.FC = () => {
             </nav>
 
             {/* CENTRAL LOGO (Absolute Alignment for Perfect Spacing) */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[280px] h-[110px] flex items-center justify-center z-20 pointer-events-auto">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-12 flex items-center justify-center z-20 pointer-events-auto">
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -162,12 +159,12 @@ const RhiveHeader: React.FC = () => {
                         setActivePageId('P-00');
                         window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
                     }}
-                    className="relative flex items-center justify-center mt-1"
+                    className="relative flex items-center justify-center"
                 >
                     <img
                         src="https://i.imgur.com/t0VcSgJ.png"
                         alt="RHIVE Logo"
-                        className="h-[80px] w-auto object-contain transition-opacity duration-300 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]"
+                        className="h-12 w-auto object-contain transition-opacity duration-300 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]"
                     />
                 </motion.button>
             </div>

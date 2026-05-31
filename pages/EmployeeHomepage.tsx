@@ -18,6 +18,7 @@ import {
     ArrowRightIcon,
     ChartPieIcon,
     ShieldCheckIcon,
+    BellIcon,
 } from '../components/icons';
 import { PAGE_GROUPS } from '../constants';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -25,6 +26,83 @@ import { useMockDB } from '../contexts/MockDatabaseContext';
 import { projectService, dashboardService, firestoreService } from '../lib/firebaseService';
 import WeatherForecastStrip from '../components/WeatherForecastStrip';
 import { getStagePageId, cn } from '../lib/utils';
+
+// Stateful Notification Bell Widget
+const NotificationBell: React.FC = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [notifications, setNotifications] = useState([
+        { id: '1', title: 'Emergency Tarping Required', message: 'Tarping request detected for property 4505 Industrial Parkway.', time: '5m ago', read: false },
+        { id: '2', title: 'Address Collision Detected', message: 'Linda Hansen and Tyler Hansen duplicated record merge needed.', time: '20m ago', read: false },
+        { id: '3', title: 'Boise Lead Routed', message: 'Lead from Boise region automatically flagged and held.', time: '1h ago', read: true }
+    ]);
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    const toggleOpen = () => setIsOpen(!isOpen);
+    const markAllRead = () => {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    };
+
+    return (
+        <div className="relative">
+            <button 
+                id="btn-notification-bell"
+                onClick={toggleOpen} 
+                className="relative p-2 text-gray-400 hover:text-white bg-black/40 border border-gray-850 hover:border-rhive-pink transition-all flex items-center justify-center rounded-xl shadow-[0_0_10px_rgba(236,2,139,0.05)] hover:shadow-pink-glow-sm cursor-pointer outline-none"
+            >
+                <BellIcon className="w-5 h-5" />
+                {unreadCount > 0 && (
+                    <span 
+                        id="notification-badge"
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-rhive-pink text-white font-mono text-[9px] font-black flex items-center justify-center rounded-full border border-black shadow-[0_0_5px_rgba(236,2,139,0.8)] animate-pulse"
+                    >
+                        {unreadCount}
+                    </span>
+                )}
+            </button>
+
+            {isOpen && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+                    <div 
+                        id="notification-dropdown"
+                        className="absolute right-0 mt-2.5 w-80 bg-[#050505] border border-gray-800 shadow-2xl p-4 space-y-3 z-50 animate-fade-in"
+                        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                    >
+                        <div className="flex justify-between items-center border-b border-gray-850 pb-2">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">System Alerts</span>
+                            {unreadCount > 0 && (
+                                <button 
+                                    onClick={markAllRead} 
+                                    className="text-[9px] font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-colors cursor-pointer"
+                                >
+                                    Mark all read
+                                </button>
+                            )}
+                        </div>
+                        <div className="space-y-2.5 max-h-64 overflow-y-auto">
+                            {notifications.map(n => (
+                                <div 
+                                    key={n.id} 
+                                    className={cn(
+                                        "p-2.5 border transition-colors flex flex-col gap-1",
+                                        n.read ? "bg-black/20 border-gray-905 text-gray-400" : "bg-rhive-pink/5 border-[#ec028b]/20 text-white"
+                                    )}
+                                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black uppercase tracking-wider truncate mr-2">{n.title}</span>
+                                        <span className="text-[8px] font-mono text-gray-500 whitespace-nowrap">{n.time}</span>
+                                    </div>
+                                    <p className="text-[10px] leading-relaxed text-gray-400 font-medium">{n.message}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
 
 // Task Item Component
 const TaskItem = ({ label, initialStatus, badge }: { label: string; initialStatus: boolean; badge?: string }) => {
@@ -587,7 +665,7 @@ const EmployeeHomepage: React.FC = () => {
         setSelectedPropertyId, 
         setSelectedProjectId 
     } = useNavigation();
-    const { currentUser, users, projects, setCurrentProjectId } = useMockDB();
+    const { currentUser, users, projects, setCurrentProjectId, properties } = useMockDB();
 
     const [activity, setActivity] = useState<{ user: string; action: string; target: string; time: string }[]>([]);
     const [activityLoading, setActivityLoading] = useState(true);
@@ -623,24 +701,50 @@ const EmployeeHomepage: React.FC = () => {
     useEffect(() => {
         const unsubscribe = projectService.subscribeToRecentActivity((firebaseProjects: any[]) => {
             const activeProjects = (firebaseProjects && firebaseProjects.length > 0) ? firebaseProjects : projects;
-            const sorted = [...activeProjects].sort((a, b) => {
-                const aTime = new Date(a.updated_at || a.created_at || a.last_updated || 0).getTime();
-                const bTime = new Date(b.updated_at || b.created_at || b.last_updated || 0).getTime();
-                return bTime - aTime;
-            }).slice(0, 5);
-
-            const mockNames = ['Rick Vance', 'Jenny Miller', 'Robert Chen', 'Thomas Henderson', 'Arthur Pendleton'];
-            const mapped = sorted.map((p: any, idx: number) => {
+            
+            // Map project activities
+            const projectActivities = activeProjects.map((p: any, idx: number) => {
                 const owner = users.find(u => u.id === (p.account_id || p.owner_id));
+                const timestamp = new Date(p.updated_at || p.created_at || p.last_updated || Date.now()).getTime();
+                const mockNames = ['Rick Vance', 'Jenny Miller', 'Robert Chen', 'Thomas Henderson', 'Arthur Pendleton'];
                 return {
                     user: p.customer_name || p.contact_name || owner?.name || mockNames[idx % mockNames.length],
                     action: 'submitted project',
                     target: p.name || 'Unnamed Project',
+                    timestamp,
                     time: timeAgo(p.updated_at || p.created_at || p.last_updated),
                 };
             });
 
-            setActivity(mapped);
+            // Map property registration activities
+            const propertyActivities = properties.map((prop: any) => {
+                const idParts = prop._id.split('-');
+                const tsStr = idParts[1];
+                let timestamp = 0;
+                if (tsStr && /^\d{10,}$/.test(tsStr)) {
+                    timestamp = parseInt(tsStr, 10);
+                } else {
+                    if (prop._id === 'PROP-1') timestamp = Date.now() - 3600000 * 2;
+                    else if (prop._id === 'PROP-2') timestamp = Date.now() - 3600000 * 5;
+                    else if (prop._id === 'PROP-3') timestamp = Date.now() - 3600000 * 12;
+                    else timestamp = Date.now() - 3600000 * 24;
+                }
+                const owner = users.find(u => u.id === prop.owner_id);
+                return {
+                    user: owner?.name || 'System Operator',
+                    action: 'registered property',
+                    target: prop.address_full || 'Unnamed Property',
+                    timestamp,
+                    time: timeAgo(new Date(timestamp).toISOString()),
+                };
+            });
+
+            // Merge, sort desc by timestamp, and take top 5
+            const combined = [...projectActivities, ...propertyActivities]
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .slice(0, 5);
+
+            setActivity(combined);
             setActivityLoading(false);
         });
 
@@ -653,7 +757,7 @@ const EmployeeHomepage: React.FC = () => {
             unsubscribe();
             unsubStats();
         };
-    }, [projects, users, setActivePageId, setSelectedContactId, setSelectedAccountId, setSelectedPropertyId, setSelectedProjectId, setCurrentProjectId]);
+    }, [projects, properties, users, setActivePageId, setSelectedContactId, setSelectedAccountId, setSelectedPropertyId, setSelectedProjectId, setCurrentProjectId]);
 
     const schedule = [
         { time: '09:00 AM', event: 'Team Standup', type: 'Meeting' },
@@ -665,7 +769,7 @@ const EmployeeHomepage: React.FC = () => {
         <PageContainer
             title={page?.name || 'Employee Homepage'}
             description="Welcome back. Here is your daily command center."
-            headerAction={null}
+            headerAction={<NotificationBell />}
         >
             {/* --- STATS OVERVIEW --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -801,6 +905,7 @@ const EmployeeHomepage: React.FC = () => {
                                                         className="text-[#ec028b] font-medium hover:underline cursor-pointer"
                                                         onClick={() => {
                                                             const foundProject = projects.find(p => p.name.toLowerCase() === item.target.toLowerCase());
+                                                            const foundProperty = properties.find(p => p.address_full.toLowerCase() === item.target.toLowerCase());
                                                             if (foundProject) {
                                                                 setCurrentProjectId(foundProject._id);
                                                                 if (foundProject.current_stage === 'Quote') {
@@ -810,6 +915,9 @@ const EmployeeHomepage: React.FC = () => {
                                                                 } else {
                                                                     setActivePageId('E-15');
                                                                 }
+                                                            } else if (foundProperty) {
+                                                                setSelectedPropertyId(foundProperty._id);
+                                                                setActivePageId('E-12');
                                                             } else {
                                                                 setActivePageId('E-05');
                                                             }

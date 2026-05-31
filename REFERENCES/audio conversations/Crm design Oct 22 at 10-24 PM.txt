@@ -1,0 +1,1484 @@
+[Speaker 1]
+Stage one.
+
+[Speaker 2]
+The customer section goes from website and call. And customer.
+
+[Speaker 2]
+Or. So the the customer can come from the website, a call, a text or mailer. And then.
+
+[Speaker 1]
+Or mailer. Yeah, how would they come from a mailer?
+
+[Speaker 2]
+Because.
+
+[Speaker 2]
+We sent him a mailer.
+
+[Speaker 1]
+But when they come in as a call still? Or is it a completely different process if they have a manner and then they call?
+
+[Speaker 2]
+I guess it's scann. Like, they go through the website or a call. You're right, so it wouldn't be the mailer.
+
+[Speaker 1]
+Okay, and then what do I email
+
+[Speaker 2]
+Unless it's like? No, so maybe we could switch that?
+
+[Speaker 2]
+Email.
+
+[Speaker 3]
+There.
+
+[Speaker 3]
+And then from there.
+
+[Speaker 2]
+He goes to sales. Intake submission form. And AI enrichment. An AI enrichment also goes back up to customer.
+
+[Speaker 1]
+What is
+
+[Speaker 2]
+AI enrichment mean?
+
+[Speaker 1]
+I think it depends upon if they're coming in as an estimate, or if they're coming in.
+
+[Speaker 1]
+So, we
+
+[Speaker 2]
+Would be finding out more about them.
+
+[Speaker 1]
+I still didn't even answer my question.
+
+[Speaker 1]
+Okay, and then it goes
+
+[Speaker 3]
+To management, it goes. Verify. Engagement.
+
+[Speaker 2]
+And then qualified lead in estimate and then on verified engagement. It says KP.
+
+[Speaker 1]
+Yeah, I don't know.
+
+[Speaker 2]
+And KP goes. Estimate.
+
+[Speaker 1]
+And then
+
+[Speaker 2]
+Estimate goes to estimate calculations.
+
+[Speaker 2]
+Generate estimate PDF. Kara welcome video promotional pricing window. Fastpass our Hive savings.
+
+[Speaker 2]
+Are you just
+
+[Speaker 3]
+Wanting me to read this to you?
+
+[Speaker 1]
+Do you feel like it makes sense?
+
+[Speaker 2]
+Because
+
+[Speaker 1]
+Then those are under those stages. What's happening?
+
+[Speaker 2]
+Yeah, because this is stage two. Estimate.
+
+[Speaker 2]
+And. An estimate doesn't have promotional pricing.
+
+[Speaker 1]
+Can stage 3 happen from stage one? Or does it come from stage two? How do you get to stage three?
+
+[Speaker 2]
+Comes from stage two, which is the estimate.
+
+[Speaker 1]
+And that's not correct.
+
+[Speaker 1]
+So?
+
+[Speaker 2]
+Now, it needs to be modified. Is?
+
+[Speaker 1]
+Have we not built this house somewhere else?
+
+[Speaker 2]
+We have. I've built it out like six times.
+
+[Speaker 1]
+Oh yeah.
+
+[Speaker 2]
+Okay, so the estimate? Doesn't have any promotional pricings. So what they do from? The estimate stage is ultimately the only option they have is to move forward to get a quote.
+
+[Speaker 2]
+Yeah, request a quote. And then once they request their quote.
+
+[Speaker 3]
+Cuz I'm focusing on reading this.
+
+[Speaker 1]
+Just lay down.
+
+[Speaker 1]
+So
+
+[Speaker 2]
+Now, it says. Annotation or? Yeah. Customer Discovery survey. I don't even know if we're doing that anymore.
+
+[Speaker 2]
+Combine ref. Data with customer input.
+
+[Speaker 1]
+Internal.
+
+[Speaker 2]
+I think it's supposed to be internal.
+
+[Speaker 3]
+Interview.
+
+[Speaker 3]
+Feel like we just need to go through this with Marine
+
+[Speaker 2]
+Because I don't know what this stuff means.
+
+[Speaker 1]
+And then,
+
+[Speaker 2]
+Yeah, I feel like you and I need to look at. There that goes. The process flow. And.
+
+[Speaker 2]
+Yeah.
+
+[Speaker 2]
+And see. We're doing now.
+
+[Speaker 1]
+Okay.
+
+[Speaker 2]
+Because I feel like. The quote form. We're just asking them. The questions now? In the quote form, so I don't need the customer. Surveying. Cuz, that's just being us in the quote form. I'm pretty sure.
+
+[Speaker 1]
+Are some of the questions?
+
+[Speaker 1]
+I don't know.
+
+[Speaker 1]
+I think we
+
+[Speaker 2]
+Need a insurance form, so if they say no, fill it out later, then we can just send
+
+[Speaker 4]
+The insurance form to them.
+
+[Speaker 2]
+So they. Fill that out.
+
+[Speaker 1]
+I don't
+
+[Speaker 2]
+Feel like you massaged my butt or warmed it up at all.
+
+[Speaker 1]
+It went from your hamstring. Straight to your glute, and it's still cold.
+
+[Speaker 1]
+Thanks!
+
+[Speaker 1]
+Well, let's just talk about it then.
+
+[Speaker 1]
+So, what are the ways that you feel people can talk to? Or get a quote. With.
+
+[Speaker 1]
+So we've experienced and that we want to build up.
+
+[Speaker 2]
+From.
+
+[Speaker 3]
+Our
+
+[Speaker 2]
+Chatbot. On our website. Okay, so
+
+[Speaker 1]
+What would that be?
+
+[Speaker 2]
+I don't know. I'm going to a form.
+
+[Speaker 1]
+Or having a conversation with them. So, it's like. So,
+
+[Speaker 2]
+Right now, it's the form, because that's what it is, right?
+
+[Speaker 1]
+Okay, we're talking about. What do we want it to be? You said chatbot. So the chatbot would say it, or it would send you a form if you don't want to talk to the chatbot.
+
+[Speaker 2]
+I
+
+[Speaker 1]
+Guess, yeah.
+
+[Speaker 1]
+Right?
+
+[Speaker 2]
+Am I calling in? And then we're going through the form.
+
+[Speaker 1]
+Yeah, so I think the chatbot needs to do it. Then the chatbot is also the call bot when they call in.
+
+[Speaker 2]
+So,
+
+[Speaker 1]
+It's really just the same bot doing the same thing. It's the same flow.
+
+[Speaker 1]
+Um. What would they have to say to the chatbot that we would want the chatbot to be able to?
+
+[Speaker 1]
+Schedule.
+
+[Speaker 1]
+With.
+
+[Speaker 1]
+I think I want to use my feet. My wrists are fucked up to be pushing on your late muscles. That's is there something you want me to focus on, or are you? You never gave me an answer.
+
+[Speaker 1]
+It's not what I'm asking.
+
+[Speaker 5]
+No, there wasn't anything specific. I
+
+[Speaker 2]
+Just wanted you to catch me.
+
+[Speaker 1]
+Okay, well then. I don't have to fucking bust my ass.
+
+[Speaker 1]
+Something that doesn't need it. I'll just load on. Play with you. Would be nice if I know what the fuck I'm doing.
+
+[Speaker 4]
+Will you do whatever you want anyways?
+
+[Speaker 1]
+No, I don't.
+
+[Speaker 2]
+I miss you too.
+
+[Speaker 1]
+Okay. So, they come in through the chatbot. How would they? What would they have to say or what would the situation have to be?
+
+[Speaker 1]
+It schedules them an inspection.
+
+[Speaker 1]
+Do you see because a lot of people will think that they need it?
+
+[Speaker 1]
+The age
+
+[Speaker 2]
+Of their roof.
+
+[Speaker 2]
+And if they're leaking.
+
+[Speaker 1]
+Okay. So, what about the age of group?
+
+[Speaker 2]
+I feel like if. 15 years or older? I don't really need to have an inspection.
+
+[Speaker 2]
+Okay.
+
+[Speaker 1]
+And we, what do we tell?
+
+[Speaker 1]
+Look,
+
+[Speaker 2]
+It's gonna be hard not going to inspection.
+
+[Speaker 1]
+Because even
+
+[Speaker 2]
+Though with that insurance guy, we didn't do it. But Shane already said, yeah, you need a new roof.
+
+[Speaker 2]
+Mommy's getting there for free, you know?
+
+[Speaker 1]
+What
+
+[Speaker 2]
+Do you think we could sing on?
+
+[Speaker 2]
+I
+
+[Speaker 1]
+Don't know, cuz I feel like. They say, I have a.
+
+[Speaker 2]
+On my roofs less than 15 years.
+
+[Speaker 1]
+Great! Would you like to move?
+
+[Speaker 1]
+So, if it is leaking or whatever. Um, yeah, I
+
+[Speaker 2]
+Feel like it really depends on the age of the reports, like. Less than 15, and then they have blow off or anything. I'm gonna picture see, like, it's a repair, right? But if it's more than 15, and they can blow off.
+
+[Speaker 2]
+And it's like five blocks. Oh gosh, you have, have you seen? Is it just like one shingle that's flown off, or do you have multiple? Like, blow off throughout your room.
+
+[Speaker 1]
+And maybe
+
+[Speaker 2]
+He could even like, just be like looking up your roof and our AI imagery. It shows blank. It shows that you are most likely in need of a roof replacement. You can't see
+
+[Speaker 1]
+It.
+
+[Speaker 2]
+It's like, yeah, we've already looked at it. Just by being on the top.
+
+[Speaker 2]
+So you don't have to go? And if it's hurting your wrist, we can just stop.
+
+[Speaker 1]
+My back's just hurt all day. So even like standing up. There's enough. Um. I want to do it with my feet because I can do it better.
+
+[Speaker 1]
+That'd be on the floor.
+
+[Speaker 2]
+Automatic roof replace?
+
+[Speaker 1]
+Uh, I think 18 years. I think 15 is still serviceable usually.
+
+[Speaker 1]
+Okay. And then.
+
+[Speaker 1]
+Yeah, if there's a leak because we have to go in and start? Find the repair.
+
+[Speaker 1]
+And then. At the same time, we could just schedule it.
+
+[Speaker 1]
+Just inspection. It's coming in that way.
+
+[Speaker 1]
+And
+
+[Speaker 2]
+If we keep getting inspections and stuff? And we're going out there. I feel like we should do that first, cuz then we're going. Now, we're talking to the customer. They're getting used to us, and then everything is just automated. From there.
+
+[Speaker 2]
+But at least they're. Getting the face-to-face? And you know what's going on with the roof? And we like that. And then ones were, like, okay, so we've noticed. These roofs. Like, we've gathered more information on the sense of.
+
+[Speaker 2]
+When it's XYZ? It's usually just always replacing it.
+
+[Speaker 2]
+And notice this, then we can repair.
+
+[Speaker 1]
+Yeah.
+
+[Speaker 6]
+Hang
+
+[Speaker 2]
+Up, we go this way.
+
+[Speaker 1]
+Okay, so.
+
+[Speaker 1]
+If they have a leak.
+
+[Speaker 1]
+Or if the roof is? More than 18 years old. It's in. It lets them schedule it. Yeah.
+
+[Speaker 1]
+And then it can schedule.
+
+[Speaker 1]
+Day or evening.
+
+[Speaker 1]
+Yeah, I think we did.
+
+[Speaker 1]
+I think it depends on.
+
+[Speaker 1]
+What time of year it is? While we do day, every evening, then it would be. Between nine and one.
+
+[Speaker 1]
+Yeah, it has to be after 11 if it's.
+
+[Speaker 1]
+How
+
+[Speaker 2]
+Late are we wanting to do inspections?
+
+[Speaker 2]
+Do we want to go until 5:00? I really want to stop at three.
+
+[Speaker 1]
+Really should be based upon the amount of light that we have.
+
+[Speaker 1]
+So we could probably create.
+
+[Speaker 1]
+Calendar rule.
+
+[Speaker 1]
+The last one will be 3 hours before Sunset. Or two hours before sunset.
+
+[Speaker 2]
+So, we're going out until seven.
+
+[Speaker 1]
+Well, middle of summer. It's like.
+
+[Speaker 2]
+Sunset. The sun doesn't go on down until mine.
+
+[Speaker 1]
+In the middle of the summer.
+
+[Speaker 1]
+The middle of the winter. It's like, five. Okay, so?
+
+[Speaker 1]
+So, does that
+
+[Speaker 2]
+Mean it changes in summer hours? That's what I'm asking, like, yeah.
+
+[Speaker 1]
+So, in the summer, the last one would be like. And then, in the winter, the last one would be like three.
+
+[Speaker 1]
+I
+
+[Speaker 2]
+Almost feel like we shouldn't do that because. I guess an hour.
+
+[Speaker 1]
+My nails hurt.
+
+[Speaker 1]
+I
+
+[Speaker 7]
+Would just do inspections Monday through Wednesday.
+
+[Speaker 1]
+Wednesday through Friday. No,
+
+[Speaker 2]
+Since we have to pick up kids.
+
+[Speaker 1]
+Wow!
+
+[Speaker 1]
+Okay.
+
+[Speaker 1]
+Okay, so.
+
+[Speaker 1]
+Originally, we were thinking if it's a repair and they could get us pictures, we could just quote it on the spot and then.
+
+[Speaker 1]
+Right, because remember how old it was, like, your story, Predators. I can quote it for you.
+
+[Speaker 1]
+So he would be doing is sending it to his.
+
+[Speaker 1]
+And then marking it up and then telling us hey solid for this.
+
+[Speaker 1]
+So, do we trust the customer to take photos?
+
+[Speaker 1]
+And maybe what it does is, it says, great. Your inspection is to is scheduled for tomorrow at this time. Um.
+
+[Speaker 1]
+Our goal is to see if we need to keep the appointment for you.
+
+[Speaker 1]
+Please submit photos of the damage and what needs to be repaired. With an explanation.
+
+[Speaker 1]
+Because if it's something where we're like, Max, it's going to cost this, like, we know. And if we don't know, great. It's scheduled already.
+
+[Speaker 2]
+I almost feel like the quote thing.
+
+[Speaker 3]
+Like?
+
+[Speaker 2]
+Portable. Project solar. It's definitely like. Do it yourself, and so you already have that expectation of, like, oh yeah, I'm gonna do it. I need to take photos, and then you do this, and that's awesome. So, I feel like ours needs to be somewhat like that. So then? They're expecting.
+
+[Speaker 2]
+I'm expecting to put in. The photos, and like the work and stuff.
+
+[Speaker 1]
+Maybe we
+
+[Speaker 7]
+Could even just be, like, send photos of the like, if possible.
+
+[Speaker 4]
+Um, send photos of the damage. Our team can analyze it.
+
+[Speaker 1]
+Yeah.
+
+[Speaker 1]
+It could be.
+
+[Speaker 1]
+I have a leak. Or I have a repair?
+
+[Speaker 1]
+And then the options.
+
+[Speaker 1]
+Um. Just get a replacement quote? Schedule an inspection. Get a virtual repair quote.
+
+[Speaker 1]
+Get a virtual repair quote and schedule an inspection. You don't miss out!
+
+[Speaker 2]
+Virtual repair quote. So, that's when it asks you the questions over the phone.
+
+[Speaker 1]
+It would be.
+
+[Speaker 1]
+Sending them a text from us. Maybe, like? Hey, this is Michael with our construction. Here for your virtual repair quote. Please send me all the photos that you can see.
+
+[Speaker 1]
+Yeah, any photos. But clearly show the damage.
+
+[Speaker 1]
+Are you breathing?
+
+[Speaker 1]
+You don't
+
+[Speaker 4]
+Want to be in pain anymore. I'm okay, I love you. Thank you.
+
+[Speaker 4]
+I know you're helping me, but?
+
+[Speaker 1]
+Yeah.
+
+[Speaker 1]
+And I work on other people. I feel like you're mad at me that I don't work on you and I work. I'm really mad at me. No matter what I would do.
+
+[Speaker 1]
+Feels like you're a lot softer with them.
+
+[Speaker 1]
+I don't talk to you with you. You don't know anything.
+
+[Speaker 5]
+You mean I don't do anything
+
+[Speaker 1]
+You don't move? It's not doing anything.
+
+[Speaker 4]
+No, it's not. I can actually breathe.
+
+[Speaker 4]
+Like half the time. I can't even breathe, and that's like too hard. Because you're? Yeah, if you can't breathe, it's too hard. I can't fucking breathe.
+
+[Speaker 1]
+I don't know what he just.
+
+[Speaker 2]
+Messaging band back?
+
+[Speaker 1]
+So, if they call in and they just want an estimate?
+
+[Speaker 1]
+Okay, so we're still.
+
+[Speaker 1]
+The chatbot.
+
+[Speaker 1]
+So, if the
+
+[Speaker 6]
+Chatbot?
+
+[Speaker 6]
+They have a leak.
+
+[Speaker 1]
+For those more than 18 years old.
+
+[Speaker 1]
+Then it can schedule the next available time slot.
+
+[Speaker 1]
+Right?
+
+[Speaker 1]
+And do we want it to schedule the next available time slot? What if it's like? Really far away.
+
+[Speaker 2]
+It's like 24 hours.
+
+[Speaker 2]
+After everything's next day.
+
+[Speaker 1]
+Okay.
+
+[Speaker 1]
+So
+
+[Speaker 2]
+This would be if they called in at 3:00, then they can't schedule until. Three the next day?
+
+[Speaker 1]
+Or,
+
+[Speaker 2]
+And if they want a morning one, then it would need to be. On Tuesday at 9:00 a.m.
+
+[Speaker 1]
+Why not
+
+[Speaker 2]
+Monday, you know, or whatever?
+
+[Speaker 1]
+Um.
+
+[Speaker 1]
+What if they say they need a repair?
+
+[Speaker 1]
+Ask further questions. Do we schedule an inspection?
+
+[Speaker 1]
+You could say, first, we schedule an inspection. Second, we evaluate photos.
+
+[Speaker 1]
+To confirm the inspection.
+
+[Speaker 1]
+Yeah, cuz, then they feel like they have to give us photos for them to confirm it. But they can just click. I don't have photos. I would confirm it.
+
+[Speaker 1]
+So, then, when they send the photos, if it's like, oh.
+
+[Speaker 1]
+They're saying that pipe trucks bad. Do we still want to go out? Look at all the other pipe trucks and stuff.
+
+[Speaker 1]
+Ultimately, yes, right?
+
+[Speaker 1]
+So, they say.
+
+[Speaker 1]
+I need a repair. Do we always want to just go out?
+
+[Speaker 1]
+I don't
+
+[Speaker 2]
+Know, honey. I feel like we haven't done it for so long.
+
+[Speaker 2]
+It's hard to say.
+
+[Speaker 1]
+I feel like when people need a repair, we always go out. I don't know. It's been Property Management, but. We've never said take a picture and send it to us. We'll send you a quote. I think that's where we want to get to you, but.
+
+[Speaker 1]
+Yeah.
+
+[Speaker 2]
+I think. Ultimately, if they're just asking for a replacement, and we
+
+[Speaker 3]
+Don't need to come out. It looks like.
+
+[Speaker 3]
+Maybe it's
+
+[Speaker 2]
+Water damage. So then we need to know how much wood or I don't know.
+
+[Speaker 2]
+And then, if they
+
+[Speaker 1]
+Want to repair, it could be like. With the emergency targeting Services.
+
+[Speaker 1]
+Offer repair and full replacement. Would you like to get started with your full replacement quote while we get?
+
+[Speaker 1]
+Um, in a while, we complete your inspection. So then, while? Waiting and going to their house.
+
+[Speaker 1]
+For the inspection, they can fill out the quote stuff and get that all turned in.
+
+[Speaker 1]
+Which leads to the quote, so they call. And I say. I need a roof replacement cut.
+
+[Speaker 1]
+Great! Let me ask a few questions.
+
+[Speaker 1]
+And is
+
+[Speaker 2]
+It going to be smart enough by taking the information and transferring it over?
+
+[Speaker 1]
+What do you mean?
+
+[Speaker 2]
+Cause for the repair there to give us our name and phone number. No address.
+
+[Speaker 1]
+Yeah, cuz now we're talking about AI conversations when we say the chatbot.
+
+[Speaker 1]
+It's not a form anymore.
+
+[Speaker 1]
+Or it's a video form of us.
+
+[Speaker 1]
+Right?
+
+[Speaker 1]
+Right. So if they call in and they want an estimate, we need to build a call-in estimate. Where I would just emails it up to them.
+
+[Speaker 1]
+Or, I guess we could just go to the website and fill it out.
+
+[Speaker 1]
+So, we don't need to build a different one.
+
+[Speaker 1]
+And if they call in for a quote, then we just ask him all the questions. And we don't have, I don't know. I feel like it's awkward asking them.
+
+[Speaker 2]
+The core questions?
+
+[Speaker 1]
+Yeah, the like, last ones on the personality profile and stuff.
+
+[Speaker 2]
+Then, we just need to figure out how to say.
+
+[Speaker 1]
+And I think it's as simple as like, great. I have like five questions that you're gonna ask a little bit more. Of your purchasing habit so that we can better assist you in making your decision. I
+
+[Speaker 2]
+Think it's ultimately great. We're.
+
+[Speaker 3]
+I wouldn't
+
+[Speaker 2]
+Even say purchasing habits.
+
+[Speaker 2]
+Um.
+
+[Speaker 2]
+Maybe you can even say personality questions whatever?
+
+[Speaker 1]
+For our customers to be 100 satisfied, I
+
+[Speaker 2]
+Think, but it, yeah, and this will assist us in building your quote.
+
+[Speaker 2]
+Specifically for you on information that you're looking for, and we'll need assistance with.
+
+[Speaker 1]
+Yeah,
+
+[Speaker 8]
+But they'll think it does. Cuz you'll see the stuff that they see.
+
+[Speaker 1]
+Okay, so if they do the estimate, then does it email them the shopping cart for the estimate so they can pick it out and then? Request a certified quote, and then it sends them to the. Quote questions that they haven't filled out, or that we haven't found out. And then, if.
+
+[Speaker 1]
+They get it, and they don't do anything.
+
+[Speaker 1]
+To the estimate. Yeah.
+
+[Speaker 1]
+So, ultimately, when they request an estimate and fill out those information, but information it needs to send them a link to.
+
+[Speaker 1]
+Um.
+
+[Speaker 1]
+Login, what is it called?
+
+[Speaker 2]
+Their portal.
+
+[Speaker 1]
+Yeah, they're portal and their portal has. It's like a shopping cart, and then also a document.
+
+[Speaker 1]
+Update dashboard.
+
+[Speaker 1]
+Right? So, then, when they request a quote, they fill all that stuff out. And it says, great, your quote's ready. You know, view your quote and pick your options, and then it's a shopping cart.
+
+[Speaker 2]
+And we have
+
+[Speaker 1]
+That built out too ish. When they request is certified go, everything goes over to the. And we have this section. The quote Builder form?
+
+[Speaker 1]
+In the quote Builder form. You need to be able to do repair estimates also.
+
+[Speaker 1]
+So, it'll just be simple where it lets you like.
+
+[Speaker 1]
+For now, input the name and the price. Like, what I was doing? And
+
+[Speaker 2]
+Then
+
+[Speaker 1]
+Build a description of the repair. And it just gives them the total.
+
+[Speaker 1]
+So, that means that they would need to be able to choose anything in their shopping cart, including just the repair.
+
+[Speaker 1]
+And then, if they chose a replacement thing, they wouldn't either choose the repair. And it would say like this isn't needed with a full replacement.
+
+[Speaker 1]
+Right?
+
+[Speaker 1]
+Yeah,
+
+[Speaker 2]
+Um. What's not mean? It was a full replacement.
+
+[Speaker 1]
+The repair.
+
+[Speaker 2]
+Oh yeah.
+
+[Speaker 2]
+And then they could choose which one they want to do.
+
+[Speaker 2]
+So in
+
+[Speaker 1]
+The shopping cart. Needs to have links to. Needs to be more like the presentation.
+
+[Speaker 2]
+Links to?
+
+[Speaker 1]
+Well, our presentation talks about us and what we do and how we give back. Wow!
+
+[Speaker 2]
+Yeah, the shopping cart doesn't do that at all.
+
+[Speaker 1]
+Right, but like the customer dashboard almost kind of does?
+
+[Speaker 2]
+Is that their portal?
+
+[Speaker 1]
+So, that's one screen. Is their portal login and then? Dashboard, which lets them know, you know, what's pending or what we need from them or where their project is at? And then also their shopping cart, which is where they choose.
+
+[Speaker 1]
+Where they would be able to.
+
+[Speaker 1]
+Request an estimate or view it if they already requested it. Or request a quote. Or view the quote shopping cart options if they've already requested it, or it would say in progress. Your project. Designer.
+
+[Speaker 1]
+Project design specialist is working on your project. Check back and make sure your notifications are on or whatever. And then, when we finish the quote, it'll pop up in that. Area.
+
+[Speaker 1]
+Where they can select and check out.
+
+[Speaker 1]
+And then the dashboard would be. Updated. Each stage in what's happening and what's going on for them. And then let them know if they need to fill out anything because after they sign. Verify we should be able to get. Now, the colors and their badge and everything. All in one swoop.
+
+[Speaker 1]
+So they make all their selections.
+
+[Speaker 1]
+They put 50 down.
+
+[Speaker 1]
+Or they could pay $90 and wait for the.
+
+[Speaker 1]
+And that could put them in a fast track.
+
+[Speaker 1]
+Right. This moves your. Job up to.
+
+[Speaker 1]
+You know increases in? Labor Pace or something like that? Well,
+
+[Speaker 2]
+It's not automatically two weeks out. Maybe it's one week.
+
+[Speaker 1]
+Cuz if they pay 90% that I mean. That means they just went 90% of the way. So we should install them faster.
+
+[Speaker 1]
+Yeah, I
+
+[Speaker 2]
+Still feel like you should be a week before, though. Just to make sure that we can schedule it. It's periodic.
+
+[Speaker 1]
+Yeah, but they could only schedule it. Two plus weeks have usually they can schedule it a week earlier. If they do the 90 percent down, maybe that's what it is. And then, if someone's like, dude, I gotta get this installed in two days, then it's like, well, make sure you're on that list to pay the 90 down. Right?
+
+[Speaker 2]
+And
+
+[Speaker 1]
+Then we just tell Orlando to install it. And then we get the permit. And go. Here's all your pictures.
+
+[Speaker 1]
+This is not an
+
+[Speaker 2]
+Asshole.
+
+[Speaker 2]
+I guess they're not supposed to do that.
+
+[Speaker 1]
+Am I guess? In the end, they're not paying us more money.
+
+[Speaker 1]
+So, do we do?
+
+[Speaker 1]
+5% extra for a fast track.
+
+[Speaker 1]
+Or not, worry about that.
+
+[Speaker 2]
+I wouldn't worry about that now. And if we want to add it in later then?
+
+[Speaker 1]
+Sure.
+
+[Speaker 1]
+Okay, so now they've chosen. Their options because it makes it mandatory. Right? Or it says, choose later.
+
+[Speaker 1]
+Cuz, what if they're like, I don't know what color?
+
+[Speaker 1]
+This would be nice to have a choose later on the color. And.
+
+[Speaker 1]
+They schedule their tentative install week, and it's two plus weeks up.
+
+[Speaker 1]
+And then in their dashboard. It shows that.
+
+[Speaker 1]
+Schedule. Yeah, they're in the schedule stage. So now it'll show.
+
+[Speaker 1]
+Step one is permit. Step two is. Material. Step three.
+
+[Speaker 1]
+And the labor one will actually be after.
+
+[Speaker 1]
+Neighbors confirmed and materials were ordered.
+
+[Speaker 1]
+Then, I think they get the pre-installation packet.
+
+[Speaker 1]
+And
+
+[Speaker 2]
+They're just confirming their colors and stuff.
+
+[Speaker 1]
+Okay. So, it confirms what they check checked out with. Is that before we make the order, though? Should be.
+
+[Speaker 1]
+Yeah.
+
+[Speaker 1]
+Okay, so pull permit. What's the problem? The permits approved then?
+
+[Speaker 2]
+Like the permit, and that's like the same time it's just making them feel like something's happening.
+
+[Speaker 8]
+That's why they're waiting why we're waiting on permit that's going out.
+
+[Speaker 1]
+Then the permit comes back, and then we ask for materials. And then once material tape comes back, we talk to labor. Once labor gives us the date, then we go back to material and put in the order, but that can only happen if they've confirmed all of their stuff.
+
+[Speaker 2]
+And. It's. During checkout, it says, is this information all correct? Yep, and that now we don't need a confirmation.
+
+[Speaker 2]
+So it brings him to a sheet where it says I chose. The designer package, this color. No gutters. Double check.
+
+[Speaker 1]
+It's okay.
+
+[Speaker 1]
+So, that's.
+
+[Speaker 2]
+But that is their double check. Yeah,
+
+[Speaker 1]
+Let's turn off on it. Okay? So, double check out. Verify invest.
+
+[Speaker 1]
+Okay, what happens in the install? Stage.
+
+[Speaker 1]
+That's when we need. Um.
+
+[Speaker 1]
+Inspection template thing? Or like?
+
+[Speaker 2]
+We still need to send them install day one to cut the grass and stuff so we can send that to them. Um. The way the permit's happening.
+
+[Speaker 1]
+With the verification of their materials. Or, do we want to send him that? When we've scheduled it, and we say this is returnative install week. Or day, because now. We actually have everything ordered and everything. And I say, by the way, you need to cut your costume. Do this and do this and do this.
+
+[Speaker 1]
+Then.
+
+[Speaker 2]
+Okay, so now we're. It's installed in, and we need to take photos.
+
+[Speaker 1]
+Yeah, it needs to have like a walkthrough of what the. Project manager or what Orlando's.
+
+[Speaker 2]
+Yeah, I think we should take pictures of. The driveway.
+
+[Speaker 2]
+What does the flower beds and stuff look like? Flip the front of their house, right?
+
+[Speaker 1]
+Yeah, we could do the six words. Front middle.
+
+[Speaker 1]
+Front left front, middle front, right? Back, left back, middle back, right?
+
+[Speaker 1]
+Yeah.
+
+[Speaker 3]
+We're just like all four sides of the
+
+[Speaker 1]
+House. Okay, and then left and right? Okay.
+
+[Speaker 2]
+And then. A picture of tear off.
+
+[Speaker 2]
+And then the decking.
+
+[Speaker 1]
+A picture of all decking exposed.
+
+[Speaker 2]
+And then two layers of ice and water.
+
+[Speaker 2]
+Maybe pictures of flashing like step flashing and
+
+[Speaker 1]
+Stuff?
+
+[Speaker 2]
+Step their wall flashings.
+
+[Speaker 1]
+Starter.
+
+[Speaker 2]
+Yeah, starter, and then ventilation.
+
+[Speaker 1]
+Pipe tags. Um.
+
+[Speaker 1]
+Filled shingles. So, just a picture of?
+
+[Speaker 1]
+The field being installed and then Hip and reach cap.
+
+[Speaker 2]
+And then sealing the hyper engine stuff. And projects.
+
+[Speaker 1]
+You could have it. So when they click in to take that picture, it has. An example picture. With a light opacity. Kind of like the before and after pictures and Company cam. So, when it's a pipe truck, it's like, oh, it should look this close, like this? So,
+
+[Speaker 2]
+It
+
+[Speaker 1]
+Kind of helps them get in frame, but they need to take a picture of. And then completed photos. It could show, like, from the front. It could even be there up there before picture that they need to line up. That would be cool.
+
+[Speaker 1]
+Have it do like an automatic? Layover autotake. Like when it's doing an OCR on a checkup load or whatever.
+
+[Speaker 1]
+And then.
+
+[Speaker 1]
+On the project manager's side.
+
+[Speaker 1]
+He would have access to be able to input all of those. Or see what was input for it?
+
+[Speaker 1]
+And then.
+
+[Speaker 1]
+You'd be able to Mark like today's the final day, and then that would. Trigger the final. Or the 40 collected?
+
+[Speaker 1]
+Yeah,
+
+[Speaker 2]
+That would need to be checked off, like in the morning or whatever.
+
+[Speaker 1]
+And so I feel like there's a template for day one start install.
+
+[Speaker 1]
+And then, like during install. So, install start. Photos and? Procedures. Dragon style photos and procedures.
+
+[Speaker 1]
+And then. Completed install photos and procedures. Plus punch list item.
+
+[Speaker 2]
+I think what it is,
+
+[Speaker 1]
+Is that?
+
+[Speaker 1]
+Let's say that Orlando has a project manager that we're paying to do this. He would.
+
+[Speaker 1]
+Be able to add punch lists. His trade only.
+
+[Speaker 1]
+So, Roofing.
+
+[Speaker 1]
+I feel like, then you could give him access to do it for gutters. I'm very tricks. But ultimately, the internal Rohive project manager would be doing that.
+
+[Speaker 1]
+Because they don't know if another trade's coming like they don't need to know if another trade's coming their gutters or from someone else or whatever.
+
+[Speaker 1]
+So, then the archive project manager? Be able to check. You know which punch lists are active in? Services are complete. And then, when it's all done and complete. Then.
+
+[Speaker 1]
+Pictures from each trade would be put into the certificate of completion.
+
+[Speaker 1]
+Signed and then sent to the customer and with. Remaining balance.
+
+[Speaker 1]
+No triggered. Invoice.
+
+[Speaker 1]
+So, then the customer's dashboard would change and get a notification that they're paying all the way.
+
+[Speaker 1]
+And this would be for a residential customer.
+
+[Speaker 1]
+Like for commercial?
+
+[Speaker 1]
+It would be the same.
+
+[Speaker 1]
+The property.
+
+[Speaker 1]
+Manager. Regional manager would be able to.
+
+[Speaker 1]
+Log in and see any other. Addresses that they're assigned to.
+
+[Speaker 1]
+As like the project manager or. Project owner. It's probably what it would be. So, Jeff could see.
+
+[Speaker 1]
+All of Jeff's managed stuff. That he's connected to.
+
+[Speaker 1]
+And then the property managers could see it, too. So any contacts that are assigned to that property could see it in. Dashboard and be able to go into that properties file, which. Then the property dashboard. That's what it is.
+
+[Speaker 1]
+Property dashboard is what says? What stage they're in, what the next step is, let's? And. Access to their saved files and photos on the project.
+
+[Speaker 1]
+And also let them message us directly from. Um, pay their bill from. See their invoices from.
+
+[Speaker 1]
+Also download the warranty info. Once that's released, it would just go into there and send them a notification. So, let's say, paid in full. Yeah,
+
+[Speaker 2]
+Um, speaking of warranty, we need to. Change the pricing on the Owens coordinating warranty, which
+
+[Speaker 1]
+Is.
+
+[Speaker 2]
+I can't remember, but it's too long.
+
+[Speaker 2]
+The 20 squares was like $180. And the. Seven squares is only. Like eighty dollars in our thing, and it's calculating.
+
+[Speaker 1]
+Okay, I think it might just be 180.
+
+[Speaker 2]
+Yeah, it's like a percentage per square or whatever.
+
+[Speaker 1]
+Where
+
+[Speaker 2]
+It's like, oh. $0.75 per square.
+
+[Speaker 1]
+So, I think that's it. If they're a commercial or government account? Then it would just schedule the inspection with them.
+
+[Speaker 1]
+So, that's easy.
+
+[Speaker 1]
+And it would just ask. You know, their contact info? Any other contacts on the job?
+
+[Speaker 1]
+And then really what the property is and what they're. And then a note about what they're looking to achieve. And then we'll go out there and talk with them. So commercial or government or whatever that makes it easy because they can just self-service. And they could upload photos.
+
+[Speaker 1]
+Yeah, like, while you wait for your. Inspection, if you'd like. If you have clear out photos, you can upload. Would you try to get you an estimate?
+
+[Speaker 1]
+No, whatever?
+
+[Speaker 1]
+Maybe
+
+[Speaker 2]
+We can even say that to the homeowners if you have clear photos? That you can provide to us. We get fast track it and can possibly get you an estimate now. And then, so they'll be like, yeah, I want it now, because that's how people are. So, that's how we can trick them. And I'd be like, yeah, how you do that? I'll send you pictures great! Worry about the pictures you provided. It actually looks like.
+
+[Speaker 1]
+We still need to come out. Yep.
+
+[Speaker 2]
+I think that's a good way to put it.
+
+[Speaker 2]
+Yeah, I
+
+[Speaker 1]
+Like that.
+
+[Speaker 2]
+Because then it's them being like? Yeah, we can get it really fast.
+
+[Speaker 2]
+I'm just not us asking for them.
+
+[Speaker 1]
+So on our? We log in. We can see every job in every stage, like in a kanban via. We can click and drag it to the next one. Um, and then when you click into that property.
+
+[Speaker 1]
+It shows you what stage they're in, what they need. It gives us notifications on what we need to take action on, which is very little. Lets us communicate directly with them.
+
+[Speaker 1]
+Like, this is almost all built.
+
+[Speaker 1]
+It has an estimate back end. Then we can grab the link, put it on. Um. Website.
+
+[Speaker 1]
+It has a kiosk so. When someone calls in, we put in their address. It finds out where they're at, and then it takes us to the kiosk for that stage. So I can do whatever that stage needs.
+
+[Speaker 1]
+Um, if? Property manager, like Melanie, she calls in. We get the address, the name of the.
+
+[Speaker 1]
+Uh, what is it called?
+
+[Speaker 2]
+Each one. Yeah.
+
+[Speaker 1]
+What is it called a? The community name. That's a field that we don't have.
+
+[Speaker 2]
+We also need to like.
+
+[Speaker 2]
+Include. For contacts. Like, who is this person like an assistant? Roll two and? I feel like they just looked at our contact. Options.
+
+[Speaker 1]
+We could just have other or that's custom, and then you type in whatever you want. And if we keep? You know, then it adds it to the list. And if it's not active for so long? Really, it just adds it to the list.
+
+[Speaker 1]
+So, then we would like Melanie calls in. We would need to.
+
+[Speaker 1]
+Add a.
+
+[Speaker 1]
+Inspection.
+
+[Speaker 1]
+Hers would be commercial because we're going through an HOA. They're the ones that are paying. And then.
+
+[Speaker 1]
+So commercial, the owner would be. The company would be ACS. Then the property would be the address.
+
+[Speaker 1]
+And then you'd have a con you'd have contacts and who they are.
+
+[Speaker 1]
+So, you just know who you need to contact. Melanie would be. Um.
+
+[Speaker 1]
+Company rep. And then. It would automatically put in page. For company invoice. So, we know who to email for the invoice.
+
+[Speaker 1]
+Which means that each company needs to have a profile so that we know who to send it to for that company. So, for ACS, it'd be. Invoice email would be.
+
+[Speaker 1]
+Page.
+
+[Speaker 1]
+Let me customize that, so it auto populates that. That's really cool. So, when we need to invoice them? Boom! It knows how! Who to send it to?
+
+[Speaker 1]
+I'm a quote toilet would say someone's ready for a quote. Or that they need a roofer. Then they're ready for a quote, so we'd go order the roofer. Then we'd upload that into. Our end for their file, which would give them access to that roofer report.
+
+[Speaker 1]
+And then it's one portal super easy.
+
+[Speaker 1]
+And
+
+[Speaker 9]
+When they download files, it needs a change of white. How machine is built in?
+
+[Speaker 9]
+So, the
+
+[Speaker 1]
+Quote shopping cart needs more of a presentation?
+
+[Speaker 1]
+Style. Then we can take all. Piece it together with pictures, you know, this is what this looks like. This looks like these are the pages these are the. Functions. Then we can build it up with Firebase to have all of these functions.
+
+[Speaker 1]
+And then we can. Victims and Sheena fix it on the back end, so it actually works. And we have a whole CRM that does our system.

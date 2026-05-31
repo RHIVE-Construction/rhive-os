@@ -9,9 +9,9 @@ import path from 'path';
 
     const baseDir = "C:\\Users\\mjrob\\.gemini\\antigravity\\brain\\a8707e63-7c28-4d28-8bd0-01caacf0c810";
     
-    // We confirmed dev server is on port 3001
-    console.log("Navigating to public homepage on port 3001...");
-    await page.goto('http://localhost:3001/');
+    // We confirmed dev server is on port 3002
+    console.log("Navigating to public homepage on port 3002...");
+    await page.goto('http://localhost:3002/');
     await page.waitForTimeout(3000); // Allow load & GSAP intro to finish
     
     console.log("Capturing Public Homepage P-00...");
@@ -53,9 +53,10 @@ import path from 'path';
     await page.mouse.click(10, 10);
     await page.waitForTimeout(1500); // Allow exit transition
 
-    console.log("Triggering System Scan panel hover...");
-    const tabBtn = page.locator('button:has-text("System Scan")');
-    await tabBtn.hover();
+    console.log("Opening System Scan Left Drawer Panel via event dispatch...");
+    await page.evaluate(() => {
+        window.dispatchEvent(new CustomEvent('open-estimator'));
+    });
     await page.waitForTimeout(1500); // Wait for sliding panel
     await page.screenshot({ path: `${baseDir}\\06_system_scan_panel.png` });
 

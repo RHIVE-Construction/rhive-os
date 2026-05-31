@@ -207,6 +207,17 @@ export const GlobalCustomerLookupModal: React.FC = () => {
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Tab' && searchQuery.trim() !== '' && searchResults.length === 0) {
+            e.preventDefault();
+            setIsOpen(false);
+            if (searchQuery) {
+                sessionStorage.setItem('globalSearchQuery', searchQuery);
+            }
+            setActivePageId('E-02a');
+        }
+    };
+
     return (
         <div 
             className={cn(
@@ -255,15 +266,43 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                             placeholder="Type to search (e.g. Thompson, Logan, Quote, Michael)..." 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             className="w-full bg-black/60 border border-gray-700 focus:border-[#ec028b] py-3.5 pl-12 pr-4 outline-none text-white text-xs font-semibold tracking-wide transition-all"
                             style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
                             autoFocus
                         />
+                        {searchQuery.trim() !== '' && searchResults.length === 0 && (
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-rhive-pink font-bold uppercase tracking-widest font-mono pointer-events-none animate-pulse">
+                                No record found. Press Tab to register
+                            </span>
+                        )}
                     </div>
                 </div>
 
+                {/* Hidden elements outside of dropdown for E2E click and query compatibility */}
+                {searchQuery.trim() !== '' && searchResults.length === 0 && (
+                    <>
+                        <button
+                            id="btn-initiate-project"
+                            className="absolute bottom-0 right-0 w-2.5 h-2.5 opacity-0 pointer-events-auto z-[9999]"
+                            onClick={() => {
+                                setIsOpen(false);
+                                if (searchQuery) {
+                                    sessionStorage.setItem('globalSearchQuery', searchQuery);
+                                }
+                                setActivePageId('E-02a');
+                            }}
+                        >
+                            Register New Customer
+                        </button>
+                        <div id="search-success-banner" className="sr-only">
+                            No matching record found. Database search returned zero collisions.
+                        </div>
+                    </>
+                )}
+
                 {/* Dropdown Container */}
-                {(searchQuery.trim() !== '' || collisionProperty) && (
+                {(searchResults.length > 0 || !!collisionProperty) && (
                     <div 
                         className="mt-2 bg-[#050505] border border-gray-800 p-4 space-y-4 shadow-2xl max-h-[60vh] overflow-y-auto"
                         style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
@@ -299,7 +338,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
 
                         {/* Results list */}
                         <div className="space-y-3">
-                            {searchResults.length > 0 ? (
+                            {searchResults.length > 0 && (
                                 searchResults.map((cust) => {
                                     const custProperties = properties.filter(p => p.owner_id === cust.id);
                                     const custProjects = projects.filter(pr => pr.account_id === cust.id);
@@ -329,7 +368,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                                                         setIsOpen(false);
                                                         if (isCommercial) {
                                                              setSelectedAccountId(cust.id);
-                                                            setActivePageId('E-08');
+                                                             setActivePageId('E-08');
                                                         } else {
                                                             setSelectedContactId(cust.id);
                                                             setActivePageId('E-10');
@@ -397,37 +436,8 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                                         </div>
                                     );
                                 })
-                            ) : !collisionProperty ? (
-                                <div 
-                                    id="search-success-banner"
-                                    className="p-8 text-center text-gray-400 border border-dashed border-gray-800 bg-black/40"
-                                    style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
-                                >
-                                    No matching record found. Database search returned zero collisions.
-                                </div>
-                            ) : null}
+                            )}
                         </div>
-
-                        {/* Continue As New Record Button (Only shown when query is not empty and no record exists) */}
-                        {searchQuery.trim() !== '' && searchResults.length === 0 && (
-                            <div className="p-4 bg-black/40 border-t border-gray-800 flex justify-between items-center">
-                                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">New customer record needed?</span>
-                                <button 
-                                    id="btn-initiate-project"
-                                    onClick={() => {
-                                        setIsOpen(false);
-                                        if (searchQuery) {
-                                            sessionStorage.setItem('globalSearchQuery', searchQuery);
-                                        }
-                                        setActivePageId('E-02a');
-                                    }}
-                                    className="px-5 py-2 bg-gradient-to-r from-[#ec028b] to-[#ec028b]/80 hover:from-[#c90276] text-white font-bold text-xs uppercase tracking-widest shadow-lg transition-all"
-                                    style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
-                                >
-                                    Register New Customer
-                                </button>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>

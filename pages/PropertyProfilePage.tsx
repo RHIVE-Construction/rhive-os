@@ -187,6 +187,36 @@ const PropertyProfilePage: React.FC = () => {
                                     </div>
                                 </div>
                             )}
+                            {property.buildings && property.buildings.length > 0 && (
+                                <div className="mt-4 pt-3 border-t border-gray-800/50 space-y-2">
+                                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Buildings</p>
+                                    <div className="space-y-2">
+                                        {property.buildings.map((b: any, idx: number) => (
+                                            <div key={b.id} className="flex items-center gap-2">
+                                                <span className="text-xs text-gray-500 font-mono">#{idx + 1}</span>
+                                                <input 
+                                                    type="text"
+                                                    value={b.name}
+                                                    onChange={async (e) => {
+                                                        const newName = e.target.value;
+                                                        const updatedBldgs = property.buildings.map((item: any) =>
+                                                            item.id === b.id ? { ...item, name: newName } : item
+                                                        );
+                                                        const pId = property._id || property.id;
+                                                        updateProperty(pId, { buildings: updatedBldgs });
+                                                        try {
+                                                            await propertyService.update(pId, { buildings: updatedBldgs });
+                                                        } catch (err) {
+                                                            console.warn(err);
+                                                        }
+                                                    }}
+                                                    className="flex-1 bg-black/30 border border-gray-800 hover:border-gray-700 focus:border-[#ec028b] rounded px-2.5 py-1 text-white text-xs font-semibold focus:outline-none transition-all"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             <button
                                 id="btn-manage-buildings"
                                 onClick={() => setIsManageModalOpen(true)}

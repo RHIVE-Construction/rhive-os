@@ -99,6 +99,7 @@ interface AddressData {
     longitude: number;
     placeName?: string;
     streetViewHeading?: number; 
+    name?: string;
 }
 
 const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) => {
@@ -905,11 +906,11 @@ const CalendarWidget = ({ onSelectSlot }: { onSelectSlot: (slot: string) => void
     );
 };
 
-const SchedulingBlock = ({ onScheduleConfirm, notesLabel = "Access Code / Entry Notes", isBlocked = false }: { onScheduleConfirm: (details: string) => void, notesLabel?: string, isBlocked?: boolean }) => {
+const SchedulingBlock = ({ onScheduleConfirm, notesLabel = "Access Code / Entry Notes", isBlocked = false, isAdminBypass = false }: { onScheduleConfirm: (details: string) => void, notesLabel?: string, isBlocked?: boolean, isAdminBypass?: boolean }) => {
     const [slot, setSlot] = useState<string | null>(null);
     const [notes, setNotes] = useState("");
 
-    if (isBlocked) {
+    if (isBlocked && !isAdminBypass) {
         return (
             <div id="scheduling-blocked-warning" className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-red-300 text-sm font-semibold">
                 Out of Service Boundary: Scheduling blocked
@@ -919,6 +920,11 @@ const SchedulingBlock = ({ onScheduleConfirm, notesLabel = "Access Code / Entry 
 
     return (
         <div className="space-y-6 animate-fade-in">
+            {isBlocked && (
+                <div id="scheduling-blocked-warning" className="p-4 bg-amber-900/20 border border-amber-500/30 rounded-lg text-amber-300 text-sm font-semibold">
+                    Out of Service Boundary: Scheduling blocked (Admin Bypass Active)
+                </div>
+            )}
             <div className="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
                 <div className="flex items-center mb-3">
                     <CalendarDaysIcon className="w-6 h-6 text-blue-400 mr-2" />
@@ -949,6 +955,13 @@ const SchedulingBlock = ({ onScheduleConfirm, notesLabel = "Access Code / Entry 
     );
 };
 
+const checkAddressOutOfBounds = (data: AddressData) => {
+    const addr = (data.address || '').toLowerCase();
+    const city = (data.city || '').toLowerCase();
+    const state = (data.state || '').toLowerCase();
+    return addr.includes('boise') || addr.includes(', id') || city === 'boise' || state === 'id';
+};
+
 const AddressSection: React.FC<{ 
     label: string, 
     data: AddressData, 
@@ -960,15 +973,18 @@ const AddressSection: React.FC<{
     readOnly?: boolean, 
     id?: string,
     pinnedBuildings?: any[],
-    onChangeBuildings?: (bldgs: any[]) => void
+    onChangeBuildings?: (bldgs: any[]) => void,
+    onDelete?: () => void
 }> = ({ 
     label, data, onChange, isCollapsed, setIsCollapsed, showMaps = false, placeholder = "Start typing address...", readOnly = false, id,
-    pinnedBuildings = [], onChangeBuildings
+    pinnedBuildings = [], onChangeBuildings, onDelete
 }) => {
     const isApiReady = useGoogleMapsApi();
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<any>(null);
     const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
+    const { currentUser } = useMockDB();
+    const isAdminBypass = currentUser?.role === 'Admin' || currentUser?.role === 'Employee';
 
     useEffect(() => {
         if (!isApiReady || !inputRef.current || !window.google || isCollapsed || readOnly) return;
@@ -1089,9 +1105,17 @@ const AddressSection: React.FC<{
                     )}
                 >
                     <div className="flex items-center min-w-0 mr-4 flex-wrap sm:flex-nowrap">
-                        <span className="text-xs text-white font-black uppercase tracking-wider whitespace-nowrap mr-2">
-                            {label === "Billing Address" ? "BILLING ADDRESS" : label.toUpperCase().includes("PROPERTY") ? "PROPERTY LOCATION" : "PROPERTY LOCATION"}
-                        </span>
+                        <input
+                            type="text"
+                            value={data.name || ''}
+                            placeholder={label}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                                e.stopPropagation();
+                                onChange({ ...data, name: e.target.value });
+                            }}
+                            className="bg-transparent border-b border-gray-800 focus:border-[#ec028b] focus:outline-none text-xs text-white font-black uppercase tracking-wider w-32 mr-2 px-1 py-0.5"
+                        />
                         <span className="text-xs text-gray-500 mr-2">—</span>
                         <div className="text-xs text-gray-400 font-medium truncate">
                             {`${data.address || 'No Address'}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''} ${data.zip || ''}`}
@@ -1099,25 +1123,25 @@ const AddressSection: React.FC<{
                     </div>
                     
                     <div className="flex items-center space-x-3 shrink-0">
-                        {label !== "Billing Address" && (
-                            <div className="flex items-center space-x-1.5 text-[#ec028b] font-black text-xs uppercase tracking-wider">
-                                <span>{pinnedBuildings.length} {pinnedBuildings.length === 1 ? 'BUILDING' : 'BUILDINGS'}</span>
-                                <svg className="w-4 h-4 animate-[spin_8s_linear_infinite]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                    <circle cx="12" cy="12" r="9" strokeDasharray="3 3" />
-                                    <circle cx="12" cy="12" r="5" />
-                                </svg>
-                            </div>
-                        )}
-                        {!readOnly && (
-                            <div className="text-gray-600 group-hover:text-[#ec028b] transition-colors">
-                                <PencilSquareIcon className="w-4 h-4" />
-                            </div>
-                        )}
+                        {/* Extraneous icons removed per user request */}
                     </div>
                 </div>
             ) : (
-                <CircuitryCard title={`${label === "Billing Address" ? "Billing Address" : "Property Address"} Details`} icon={<MapPinIcon className="w-5 h-5" />}>
+                <CircuitryCard title={`${data.name || (label === "Billing Address" ? "Billing Address" : "Property Address")} Details`} icon={<MapPinIcon className="w-5 h-5" />}>
                     <div className="space-y-4">
+                        {label !== "Billing Address" && (
+                            <div>
+                                <QuestionLabel>Property Name</QuestionLabel>
+                                <InputField 
+                                    name="name" 
+                                    placeholder={label} 
+                                    value={data.name || ''} 
+                                    onChange={handleFieldChange} 
+                                    disabled={readOnly} 
+                                    className="mb-2"
+                                />
+                            </div>
+                        )}
                         <div>
                             <QuestionLabel required>Street Address or Business Name</QuestionLabel>
                             <div className="relative">
@@ -1164,6 +1188,13 @@ const AddressSection: React.FC<{
                             </div>
                         </div>
 
+                        {checkAddressOutOfBounds(data) && (
+                            <div className="p-3 bg-amber-950/40 border border-amber-500/50 text-amber-400 text-xs font-bold animate-pulse flex items-center justify-between mt-2"
+                                 style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}>
+                                <span>⚠️ Out of Service Boundary (Boise region detected). {isAdminBypass ? "Admin Bypass Active." : "Scheduling is blocked."}</span>
+                            </div>
+                        )}
+
                         {onChangeBuildings && (
                             <div className="mt-4 pt-3 border-t border-gray-800 space-y-2">
                                 <QuestionLabel>Number of Buildings</QuestionLabel>
@@ -1192,7 +1223,17 @@ const AddressSection: React.FC<{
                             </div>
                         )}
 
-                        <div className="flex justify-end pt-2 border-t border-gray-800/40">
+                        <div className="flex justify-end pt-2 border-t border-gray-800/40 space-x-3">
+                            {onDelete && (
+                                <Button 
+                                    type="button" 
+                                    size="sm" 
+                                    onClick={onDelete}
+                                    className="bg-red-600 hover:bg-red-700 border-none text-white text-xs uppercase tracking-widest font-black"
+                                >
+                                    Delete Property
+                                </Button>
+                            )}
                             <Button 
                                 id="btn-save-property-section"
                                 type="button" 
@@ -1316,7 +1357,7 @@ const SummaryDisplay = ({ items }: { items: { label: string, value: string | num
 // --- Main Page Component ---
 
 const CustomerInputPage: React.FC = () => {
-    const { addUser, createProject, properties, addProperty, users, projects, updateProperty, addCommunication } = useMockDB();
+    const { addUser, createProject, properties, addProperty, users, projects, updateProperty, addCommunication, currentUser, setCurrentProjectId } = useMockDB();
     const { setActivePageId } = useNavigation();
     const { pricing } = usePricing();
     const isApiReady = useGoogleMapsApi();
@@ -1399,8 +1440,32 @@ const CustomerInputPage: React.FC = () => {
     const [purchaseIntent, setPurchaseIntent] = useState<'Ready' | 'Exploring' | ''>('');
     const [isIntentCollapsed, setIsIntentCollapsed] = useState(false);
     const [aiExtractBannerText, setAiExtractBannerText] = useState<string | null>(null);
-    const [isEscrowBilling, setIsEscrowBilling] = useState(false);
-    const [showBillingLockError, setShowBillingLockError] = useState(false);
+
+    // Session Restore from sessionStorage telemetry states on mount
+    useEffect(() => {
+        const intakeScopeType = sessionStorage.getItem('intakeScopeType');
+        const intakeActiveLeak = sessionStorage.getItem('intakeActiveLeak');
+        const intakeEmergencyTarp = sessionStorage.getItem('intakeEmergencyTarp');
+        const intakePurchaseIntent = sessionStorage.getItem('intakePurchaseIntent');
+
+        if (intakeScopeType) {
+            setScopeType(intakeScopeType as 'Repair' | 'Replacement');
+            sessionStorage.removeItem('intakeScopeType');
+        }
+        if (intakeActiveLeak === 'true' || intakeEmergencyTarp === 'true') {
+            setRepairDetails(prev => ({
+                ...prev,
+                activeLeak: intakeActiveLeak === 'true',
+                emergencyTarp: intakeEmergencyTarp === 'true'
+            }));
+            if (intakeActiveLeak === 'true') sessionStorage.removeItem('intakeActiveLeak');
+            if (intakeEmergencyTarp === 'true') sessionStorage.removeItem('intakeEmergencyTarp');
+        }
+        if (intakePurchaseIntent) {
+            setPurchaseIntent(intakePurchaseIntent as 'Ready' | 'Exploring');
+            sessionStorage.removeItem('intakePurchaseIntent');
+        }
+    }, []);
     
     // Workflow Logic State
     const [matchedProperty, setMatchedProperty] = useState<Property | null>(null);
@@ -1478,11 +1543,17 @@ const CustomerInputPage: React.FC = () => {
     const requiresOrganization = projectCategory === 'Commercial' || projectCategory === 'Government';
     
     const isOutOfBounds = useMemo(() => {
-        const addr = (propertyData.address || '').toLowerCase();
-        const city = (propertyData.city || '').toLowerCase();
-        const state = (propertyData.state || '').toLowerCase();
-        return addr.includes('boise') || addr.includes(', id') || city === 'boise' || state === 'id';
-    }, [propertyData]);
+        if (checkAddressOutOfBounds(propertyData)) return true;
+        return additionalProperties.some(p => checkAddressOutOfBounds(p.propertyData));
+    }, [propertyData, additionalProperties]);
+
+    const isAdminBypass = useMemo(() => {
+        return currentUser?.role === 'Admin' || currentUser?.role === 'Employee';
+    }, [currentUser]);
+
+    const isSchedulingBlocked = useMemo(() => {
+        return isOutOfBounds && !isAdminBypass;
+    }, [isOutOfBounds, isAdminBypass]);
 
     const isInspectionRequired = isInsurance || requiresOrganization || (scopeType === 'Repair' && (repairDetails.isOld || !repairDetails.hasPhotos || repairDetails.activeLeak));
     // IF Insurance Claim -> FORCE Quote/Inspection path (disable instant estimate)
@@ -1516,6 +1587,19 @@ const CustomerInputPage: React.FC = () => {
         }
     }, [contacts, companyData, projectCategory, billingStatus, hasCustomBilling, propertyData, requiresOrganization]);
 
+    // Sync Escrow Billing if any contact email matches @escrow.com
+    useEffect(() => {
+        const hasEscrowEmail = contacts.some(c => c.email && c.email.toLowerCase().includes('@escrow.com'));
+        if (hasEscrowEmail && propertyData.address) {
+            setBillingData(propertyData);
+            setHasCustomBilling(true);
+            setBillingStatus('confirmed');
+            const escrowContact = contacts.find(c => c.email && c.email.toLowerCase().includes('@escrow.com'));
+            if (escrowContact) {
+                setBillToName(`${escrowContact.firstName} ${escrowContact.lastName}`);
+            }
+        }
+    }, [contacts, propertyData]);
     useEffect(() => {
         if (propertyData.latitude !== 0) {
             const building = generateMockBuildingData(propertyData);
@@ -1597,8 +1681,8 @@ const CustomerInputPage: React.FC = () => {
         e.preventDefault();
         if (contacts.length === 0) return alert("Please add at least one contact.");
         
-        if (isOutOfBounds) {
-            alert("Out of Service Boundary: Referrals routing initiated. Detailing third-party provider referral instructions: This project will be handed off to local partners in the Boise region.");
+        if (isOutOfBounds && !isAdminBypass) {
+            return alert("Out of Service Boundary: This address is in the Boise region and is out of our service boundary. Submission blocked.");
         }
 
         // 1. Resolve and register contacts
@@ -1659,9 +1743,16 @@ const CustomerInputPage: React.FC = () => {
         );
 
         let targetPropertyId = '';
+        const hasEscrowEmail = resolvedContacts.some(c => c.email && c.email.toLowerCase().includes('@escrow.com'));
+        const escrowNoteText = hasEscrowEmail ? "Billing address updated directly under escrow rules. Escrow record initialized." : undefined;
         
         if (existingProperty) {
             targetPropertyId = existingProperty._id;
+            
+            if (hasEscrowEmail) {
+                updateProperty(existingProperty._id, { escrow_note: escrowNoteText });
+                addCommunication('file', existingProperty._id, escrowNoteText);
+            }
             
             // Check if we need to update company relationship
             if (requiresOrganization && resolvedCompanyId && existingProperty.owner_id !== resolvedCompanyId) {
@@ -1717,8 +1808,13 @@ const CustomerInputPage: React.FC = () => {
                 type: requiresOrganization ? 'Commercial' : 'Residential',
                 owner_id: ownerId,
                 coordinates: { lat: propertyData.latitude, lng: propertyData.longitude },
-                buildings: finalBuildings
+                buildings: finalBuildings,
+                escrow_note: escrowNoteText
             });
+
+            if (hasEscrowEmail) {
+                addCommunication('file', targetPropertyId, escrowNoteText!);
+            }
         }
 
         // Save additional properties (if any)
@@ -1789,13 +1885,15 @@ const CustomerInputPage: React.FC = () => {
                 addCommunication('file', activeProjectOnProp._id, `Linked contact to project: ${rc.firstName} ${rc.lastName} (${rc.phone})`);
             });
 
-            alert(`Smart Merge Complete: Existing active project "${activeProjectOnProp.name}" found on property. New contacts and intake details have been merged into this project file (No duplicate card created).`);
+            // Redirect smoothly to the existing project dashboard
+            setCurrentProjectId(activeProjectOnProp._id);
+            setActivePageId('E-15');
         } else {
             // Create new project
-            createProject(projectName, projectCategory, targetPropertyId, ownerId);
+            const newProjId = createProject(projectName, projectCategory, targetPropertyId, ownerId);
+            setCurrentProjectId(newProjId);
+            setActivePageId('E-15');
         }
-
-        setActivePageId('E-18');
     };
 
     const handleGoToPropertyProfile = () => {
@@ -1982,6 +2080,9 @@ const CustomerInputPage: React.FC = () => {
                                     updated[idx].isCollapsed = val;
                                     setAdditionalProperties(updated);
                                 }} 
+                                onDelete={() => {
+                                    setAdditionalProperties(prev => prev.filter(p => p.id !== prop.id));
+                                }}
                                 showMaps={false} 
                                 id={`property-address-input-${idx + 2}`}
                                 pinnedBuildings={prop.pinnedBuildings}
@@ -1991,15 +2092,6 @@ const CustomerInputPage: React.FC = () => {
                                     setAdditionalProperties(updated);
                                 }}
                             />
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setAdditionalProperties(prev => prev.filter(p => p.id !== prop.id));
-                                }}
-                                className="absolute right-12 top-6 text-red-500 hover:text-red-400 text-[10px] font-black uppercase tracking-wider"
-                            >
-                                Remove Property
-                            </button>
                         </div>
                     ))}
 
@@ -2025,30 +2117,7 @@ const CustomerInputPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Property Match Notification - Inline, Non-Blocking */}
-                {matchedProperty && (
-                    <div className="animate-fade-in my-4">
-                        <div className="p-4 bg-[#ec028b]/10 border border-[#ec028b] rounded-xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="flex items-center">
-                                <div className="p-2 bg-[#ec028b]/20 rounded-full mr-3">
-                                    <Check className="w-5 h-5 text-[#ec028b]" />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-bold text-sm">Existing Property Found</h3>
-                                    <p className="text-xs text-gray-400">
-                                        {matchedProperty.address_full} (Owner: {matchedProperty.owner_id})
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex space-x-2 w-full sm:w-auto">
-                                <Button type="button" variant="secondary" onClick={handleGoToPropertyProfile} className="flex-1 sm:flex-initial text-xs py-2 h-auto">
-                                    View Profile
-                                </Button>
-                                {/* User can simply continue filling out the form below to "Start New Quote" essentially */}
-                            </div>
-                        </div>
-                    </div>
-                )}
+
                 
                 {/* CONTACTS - Always Visible */}
                 <div className="animate-fade-in">
@@ -2219,49 +2288,8 @@ const CustomerInputPage: React.FC = () => {
                         <CircuitryCard 
                             title="Billing Details" 
                             icon={<DocumentTextIcon className="w-5 h-5" />}
-                            headerAccessory={
-                                <div className="flex items-center gap-3 bg-black/40 border border-gray-850 px-4 py-2 rounded-xl">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Escrow Billing Rules</span>
-                                    <button
-                                        id="switch-escrow-billing"
-                                        type="button"
-                                        onClick={() => setIsEscrowBilling(!isEscrowBilling)}
-                                        className={cn(
-                                            "relative inline-flex h-6 w-11 items-center rounded-full transition-colors outline-none focus:outline-none",
-                                            isEscrowBilling ? "bg-[#ec028b]" : "bg-gray-700"
-                                        )}
-                                    >
-                                        <span
-                                            className={cn(
-                                                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                                isEscrowBilling ? "translate-x-6" : "translate-x-1"
-                                            )}
-                                        />
-                                    </button>
-                                </div>
-                            }
                         >
                             <div className="space-y-6 relative">
-                                {isEscrowBilling && (
-                                    <div 
-                                        id="billing-lock-overlay"
-                                        onClick={() => setShowBillingLockError(true)}
-                                        className="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex flex-col items-center justify-center cursor-not-allowed z-50 rounded-xl border border-red-500/20"
-                                    >
-                                        <span className="text-xl mb-1">🔒</span>
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-red-500">Billing Escrow Rules Active</span>
-                                    </div>
-                                )}
-                                
-                                {showBillingLockError && (
-                                    <div 
-                                        id="billing-lock-error-banner"
-                                        className="p-3 bg-red-950/40 border border-red-500/50 rounded-lg text-red-400 text-xs font-bold shadow-[0_0_15px_rgba(239,68,68,0.15)] animate-pulse mb-4"
-                                    >
-                                        Billing parameters locked under escrow rules. Contact admin.
-                                    </div>
-                                )}
-
                                 <div>
                                     <QuestionLabel>Bill To Entity / Person</QuestionLabel>
                                     <CompanyLookup 
@@ -2285,6 +2313,7 @@ const CustomerInputPage: React.FC = () => {
                                 </div>
 
                                 <AddressSection 
+                                    id="billing-address-input"
                                     label="Billing Address"
                                     data={billingData}
                                     onChange={(d) => {
@@ -2337,6 +2366,7 @@ const CustomerInputPage: React.FC = () => {
                                             setIsIntentCollapsed(true); 
                                         }}
                                         isBlocked={isOutOfBounds}
+                                        isAdminBypass={isAdminBypass}
                                     />
                                 )}
                                 
@@ -2444,6 +2474,7 @@ const CustomerInputPage: React.FC = () => {
                                                                 setIsIntentCollapsed(true); 
                                                             }}
                                                             isBlocked={isOutOfBounds}
+                                                            isAdminBypass={isAdminBypass}
                                                         />
                                                     </div>
                                                 )}
@@ -2512,6 +2543,7 @@ const CustomerInputPage: React.FC = () => {
                                                             setIsIntentCollapsed(true); 
                                                         }}
                                                         isBlocked={isOutOfBounds}
+                                                        isAdminBypass={isAdminBypass}
                                                     />
                                                 </div>
                                             </div>
@@ -2896,6 +2928,7 @@ const CustomerInputPage: React.FC = () => {
                             onScheduleConfirm={(details) => alert(`Scheduled Call: ${details}`)} 
                             notesLabel="Notes for Call"
                             isBlocked={isOutOfBounds}
+                            isAdminBypass={isAdminBypass}
                         />
                     </CircuitryCard>
                 )}

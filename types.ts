@@ -206,6 +206,7 @@ export interface Property {
   coordinates: { lat: number; lng: number };
   features: string[];
   buildings?: { id: string; name: string; coordinates?: { lat: number; lng: number } }[];
+  escrow_note?: string;
 }
 
 export type ProjectStage = 

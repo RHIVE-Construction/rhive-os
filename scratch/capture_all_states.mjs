@@ -12,7 +12,7 @@ import { chromium } from 'playwright';
     
     const page = await context.newPage();
     const screenshotsDir = 'C:\\Users\\mjrob\\.gemini\\antigravity\\brain\\a8707e63-7c28-4d28-8bd0-01caacf0c810';
-    const baseUrl = 'http://localhost:3001';
+    const baseUrl = 'http://localhost:3002';
 
     // Helper to take a screenshot and log it
     const takeScreenshot = async (name, delay = 1000) => {

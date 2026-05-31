@@ -462,7 +462,8 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             owner_id: property.owner_id || 'Unknown',
             coordinates: { lat: 0, lng: 0 },
             features: property.features || [],
-            buildings: property.buildings || []
+            buildings: property.buildings || [],
+            escrow_note: property.escrow_note
         };
         setProperties(prev => [...prev, newProperty]);
         userLogService.logAction('ADD_PROPERTY', `Property added: ${newProperty.address_full} (ID: ${newId})`, { propertyId: newId, property: newProperty });

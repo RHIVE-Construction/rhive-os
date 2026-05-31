@@ -71,14 +71,15 @@ const TechHero: React.FC = () => {
     return (
         <section className="relative min-h-[90vh] flex items-center justify-center pt-32 pb-24 overflow-hidden snap-start select-none">
             
-            {/* 1. Video Background Layer (Bottom) */}
+            {/* 1. Video Background Layer (Bottom) - Scaled and shifted to crop out top-left watermark logo */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                 <video
                     autoPlay
                     muted
                     loop
                     playsInline
-                    className="w-full h-full object-cover scale-100 filter brightness-[0.4]"
+                    className="w-full h-full object-cover filter brightness-[0.4]"
+                    style={{ transform: 'scale(1.12) translate(-3%, -3%)', transformOrigin: 'top left' }}
                 >
                     <source src="/vidupload/TRADESHOW MARKETING VIDEO.mp4" type="video/mp4" />
                 </video>

@@ -431,11 +431,11 @@ const FinishOnTopTitle: React.FC = () => {
         );
     }, []);
 
-    const text = "FINISH ON TOP.";
+    const text = "FINISH ON TOP";
     const words = text.split(" ");
 
     return (
-        <div ref={textRef} className="flex flex-wrap justify-center gap-x-6 select-none perspective-[1000px] overflow-hidden py-2">
+        <div ref={textRef} className="flex flex-wrap items-center justify-center gap-x-6 select-none perspective-[1000px] overflow-hidden py-2">
             {words.map((word, wordIdx) => (
                 <span key={wordIdx} className="char-word inline-block whitespace-nowrap">
                     {word.split("").map((char, charIdx) => (
@@ -449,6 +449,22 @@ const FinishOnTopTitle: React.FC = () => {
                     ))}
                 </span>
             ))}
+            <span 
+                className="char inline-block ml-2"
+                style={{ opacity: 0, transformOrigin: 'bottom center' }}
+            >
+                <svg
+                    viewBox="0 0 24 24"
+                    className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 text-rhive-pink drop-shadow-[0_0_12px_rgba(236,2,139,0.85)]"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path d="M2 17L12 7L22 17" />
+                </svg>
+            </span>
         </div>
     );
 };
@@ -488,7 +504,7 @@ const FoundersCardLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                                 <Award size={18} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black tracking-widest uppercase italic">The Founders Card</h3>
+                                <h3 className="text-lg font-black tracking-widest uppercase italic">RHIVE Construction LLC</h3>
                                 <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em]">P-02 VERIFIED LEADERSHIP CREDENTIALS</p>
                             </div>
                         </div>
@@ -508,7 +524,7 @@ const FoundersCardLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                             <h4 className="text-md font-black uppercase text-white">Kara Robinson</h4>
                             <p className="text-rhive-pink text-[9px] font-black uppercase tracking-widest mb-3">PRESIDENT // FOUNDER</p>
                             <p className="text-[10px] text-gray-400 font-serif italic mb-4 leading-relaxed">
-                                Driving operational systems precision. Kara secures client alignment through strategic planning and dedicated execution safety.
+                                Empowering the community and elevating our customers. Kara drives operational systems precision, ensuring every contractor and representative works under the highest standards of safety, quality, and mutual trust.
                             </p>
                             <div className="text-[8px] font-mono text-gray-500 uppercase space-y-1">
                                 <p>Email: Point of Contact via HQ</p>
@@ -518,13 +534,13 @@ const FoundersCardLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                         </div>
 
                         <div className="border border-white/10 p-5 bg-white/5 relative" style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
-                            <div className="w-20 h-20 rounded-full overflow-hidden border border-rhive-blue mb-4">
+                            <div className="w-20 h-20 rounded-full overflow-hidden border border-rhive-pink mb-4">
                                 <img src="https://static.wixstatic.com/media/c5862a_f1b8b6616fe44f739664188e00d416ce~mv2.png" alt="Michael Robinson" className="w-full h-full object-cover" />
                             </div>
                             <h4 className="text-md font-black uppercase text-white">Michael Robinson</h4>
                             <p className="text-rhive-pink text-[9px] font-black uppercase tracking-widest mb-3">CEO // STRATEGIC ARCHITECT</p>
                             <p className="text-[10px] text-gray-400 font-serif italic mb-4 leading-relaxed">
-                                Championing technological infrastructure. Michael bridges AI-driven operating dynamics with high-performance physical builds.
+                                Bridging contractor excellence with customer transparency. Michael maps AI-driven operating systems to deliver direct, data-backed value to our representatives and local community projects.
                             </p>
                             <div className="text-[8px] font-mono text-gray-500 uppercase space-y-1">
                                 <p>Email: michael@rhiveconstruction.com</p>
@@ -535,7 +551,7 @@ const FoundersCardLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     </div>
                     
                     <div className="mt-6 border-t border-white/10 pt-4 flex justify-between items-center text-[8px] font-mono text-gray-500 uppercase tracking-widest">
-                        <span>RHIVE INDUSTRIES LLC • SALT LAKE CLUSTER</span>
+                        <span>RHIVE Construction LLC • SALT LAKE CLUSTER</span>
                         <span className="text-rhive-pink">VERIFIED STATUS: OK</span>
                     </div>
                 </div>
@@ -545,6 +561,7 @@ const FoundersCardLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
 };
 
 const ProcessLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+    const [bgColor, setBgColor] = useState('#000000');
     if (!isOpen) return null;
     const stages = [
         { stage: "STAGE 01", title: "DRONE SCAN", desc: "Digital intake & aerial assessment. We analyze your property's roof layout using high-resolution drone mapping before any work begins.", progress: "10%", check: "Drone flight scheduled" },
@@ -560,7 +577,7 @@ const ProcessLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
     ];
 
     return (
-        <div className="fixed inset-0 z-[11000] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[11000]">
             <motion.div 
                 className="absolute inset-0 bg-black/85 backdrop-blur-md"
                 initial={{ opacity: 0 }}
@@ -570,20 +587,45 @@ const ProcessLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
             <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="relative max-w-lg w-full bg-black/95 border border-rhive-pink/40 p-8 text-white z-10 overflow-hidden flex flex-col max-h-[85vh]"
+                className="fixed inset-[0.5in] border border-rhive-pink/40 p-8 text-white z-10 overflow-hidden flex flex-col"
                 style={{
+                    backgroundColor: bgColor,
                     clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)'
                 }}
             >
                 <div className="relative z-10 flex flex-col h-full">
                     <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
                             <div className="text-rhive-pink p-2 bg-rhive-pink/10 rounded-sm border border-rhive-pink/20">
                                 <Compass size={18} />
                             </div>
                             <div>
                                 <h3 className="text-lg font-black tracking-widest uppercase italic text-left">Zero Surprises Process</h3>
                                 <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em]">P-04 10-STAGE VERTICAL PERFORMANCE INTEGRITY</p>
+                            </div>
+                            <div className="flex items-center gap-1.5 ml-4 bg-black/40 p-1 border border-white/5 rounded">
+                                {[
+                                    { label: 'A', value: '#000000', title: 'Starship Black' },
+                                    { label: 'B', value: '#0b0114', title: 'Nebula Purple' },
+                                    { label: 'C', value: '#010a18', title: 'Starlink Blue' },
+                                    { label: 'D', value: '#0d0f12', title: 'Orbit Gray' },
+                                    { label: 'E', value: '#011215', title: 'Aurora Teal' }
+                                ].map(token => (
+                                    <button
+                                        key={token.label}
+                                        onClick={() => setBgColor(token.value)}
+                                        title={token.title}
+                                        type="button"
+                                        className={cn(
+                                            "w-6 h-6 border flex items-center justify-center text-[10px] font-mono font-black transition-all",
+                                            bgColor === token.value 
+                                                ? "border-rhive-pink bg-rhive-pink/20 text-white shadow-[0_0_8px_rgba(236,2,139,0.5)]" 
+                                                : "border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-white"
+                                        )}
+                                    >
+                                        {token.label}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                         <button 
@@ -634,523 +676,6 @@ const ProcessLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
     );
 };
 
-const OmniBirdTriageLightbox = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-    const [phone, setPhone] = useState('(801) 555-0192');
-    const [severity, setSeverity] = useState<'critical' | 'severe' | 'drip'>('severe');
-    const [location, setLocation] = useState('Attic / Main Facet');
-    const [desc, setDesc] = useState('Active water intrusion during storm, dripping near electrical units');
-    const [triageStep, setTriageStep] = useState<'form' | 'success'>('form');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    if (!isOpen) return null;
-
-    const handleTriageSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setTimeout(() => {
-            setIsSubmitting(false);
-            setTriageStep('success');
-        }, 1200);
-    };
-
-    return (
-        <div className="fixed inset-0 z-[11000] flex items-center justify-center p-4">
-            <motion.div 
-                className="absolute inset-0 bg-black/85 backdrop-blur-md"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onClick={onClose}
-            />
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="relative max-w-md w-full bg-black/95 border border-red-500/40 p-8 text-white z-10 overflow-hidden flex flex-col"
-                style={{
-                    clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)'
-                }}
-            >
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
-                    <PlexusShape
-                        backgroundColor="transparent"
-                        dotColor="#ef4444"
-                        lineColor="239, 68, 68"
-                        density={25}
-                        className="w-full h-full"
-                    />
-                </div>
-
-                <div className="relative z-10 text-left">
-                    <div className="flex items-center justify-between border-b border-red-500/20 pb-4 mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="text-red-500 p-2 bg-red-500/10 rounded-sm border border-red-500/20 animate-pulse">
-                                <ShieldAlert size={18} />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-black tracking-widest uppercase italic text-red-500">Emergency Restoration</h3>
-                                <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em]">P-06 OMNI-BIRD TRIAGE INTERNALS</p>
-                            </div>
-                        </div>
-                        <button 
-                            type="button"
-                            onClick={onClose}
-                            className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-
-                    {triageStep === 'form' ? (
-                        <form onSubmit={handleTriageSubmit} className="space-y-4">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">CONTACT PHONE NUMBER</label>
-                                <input
-                                    type="tel"
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    required
-                                    className="w-full bg-black/60 border border-white/15 p-4 rounded-lg text-xs font-bold text-white tracking-widest outline-none focus:border-red-500 transition-all"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">SEVERITY LEVEL</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { id: 'critical', label: 'CRITICAL' },
-                                        { id: 'severe', label: 'SEVERE' },
-                                        { id: 'drip', label: 'ACTIVE DRIP' }
-                                    ].map(item => (
-                                        <button
-                                            key={item.id}
-                                            type="button"
-                                            onClick={() => setSeverity(item.id as any)}
-                                            className={cn(
-                                                "py-2 text-[9px] font-black uppercase tracking-widest border rounded transition-all",
-                                                severity === item.id 
-                                                    ? "bg-red-500 border-red-500 text-black font-black"
-                                                    : "border-white/15 text-gray-400 hover:text-white hover:bg-white/5"
-                                            )}
-                                        >
-                                            {item.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">LEAK LOCATION</label>
-                                <input
-                                    type="text"
-                                    value={location}
-                                    onChange={(e) => setLocation(e.target.value)}
-                                    required
-                                    className="w-full bg-black/60 border border-white/15 p-4 rounded-lg text-xs font-bold text-white uppercase outline-none focus:border-red-500 transition-all"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">SITUATION BRIEFING</label>
-                                <textarea
-                                    value={desc}
-                                    onChange={(e) => setDesc(e.target.value)}
-                                    required
-                                    className="w-full bg-black/60 border border-white/15 p-4 rounded-lg text-xs font-bold text-white outline-none focus:border-red-500 transition-all h-20 resize-none"
-                                />
-                            </div>
-
-                            <div className="border border-dashed border-white/15 hover:border-red-500/50 p-4 rounded-lg text-center bg-white/5 cursor-pointer flex flex-col items-center gap-1">
-                                <UploadCloud size={20} className="text-gray-400" />
-                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">DROP VISUAL DAMAGE FILES HERE</span>
-                                <span className="text-[7px] font-mono text-gray-600 uppercase">Supports images & videos</span>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full py-4 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all disabled:opacity-50"
-                            >
-                                {isSubmitting ? 'DISPATCHING SPECIALIST FORCE...' : 'DISPATCH EMERGENCY RESPONSE'}
-                            </button>
-                        </form>
-                    ) : (
-                        <div className="space-y-6 text-center py-4">
-                            <div className="flex justify-center">
-                                <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] animate-pulse">
-                                    <CheckCircle2 size={32} />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <h4 className="text-2xl font-black uppercase tracking-tight text-white">DISPATCH LOCKED</h4>
-                                <span className="text-red-400 font-mono text-[9px] font-black uppercase tracking-widest">Level 1 Emergency Triage Active</span>
-                            </div>
-                            <div className="bg-white/5 border border-red-500/20 p-4 rounded-xl text-left font-mono text-[9px] uppercase text-gray-400 space-y-1.5">
-                                <p><span className="text-white font-bold">Triage Token:</span> #LEAK-RESTORE-4890</p>
-                                <p><span className="text-white font-bold">Queue status:</span> Critical Priority 1</p>
-                                <p><span className="text-white font-bold">Response Crew:</span> Salt Lake Dispatch Unit 2</p>
-                                <p><span className="text-white font-bold">ETA Constraint:</span> Under 120 Minutes</p>
-                            </div>
-                            <p className="text-[10px] text-gray-400 leading-relaxed font-serif italic text-center">
-                                Emergency dispatchers are routing a drone scan and leak containment unit to your location. Keep your phone active.
-                            </p>
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="w-full py-3 border border-white/10 hover:border-white text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all"
-                            >
-                                CLOSE TRIAGE VIEW
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </motion.div>
-        </div>
-    );
-};
-
-const ConfiguratorLightbox = ({ 
-    isOpen, 
-    onClose, 
-    initialAddress,
-    mode 
-}: { 
-    isOpen: boolean; 
-    onClose: () => void; 
-    initialAddress: string;
-    mode: 'estimate' | 'quote';
-}) => {
-    const [step, setStep] = useState(1);
-    const [address, setAddress] = useState('');
-    const [roofType, setRoofType] = useState<'flat' | 'steep'>('steep');
-    const [material, setMaterial] = useState<'shingle' | 'metal' | 'pvc' | 'tpo'>('shingle');
-    const [facets, setFacets] = useState(12);
-    const [pitch, setPitch] = useState<'low' | 'medium' | 'steep'>('medium');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [customerName, setCustomerName] = useState('');
-    const [customerEmail, setCustomerEmail] = useState('');
-    const [customerPhone, setCustomerPhone] = useState('');
-
-    useEffect(() => {
-        if (initialAddress) {
-            setAddress(initialAddress);
-        } else {
-            setAddress('525 Aspen Meadow Dr, Logan, UT');
-        }
-    }, [initialAddress, isOpen]);
-
-    if (!isOpen) return null;
-
-    const calculateEstimate = () => {
-        let base = 12000;
-        if (material === 'metal') base = 26000;
-        if (material === 'pvc') base = 18000;
-        if (material === 'tpo') base = 16000;
-
-        if (pitch === 'steep') base *= 1.25;
-        if (roofType === 'flat') base *= 1.1;
-        base += facets * 200;
-
-        const low = Math.round(base * 0.9);
-        const high = Math.round(base * 1.1);
-
-        return {
-            low: low.toLocaleString(),
-            high: high.toLocaleString(),
-            viability: 'Optimal for Solar & High wind defense',
-            lifetime: 'Estimated service lifespan: 35-50 years'
-        };
-    };
-
-    const handleFinish = (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setTimeout(() => {
-            setIsSubmitting(false);
-            setStep(5);
-        }, 1500);
-    };
-
-    const result = calculateEstimate();
-
-    return (
-        <div className="fixed inset-0 z-[11000] flex items-center justify-center p-4">
-            <motion.div 
-                className="absolute inset-0 bg-black/85 backdrop-blur-md"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onClick={onClose}
-            />
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="relative max-w-2xl w-full bg-black/95 border border-rhive-pink/40 p-8 text-white z-10 overflow-hidden flex flex-col max-h-[90vh]"
-                style={{
-                    clipPath: 'polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px)'
-                }}
-            >
-                <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
-                    <PlexusShape
-                        backgroundColor="transparent"
-                        dotColor="#ec028b"
-                        lineColor="236, 2, 139"
-                        density={30}
-                        className="w-full h-full"
-                    />
-                </div>
-
-                <div className="relative z-10 flex flex-col h-full text-left">
-                    <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="text-rhive-pink p-2 bg-rhive-pink/10 rounded-sm border border-rhive-pink/20">
-                                <Zap size={18} />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-black tracking-widest uppercase italic">
-                                    {mode === 'quote' ? 'Certified Quote Engine' : 'Roof Configurator'}
-                                </h3>
-                                <p className="text-[8px] font-mono text-gray-500 uppercase tracking-[0.2em]">P-01 GEOSPATIAL MULTI-DEPTH LIGHTBOX</p>
-                            </div>
-                        </div>
-                        <button 
-                            type="button"
-                            onClick={onClose}
-                            className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-
-                    {step < 5 && (
-                        <div className="grid grid-cols-4 gap-2 mb-8 text-center">
-                            {[1, 2, 3, 4].map(s => (
-                                <div key={s} className="flex flex-col gap-1">
-                                    <div className={cn(
-                                        "h-1.5 w-full rounded transition-all",
-                                        step >= s ? "bg-rhive-pink shadow-pink-glow" : "bg-white/10"
-                                    )} />
-                                    <span className={cn(
-                                        "text-[8px] font-black uppercase tracking-wider",
-                                        step === s ? "text-rhive-pink" : "text-gray-500"
-                                    )}>
-                                        {s === 1 ? 'SPECS' : s === 2 ? 'MATERIALS' : s === 3 ? 'GEOMETRY' : 'MAP DATA'}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="flex-1 overflow-y-auto pr-2 min-h-[300px]">
-                        {step === 1 && (
-                            <div className="space-y-6 text-left">
-                                <h4 className="text-xl font-black uppercase tracking-tight text-white">Confirm Property Details</h4>
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">DEPLOYMENT ADDRESS</label>
-                                    <input
-                                        type="text"
-                                        value={address}
-                                        onChange={(e) => setAddress(e.target.value)}
-                                        className="w-full bg-black/60 border border-white/15 p-4 rounded-lg text-xs font-bold text-white uppercase outline-none focus:border-rhive-pink transition-all"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">ROOF SLOPE CATEGORY</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setRoofType('steep')}
-                                            className={cn(
-                                                "py-4 text-[10px] font-black uppercase tracking-widest border rounded transition-all",
-                                                roofType === 'steep' ? "border-rhive-pink bg-rhive-pink/15 text-white" : "border-white/15 text-gray-400 hover:text-white"
-                                            )}
-                                        >
-                                            Steep Slope (Residential)
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setRoofType('flat')}
-                                            className={cn(
-                                                "py-4 text-[10px] font-black uppercase tracking-widest border rounded transition-all",
-                                                roofType === 'flat' ? "border-rhive-pink bg-rhive-pink/15 text-white" : "border-white/15 text-gray-400 hover:text-white"
-                                            )}
-                                        >
-                                            Flat Roof (Commercial)
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex justify-end pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(2)}
-                                        className="btn-tech py-4 px-8 text-[10px] font-black tracking-widest uppercase"
-                                    >
-                                        Proceed to Materials
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {step === 2 && (
-                            <div className="space-y-6 text-left">
-                                <h4 className="text-xl font-black uppercase tracking-tight text-white">Select Material Infrastructure</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {[
-                                        { id: 'shingle', label: 'Owens Corning Duration Shingle', desc: 'STEEP SLOPE // Storm proof self-sealing shingle, Lifetime Integrity.' },
-                                        { id: 'metal', label: 'Standing Seam Premium Metal', desc: 'STEEP/LOW // 24-Gauge structural steel panel, Lifetime integrity, 50-year warranty.' },
-                                        { id: 'pvc', label: 'Single-Ply PVC Molecular Membrane', desc: 'FLAT ROOF // Commercial standard, heat welded seams, high chemical resistance.' },
-                                        { id: 'tpo', label: 'TPO Single-Ply Membrane', desc: 'FLAT ROOF // High reflectivity rating, energy-efficient thermal shield.' }
-                                    ].map(item => (
-                                        <button
-                                            key={item.id}
-                                            type="button"
-                                            onClick={() => setMaterial(item.id as any)}
-                                            className={cn(
-                                                "p-4 border rounded text-left transition-all duration-300 flex flex-col gap-1.5 hover:bg-white/5",
-                                                material === item.id 
-                                                    ? "border-rhive-pink bg-rhive-pink/10 shadow-[0_0_15px_rgba(236,2,139,0.15)]" 
-                                                    : "border-white/15 bg-black/40 text-gray-400"
-                                            )}
-                                        >
-                                            <span className="text-[11px] font-black uppercase text-white tracking-wider">{item.label}</span>
-                                            <span className="text-[9px] leading-relaxed text-gray-400">{item.desc}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="flex justify-between pt-4">
-                                    <button type="button" onClick={() => setStep(1)} className="btn-tech-outline py-4 px-8 text-[10px] uppercase">Back</button>
-                                    <button type="button" onClick={() => setStep(3)} className="btn-tech py-4 px-8 text-[10px] uppercase">Proceed to Geometry</button>
-                                </div>
-                            </div>
-                        )}
-
-                        {step === 3 && (
-                            <div className="space-y-6 text-left">
-                                <h4 className="text-xl font-black uppercase tracking-tight text-white">Geospatial Geometry Verification</h4>
-                                <div className="space-y-4">
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">FACET COUNT (ROOF SECTIONS)</label>
-                                        <div className="flex items-center gap-4">
-                                            <button type="button" onClick={() => setFacets(Math.max(1, facets - 1))} className="w-12 h-12 bg-white/5 border border-white/15 text-lg font-bold flex items-center justify-center rounded-lg hover:border-rhive-pink">-</button>
-                                            <span className="text-xl font-mono font-black text-white w-12 text-center">{facets}</span>
-                                            <button type="button" onClick={() => setFacets(facets + 1)} className="w-12 h-12 bg-white/5 border border-white/15 text-lg font-bold flex items-center justify-center rounded-lg hover:border-rhive-pink">+</button>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">ROOF PITCH</label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {['low', 'medium', 'steep'].map(p => (
-                                                <button
-                                                    key={p}
-                                                    type="button"
-                                                    onClick={() => setPitch(p as any)}
-                                                    className={cn(
-                                                        "py-3 text-[9px] font-black uppercase tracking-widest border rounded transition-all",
-                                                        pitch === p ? "border-rhive-pink bg-rhive-pink/15 text-white" : "border-white/15 text-gray-400 hover:text-white"
-                                                    )}
-                                                >
-                                                    {p} pitch
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex justify-between pt-4">
-                                    <button type="button" onClick={() => setStep(2)} className="btn-tech-outline py-4 px-8 text-[10px] uppercase">Back</button>
-                                    <button type="button" onClick={() => setStep(4)} className="btn-tech py-4 px-8 text-[10px] uppercase">Initialize Map Radar</button>
-                                </div>
-                            </div>
-                        )}
-
-                        {step === 4 && (
-                            <div className="space-y-6 text-left">
-                                <h4 className="text-xl font-black uppercase tracking-tight text-white">Google Solar API Radar Sweep</h4>
-                                <div className="grid md:grid-cols-2 gap-6 items-center">
-                                    <div className="border border-rhive-pink/30 rounded-xl aspect-square bg-slate-950 relative overflow-hidden flex items-center justify-center shadow-lg">
-                                        <div className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-luminosity" style={{ backgroundImage: 'url(https://i.imgur.com/GscT2hY.png)' }} />
-                                        <div className="absolute inset-0 bg-radial-gradient opacity-80" style={{ background: 'radial-gradient(circle, rgba(236,2,139,0.15) 0%, rgba(8,13,124,0.05) 50%, transparent 100%)' }} />
-                                        
-                                        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full overflow-visible pointer-events-none drop-shadow-[0_0_8px_rgba(236,2,139,0.9)] animate-pulse">
-                                            <polygon points="25,30 75,30 85,75 15,75" fill="rgba(236, 2, 139, 0.1)" stroke="#ec028b" strokeWidth="1.5" />
-                                            <polygon points="50,15 75,30 25,30" fill="rgba(8, 19, 124, 0.15)" stroke="#08137c" strokeWidth="1" />
-                                        </svg>
-                                        <span className="absolute bottom-3 left-3 text-[7px] font-mono text-cyan-400 uppercase tracking-widest bg-black/60 px-2 py-0.5 rounded border border-cyan-400/20">
-                                            RADAR_GEOMETRY_LOCK: 99.8%
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="border border-white/10 p-4 bg-white/5 rounded-lg space-y-2 font-mono text-[9px] uppercase tracking-wider text-gray-400">
-                                            <p><span className="text-white font-bold">Viability:</span> {result.viability}</p>
-                                            <p><span className="text-white font-bold">Lifetime:</span> {result.lifetime}</p>
-                                            <p><span className="text-white font-bold">Scanned Area:</span> 2,840 sq ft</p>
-                                            <p><span className="text-white font-bold">Solar Exposure:</span> High (1,380 kWh/m²/yr)</p>
-                                        </div>
-                                        <div className="border border-rhive-pink/40 p-4 bg-rhive-pink/5 rounded-lg text-center shadow-pink-glow">
-                                            <span className="text-[9px] font-mono text-rhive-pink uppercase font-black block tracking-widest mb-1">PROJECT savings range</span>
-                                            <span className="text-3xl font-black text-white">${result.low} - ${result.high}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <form onSubmit={handleFinish} className="space-y-4 pt-4 border-t border-white/10">
-                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">CLIENT DELIVERY SECURE DATA</span>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        <input type="text" placeholder="NAME" required value={customerName} onChange={e => setCustomerName(e.target.value)} className="w-full bg-black/60 border border-white/15 p-3 rounded-lg text-[10px] font-bold outline-none focus:border-rhive-pink transition-all" />
-                                        <input type="email" placeholder="EMAIL" required value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} className="w-full bg-black/60 border border-white/15 p-3 rounded-lg text-[10px] font-bold outline-none focus:border-rhive-pink transition-all" />
-                                        <input type="tel" placeholder="PHONE" required value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="w-full bg-black/60 border border-white/15 p-3 rounded-lg text-[10px] font-bold outline-none focus:border-rhive-pink transition-all" />
-                                    </div>
-                                    <div className="flex justify-between pt-2">
-                                        <button type="button" onClick={() => setStep(3)} className="btn-tech-outline py-4 px-8 text-[10px] uppercase">Back</button>
-                                        <button type="submit" disabled={isSubmitting} className="btn-tech py-4 px-12 text-[10px] uppercase shadow-pink-glow">
-                                            {isSubmitting ? 'UPLOADING PORTAL CONFIG...' : 'LOCK IN MOCK ESTIMATE'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
-
-                        {step === 5 && (
-                            <div className="space-y-8 text-center py-8">
-                                <div className="flex justify-center">
-                                    <div className="w-20 h-20 bg-rhive-pink rounded-full flex items-center justify-center text-white shadow-pink-glow animate-pulse">
-                                        <CheckCircle2 size={40} />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <h4 className="text-3xl font-black uppercase tracking-tight text-white">PROJECT PORTAL OPEN</h4>
-                                    <span className="text-rhive-pink font-mono text-[9px] font-black uppercase tracking-widest">Mock Database Records Synced Successfully</span>
-                                </div>
-                                <p className="text-[11px] text-gray-400 leading-relaxed font-serif italic max-w-md mx-auto">
-                                    A project record has been created for <span className="text-white font-bold">{customerName}</span> at <span className="text-white font-bold">{address}</span>. The Owens Corning {material.toUpperCase()} estimation is locked.
-                                </p>
-                                <div className="flex justify-center gap-4">
-                                    <button 
-                                        type="button" 
-                                        onClick={() => {
-                                            onClose();
-                                            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
-                                        }}
-                                        className="btn-tech-outline py-4 px-8 text-[10px] uppercase"
-                                    >
-                                        Return to Homepage
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            onClose();
-                                            window.location.href = "/?page=C-01";
-                                        }}
-                                        className="btn-tech py-4 px-8 text-[10px] uppercase shadow-pink-glow"
-                                    >
-                                        Enter Client Portal
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </motion.div>
-        </div>
-    );
-};
 
 // --- Main Page ---
 
@@ -1165,19 +690,59 @@ const PublicHomepage: React.FC = () => {
     const [isP06Open, setIsP06Open] = useState(false);
     const [configuratorMode, setConfiguratorMode] = useState<'estimate' | 'quote'>('estimate');
 
+    const handleLaneClick = (lane: 'leak' | 'estimate' | 'quote') => {
+        sessionStorage.removeItem('intakeActiveLeak');
+        sessionStorage.removeItem('intakeEmergencyTarp');
+        sessionStorage.removeItem('intakeScopeType');
+        sessionStorage.removeItem('intakePurchaseIntent');
+        sessionStorage.removeItem('globalSearchQuery');
+        
+        if (lane === 'leak') {
+            sessionStorage.setItem('intakeActiveLeak', 'true');
+            sessionStorage.setItem('intakeEmergencyTarp', 'true');
+        } else if (lane === 'estimate') {
+            sessionStorage.setItem('intakeScopeType', 'Replacement');
+            sessionStorage.setItem('intakePurchaseIntent', 'Exploring');
+        } else if (lane === 'quote') {
+            sessionStorage.setItem('intakeScopeType', 'Replacement');
+            sessionStorage.setItem('intakePurchaseIntent', 'Ready');
+        }
+        
+        setActivePageId('E-02a');
+    };
+
     useEffect(() => {
         const handleEmergencyTriage = () => {
-            setIsP06Open(true);
+            sessionStorage.removeItem('intakeActiveLeak');
+            sessionStorage.removeItem('intakeEmergencyTarp');
+            sessionStorage.removeItem('intakeScopeType');
+            sessionStorage.removeItem('intakePurchaseIntent');
+            sessionStorage.removeItem('globalSearchQuery');
+            sessionStorage.setItem('intakeActiveLeak', 'true');
+            sessionStorage.setItem('intakeEmergencyTarp', 'true');
+            setActivePageId('E-02a');
         };
         const handleRoofConfigurator = (e: Event) => {
             const customEvent = e as CustomEvent;
+            sessionStorage.removeItem('intakeActiveLeak');
+            sessionStorage.removeItem('intakeEmergencyTarp');
+            sessionStorage.removeItem('intakeScopeType');
+            sessionStorage.removeItem('intakePurchaseIntent');
+            sessionStorage.removeItem('globalSearchQuery');
+            
             if (customEvent.detail?.mode) {
-                setConfiguratorMode(customEvent.detail.mode);
+                if (customEvent.detail.mode === 'quote') {
+                    sessionStorage.setItem('intakeScopeType', 'Replacement');
+                    sessionStorage.setItem('intakePurchaseIntent', 'Ready');
+                } else {
+                    sessionStorage.setItem('intakeScopeType', 'Replacement');
+                    sessionStorage.setItem('intakePurchaseIntent', 'Exploring');
+                }
             }
             if (customEvent.detail?.address) {
-                setAddressQuery(customEvent.detail.address);
+                sessionStorage.setItem('globalSearchQuery', customEvent.detail.address);
             }
-            setIsP01Open(true);
+            setActivePageId('E-02a');
         };
 
         window.addEventListener('open-emergency-triage', handleEmergencyTriage);
@@ -1258,14 +823,15 @@ const PublicHomepage: React.FC = () => {
             {/* HERO SECTION */}
             <section id="hero" className="relative w-full min-h-[85vh] flex items-center justify-center pt-32 pb-24 overflow-hidden snap-start shrink-0">
 
-                {/* Video Background Layer (Bottom) */}
+                {/* Video Background Layer (Bottom) - Scaled and shifted to crop out top-left watermark logo */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1 }}>
                     <video
                         autoPlay
                         muted
                         loop
                         playsInline
-                        className="w-full h-full object-cover scale-100"
+                        className="w-full h-full object-cover"
+                        style={{ transform: 'scale(1.12) translate(-3%, -3%)', transformOrigin: 'top left' }}
                     >
                         <source src="/vidupload/TRADESHOW MARKETING VIDEO.mp4" type="video/mp4" />
                     </video>
@@ -1334,16 +900,87 @@ const PublicHomepage: React.FC = () => {
                         </button>
                     </motion.div>
 
+                    {/* 3-lane action grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-10 w-full px-4 relative z-20">
+                        {/* Lane 1: Active Leak / Emergency */}
+                        <div 
+                            onClick={() => handleLaneClick('leak')}
+                            className="relative cursor-pointer group p-6 border border-red-500/30 hover:border-red-500 bg-black/60 backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] text-left flex flex-col justify-between h-full"
+                            style={{
+                                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+                            }}
+                        >
+                            <div className="absolute top-0 right-0 w-8 h-[2px] bg-red-500 drop-shadow-[0_0_3px_rgba(239,68,68,0.8)]" />
+                            <div>
+                                <div className="text-red-500 p-2 bg-red-500/10 rounded-sm border border-red-500/20 w-fit mb-4 group-hover:scale-105 transition-transform duration-300">
+                                    <ShieldAlert size={18} />
+                                </div>
+                                <h4 className="text-xs font-black tracking-widest uppercase text-white mb-2 group-hover:text-red-400 transition-colors">Active Leak / Emergency</h4>
+                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed mb-6">
+                                    Immediate water intrusion detection. Dispatches priority tarping and drone inspection queue.
+                                </p>
+                            </div>
+                            <span className="text-[9px] font-mono text-red-400 uppercase tracking-widest flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                Escalated Dispatch <ChevronRight size={10} />
+                            </span>
+                        </div>
+
+                        {/* Lane 2: Instant Estimate / AI Scan */}
+                        <div 
+                            onClick={() => handleLaneClick('estimate')}
+                            className="relative cursor-pointer group p-6 border border-rhive-pink/30 hover:border-rhive-pink bg-black/60 backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_20px_rgba(236,2,139,0.3)] text-left flex flex-col justify-between h-full"
+                            style={{
+                                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+                            }}
+                        >
+                            <div className="absolute top-0 right-0 w-8 h-[2px] bg-rhive-pink drop-shadow-[0_0_3px_rgba(236,2,139,0.8)]" />
+                            <div>
+                                <div className="text-rhive-pink p-2 bg-rhive-pink/10 rounded-sm border border-rhive-pink/20 w-fit mb-4 group-hover:scale-105 transition-transform duration-300">
+                                    <Zap size={18} fill="currentColor" />
+                                </div>
+                                <h4 className="text-xs font-black tracking-widest uppercase text-white mb-2 group-hover:text-rhive-pink transition-colors">Instant Estimate / AI Scan</h4>
+                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed mb-6">
+                                    Launch satellite telemetry scans for rapid ballpark analysis & structural scoping.
+                                </p>
+                            </div>
+                            <span className="text-[9px] font-mono text-rhive-pink uppercase tracking-widest flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                Remote Telemetry <ChevronRight size={10} />
+                            </span>
+                        </div>
+
+                        {/* Lane 3: Certified Quote / Partner Proj */}
+                        <div 
+                            onClick={() => handleLaneClick('quote')}
+                            className="relative cursor-pointer group p-6 border border-rhive-gold/30 hover:border-rhive-gold bg-black/60 backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_20px_rgba(226,171,73,0.3)] text-left flex flex-col justify-between h-full"
+                            style={{
+                                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+                            }}
+                        >
+                            <div className="absolute top-0 right-0 w-8 h-[2px] bg-rhive-gold drop-shadow-[0_0_3px_rgba(226,171,73,0.8)]" />
+                            <div>
+                                <div className="text-rhive-gold p-2 bg-rhive-gold/10 rounded-sm border border-rhive-gold/20 w-fit mb-4 group-hover:scale-105 transition-transform duration-300">
+                                    <Award size={18} />
+                                </div>
+                                <h4 className="text-xs font-black tracking-widest uppercase text-white mb-2 group-hover:text-rhive-gold transition-colors">Certified Quote / Partner Proj</h4>
+                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed mb-6">
+                                    On-site verification, certified contract, and dedicated partner portal setup.
+                                </p>
+                            </div>
+                            <span className="text-[9px] font-mono text-rhive-gold uppercase tracking-widest flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                Partner Engagement <ChevronRight size={10} />
+                            </span>
+                        </div>
+                    </div>
+
                     <div className="mt-8 w-full flex justify-center">
                         <div className="relative flex justify-center items-center w-full max-w-4xl">
                             <AddressScanInput 
                                 id="property-scanner" 
                                 value={addressQuery}
                                 onChange={setAddressQuery}
-                                onScan={(address) => {
-                                    setAddressQuery(address);
-                                    setConfiguratorMode('estimate');
-                                    setIsP01Open(true);
+                                onScan={() => {
+                                    sessionStorage.setItem('globalSearchQuery', addressQuery);
+                                    setActivePageId('E-02a');
                                 }}
                             />
                         </div>
@@ -1770,13 +1407,6 @@ const PublicHomepage: React.FC = () => {
                 </div>
             </footer>
 
-            <ConfiguratorLightbox 
-                isOpen={isP01Open} 
-                onClose={() => setIsP01Open(false)} 
-                initialAddress={addressQuery}
-                mode={configuratorMode}
-            />
-
             <FoundersCardLightbox 
                 isOpen={isP02Open} 
                 onClose={() => setIsP02Open(false)} 
@@ -1785,11 +1415,6 @@ const PublicHomepage: React.FC = () => {
             <ProcessLightbox 
                 isOpen={isP04Open} 
                 onClose={() => setIsP04Open(false)} 
-            />
-
-            <OmniBirdTriageLightbox 
-                isOpen={isP06Open} 
-                onClose={() => setIsP06Open(false)} 
             />
         </div>
     );

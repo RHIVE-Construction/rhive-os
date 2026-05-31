@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import * as fs from 'fs';
 
-const BASE_URL = 'http://localhost:3001';
+const BASE_URL = 'http://localhost:3000';
 const screenshotsDir = 'C:\\Users\\mjrob\\.gemini\\antigravity\\brain\\a8707e63-7c28-4d28-8bd0-01caacf0c810\\test-proofs';
 
 if (!fs.existsSync(screenshotsDir)) {
@@ -33,7 +33,7 @@ async function runTests() {
     const resetToPage = async () => {
         await page.goto(`${BASE_URL}/?bypass=Employee&page=E-02a`);
         await page.evaluate(() => { window.sessionStorage.clear(); });
-        await page.reload();
+        await page.goto(`${BASE_URL}/?bypass=Employee&page=E-02a`);
         await page.waitForTimeout(1000);
     };
 
@@ -83,7 +83,7 @@ async function runTests() {
         console.log(`Phone lookup banner: ${s1PhoneNotFoundText}`);
         
         // Save first lookup screenshot
-        await page.screenshot({ path: `${screenshotsDir}\\01a_rick_phone_lookup.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\01a_rick_phone_lookup.png`, fullPage: true });
         
         // 2. Address lookup second
         console.log("Clearing input and looking up Rick's address dynamically...");
@@ -103,7 +103,7 @@ async function runTests() {
         console.log(`Address lookup banner: ${s1AddressNotFoundText}`);
         
         // Save second lookup screenshot
-        await page.screenshot({ path: `${screenshotsDir}\\01b_rick_address_lookup.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\01b_rick_address_lookup.png`, fullPage: true });
         
         // Click initiate new project
         await page.click('#btn-initiate-project');
@@ -123,7 +123,7 @@ async function runTests() {
         await page.waitForTimeout(200);
         await page.click('text=Need A Ballpark Price');
         
-        await page.screenshot({ path: `${screenshotsDir}\\01_rick_vance.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\01_rick_vance.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         console.log("Scenario 1 Saved.");
@@ -155,7 +155,7 @@ async function runTests() {
         console.log(`AI Banner Text: "${aiBannerText}"`);
         const s2Extracted = aiBannerText.includes("Mapped Jenny Miller") && aiBannerText.includes("Dark Gray/Charcoal");
         
-        await page.screenshot({ path: `${screenshotsDir}\\02_jenny_miller.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\02_jenny_miller.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         console.log("Scenario 2 Saved.");
@@ -184,7 +184,7 @@ async function runTests() {
         await page.waitForTimeout(200);
         await page.click('text=Need A Ballpark Price');
 
-        await page.screenshot({ path: `${screenshotsDir}\\03_robert_chen.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\03_robert_chen.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         report.push({ id: '03', name: 'DISC-DOVE-01 (Robert Chen)', status: 'PASS', log: 'Process reassurance recorded.' });
@@ -214,7 +214,7 @@ async function runTests() {
         await page.waitForTimeout(200);
         await page.click('text=Need A Ballpark Price');
 
-        await page.screenshot({ path: `${screenshotsDir}\\04_arthur_pendleton.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\04_arthur_pendleton.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         report.push({ id: '04', name: 'DISC-OWL-01 (Arthur Pendleton)', status: itemizationVisible ? 'PASS' : 'FAIL', log: 'Technical details panel exposed and saved.' });
@@ -258,7 +258,7 @@ async function runTests() {
         await page.waitForTimeout(200);
         await page.click('button:has-text("Yes"):near(label:has-text("active leak"))');
 
-        await page.screenshot({ path: `${screenshotsDir}\\05_vanguard_leak.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\05_vanguard_leak.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         report.push({ id: '05', name: 'OPER-COMM-LEAK (Vanguard PM)', status: 'PASS', log: 'Contacts billing/access split routing saved.' });
@@ -276,7 +276,7 @@ async function runTests() {
         await page.click('button:has-text("Confirm Selection")');
         await page.waitForTimeout(500);
 
-        await page.screenshot({ path: `${screenshotsDir}\\debug_scenario_6.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\debug_scenario_6.png`, fullPage: true });
 
         await page.fill('input[id="property-address-input"]', '8800 S Redwood Road');
         
@@ -304,7 +304,7 @@ async function runTests() {
         await page.waitForTimeout(200);
         await page.click('button:has-text("No"):near(label:has-text("active leak"))');
 
-        await page.screenshot({ path: `${screenshotsDir}\\06_apex_regional.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\06_apex_regional.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         report.push({ id: '06', name: 'OPER-COMM-REGIONAL (Apex Group)', status: 'PASS', log: 'Corporate parent hierarchy preserved.' });
@@ -332,7 +332,7 @@ async function runTests() {
         await page.waitForTimeout(300);
         await page.click('button:has-text("Asphalt Shingles")');
 
-        await page.screenshot({ path: `${screenshotsDir}\\07_thomas_henderson.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\07_thomas_henderson.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         report.push({ id: '07', name: 'OPER-RES-OWNER-ASPHALT (Thomas)', status: 'PASS', log: 'Standard shingle request submitted.' });
@@ -373,7 +373,7 @@ async function runTests() {
         await page.click('button:has-text("Asphalt Shingles")');
         await page.click('button:has-text("TPO/Membrane")');
 
-        await page.screenshot({ path: `${screenshotsDir}\\08_gomez_multimat.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\08_gomez_multimat.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         report.push({ id: '08', name: 'OPER-RES-PROXY-MULTIMAT (Gomez)', status: 'PASS', log: 'Proxy Gomez billing with multi-material setup saved.' });
@@ -403,7 +403,7 @@ async function runTests() {
         await page.waitForTimeout(200);
         await page.click('text=Need A Firm Quote');
 
-        await page.screenshot({ path: `${screenshotsDir}\\09_buildwest.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\09_buildwest.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         report.push({ id: '09', name: 'OPER-COMM-BUILDER-EMAIL (BuildWest)', status: 'PASS', log: 'Commercial estimation data collected.' });
@@ -433,7 +433,7 @@ async function runTests() {
         await page.waitForTimeout(200);
         await page.click('text=Need A Ballpark Price');
 
-        await page.screenshot({ path: `${screenshotsDir}\\10_summit_horizon.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\10_summit_horizon.png`, fullPage: true });
         await page.click('button[type="submit"]');
         await page.waitForTimeout(500);
         report.push({ id: '10', name: 'OPER-COMM-MULTIPROP (Sarah K.)', status: 'PASS', log: 'Sarah Kensington B2B account logged.' });
@@ -454,24 +454,16 @@ async function runTests() {
         await page.fill('input[type="email"]', 'james.patton@escrow.com');
         await page.click('button:has-text("Save Contact")');
 
-        // Collapse/Expand Billing to enable rules
-        await page.click('text=Billing Confirmation Required');
+        // Collapse/Expand Billing to verify rules
+        await page.click('text=Billing');
         await page.waitForTimeout(300);
 
-        // Turn on escrow billing rules
-        await page.click('#switch-escrow-billing');
-        await page.waitForTimeout(300);
+        // Verify Billing address fields match property address (775 Canyon Breeze Lane)
+        const billingAddressValue = await page.inputValue('#billing-address-input');
+        console.log(`Billing Address value retrieved: "${billingAddressValue}"`);
+        const billingMatches = billingAddressValue === '775 Canyon Breeze Lane';
 
-        // Try to click/edit locked input
-        await page.click('#billing-lock-overlay');
-        await page.waitForTimeout(300);
-
-        // Assert error message shown
-        const errorText = await page.textContent('#billing-lock-error-banner');
-        console.log(`Billing Lock Error Banner text: "${errorText}"`);
-        const isLocked = errorText.includes("Billing parameters locked under escrow rules");
-
-        await page.screenshot({ path: `${screenshotsDir}\\11_valley_view_locked.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\11_valley_view_locked.png`, fullPage: true });
         
         // Set intent
         await page.click('button:has-text("Replacement")');
@@ -479,8 +471,19 @@ async function runTests() {
         await page.click('text=Need A Ballpark Price');
 
         await page.click('button[type="submit"]');
-        await page.waitForTimeout(500);
-        report.push({ id: '11', name: 'OPER-FIN-LITIGATION (Valley View)', status: isLocked ? 'PASS' : 'FAIL', log: isLocked ? 'Escrow Billing parameters locked successfully.' : 'Escrow Billing parameters were not locked.' });
+        await page.waitForTimeout(1500);
+
+        // Verify escrow note in local storage database
+        const propertiesS11 = await page.evaluate(() => {
+            return JSON.parse(localStorage.getItem('rhive_db_properties') || '[]');
+        });
+        const valleyViewProp = propertiesS11.find(p => p.address_full.includes('775 Canyon Breeze Lane'));
+        const escrowNote = valleyViewProp?.escrow_note || '';
+        console.log(`Valley View Property Escrow Note: "${escrowNote}"`);
+        const noteMatches = escrowNote === 'Billing address updated directly under escrow rules. Escrow record initialized.';
+
+        const isLitigationRuleValid = billingMatches && noteMatches;
+        report.push({ id: '11', name: 'OPER-FIN-LITIGATION (Valley View)', status: isLitigationRuleValid ? 'PASS' : 'FAIL', log: isLitigationRuleValid ? 'Escrow Billing parameters synchronized and note saved successfully.' : `Escrow validation failed. billingMatches: ${billingMatches}, noteMatches: ${noteMatches}` });
 
         // ==========================================
         // SCENARIO 12: OPER-DUP-COLLISION (Linda & Tyler Hansen Duplicate Collision)
@@ -516,7 +519,7 @@ async function runTests() {
         console.log(`Collision Search text results: "${collisionText}"`);
         const collisionTriggered = collisionText.includes("Existing Record Found") || collisionText.includes("Address Collision Detected");
 
-        await page.screenshot({ path: `${screenshotsDir}\\12_hansen_collision.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\12_hansen_collision.png`, fullPage: true });
         
         // Trigger profile merge
         await page.click('#btn-merge-profiles');
@@ -555,7 +558,7 @@ async function runTests() {
         console.log(`Scheduling warning visible: ${warningVisible}, text: "${warningText}"`);
         const boundaryBlocked = warningVisible && warningText.includes("Out of Service Boundary: Scheduling blocked");
 
-        await page.screenshot({ path: `${screenshotsDir}\\13_boise_boundary_block.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\13_boise_boundary_block.png`, fullPage: true });
 
         // Save project (triggers out of boundary referral dialog and submit redirect)
         await page.click('button[type="submit"]');
@@ -602,7 +605,7 @@ async function runTests() {
         }
 
         // Capture intake preview screenshot
-        await page.screenshot({ path: `${screenshotsDir}\\14_willow_park_intake.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\14_willow_park_intake.png`, fullPage: true });
 
         // Confirm Target to finalize mapped buildings
         await page.click('button:has-text("Confirm Target")');
@@ -628,7 +631,7 @@ async function runTests() {
         const propertiesS14 = await page.evaluate(() => {
             return JSON.parse(localStorage.getItem('rhive_db_properties') || '[]');
         });
-        const willowProp = propertiesS14.find(p => p.address_full === 'Pine St' || p.address_full.includes('Willow Park'));
+        const willowProp = propertiesS14.find(p => p.address_full.toLowerCase().includes('pine') || p.address_full.includes('Willow Park'));
         const s14BldgCount = willowProp?.buildings?.length || 0;
         console.log(`Scenario 14 result: s14BldgCount = ${s14BldgCount}`);
         report.push({ id: '14', name: 'OPER-MULTI-BUILDING-INTAKE (Willow Park)', status: s14BldgCount === 13 ? 'PASS' : 'FAIL', log: s14BldgCount === 13 ? 'Successfully pinned 13 buildings in AddressConfirmationModal at intake.' : `Incorrect building count: ${s14BldgCount}` });
@@ -702,14 +705,14 @@ async function runTests() {
         await page.waitForTimeout(100);
 
         // Capture screenshot of manage buildings modal
-        await page.screenshot({ path: `${screenshotsDir}\\15_landmark_manage_buildings.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\15_landmark_manage_buildings.png`, fullPage: true });
 
         // Save changes in ManageBuildingsModal
         await page.click('button:has-text("Save Changes")');
         await page.waitForTimeout(1500);
 
         // Capture property dashboard post-edit screenshot
-        await page.screenshot({ path: `${screenshotsDir}\\15_landmark_property_dashboard.png` });
+        await page.screenshot({ path: `${screenshotsDir}\\15_landmark_property_dashboard.png`, fullPage: true });
 
         // Verify Landmark property buildings in DB
         const propertiesS15 = await page.evaluate(() => {
