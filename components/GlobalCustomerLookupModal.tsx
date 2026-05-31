@@ -307,34 +307,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                         className="mt-2 bg-[#050505] border border-gray-800 p-4 space-y-4 shadow-2xl max-h-[60vh] overflow-y-auto"
                         style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                     >
-                        {/* Collision banner alert (Flashing amber warning card) */}
-                        {collisionProperty && (
-                            <div 
-                                id="search-collision-banner"
-                                className="p-4 bg-amber-950/40 border border-amber-500/50 text-amber-400 text-xs font-bold flex flex-col gap-2 shadow-[0_0_15px_rgba(245,158,11,0.15)] animate-pulse"
-                                style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span className="text-base">⚠️</span>
-                                    <span>Existing Record Found - Address Collision Detected ({collisionOwnerName || 'Linda Hansen'})</span>
-                                </div>
-                                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider leading-relaxed">
-                                    Property address "{collisionProperty.address_full}" is already registered. Relate Tyler Hansen to this existing profile?
-                                </p>
-                                <button
-                                    id="btn-merge-profiles"
-                                    onClick={() => {
-                                        setIsOpen(false);
-                                        setSelectedPropertyId(collisionProperty._id);
-                                        setActivePageId('E-12');
-                                    }}
-                                    className="w-fit mt-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest text-[9px] transition-all"
-                                    style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
-                                >
-                                    Merge / Relate to Existing
-                                </button>
-                            </div>
-                        )}
+
 
                         {/* Results list */}
                         <div className="space-y-3">

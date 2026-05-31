@@ -689,6 +689,7 @@ const PublicHomepage: React.FC = () => {
     const [isP04Open, setIsP04Open] = useState(false);
     const [isP06Open, setIsP06Open] = useState(false);
     const [configuratorMode, setConfiguratorMode] = useState<'estimate' | 'quote'>('estimate');
+    const [selectedLane, setSelectedLane] = useState<'leak' | 'estimate' | 'quote'>('estimate');
 
     const handleLaneClick = (lane: 'leak' | 'estimate' | 'quote') => {
         sessionStorage.removeItem('intakeActiveLeak');
@@ -900,79 +901,31 @@ const PublicHomepage: React.FC = () => {
                         </button>
                     </motion.div>
 
-                    {/* 3-lane action grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-10 w-full px-4 relative z-20">
-                        {/* Lane 1: Active Leak / Emergency */}
-                        <div 
-                            onClick={() => handleLaneClick('leak')}
-                            className="relative cursor-pointer group p-6 border border-red-500/30 hover:border-red-500 bg-black/60 backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_20px_rgba(239,68,68,0.3)] text-left flex flex-col justify-between h-full"
-                            style={{
-                                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
-                            }}
-                        >
-                            <div className="absolute top-0 right-0 w-8 h-[2px] bg-red-500 drop-shadow-[0_0_3px_rgba(239,68,68,0.8)]" />
-                            <div>
-                                <div className="text-red-500 p-2 bg-red-500/10 rounded-sm border border-red-500/20 w-fit mb-4 group-hover:scale-105 transition-transform duration-300">
-                                    <ShieldAlert size={18} />
-                                </div>
-                                <h4 className="text-xs font-black tracking-widest uppercase text-white mb-2 group-hover:text-red-400 transition-colors">Active Leak / Emergency</h4>
-                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed mb-6">
-                                    Immediate water intrusion detection. Dispatches priority tarping and drone inspection queue.
-                                </p>
-                            </div>
-                            <span className="text-[9px] font-mono text-red-400 uppercase tracking-widest flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                                Escalated Dispatch <ChevronRight size={10} />
-                            </span>
+
+                    <div className="mt-8 w-full flex flex-col items-center">
+                        {/* Selection Tabs - Half the height of the input field, sitting 10pt above the input field */}
+                        <div className="flex justify-center gap-3 mb-[10px] z-20 relative">
+                            {[
+                                { id: 'leak', label: 'Emergency Leak', color: 'border-red-500/40 hover:border-red-500 text-red-500', activeBg: 'bg-red-500/20 text-red-400 border-red-500' },
+                                { id: 'estimate', label: 'Instant Estimate', color: 'border-rhive-pink/40 hover:border-rhive-pink text-rhive-pink', activeBg: 'bg-rhive-pink/20 text-rhive-pink border-rhive-pink' },
+                                { id: 'quote', label: 'Certified Quote', color: 'border-rhive-gold/40 hover:border-rhive-gold text-rhive-gold', activeBg: 'bg-rhive-gold/20 text-rhive-gold border-rhive-gold' }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setSelectedLane(tab.id as any)}
+                                    className={cn(
+                                        "h-8 px-5 flex items-center justify-center text-[10px] font-black uppercase tracking-widest border transition-all duration-300 backdrop-blur-md cursor-pointer",
+                                        selectedLane === tab.id ? tab.activeBg : `${tab.color} bg-black/60`
+                                    )}
+                                    style={{
+                                        clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                                    }}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
                         </div>
 
-                        {/* Lane 2: Instant Estimate / AI Scan */}
-                        <div 
-                            onClick={() => handleLaneClick('estimate')}
-                            className="relative cursor-pointer group p-6 border border-rhive-pink/30 hover:border-rhive-pink bg-black/60 backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_20px_rgba(236,2,139,0.3)] text-left flex flex-col justify-between h-full"
-                            style={{
-                                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
-                            }}
-                        >
-                            <div className="absolute top-0 right-0 w-8 h-[2px] bg-rhive-pink drop-shadow-[0_0_3px_rgba(236,2,139,0.8)]" />
-                            <div>
-                                <div className="text-rhive-pink p-2 bg-rhive-pink/10 rounded-sm border border-rhive-pink/20 w-fit mb-4 group-hover:scale-105 transition-transform duration-300">
-                                    <Zap size={18} fill="currentColor" />
-                                </div>
-                                <h4 className="text-xs font-black tracking-widest uppercase text-white mb-2 group-hover:text-rhive-pink transition-colors">Instant Estimate / AI Scan</h4>
-                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed mb-6">
-                                    Launch satellite telemetry scans for rapid ballpark analysis & structural scoping.
-                                </p>
-                            </div>
-                            <span className="text-[9px] font-mono text-rhive-pink uppercase tracking-widest flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                                Remote Telemetry <ChevronRight size={10} />
-                            </span>
-                        </div>
-
-                        {/* Lane 3: Certified Quote / Partner Proj */}
-                        <div 
-                            onClick={() => handleLaneClick('quote')}
-                            className="relative cursor-pointer group p-6 border border-rhive-gold/30 hover:border-rhive-gold bg-black/60 backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_20px_rgba(226,171,73,0.3)] text-left flex flex-col justify-between h-full"
-                            style={{
-                                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
-                            }}
-                        >
-                            <div className="absolute top-0 right-0 w-8 h-[2px] bg-rhive-gold drop-shadow-[0_0_3px_rgba(226,171,73,0.8)]" />
-                            <div>
-                                <div className="text-rhive-gold p-2 bg-rhive-gold/10 rounded-sm border border-rhive-gold/20 w-fit mb-4 group-hover:scale-105 transition-transform duration-300">
-                                    <Award size={18} />
-                                </div>
-                                <h4 className="text-xs font-black tracking-widest uppercase text-white mb-2 group-hover:text-rhive-gold transition-colors">Certified Quote / Partner Proj</h4>
-                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed mb-6">
-                                    On-site verification, certified contract, and dedicated partner portal setup.
-                                </p>
-                            </div>
-                            <span className="text-[9px] font-mono text-rhive-gold uppercase tracking-widest flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                                Partner Engagement <ChevronRight size={10} />
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="mt-8 w-full flex justify-center">
                         <div className="relative flex justify-center items-center w-full max-w-4xl">
                             <AddressScanInput 
                                 id="property-scanner" 
@@ -980,7 +933,7 @@ const PublicHomepage: React.FC = () => {
                                 onChange={setAddressQuery}
                                 onScan={() => {
                                     sessionStorage.setItem('globalSearchQuery', addressQuery);
-                                    setActivePageId('E-02a');
+                                    handleLaneClick(selectedLane);
                                 }}
                             />
                         </div>

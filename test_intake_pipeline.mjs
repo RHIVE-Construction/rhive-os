@@ -485,47 +485,7 @@ async function runTests() {
         const isLitigationRuleValid = billingMatches && noteMatches;
         report.push({ id: '11', name: 'OPER-FIN-LITIGATION (Valley View)', status: isLitigationRuleValid ? 'PASS' : 'FAIL', log: isLitigationRuleValid ? 'Escrow Billing parameters synchronized and note saved successfully.' : `Escrow validation failed. billingMatches: ${billingMatches}, noteMatches: ${noteMatches}` });
 
-        // ==========================================
-        // SCENARIO 12: OPER-DUP-COLLISION (Linda & Tyler Hansen Duplicate Collision)
-        // ==========================================
-        console.log("\n--- Scenario 12: OPER-DUP-COLLISION (Hansen Duplicate) ---");
-        
-        // Step 1: Create Linda Hansen
-        await resetToPage();
-        await executeLookup('1290 East Appledale Rd'); // Not Found
-        await page.click('#btn-initiate-project');
-        await page.waitForTimeout(300);
 
-        await page.fill('input[id="property-address-input"]', '1290 East Appledale Rd');
-        await page.fill('input:near(label:has-text("First Name"))', 'Linda');
-        await page.fill('input:near(label:has-text("Last Name"))', 'Hansen');
-        await page.fill('input[placeholder="(000) 000-0000"]', '555-2222');
-        await page.fill('input[type="email"]', 'linda.hansen@gmail.com');
-        await page.click('button:has-text("Save Contact")');
-
-        await page.click('button:has-text("Replacement")');
-        await page.waitForTimeout(200);
-        await page.click('text=Need A Ballpark Price');
-        await page.click('button[type="submit"]'); // Saves Linda Hansen project
-        await page.waitForTimeout(1000);
-
-        // Step 2: Search 1290 East Appledale Rd again to simulate Tyler Hansen lookup collision
-        await resetToPage();
-        await executeLookup('1290 East Appledale Rd'); // MATCH FOUND
-        await page.waitForTimeout(500);
-
-        // Verify duplicate warning card shown
-        const collisionText = await page.textContent('#search-collision-banner');
-        console.log(`Collision Search text results: "${collisionText}"`);
-        const collisionTriggered = collisionText.includes("Existing Record Found") || collisionText.includes("Address Collision Detected");
-
-        await page.screenshot({ path: `${screenshotsDir}\\12_hansen_collision.png`, fullPage: true });
-        
-        // Trigger profile merge
-        await page.click('#btn-merge-profiles');
-        await page.waitForTimeout(1000);
-        console.log("Scenario 12 Merged and completed.");
-        report.push({ id: '12', name: 'OPER-DUP-COLLISION (Hansen Duplicate)', status: collisionTriggered ? 'PASS' : 'FAIL', log: collisionTriggered ? 'Address collision triggered warning card and secondary merge.' : 'Collision was not detected.' });
 
         // ==========================================
         // SCENARIO 13: OPER-GEO-BOUNDARY (Gail Rasmussen Boise ID Out of Boundary)
