@@ -19,6 +19,7 @@ backlog:
   - "[N9] CALENDAR_OPT: Restructure calendars for Martell color-blocks. QA_EXIT:0."
 review:
 done:
+  - "[N1] INTAKE_LOOKUP_TAB_AND_SPACING: Prevented lookup modal popup on intake page, implemented tab-to-autofill queries, adjusted homepage lane spacing by 5pt, and captured full walkthrough screenshots. QA_EXIT:0."
   - "[N1] SCREENSHOT_UPDATE: Overwrote all outdated brain screenshots for the Feedback Hub carousels using port 3000. QA_EXIT:0."
   - "[N1] REENGINEERED_HOMEPAGE_REVIEW: Removed System Scan floating button, removed notch oval backdrop, shrank central logo to h-8, and cropped background video watermark by 1.12 scale transform. QA_EXIT:0."
   - "[N1] NAV_REFACTOR_AND_STAGE_REBRAND: Removed redundant login from header, updated Michael's phone number, re-branded 10 stages to homeowner-friendly names, aligned System Scan left / Hunni right, and re-rendered screenshots against active port 3000. QA_EXIT:0."
