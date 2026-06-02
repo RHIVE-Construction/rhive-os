@@ -265,7 +265,14 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
 const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: AddressData, onConfirm: (buildings: any[]) => void, onStartOver: () => void }) => {
     const isApiReady = useGoogleMapsApi();
     const [view, setView] = useState<'satellite' | 'street'>('satellite');
-    const [buildings, setBuildings] = useState<{ id: string; name: string; lat: number; lng: number }[]>([]);
+    const [buildings, setBuildings] = useState<{ id: string; name: string; lat: number; lng: number }[]>(() => {
+        return [{
+            id: `BLDG-1-${Date.now()}`,
+            name: 'BLD-1',
+            lat: data.latitude || 40.7608,
+            lng: data.longitude || -111.8910
+        }];
+    });
     
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const streetViewRef = useRef<HTMLDivElement>(null);
@@ -296,13 +303,13 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
             const latLng = e.latLng;
             const newBldg = {
                 id: `BLDG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                name: `Building ${Date.now()}`,
+                name: 'BLD-Temp',
                 lat: latLng.lat(),
                 lng: latLng.lng()
             };
             setBuildings(prev => {
                 const count = prev.length + 1;
-                return [...prev, { ...newBldg, name: `Building ${count}` }];
+                return [...prev, { ...newBldg, name: `BLD-${count}` }];
             });
         });
     }, [isApiReady, data.latitude, data.longitude, map]);
@@ -390,7 +397,7 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
             const filtered = prev.filter(b => b.id !== id);
             return filtered.map((b, idx) => ({
                 ...b,
-                name: `Building ${idx + 1}`
+                name: b.name.startsWith('BLD-') || b.name.startsWith('Building ') ? `BLD-${idx + 1}` : b.name
             }));
         });
     };
@@ -448,7 +455,15 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                                                 {idx + 1}
                                             </div>
                                             <div>
-                                                <p className="text-xs text-white font-bold">{b.name}</p>
+                                                <input
+                                                    type="text"
+                                                    value={b.name}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setBuildings(prev => prev.map(item => item.id === b.id ? { ...item, name: val } : item));
+                                                    }}
+                                                    className="bg-transparent border-b border-gray-800 focus:border-[#ec028b] text-xs text-white font-bold outline-none py-0.5 w-36 transition-colors"
+                                                />
                                                 <p className="text-[9px] text-gray-500 font-mono">
                                                     {b.lat.toFixed(5)}, {b.lng.toFixed(5)}
                                                 </p>
@@ -530,7 +545,7 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                             onClick={() => {
                                 const finalBldgs = buildings.length > 0 
                                     ? buildings.map(b => ({ id: b.id, name: b.name, coordinates: { lat: b.lat, lng: b.lng } })) 
-                                    : [{ id: 'BLDG-DEFAULT', name: 'Main Building', coordinates: { lat: data.latitude, lng: data.longitude } }];
+                                    : [{ id: 'BLDG-DEFAULT', name: 'BLD-1', coordinates: { lat: data.latitude, lng: data.longitude } }];
                                 onConfirm(finalBldgs);
                             }} 
                             className="px-5 py-2 bg-[#ec028b] hover:bg-pink-600 text-xs font-black uppercase tracking-widest text-white shadow-pink-glow transition-all rounded-none"
@@ -1191,8 +1206,13 @@ const AddressSection: React.FC<{
                             className="bg-transparent border-b border-gray-800 focus:border-[#ec028b] focus:outline-none text-xs text-white font-black uppercase tracking-wider w-32 mr-2 px-1 py-0.5"
                         />
                         <span className="text-xs text-gray-500 mr-2">—</span>
-                        <div className="text-xs text-gray-400 font-medium truncate">
-                            {`${data.address || 'No Address'}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''} ${data.zip || ''}`}
+                        <div className="text-xs text-gray-400 font-medium truncate flex items-center gap-2">
+                            <span>{`${data.address || 'No Address'}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''} ${data.zip || ''}`}</span>
+                            {pinnedBuildings && pinnedBuildings.length > 0 && (
+                                <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] bg-[#ec028b]/15 text-[#ec028b] border border-[#ec028b]/30 font-mono font-bold uppercase tracking-wider">
+                                    🏠 {pinnedBuildings.length} {pinnedBuildings.length === 1 ? 'Building' : 'Buildings'}
+                                </span>
+                            )}
                         </div>
                     </div>
                     
@@ -1451,6 +1471,22 @@ const CustomerInputPage: React.FC = () => {
     useEffect(() => {
         const query = sessionStorage.getItem('globalSearchQuery');
         const qType = sessionStorage.getItem('globalSearchQueryType');
+        const cachedAddressDataStr = sessionStorage.getItem('globalSearchAddressData');
+        
+        if (qType === 'Address' && cachedAddressDataStr) {
+            sessionStorage.removeItem('globalSearchQuery');
+            sessionStorage.removeItem('globalSearchQueryType');
+            sessionStorage.removeItem('globalSearchAddressData');
+            try {
+                const cachedData = JSON.parse(cachedAddressDataStr);
+                setPropertyData(cachedData);
+                setIsVerificationOpen(true);
+            } catch (e) {
+                console.error("Failed to parse cached address data:", e);
+            }
+            return;
+        }
+
         if (query) {
             if ((qType === 'Address' || !qType) && (!isApiReady || !window.google)) {
                 return; // Wait for Google Maps API to be ready before consuming Address query
@@ -2028,12 +2064,14 @@ const CustomerInputPage: React.FC = () => {
 
             // Redirect smoothly to the existing project dashboard
             setCurrentProjectId(activeProjectOnProp._id);
-            setActivePageId('E-15');
+            setSubmissionSummary({ type: 'Project Merged', name: projectName });
+            setIsSuccessModalOpen(true);
         } else {
             // Create new project
             const newProjId = createProject(projectName, projectCategory, targetPropertyId, ownerId);
             setCurrentProjectId(newProjId);
-            setActivePageId('E-15');
+            setSubmissionSummary({ type: 'Project Created', name: projectName });
+            setIsSuccessModalOpen(true);
         }
     };
 
@@ -2116,7 +2154,7 @@ const CustomerInputPage: React.FC = () => {
                             <Button className="w-full bg-green-600 hover:bg-green-500" onClick={handleFormReset}>
                                 <ArrowRightIcon className="w-4 h-4 mr-2" /> Start New Intake
                             </Button>
-                            <Button variant="secondary" className="w-full" onClick={() => { setIsSuccessModalOpen(false); setActivePageId('E-18'); }}>
+                            <Button variant="secondary" className="w-full" onClick={() => { setIsSuccessModalOpen(false); setActivePageId('E-05'); }}>
                                 View in Pipeline
                             </Button>
                         </div>

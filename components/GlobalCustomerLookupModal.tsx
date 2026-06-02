@@ -72,7 +72,7 @@ const decipherQueryType = (q: string): 'Phone Number' | 'Address' | 'Name' | 'No
 };
 
 export const GlobalCustomerLookupModal: React.FC = () => {
-    const { users, properties, projects, setCurrentProjectId } = useMockDB();
+    const { users, properties, projects, setCurrentProjectId, currentUser } = useMockDB();
     const { setActivePageId, setSelectedPropertyId, setSelectedContactId, setSelectedAccountId } = useNavigation();
     
     const [isOpen, setIsOpen] = useState(false);
@@ -90,12 +90,15 @@ export const GlobalCustomerLookupModal: React.FC = () => {
 
     useEffect(() => {
         const handleOpen = () => {
+            if (!currentUser || (currentUser.role !== 'Employee' && currentUser.role !== 'Admin' && currentUser.role !== 'Super Admin')) {
+                return;
+            }
             setSearchQuery('');
             setIsOpen(true);
         };
         window.addEventListener('open-customer-lookup', handleOpen);
         return () => window.removeEventListener('open-customer-lookup', handleOpen);
-    }, []);
+    }, [currentUser]);
 
     useEffect(() => {
         if (isOpen) {
@@ -130,6 +133,31 @@ export const GlobalCustomerLookupModal: React.FC = () => {
             const place = autocompleteRef.current.getPlace();
             if (place && place.formatted_address) {
                 setSearchQuery(place.formatted_address);
+                if (place.geometry) {
+                    const addressComponents = place.address_components;
+                    let streetNumber = '', route = '', city = '', state = '', zip = '';
+                    if (addressComponents) {
+                        for (const component of addressComponents) {
+                            const componentType = component.types[0];
+                            switch (componentType) {
+                                case 'street_number': streetNumber = component.long_name; break;
+                                case 'route': route = component.short_name; break;
+                                case 'locality': city = component.long_name; break;
+                                case 'administrative_area_level_1': state = component.short_name; break;
+                                case 'postal_code': zip = component.short_name; break;
+                            }
+                        }
+                    }
+                    const addressData = {
+                        address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
+                        city,
+                        state,
+                        zip,
+                        latitude: place.geometry.location.lat(),
+                        longitude: place.geometry.location.lng()
+                    };
+                    sessionStorage.setItem('globalSearchAddressData', JSON.stringify(addressData));
+                }
             } else if (place && place.name) {
                 setSearchQuery(place.name);
             }
@@ -237,6 +265,9 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                 if (searchQuery) {
                     sessionStorage.setItem('globalSearchQuery', searchQuery);
                     sessionStorage.setItem('globalSearchQueryType', queryType || '');
+                    if (queryType !== 'Address') {
+                        sessionStorage.removeItem('globalSearchAddressData');
+                    }
                 }
                 setActivePageId('E-02a');
             }

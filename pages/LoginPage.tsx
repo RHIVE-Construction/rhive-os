@@ -303,7 +303,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                 </div>
                             </form>
                             
-                            <QuickBypassPanel onLogin={onLogin} />
+                            {(window.location.hostname === 'localhost' || 
+                              window.location.search.includes('bypass') || 
+                              window.location.search.includes('dev')) && (
+                                <QuickBypassPanel onLogin={onLogin} />
+                            )}
                         </div>
 
                         <div className="mt-10 text-center relative z-20">

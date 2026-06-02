@@ -196,7 +196,9 @@ const LoginBridge: React.FC = () => {
     if (!currentUser) {
         const isLoginPage = activePageId === 'P-06';
         const hasOwnHeader = activePageId === 'P-00' || activePageId === 'P-00a' || activePageId === 'P-00b' || !activePageId;
-        const CurrentPage = pageComponentMap[activePageId] || pageComponentMap['P-00'];
+        const isPagePublic = activePageId && activePageId.startsWith('P-');
+        const targetPageId = isPagePublic ? activePageId : 'P-00';
+        const CurrentPage = pageComponentMap[targetPageId] || pageComponentMap['P-00'];
 
         return (
             <div className={cn(

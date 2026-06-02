@@ -151,7 +151,7 @@ const RhiveHeader: React.FC = () => {
             </nav>
 
             {/* CENTRAL LOGO (Absolute Alignment for Perfect Spacing) */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-12 flex items-center justify-center z-20 pointer-events-auto">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[240px] h-16 flex items-center justify-center z-20 pointer-events-auto">
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -164,7 +164,7 @@ const RhiveHeader: React.FC = () => {
                     <img
                         src="https://i.imgur.com/t0VcSgJ.png"
                         alt="RHIVE Logo"
-                        className="h-12 w-auto object-contain transition-opacity duration-300 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]"
+                        className="h-16 w-auto object-contain transition-opacity duration-300 drop-shadow-[0_0_10px_rgba(255,255,255,0.25)]"
                     />
                 </motion.button>
             </div>
