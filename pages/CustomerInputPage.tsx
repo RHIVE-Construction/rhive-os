@@ -234,7 +234,13 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl relative overflow-hidden">
+            <div 
+                className="bg-gray-900 border border-gray-700 rounded-none w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl relative overflow-hidden"
+                style={{
+                    clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)',
+                    WebkitClipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)'
+                }}
+            >
                 <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900 z-10">
                     <div>
                         <h3 className="text-white font-bold text-lg">Select Location</h3>
@@ -391,7 +397,13 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
-             <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-6xl h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
+              <div 
+                className="bg-gray-900 border border-gray-700 rounded-none w-full max-w-6xl h-[85vh] flex flex-col shadow-2xl relative overflow-hidden"
+                style={{
+                    clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)',
+                    WebkitClipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)'
+                }}
+              >
                 
                 {/* Two Column Layout (Map + Sidebar) */}
                 <div className="flex-1 flex overflow-hidden relative">
@@ -464,11 +476,15 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                             type="button"
                             onClick={() => setView('street')} 
                             className={cn(
-                                "px-4 py-2 border rounded text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center min-w-[120px]", 
+                                "px-4 py-2 border text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center min-w-[120px] rounded-none", 
                                 view === 'street' 
                                     ? "bg-[#ec028b] border-[#ec028b] text-white shadow-pink-glow-sm" 
                                     : "bg-black border-gray-800 text-gray-400 hover:text-white hover:border-gray-600"
                             )}
+                            style={{
+                                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                                WebkitClipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                            }}
                         >
                             <CameraIcon className="w-3.5 h-3.5 mr-1.5" /> Street View
                         </button>
@@ -476,11 +492,15 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                             type="button"
                             onClick={() => setView('satellite')} 
                             className={cn(
-                                "px-4 py-2 border rounded text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center min-w-[120px]", 
+                                "px-4 py-2 border text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center min-w-[120px] rounded-none", 
                                 view === 'satellite' 
                                     ? "bg-[#ec028b] border-[#ec028b] text-white shadow-pink-glow-sm" 
                                     : "bg-black border-gray-800 text-gray-400 hover:text-white hover:border-gray-600"
                             )}
+                            style={{
+                                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                                WebkitClipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                            }}
                         >
                             <SatelliteIcon className="w-3.5 h-3.5 mr-1.5" /> Satellite Map
                         </button>
@@ -497,7 +517,11 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                         <button 
                             type="button"
                             onClick={onStartOver} 
-                            className="px-4 py-2 border border-gray-800 bg-black hover:bg-gray-900 rounded text-xs font-black uppercase tracking-wider text-gray-400 hover:text-white transition-colors"
+                            className="px-4 py-2 border border-gray-800 bg-black hover:bg-gray-900 text-xs font-black uppercase tracking-wider text-gray-400 hover:text-white transition-colors rounded-none"
+                            style={{
+                                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                                WebkitClipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                            }}
                         >
                             Start Over
                         </button>
@@ -509,7 +533,11 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                                     : [{ id: 'BLDG-DEFAULT', name: 'Main Building', coordinates: { lat: data.latitude, lng: data.longitude } }];
                                 onConfirm(finalBldgs);
                             }} 
-                            className="px-5 py-2 bg-[#ec028b] hover:bg-pink-600 rounded text-xs font-black uppercase tracking-widest text-white shadow-pink-glow transition-all"
+                            className="px-5 py-2 bg-[#ec028b] hover:bg-pink-600 text-xs font-black uppercase tracking-widest text-white shadow-pink-glow transition-all rounded-none"
+                            style={{
+                                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                                WebkitClipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                            }}
                         >
                             Confirm Target
                         </button>
@@ -1046,9 +1074,44 @@ const AddressSection: React.FC<{
     };
 
     const triggerGeocoding = (typedAddress: string) => {
-        if (!typedAddress || !window.google || !window.google.maps) return;
+        if (!typedAddress || !window.google || !window.google.maps) {
+            onChange({
+                ...data,
+                address: typedAddress,
+                latitude: 40.7608,
+                longitude: -111.8910,
+                city: data.city || 'Salt Lake City',
+                state: data.state || 'UT',
+                zip: data.zip || '84101'
+            });
+            setIsCollapsed(true);
+            return;
+        }
         const geocoder = new window.google.maps.Geocoder();
+        let geocodeCompleted = false;
+
+        const geocodeTimeout = setTimeout(() => {
+            if (!geocodeCompleted) {
+                geocodeCompleted = true;
+                console.warn("Geocoding timed out. Using fallback SLC coords.");
+                onChange({
+                    ...data,
+                    address: typedAddress,
+                    latitude: 40.7608,
+                    longitude: -111.8910,
+                    city: data.city || 'Salt Lake City',
+                    state: data.state || 'UT',
+                    zip: data.zip || '84101'
+                });
+                setIsCollapsed(true);
+            }
+        }, 3000);
+
         geocoder.geocode({ address: typedAddress }, (results: any, status: string) => {
+            if (geocodeCompleted) return;
+            geocodeCompleted = true;
+            clearTimeout(geocodeTimeout);
+
             if (status === 'OK' && results && results[0]) {
                 const place = results[0];
                 const addressComponents = place.address_components;
@@ -1075,6 +1138,17 @@ const AddressSection: React.FC<{
                     longitude: place.geometry.location.lng(),
                     streetViewHeading: 0
                 });
+            } else {
+                onChange({
+                    ...data,
+                    address: typedAddress,
+                    latitude: 40.7608,
+                    longitude: -111.8910,
+                    city: data.city || 'Salt Lake City',
+                    state: data.state || 'UT',
+                    zip: data.zip || '84101'
+                });
+                setIsCollapsed(true);
             }
         });
     };
@@ -1403,8 +1477,41 @@ const CustomerInputPage: React.FC = () => {
                     email: ''
                 });
             } else if (qType === 'Address' || !qType) {
+                if (!window.google || !window.google.maps) {
+                    setPropertyData(prev => ({
+                        ...prev,
+                        address: query,
+                        latitude: 40.7608,
+                        longitude: -111.8910,
+                        city: 'Salt Lake City',
+                        state: 'UT',
+                        zip: '84101'
+                    }));
+                    return;
+                }
                 const geocoder = new window.google.maps.Geocoder();
+                let geocodeCompleted = false;
+
+                const mountGeocodeTimeout = setTimeout(() => {
+                    if (!geocodeCompleted) {
+                        geocodeCompleted = true;
+                        setPropertyData(prev => ({
+                            ...prev,
+                            address: query,
+                            latitude: 40.7608,
+                            longitude: -111.8910,
+                            city: 'Salt Lake City',
+                            state: 'UT',
+                            zip: '84101'
+                        }));
+                    }
+                }, 3000);
+
                 geocoder.geocode({ address: query }, (results: any, status: string) => {
+                    if (geocodeCompleted) return;
+                    geocodeCompleted = true;
+                    clearTimeout(mountGeocodeTimeout);
+
                     if (status === 'OK' && results && results[0]) {
                         const place = results[0];
                         const addressComponents = place.address_components;
@@ -1432,7 +1539,15 @@ const CustomerInputPage: React.FC = () => {
                         });
                         setIsVerificationOpen(true);
                     } else {
-                        setPropertyData(prev => ({ ...prev, address: query }));
+                        setPropertyData(prev => ({
+                            ...prev,
+                            address: query,
+                            latitude: 40.7608,
+                            longitude: -111.8910,
+                            city: 'Salt Lake City',
+                            state: 'UT',
+                            zip: '84101'
+                        }));
                     }
                 });
             }

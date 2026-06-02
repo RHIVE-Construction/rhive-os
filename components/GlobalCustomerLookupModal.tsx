@@ -77,8 +77,16 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [shouldRender, setShouldRender] = useState(false);
     const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 150);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
 
     useEffect(() => {
         const handleOpen = () => {
@@ -149,8 +157,8 @@ export const GlobalCustomerLookupModal: React.FC = () => {
 
     if (!shouldRender) return null;
 
-    // --- DEEP SMART SEARCH LOGIC ---
-    const searchLower = searchQuery.toLowerCase().trim();
+    // --- DEEP SMART SEARCH LOGIC (Debounced) ---
+    const searchLower = debouncedSearchQuery.toLowerCase().trim();
     const matchedCustomerIds = new Set<string>();
 
     if (searchLower) {
@@ -196,7 +204,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     const collisionOwner = collisionProperty ? users.find(u => u.id === collisionProperty.owner_id) : null;
     const collisionOwnerName = collisionOwner ? collisionOwner.name : '';
 
-    // Decipher search queries and association status
+    // Decipher search queries and association status (Real-time indicators based on raw input)
     const queryType = decipherQueryType(searchQuery);
     const isAssociated = searchResults.length > 0 || !!collisionProperty;
     const associationStatus = isAssociated ? 'Associated' : 'New Record';
@@ -208,14 +216,30 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Tab' && searchQuery.trim() !== '' && searchResults.length === 0) {
-            e.preventDefault();
-            setIsOpen(false);
-            if (searchQuery) {
-                sessionStorage.setItem('globalSearchQuery', searchQuery);
-                sessionStorage.setItem('globalSearchQueryType', queryType || '');
+        if (e.key === 'Tab' && searchQuery.trim() !== '') {
+            // Solve race conditions by performing an immediate synchronous lookup check on raw search query
+            const sLower = searchQuery.toLowerCase().trim();
+            const hasImmediateMatches = users.some(u => 
+                u.role === 'Customer' && (
+                    u.name.toLowerCase().includes(sLower) ||
+                    (u.email && u.email.toLowerCase().includes(sLower)) ||
+                    (u.phone && u.phone.includes(sLower))
+                )
+            ) || properties.some(p => 
+                p.address_full.toLowerCase().includes(sLower)
+            ) || projects.some(pr => 
+                pr.name.toLowerCase().includes(sLower)
+            );
+
+            if (!hasImmediateMatches) {
+                e.preventDefault();
+                setIsOpen(false);
+                if (searchQuery) {
+                    sessionStorage.setItem('globalSearchQuery', searchQuery);
+                    sessionStorage.setItem('globalSearchQueryType', queryType || '');
+                }
+                setActivePageId('E-02a');
             }
-            setActivePageId('E-02a');
         }
     };
 
