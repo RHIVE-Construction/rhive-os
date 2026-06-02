@@ -441,7 +441,9 @@ const SessionWidget = () => {
         <div className="bg-gray-900/60 border border-gray-700/50 rounded-xl p-4 flex items-center justify-between backdrop-blur-sm mb-6 shadow-lg">
             <div className="flex items-center">
                 <div className="relative">
-                    <img src={currentUser?.avatarUrl || "https://i.pravatar.cc/150?u=employee"} alt="User" className="w-12 h-12 rounded-full border border-[#ec028b]" />
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-800 to-black border border-[#ec028b] flex items-center justify-center font-black text-[#ec028b] text-lg uppercase select-none">
+                        {currentUser?.name?.charAt(0) ?? '?'}
+                    </div>
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-black border border-[#ec028b] rounded-full"></div>
                 </div>
                 <div className="ml-4">

@@ -32,13 +32,13 @@ const MockDatabaseContext = createContext<MockDatabaseContextType | undefined>(u
 
 // --- SEED DATA ---
 const SEED_USERS: User[] = [
-    { id: 'U-EMP-1', name: 'Mike Robinson', role: 'Employee', email: 'mike@rhive.com', avatarUrl: 'https://i.pravatar.cc/150?u=mike' },
-    { id: 'U-CUST-1', name: 'Michael Robinson', role: 'Customer', email: 'michael.robinson@gmail.com', phone: '(801) 555-0192', avatarUrl: 'https://i.pravatar.cc/150?u=michael' },
+    { id: 'U-EMP-1', name: 'Mike Robinson', role: 'Employee', email: 'mike@rhive.com' },
+    { id: 'U-CUST-1', name: 'Michael Robinson', role: 'Customer', email: 'michael.robinson@gmail.com', phone: '(801) 555-0192' },
     { id: 'U-CUST-2', name: 'Willow Park HOA', role: 'Customer', email: 'board@willowpark.com' },
     { id: 'U-CONT-1', name: 'Quality Roofing', role: 'Contractor', email: 'jobs@quality.com' },
     { id: 'U-SUPP-1', name: 'ABC Supply', role: 'Supplier', email: 'orders@abc.com' },
     { id: 'U-ACC-LHM', name: 'Larry H Miller Group', role: 'Customer', email: 'billing@lhm.com' },
-    { id: 'U-ADMIN-JAMES', name: 'James Gimena', role: 'Admin', email: 'james.g@rhiveconstruction.com', phone: '(333) 333-3333', password_hash: 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5', avatarUrl: 'https://i.pravatar.cc/150?u=james' },
+    { id: 'U-ADMIN-JAMES', name: 'James Gimena', role: 'Admin', email: 'james.g@rhiveconstruction.com', phone: '(333) 333-3333', password_hash: 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5' },
     { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' },
 ];
 
@@ -171,7 +171,6 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                         email: email,
                         phone: '(333) 333-3333',
                         password_hash: correctHash,
-                        avatarUrl: 'https://i.pravatar.cc/150?u=james',
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     });
@@ -179,13 +178,15 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     const userDoc = res.data as any;
                     const needsUpdate =
                         userDoc.password_hash !== correctHash ||
-                        userDoc.role !== correctRole;
+                        userDoc.role !== correctRole ||
+                        !!userDoc.avatarUrl;
 
                     if (needsUpdate) {
                         console.log("Updating James Gimena Firestore profile to Admin role with correct password hash...");
                         await userService.update(userDoc.id, {
                             role: correctRole,
                             password_hash: correctHash,
+                            avatarUrl: null,
                             updated_at: new Date().toISOString()
                         });
                     }
