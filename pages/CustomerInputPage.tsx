@@ -262,7 +262,59 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
     );
 };
 
-const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: AddressData, onConfirm: (buildings: any[]) => void, onStartOver: () => void }) => {
+const checkAddressOutOfBounds = (data: AddressData) => {
+    const allowedState = (typeof window !== 'undefined' ? localStorage.getItem('service_boundary_state') : null) || 'UT';
+    const state = (data.state || '').toUpperCase().trim();
+    if (state && state !== allowedState.toUpperCase().trim()) {
+        return true;
+    }
+    const addr = (data.address || '').toLowerCase();
+    const city = (data.city || '').toLowerCase();
+    if (addr.includes('boise') || addr.includes(', id') || city === 'boise' || (data.state || '').toLowerCase() === 'id') {
+        return true;
+    }
+    return false;
+};
+
+const parseAddressString = (fullStr: string): Partial<AddressData> => {
+    const parts = fullStr.split(',').map(p => p.trim());
+    if (parts.length >= 3) {
+        const street = parts[0];
+        const city = parts[1];
+        const stateZipPart = parts[2];
+        const stateZipMatch = stateZipPart.match(/^([A-Z]{2})\s*(\d{5})?$/i);
+        if (stateZipMatch) {
+            return {
+                address: street,
+                city: city,
+                state: stateZipMatch[1].toUpperCase(),
+                zip: stateZipMatch[2] || ''
+            };
+        } else {
+            const lastWords = stateZipPart.split(/\s+/);
+            return {
+                address: street,
+                city: city,
+                state: lastWords[0]?.toUpperCase() || '',
+                zip: lastWords[1] || ''
+            };
+        }
+    } else if (parts.length === 2) {
+        const street = parts[0];
+        const lastWords = parts[1].split(/\s+/);
+        return {
+            address: street,
+            city: lastWords[0] || '',
+            state: lastWords[1]?.toUpperCase() || '',
+            zip: lastWords[2] || ''
+        };
+    }
+    return {
+        address: fullStr
+    };
+};
+
+const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass }: { data: AddressData, onConfirm: (buildings: any[], updatedAddress?: Partial<AddressData>) => void, onStartOver: () => void, isAdminBypass: boolean }) => {
     const isApiReady = useGoogleMapsApi();
     const [view, setView] = useState<'satellite' | 'street'>('satellite');
     const [buildings, setBuildings] = useState<{ id: string; name: string; lat: number; lng: number }[]>(() => {
@@ -272,6 +324,9 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
             lat: data.latitude || 40.7608,
             lng: data.longitude || -111.8910
         }];
+    });
+    const [editableAddress, setEditableAddress] = useState(() => {
+        return `${data.address || ''}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''}${data.zip ? ` ${data.zip}` : ''}`;
     });
     
     const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -412,6 +467,28 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                 }}
               >
                 
+                {/* Modal Header: Editable Address Title */}
+                <div className="p-4 bg-gray-950 border-b border-gray-800 flex justify-between items-center shrink-0">
+                    <div className="flex-1 mr-4">
+                        <label className="text-[9px] text-gray-500 font-black tracking-widest uppercase block mb-1">Verify and Edit Property Address</label>
+                        <input
+                            type="text"
+                            value={editableAddress}
+                            onChange={(e) => setEditableAddress(e.target.value)}
+                            className="bg-black/40 border border-gray-800 focus:border-[#ec028b] text-white font-bold text-base px-3 py-1.5 w-full max-w-2xl outline-none transition-all rounded"
+                            placeholder="Address, City, State Zip"
+                        />
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onStartOver}
+                        className="text-gray-400 hover:text-white transition-colors"
+                        title="Cancel"
+                    >
+                        <XIcon className="w-6 h-6" />
+                    </button>
+                </div>
+                
                 {/* Two Column Layout (Map + Sidebar) */}
                 <div className="flex-1 flex overflow-hidden relative">
                     
@@ -522,9 +599,9 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                     </div>
 
                     <div className="hidden lg:flex flex-col items-center max-w-md text-center">
-                        <span className="text-[9px] text-gray-500 font-black tracking-widest uppercase">Universal Intake Target</span>
+                        <span className="text-[9px] text-gray-500 font-black tracking-widest uppercase">Intake Address target</span>
                         <span className="text-xs text-white font-bold tracking-tight truncate w-full max-w-sm">
-                            {data.address}, {data.city}, {data.state} {data.zip}
+                            {editableAddress}
                         </span>
                     </div>
 
@@ -543,10 +620,16 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver }: { data: Addr
                         <button 
                             type="button"
                             onClick={() => {
+                                const updatedAddr = parseAddressString(editableAddress);
+                                const mergedAddr = { ...data, ...updatedAddr };
+                                if (checkAddressOutOfBounds(mergedAddr) && !isAdminBypass) {
+                                    alert("Out of Service Boundary: Scheduling blocked for out of state address.");
+                                    return;
+                                }
                                 const finalBldgs = buildings.length > 0 
                                     ? buildings.map(b => ({ id: b.id, name: b.name, coordinates: { lat: b.lat, lng: b.lng } })) 
                                     : [{ id: 'BLDG-DEFAULT', name: 'BLD-1', coordinates: { lat: data.latitude, lng: data.longitude } }];
-                                onConfirm(finalBldgs);
+                                onConfirm(finalBldgs, updatedAddr);
                             }} 
                             className="px-5 py-2 bg-[#ec028b] hover:bg-pink-600 text-xs font-black uppercase tracking-widest text-white shadow-pink-glow transition-all rounded-none"
                             style={{
@@ -998,12 +1081,7 @@ const SchedulingBlock = ({ onScheduleConfirm, notesLabel = "Access Code / Entry 
     );
 };
 
-const checkAddressOutOfBounds = (data: AddressData) => {
-    const addr = (data.address || '').toLowerCase();
-    const city = (data.city || '').toLowerCase();
-    const state = (data.state || '').toLowerCase();
-    return addr.includes('boise') || addr.includes(', id') || city === 'boise' || state === 'id';
-};
+// checkAddressOutOfBounds logic has been moved to the top of the file to prevent ReferenceError.
 
 const AddressSection: React.FC<{ 
     label: string, 
@@ -1334,6 +1412,10 @@ const AddressSection: React.FC<{
                                 size="sm" 
                                 onClick={() => {
                                     if (data.address) {
+                                        if (checkAddressOutOfBounds(data) && !isAdminBypass) {
+                                            alert("Out of Service Boundary: Scheduling blocked.");
+                                            return;
+                                        }
                                         setIsCollapsed(true);
                                     } else {
                                         alert("Please enter an address first.");
@@ -1716,6 +1798,9 @@ const CustomerInputPage: React.FC = () => {
     // Submission and Reset Logic
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [submissionSummary, setSubmissionSummary] = useState({ name: '', type: '' });
+    const [isNotesOpen, setIsNotesOpen] = useState(false);
+    const [isNotesMinimized, setIsNotesMinimized] = useState(false);
+    const [isContactsCollapsed, setIsContactsCollapsed] = useState(false);
 
     const requiresOrganization = projectCategory === 'Commercial' || projectCategory === 'Government';
     
@@ -2141,7 +2226,7 @@ const CustomerInputPage: React.FC = () => {
         <PageContainer title="New Lead Entry" description="Intake Script & Assessment Form">
             {/* Success Modal */}
             {isSuccessModalOpen && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in">
                     <div className="bg-gray-900 border border-green-500/50 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative">
                         <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500">
                             <Check className="w-8 h-8 text-green-500" />
@@ -2154,7 +2239,7 @@ const CustomerInputPage: React.FC = () => {
                             <Button className="w-full bg-green-600 hover:bg-green-500" onClick={handleFormReset}>
                                 <ArrowRightIcon className="w-4 h-4 mr-2" /> Start New Intake
                             </Button>
-                            <Button variant="secondary" className="w-full" onClick={() => { setIsSuccessModalOpen(false); setActivePageId('E-05'); }}>
+                            <Button variant="secondary" className="w-full" onClick={() => { setIsSuccessModalOpen(false); setActivePageId(isEstimateRequest ? 'E-27' : 'E-28'); }}>
                                 View in Pipeline
                             </Button>
                         </div>
@@ -2186,13 +2271,23 @@ const CustomerInputPage: React.FC = () => {
             {isVerificationOpen && (
                 <AddressVerificationModal 
                     data={currentVerifyingIndex === 0 || currentVerifyingIndex === null ? propertyData : additionalProperties[currentVerifyingIndex - 1].propertyData}
-                    onConfirm={(bldgs) => {
+                    isAdminBypass={isAdminBypass}
+                    onConfirm={(bldgs, updatedAddr) => {
                         if (currentVerifyingIndex === 0 || currentVerifyingIndex === null) {
                             setPinnedBuildings(bldgs);
+                            if (updatedAddr) {
+                                setPropertyData(prev => ({ ...prev, ...updatedAddr }));
+                            }
                             setIsPropertyCollapsed(true);
                         } else {
                             const updated = [...additionalProperties];
                             updated[currentVerifyingIndex - 1].pinnedBuildings = bldgs;
+                            if (updatedAddr) {
+                                updated[currentVerifyingIndex - 1].propertyData = {
+                                    ...updated[currentVerifyingIndex - 1].propertyData,
+                                    ...updatedAddr
+                                };
+                            }
                             updated[currentVerifyingIndex - 1].isCollapsed = true;
                             setAdditionalProperties(updated);
                         }
@@ -2300,48 +2395,61 @@ const CustomerInputPage: React.FC = () => {
                 
                 {/* CONTACTS - Always Visible */}
                 <div className="animate-fade-in">
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between border-b border-gray-800 pb-2 mb-6">
-                             <div className="flex items-center text-white font-black text-sm tracking-widest uppercase">
-                                <UserIcon className="w-4 h-4 mr-2 text-gray-400" />
-                                CONTACT DIRECTORY
+                    {isContactsCollapsed && contacts.length > 0 ? (
+                        <RenderCollapsedSection 
+                            title="Contact Directory" 
+                            summary={contacts.map(c => `${c.firstName} ${c.lastName} (${c.role || 'Contact'} • Phone: ${c.phone} • Email: ${c.email} • Preference: ${c.preferredContactMethod})`).join(' | ')}
+                            onEdit={() => setIsContactsCollapsed(false)} 
+                        />
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b border-gray-800 pb-2 mb-6">
+                                 <div className="flex items-center text-white font-black text-sm tracking-widest uppercase">
+                                    <UserIcon className="w-4 h-4 mr-2 text-gray-400" />
+                                    CONTACT DIRECTORY
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div className="space-y-3">
-                            {contacts.map(c => (
-                                editingContactId === c.id ? 
-                                <ContactForm key={c.id} initialData={c} onSave={(upd) => { setContacts(prev => prev.map(ex => ex.id === upd.id ? upd : ex)); setEditingContactId(null); }} onCancel={() => setEditingContactId(null)} isPrimary={c.isPrimary} isCommercial={requiresOrganization} companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} /> :
-                                <ContactCard key={c.id} contact={c} onEdit={() => setEditingContactId(c.id)} onDelete={() => setContacts(prev => prev.filter(x => x.id !== c.id))} />
-                            ))}
-                        </div>
+                            
+                            <div className="space-y-3">
+                                {contacts.map(c => (
+                                    editingContactId === c.id ? 
+                                    <ContactForm key={c.id} initialData={c} onSave={(upd) => { setContacts(prev => prev.map(ex => ex.id === upd.id ? upd : ex)); setEditingContactId(null); }} onCancel={() => setEditingContactId(null)} isPrimary={c.isPrimary} isCommercial={requiresOrganization} companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} /> :
+                                    <ContactCard key={c.id} contact={c} onEdit={() => setEditingContactId(c.id)} onDelete={() => setContacts(prev => prev.filter(x => x.id !== c.id))} />
+                                ))}
+                            </div>
 
-                        {(isAddingContact || contacts.length === 0) && !editingContactId && (
-                            <ContactForm 
-                                key={contacts.length === 0 ? `new-primary-${autofilledContactData.firstName}-${autofilledContactData.lastName}-${autofilledContactData.phone}` : 'adding-contact'}
-                                initialData={contacts.length === 0 ? autofilledContactData : undefined}
-                                onSave={(c) => { setContacts(prev => [...prev, c]); setIsAddingContact(false); }} 
-                                onCancel={() => setIsAddingContact(false)} 
-                                isPrimary={contacts.length === 0} 
-                                isCommercial={requiresOrganization} 
-                                companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} 
-                            />
-                        )}
+                            {(isAddingContact || contacts.length === 0) && !editingContactId && (
+                                <ContactForm 
+                                    key={contacts.length === 0 ? `new-primary-${autofilledContactData.firstName}-${autofilledContactData.lastName}-${autofilledContactData.phone}` : 'adding-contact'}
+                                    initialData={contacts.length === 0 ? autofilledContactData : undefined}
+                                    onSave={(c) => { setContacts(prev => [...prev, c]); setIsAddingContact(false); }} 
+                                    onCancel={() => setIsAddingContact(false)} 
+                                    isPrimary={contacts.length === 0} 
+                                    isCommercial={requiresOrganization} 
+                                    companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} 
+                                />
+                            )}
 
-                        {!editingContactId && !isAddingContact && (
-                             <button 
-                                 type="button" 
-                                 onClick={() => setIsAddingContact(true)} 
-                                 className="w-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#ec028b] transition-all bg-black/40 hover:bg-gray-900 border border-gray-800 hover:border-[#ec028b]/30 py-3.5 rounded-lg mt-4 shadow-sm"
-                             >
-                                 <svg className="w-4 h-4 animate-[spin_10s_linear_infinite] text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                     <circle cx="12" cy="12" r="8" strokeDasharray="3 3" />
-                                     <path d="M12 9v6M9 12h6" />
-                                 </svg>
-                                 <span>Add Project Contact</span>
-                             </button>
-                        )}
-                    </div>
+                            {!editingContactId && !isAddingContact && (
+                                <div className="space-y-4">
+                                     <button 
+                                         type="button" 
+                                         onClick={() => setIsAddingContact(true)} 
+                                         className="w-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#ec028b] transition-all bg-black/40 hover:bg-gray-900 border border-gray-800 hover:border-[#ec028b]/30 py-3.5 rounded-lg shadow-sm"
+                                     >
+                                         <svg className="w-4 h-4 animate-[spin_10s_linear_infinite] text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                             <circle cx="12" cy="12" r="8" strokeDasharray="3 3" />
+                                             <path d="M12 9v6M9 12h6" />
+                                         </svg>
+                                         <span>Add Project Contact</span>
+                                     </button>
+                                     <div className="flex justify-end pt-2">
+                                         <Button size="sm" type="button" onClick={() => setIsContactsCollapsed(true)}>Confirm Contacts</Button>
+                                     </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* PROJECT TYPE - Always Visible */}
@@ -2349,7 +2457,7 @@ const CustomerInputPage: React.FC = () => {
                     {isTypeCollapsed ? (
                         <RenderCollapsedSection 
                             title="Project Type" 
-                            summary={`${projectCategory} ${isInsurance ? '[Insurance]' : '[Non-Insurance]'}`}
+                            summary={`${projectCategory} • ${isInsurance ? 'Insurance Claim' : 'Non-Insurance Project'}`}
                             onEdit={() => setIsTypeCollapsed(false)} 
                         />
                     ) : (
@@ -2427,7 +2535,7 @@ const CustomerInputPage: React.FC = () => {
                         {isInsuranceInfoCollapsed ? (
                             <RenderCollapsedSection 
                                 title="Insurance Details" 
-                                summary={`${insuranceInfo.carrier || 'No Carrier'} • Claim #${insuranceInfo.claimNumber || 'N/A'} (${insuranceStatus})${damageType.length > 0 ? ` • Damage: ${damageType.join(', ')}` : ''}`}
+                                summary={`${insuranceInfo.carrier || 'No Carrier'} • Claim: ${insuranceInfo.claimNumber || 'N/A'} (${insuranceStatus})${insuranceInfo.deductible ? ` • Deductible: $${insuranceInfo.deductible}` : ''}${insuranceInfo.dateOfLoss ? ` • Loss: ${insuranceInfo.dateOfLoss}` : ''}${damageType.length > 0 ? ` • Damage: ${damageType.join(', ')}` : ''}`}
                                 onEdit={() => setIsInsuranceInfoCollapsed(false)} 
                             />
                         ) : (
@@ -2467,7 +2575,7 @@ const CustomerInputPage: React.FC = () => {
                     {isBillingCollapsed ? (
                         <RenderCollapsedSection 
                             title={billingStatus === 'auto' ? "Billing Confirmation Required" : "Billing"}
-                            summary={`Bill To: ${billToName || 'Same as Property'}${billingData.address ? ` • ${billingData.address}` : ''}`}
+                            summary={`Bill To: ${billToName || 'Same as Property'}${billingData.address ? ` • ${billingData.address}, ${billingData.city || ''}, ${billingData.state || ''} ${billingData.zip || ''}`.trim() : ''}${hasCustomBilling ? ' (Custom Billing Profile)' : ''}`}
                             onEdit={() => setIsBillingCollapsed(false)} 
                             variant={billingStatus === 'auto' ? 'pink' : 'green'}
                         />
@@ -2523,24 +2631,14 @@ const CustomerInputPage: React.FC = () => {
                     )}
                 </div>
 
-                {/* Project Details / Notes - Always Visible */}
-                <div className="animate-fade-in">
-                    <CircuitryCard title="Project Details / Notes" icon={<DocumentTextIcon className="w-5 h-5" />}>
-                        <ProjectDetailsInput 
-                            value={detailedScope.projectDetails} 
-                            onChange={v => setDetailedScope(p => ({...p, projectDetails: v}))}
-                            onOptimize={handleOptimizeNote}
-                            aiBannerText={aiExtractBannerText}
-                        />
-                    </CircuitryCard>
-                </div>
+                {/* Project Details / Notes - Moved to floating notes button/modal */}
 
                 {/* PROJECT INTENT - Always Visible */}
                 <div className="animate-fade-in">
                     {isIntentCollapsed ? (
                         <RenderCollapsedSection 
                             title="Project Intent" 
-                            summary={`${scopeType}${scopeType === 'Repair' ? ` • Active Leak: ${repairDetails.activeLeak ? 'Yes' : 'No'}${repairDetails.emergencyTarp ? ' • Tarping Needed' : ''}` : ` • Intent: ${purchaseIntent || 'Researching'}`}`}
+                            summary={`${scopeType} • Intent: ${purchaseIntent || 'Researching'}${scopeType === 'Repair' ? ` • Active Leak: ${repairDetails.activeLeak ? 'Yes' : 'No'}${repairDetails.emergencyTarp ? ' • Tarping Needed' : ''}${repairDetails.isOld ? ' • Old Roof' : ''}${!repairDetails.hasPhotos ? ' • No Photos' : ''}` : ''}`}
                             onEdit={() => setIsIntentCollapsed(false)} 
                         />
                     ) : (
@@ -3026,7 +3124,7 @@ const CustomerInputPage: React.FC = () => {
                         {isDetailedScopeCollapsed ? (
                             <RenderCollapsedSection 
                                 title="Detailed Scope" 
-                                summary={`${detailedScope.materialPreference} • Decking: ${detailedScope.deckingAction} • Satellite: ${detailedScope.satelliteAction} • Solar: ${detailedScope.solarAction}`}
+                                summary={`${detailedScope.materialPreference} • Decking: ${detailedScope.deckingAction} • Satellite: ${detailedScope.satelliteAction} • Swamp Cooler: ${detailedScope.swampCoolerAction} • Solar: ${detailedScope.solarAction}${detailedScope.solarStorage !== 'N/A' && detailedScope.solarStorage ? ` (${detailedScope.solarStorage})` : ''}${detailedScope.additionalDetails ? ` • Additional: ${detailedScope.additionalDetails}` : ''}`}
                                 onEdit={() => setIsDetailedScopeCollapsed(false)} 
                             />
                         ) : (
@@ -3126,7 +3224,7 @@ const CustomerInputPage: React.FC = () => {
                     {isProfileCollapsed ? (
                         <RenderCollapsedSection 
                             title="Customer Profile" 
-                            summary={`${customerProfile.familiarity} • ${customerProfile.investmentStyle} • Readiness: ${customerProfile.readiness}`}
+                            summary={`${customerProfile.familiarity} • ${customerProfile.investmentStyle} • Readiness: ${customerProfile.readiness}${customerProfile.concerns.length > 0 ? ` • Concerns: ${customerProfile.concerns.join(', ')}` : ''}${customerProfile.decisionCriteria.length > 0 ? ` • Criteria: ${customerProfile.decisionCriteria.join(', ')}` : ''}`}
                             onEdit={() => setIsProfileCollapsed(false)} 
                         />
                         ) : (
@@ -3182,7 +3280,22 @@ const CustomerInputPage: React.FC = () => {
                             <p className="text-xs text-gray-400 uppercase font-bold">{isEstimateRequest ? "Generating Estimate for:" : "Creating Project:"}</p>
                             <p className="text-white font-bold truncate max-w-[200px]">{requiresOrganization ? (companyData.propertyName || propertyData.address) : (contacts[0]?.lastName + ' Residence')}</p>
                         </div>
-                        <div className="flex space-x-4">
+                        <div className="flex space-x-4 items-center">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsNotesOpen(true);
+                                    setIsNotesMinimized(false);
+                                }}
+                                className="px-3 py-2 bg-gray-800 border border-gray-700 hover:border-[#ec028b]/50 hover:bg-gray-800 text-gray-400 hover:text-white rounded-xl transition-all flex items-center text-xs font-bold uppercase tracking-wider relative"
+                                title="Project Notes"
+                            >
+                                <DocumentTextIcon className="w-4 h-4 mr-1.5" />
+                                Notes
+                                {detailedScope.projectDetails.trim() && (
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#ec028b] rounded-full shadow-pink-glow animate-pulse" />
+                                )}
+                            </button>
                             <Button variant="secondary" onClick={() => setActivePageId('E-01')} type="button">Cancel</Button>
                             <Button size="lg" type="submit">
                                 {isEstimateRequest ? "Send Estimate & Invite" : "Create & Open File"}
@@ -3191,6 +3304,68 @@ const CustomerInputPage: React.FC = () => {
                     </div>
                 )}
             </form>
+
+            {/* FLOATING NOTES COMPONENT */}
+            {isNotesOpen && (
+                isNotesMinimized ? (
+                    <div className="fixed bottom-24 right-6 z-50 animate-bounce-subtle">
+                        <button
+                            type="button"
+                            onClick={() => setIsNotesMinimized(false)}
+                            className="bg-[#ec028b] hover:bg-pink-600 text-white rounded-full p-4 shadow-pink-glow border border-white/20 transition-all flex items-center space-x-2 animate-fade-in"
+                        >
+                            <DocumentTextIcon className="w-6 h-6" />
+                            <span className="text-xs font-black uppercase tracking-wider pr-1">Notes Minimized</span>
+                        </button>
+                    </div>
+                ) : (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+                        <div 
+                            className="bg-gray-900 border border-gray-700 w-full max-w-2xl flex flex-col shadow-2xl relative overflow-hidden rounded-none"
+                            style={{
+                                clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)',
+                                WebkitClipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)'
+                            }}
+                        >
+                            <div className="p-4 bg-gray-950 border-b border-gray-800 flex justify-between items-center">
+                                <div className="flex items-center space-x-2">
+                                    <DocumentTextIcon className="w-5 h-5 text-[#ec028b]" />
+                                    <h3 className="text-white font-bold text-base">Project Details & Notes</h3>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setIsNotesMinimized(true)}
+                                        className="p-1 bg-gray-850 hover:bg-gray-800 rounded border border-gray-750 text-gray-400 hover:text-white transition-all text-xs px-2 py-1 font-bold uppercase tracking-widest"
+                                        title="Minimize Editor"
+                                    >
+                                        Minimize
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setIsNotesOpen(false)}
+                                        className="p-1 bg-gray-855 hover:bg-[#ec028b] hover:border-[#ec028b]/50 rounded border border-gray-750 text-gray-400 hover:text-white transition-all text-xs px-2.5 py-1 font-bold uppercase tracking-widest"
+                                        title="Save and Close"
+                                    >
+                                        Save & Close
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="p-6 bg-gray-900/40 flex-1 space-y-4">
+                                <p className="text-xs text-gray-400 font-medium">
+                                    Capture client details, access codes, specifications, or special instructions. These notes are saved inline and persist dynamically.
+                                </p>
+                                <ProjectDetailsInput 
+                                    value={detailedScope.projectDetails} 
+                                    onChange={v => setDetailedScope(p => ({...p, projectDetails: v}))}
+                                    onOptimize={handleOptimizeNote}
+                                    aiBannerText={aiExtractBannerText}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )
+            )}
         </PageContainer>
     );
 };

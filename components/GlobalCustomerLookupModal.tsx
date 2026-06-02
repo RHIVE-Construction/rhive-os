@@ -27,13 +27,31 @@ const isAddressLike = (q: string) => {
     const normalized = q.toLowerCase().trim();
     if (!normalized) return false;
     // Phone number (only digits, spaces, dashes, parens)
-    if (/^[0-9\-\s\(\)]+$/.test(normalized)) return false;
-    // Contains numbers and letters (street number + street name)
+    if (/^[0-9\-\s\(\)\+\.]+$/.test(normalized)) return false;
+    
+    // Contains comma (e.g. City, State)
+    if (normalized.includes(',')) return true;
+    
+    // Starts with digits (typical street number)
+    if (/^\d+/.test(normalized)) return true;
+    
+    // Contains digits and letters
     if (/\d+/.test(normalized) && /[a-z]+/i.test(normalized)) return true;
+    
     // Common street suffixes
-    const suffixes = ['st', 'ave', 'rd', 'ln', 'lane', 'way', 'blvd', 'dr', 'drive', 'ct', 'court', 'pl', 'place', 'hwy', 'highway'];
-    const words = normalized.split(/\s+/);
-    return words.some(w => suffixes.includes(w));
+    const suffixes = [
+        'st', 'street', 'ave', 'avenue', 'rd', 'road', 'ln', 'lane', 'way', 'blvd', 'boulevard', 
+        'dr', 'drive', 'ct', 'court', 'pl', 'place', 'hwy', 'highway', 'pkwy', 'parkway', 'loop', 'ter', 'terrace',
+        'suite', 'ste', 'apt', 'apartment', 'unit'
+    ];
+    const words = normalized.split(/[\s,]+/);
+    if (words.some(w => suffixes.includes(w))) return true;
+
+    // Check for state codes or common cities/states
+    const stateCodes = ['ut', 'id', 'wy', 'co', 'nv', 'or', 'wa', 'ca', 'mt', 'az', 'nm', 'utah', 'idaho', 'boise', 'salt lake'];
+    if (words.some(w => stateCodes.includes(w))) return true;
+    
+    return false;
 };
 
 // Decipher search query types
@@ -47,20 +65,12 @@ const decipherQueryType = (q: string): 'Phone Number' | 'Address' | 'Name' | 'No
     }
     
     // 2. Address
-    const lower = trimmed.toLowerCase();
-    const hasDigits = /\d+/.test(lower);
-    const hasLetters = /[a-z]+/i.test(lower);
-    
-    const suffixes = [
-        'st', 'street', 'ave', 'avenue', 'rd', 'road', 'ln', 'lane', 'way', 'blvd', 'boulevard', 
-        'dr', 'drive', 'ct', 'court', 'pl', 'place', 'hwy', 'highway', 'pkwy', 'parkway', 'loop', 'ter', 'terrace'
-    ];
-    const words = lower.split(/\s+/);
-    const hasSuffix = words.some(w => suffixes.includes(w));
-    
-    if ((hasDigits && hasLetters) || hasSuffix) {
+    if (isAddressLike(trimmed)) {
         return 'Address';
     }
+    
+    const lower = trimmed.toLowerCase();
+    const words = lower.split(/\s+/);
     
     // 3. Note
     if (words.length >= 5 || trimmed.length > 30) {
@@ -245,6 +255,29 @@ export const GlobalCustomerLookupModal: React.FC = () => {
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Tab' && searchQuery.trim() !== '') {
+            // Check if google maps suggestions are visible in DOM
+            const pacItems = document.querySelectorAll('.pac-item');
+            if (pacItems && pacItems.length > 0) {
+                e.preventDefault();
+                const firstItem = pacItems[0] as HTMLElement;
+                firstItem.click();
+
+                // Wait briefly for place_changed listener to store parsed address data
+                setTimeout(() => {
+                    setIsOpen(false);
+                    const cached = sessionStorage.getItem('globalSearchAddressData');
+                    if (cached) {
+                        sessionStorage.setItem('globalSearchQuery', searchQuery);
+                        sessionStorage.setItem('globalSearchQueryType', 'Address');
+                    } else {
+                        sessionStorage.setItem('globalSearchQuery', searchQuery);
+                        sessionStorage.setItem('globalSearchQueryType', queryType || 'Address');
+                    }
+                    setActivePageId('E-02a');
+                }, 250);
+                return;
+            }
+
             // Solve race conditions by performing an immediate synchronous lookup check on raw search query
             const sLower = searchQuery.toLowerCase().trim();
             const hasImmediateMatches = users.some(u => 

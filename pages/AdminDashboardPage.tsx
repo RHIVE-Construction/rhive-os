@@ -76,6 +76,15 @@ const AdminDashboardPage: React.FC = () => {
     const [guestSignup, setGuestSignup] = useState(true);
     const [droneSimulation, setDroneSimulation] = useState(true);
     const [syncInterval, setSyncInterval] = useState(30);
+    const [serviceState, setServiceState] = useState(() => {
+        return localStorage.getItem('service_boundary_state') || 'UT';
+    });
+
+    const handleServiceStateChange = (val: string) => {
+        const uppercaseVal = val.toUpperCase().trim();
+        setServiceState(uppercaseVal);
+        localStorage.setItem('service_boundary_state', uppercaseVal);
+    };
 
     const handleEditPricing = (id: number) => {
         const item = pricing.find(p => p.id === id);
@@ -591,7 +600,26 @@ const AdminDashboardPage: React.FC = () => {
                                     value={syncInterval}
                                     onChange={e => setSyncInterval(Number(e.target.value))}
                                     className="w-full accent-[#ec028b] cursor-pointer bg-black/60 border border-gray-800 rounded-lg outline-none h-1.5"
+                                    style={{ WebkitAppearance: 'none' }}
                                 />
+                            </div>
+
+                            {/* Service State Boundary Limit */}
+                            <div className="p-4 bg-gray-900/40 border border-gray-800/40 rounded-xl">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h4 className="text-sm font-bold text-white">Service State Boundary Limit</h4>
+                                        <p className="text-xs text-gray-500 mt-1">Allowed region state code. Address intake and scheduling is blocked for other states.</p>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        maxLength={2}
+                                        value={serviceState}
+                                        onChange={e => handleServiceStateChange(e.target.value)}
+                                        className="w-16 bg-black border border-gray-850 focus:border-[#ec028b] rounded px-3 py-1.5 text-white font-bold text-center uppercase outline-none transition-colors"
+                                        placeholder="UT"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </Card>
