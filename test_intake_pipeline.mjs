@@ -39,6 +39,10 @@ async function runTests() {
 
     // Helper to verify lookup
     const executeLookup = async (key) => {
+        if (!await page.isVisible('#search-lookup-input')) {
+            await page.click('#header-search-btn');
+            await page.waitForSelector('#search-lookup-input', { timeout: 5000 });
+        }
         await page.fill('#search-lookup-input', key);
         await page.click('#btn-verify-lookup');
         await page.waitForTimeout(500);
@@ -66,6 +70,10 @@ async function runTests() {
         
         // 1. Phone number lookup first
         console.log("Looking up Rick's phone number dynamically...");
+        if (!await page.isVisible('#search-lookup-input')) {
+            await page.click('#header-search-btn');
+            await page.waitForSelector('#search-lookup-input', { timeout: 5000 });
+        }
         await page.locator('#search-lookup-input').click();
         await page.locator('#search-lookup-input').fill('');
         await page.type('#search-lookup-input', '2085550192', { delay: 100 });
@@ -87,6 +95,10 @@ async function runTests() {
         
         // 2. Address lookup second
         console.log("Clearing input and looking up Rick's address dynamically...");
+        if (!await page.isVisible('#search-lookup-input')) {
+            await page.click('#header-search-btn');
+            await page.waitForSelector('#search-lookup-input', { timeout: 5000 });
+        }
         await page.locator('#search-lookup-input').click();
         await page.locator('#search-lookup-input').fill('');
         await page.type('#search-lookup-input', '1398 West 12115 South', { delay: 100 });
@@ -556,8 +568,8 @@ async function runTests() {
         await page.waitForTimeout(3000);
         console.log("Intake satellite map displayed. Dropping 13 safe pins...");
 
-        // Click 13 times at safe offset points on the satellite map (avoiding controls and marker overlap)
-        for (let i = 0; i < 13; i++) {
+        // Click 12 times (plus 1 default primary building makes 13 total) at safe offset points on the satellite map (avoiding controls and marker overlap)
+        for (let i = 0; i < 12; i++) {
             const xOffset = 80 + (i * 55);
             const yOffset = 150 + (i * 20);
             await page.click('#intake-google-map', { position: { x: xOffset, y: yOffset }, force: true });

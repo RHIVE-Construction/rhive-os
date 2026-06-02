@@ -53,6 +53,7 @@ import CustomerProjectMapPage from './pages/CustomerProjectMapPage'; // E-06
 import CustomerHomepage from './pages/CustomerHomepage'; // C-01
 import CustomerDashboard from './pages/CustomerDashboard'; // C-02
 import CustomerProjectProfilePage from './pages/CustomerProjectProfilePage'; // C-03
+import ProjectProfilePage from './pages/ProjectProfilePage';
 import ContractorHomepage from './pages/ContractorHomepage'; // CO-01
 import ContractorAdminPanelPage from './pages/ContractorAdminPanelPage'; // CO-03
 import ContractorFinancialsPage from './pages/ContractorFinancialsPage'; // CO-07
