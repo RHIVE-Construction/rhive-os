@@ -5,7 +5,7 @@ import Card from '../components/Card';
 import CollapsibleSection from '../components/CollapsibleSection';
 import { MapPinIcon, BriefcaseIcon, UserIcon, BuildingStorefrontIcon } from '../components/icons';
 import { useNavigation } from '../contexts/NavigationContext';
-import { propertyService, contactService, projectService } from '../lib/firebaseService';
+import { propertyService, contactService, projectService, firestoreService } from '../lib/firebaseService';
 import { cn } from '../lib/utils';
 import PropertyPage from './PropertyPage';
 import { getMapsApiKey } from '../lib/mapsConfig';
@@ -44,25 +44,49 @@ const PropertyProfilePage: React.FC = () => {
 
     useEffect(() => { getMapsApiKey().then(setMapsKey); }, []);
 
-    // Resolve the active property and projects
+    // ---------------------------------------------------------------------------
+    // Load property: first try Firestore by doc ID, then fall back to MockDB seed
+    // ---------------------------------------------------------------------------
     useEffect(() => {
-        if (allProperties.length === 0) {
+        if (!selectedPropertyId) {
+            setProperty(null);
             setLoading(false);
             return;
         }
-        if (selectedPropertyId) {
-            const found = allProperties.find(p => p._id === selectedPropertyId || p.id === selectedPropertyId);
-            setProperty(found || null);
-            if (found) {
-                const filteredProjects = allProjects.filter(p => p.property_id === found._id || p.property_id === found.id);
-                setProjects(filteredProjects);
-            }
-        } else {
-            setProperty(null);
-            setProjects([]);
-        }
-        setLoading(false);
-    }, [allProperties, allProjects, selectedPropertyId]);
+
+        setLoading(true);
+
+        // Try fetching the live Firestore document first
+        firestoreService.getDocument('properties', selectedPropertyId)
+            .then((res: any) => {
+                if (res?.success && res?.data) {
+                    setProperty({ ...res.data, id: selectedPropertyId });
+                } else {
+                    // Fall back to MockDB seed data
+                    const found = allProperties.find(
+                        (p: any) => p._id === selectedPropertyId || p.id === selectedPropertyId
+                    );
+                    setProperty(found || null);
+                }
+            })
+            .catch(() => {
+                const found = allProperties.find(
+                    (p: any) => p._id === selectedPropertyId || p.id === selectedPropertyId
+                );
+                setProperty(found || null);
+            })
+            .finally(() => setLoading(false));
+    }, [selectedPropertyId, allProperties]);
+
+    // Load projects linked to this property
+    useEffect(() => {
+        if (!property) { setProjects([]); return; }
+        const propId = property.id || property._id;
+        const filteredProjects = allProjects.filter(
+            (p: any) => p.property_id === propId
+        );
+        setProjects(filteredProjects);
+    }, [property, allProjects]);
 
     // Load contacts linked to this property
     useEffect(() => {
@@ -78,12 +102,41 @@ const PropertyProfilePage: React.FC = () => {
         });
     }, [property]);
 
-    const addressForMap = property?.address_full || property?.property_address;
-    
-    const satUrl = (property?.latitude && property?.longitude)
-        ? `https://maps.googleapis.com/maps/api/staticmap?center=${property.latitude},${property.longitude}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${property.latitude},${property.longitude}&key=${mapsKey}`
-        : addressForMap
-            ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(addressForMap)}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${encodeURIComponent(addressForMap)}&key=${mapsKey}`
+    // ---------------------------------------------------------------------------
+    // Field normalizer — resolves both Firestore import (Property_Street) and
+    // legacy MockDB format (address_full, city, etc.)
+    // ---------------------------------------------------------------------------
+    const gf = (p: any, ...keys: string[]) => {
+        for (const k of keys) {
+            if (p?.[k] !== undefined && p?.[k] !== null && p?.[k] !== '') return String(p[k]);
+        }
+        return '';
+    };
+
+    const pStreet   = property ? gf(property, 'Property_Street', 'property_address', 'address_full') : '';
+    const pCity     = property ? gf(property, 'Property_City', 'city') : '';
+    const pState    = property ? gf(property, 'Property_State', 'state') : '';
+    const pZip      = property ? gf(property, 'Property_Zip', 'Property_Code', 'zip') : '';
+    const pType     = property ? gf(property, 'Property_Type', 'type') || 'Property' : '';
+    const pName     = property ? gf(property, 'Property_Name', 'name') : '';
+    const pLat      = property ? gf(property, 'latitude', 'Latitude') : '';
+    const pLng      = property ? gf(property, 'longitude', 'Longitude') : '';
+
+    const addressTitle =
+        pName ||
+        pStreet ||
+        [pCity, pState, pZip].filter(Boolean).join(', ') ||
+        'Unknown Address';
+
+    const fullAddressForMap =
+        pStreet
+            ? [pStreet, pCity, pState, pZip].filter(Boolean).join(', ')
+            : addressTitle;
+
+    const satUrl = (pLat && pLng)
+        ? `https://maps.googleapis.com/maps/api/staticmap?center=${pLat},${pLng}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${pLat},${pLng}&key=${mapsKey}`
+        : fullAddressForMap
+            ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(fullAddressForMap)}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${encodeURIComponent(fullAddressForMap)}&key=${mapsKey}`
             : null;
 
     if (loading) {
@@ -105,12 +158,11 @@ const PropertyProfilePage: React.FC = () => {
         return <PropertyPage />;
     }
 
-    const addressTitle = property.address_full || [property.property_address, property.city, property.state, property.zip].filter(Boolean).join(', ') || 'Unknown Address';
 
     return (
         <PageContainer
             title={addressTitle}
-            description={`${property.type || 'Property'} Details • Live from Firebase`}
+            description={`${pType} • Live from Firebase`}
         >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -118,7 +170,7 @@ const PropertyProfilePage: React.FC = () => {
                 <div className="lg:col-span-2">
                     <Card title="Location">
                         <div className="relative h-80 bg-gray-900 rounded-lg overflow-hidden">
-                            {satUrl ? (
+                            {mapsKey ? (
                                 <div className="w-full h-full">
                                     <iframe
                                         width="100%"
@@ -127,11 +179,15 @@ const PropertyProfilePage: React.FC = () => {
                                         loading="lazy"
                                         allowFullScreen
                                         referrerPolicy="no-referrer-when-downgrade"
-                                        src={`https://www.google.com/maps/embed/v1/view?key=${mapsKey}&center=${property?.latitude || 33.3286},${property?.longitude || -115.8434}&zoom=15&maptype=satellite`}
+                                        src={
+                                            pLat && pLng
+                                                ? `https://www.google.com/maps/embed/v1/view?key=${mapsKey}&center=${pLat},${pLng}&zoom=18&maptype=satellite`
+                                                : `https://www.google.com/maps/embed/v1/place?key=${mapsKey}&q=${encodeURIComponent(fullAddressForMap)}&zoom=16&maptype=satellite`
+                                        }
                                     ></iframe>
-                                    {/* Floating Address Label over Pin (Since we use view, we center the label) */}
+                                    {/* Floating address label */}
                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[20px] pointer-events-none z-10">
-                                        <div className="bg-black/90 backdrop-blur-lg border border-[#ec028b] px-3 py-1.5 rounded shadow-[0_0_20px_rgba(236,2,139,0.4)] flex flex-col items-center animate-in fade-in zoom-in duration-500">
+                                        <div className="bg-black/90 backdrop-blur-lg border border-[#ec028b] px-3 py-1.5 rounded shadow-[0_0_20px_rgba(236,2,139,0.4)] flex flex-col items-center">
                                             <p className="text-white font-black text-[10px] whitespace-nowrap uppercase tracking-tighter">
                                                 {addressTitle}
                                             </p>
@@ -140,19 +196,23 @@ const PropertyProfilePage: React.FC = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center">
+                                <div className="w-full h-full flex flex-col items-center justify-center gap-3">
                                     <MapPinIcon className="w-16 h-16 text-gray-700" />
-                                    <p className="absolute text-gray-500 text-sm">No coordinates on file</p>
+                                    <p className="text-gray-500 text-sm text-center px-4">
+                                        {fullAddressForMap
+                                            ? `Maps API key not configured — address on file: ${fullAddressForMap}`
+                                            : 'No address or coordinates on file'}
+                                    </p>
                                 </div>
                             )}
                             <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                             <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-md border border-gray-700 px-4 py-3 rounded-lg"
                                 style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}>
                                 <p className="text-[9px] text-[#ec028b] font-black uppercase tracking-widest mb-0.5">Property Address</p>
-                                <p className="text-white font-bold text-sm">{addressTitle}</p>
-                                {property.latitude && property.longitude && (
+                                <p className="text-white font-bold text-sm">{fullAddressForMap}</p>
+                                {pLat && pLng && (
                                     <p className="text-gray-500 text-[10px] font-mono mt-1">
-                                        {Number(property.latitude).toFixed(4)}, {Number(property.longitude).toFixed(4)}
+                                        {Number(pLat).toFixed(4)}, {Number(pLng).toFixed(4)}
                                     </p>
                                 )}
                             </div>
@@ -165,10 +225,11 @@ const PropertyProfilePage: React.FC = () => {
                     <Card title="Property Details">
                         <div className="space-y-4">
                             {[
-                                { label: 'Type', value: property.type },
-                                { label: 'City', value: property.city },
-                                { label: 'State', value: property.state },
-                                { label: 'ZIP', value: property.zip },
+                                { label: 'Type',      value: pType },
+                                { label: 'Street',    value: pStreet },
+                                { label: 'City',      value: pCity },
+                                { label: 'State',     value: pState },
+                                { label: 'ZIP',       value: pZip },
                             ].map(({ label, value }) => value ? (
                                 <div key={label} className="flex justify-between items-center py-2 border-b border-gray-800/50 last:border-0">
                                     <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{label}</span>
