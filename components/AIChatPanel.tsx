@@ -471,7 +471,7 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ isOpen, onClose }) => {
                             </div>
                             <div className="flex justify-between items-center mt-1.5 px-0.5">
                                 <span className="text-[8px] font-mono text-gray-700 uppercase tracking-wider">Enter to send · Shift+Enter newline</span>
-                                <span className="text-[8px] font-mono text-rhive-pink/50 uppercase tracking-wider">Gemini 2.0 Flash</span>
+                                <span className="text-[8px] font-mono text-rhive-pink/50 uppercase tracking-wider">Gemini 3.5 Flash</span>
                             </div>
                         </div>
                     </div>

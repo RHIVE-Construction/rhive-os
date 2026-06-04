@@ -54,7 +54,7 @@ export async function* streamChat(
     }));
 
     const chat = client.chats.create({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-3.5-flash',
         config: { systemInstruction: SYSTEM_PROMPT },
         history: geminiHistory,
     });
