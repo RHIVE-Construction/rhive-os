@@ -50,3 +50,8 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: VITE_GEMINI_API_KEY
+    value: AIzaSyC6-RDd8ijIS6BYg3hbYCk8F16li-74KWM
+    availability:
+      - BUILD
+      - RUNTIME
