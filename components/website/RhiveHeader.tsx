@@ -1,11 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, LogOut, Menu, X, User } from 'lucide-react';
+import { Sun, Moon, LogOut, Menu, X, User, Sparkles } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMockDB } from '../../contexts/MockDatabaseContext';
 import PlexusShape from '../PlexusShape';
+import AIChatPanel from '../AIChatPanel';
 
 
 
@@ -17,6 +18,7 @@ const RhiveHeader: React.FC = () => {
 
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+    const [isAIChatOpen, setIsAIChatOpen] = React.useState(false);
 
     const handleExit = () => {
         if (lastPortalPageId) {
@@ -107,6 +109,7 @@ const RhiveHeader: React.FC = () => {
     };
 
     return (
+        <>
         <header className="fixed top-0 left-0 right-0 z-[500] h-12 flex items-center px-12 transition-all duration-300 select-none">
 
             {/* 1. Header Glass Chassis (Full Width, Ultra-Subtle Gradient) */}
@@ -205,6 +208,21 @@ const RhiveHeader: React.FC = () => {
                                 <Moon size={18} />
                             </motion.div>
                         </div>
+                    </button>
+
+                    {/* AI Assistant Button */}
+                    <button
+                        onClick={() => setIsAIChatOpen(o => !o)}
+                        id="public-header-ai-assistant-btn"
+                        className={cn(
+                            "p-2.5 rounded-full border transition-all bg-black/50",
+                            isAIChatOpen
+                                ? "border-rhive-pink text-rhive-pink shadow-[0_0_10px_rgba(236,2,139,0.35)] bg-rhive-pink/10"
+                                : "border-transparent text-white/80 hover:border-rhive-pink/50 hover:text-rhive-pink"
+                        )}
+                        title="AI Assistant — ARIA"
+                    >
+                        <Sparkles size={18} />
                     </button>
 
                     <motion.a
@@ -403,6 +421,10 @@ const RhiveHeader: React.FC = () => {
 
 
         </header>
+
+        {/* AI Chat Panel */}
+        <AIChatPanel isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
+        </>
     );
 };
 
