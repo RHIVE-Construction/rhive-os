@@ -7,6 +7,7 @@ import WeatherForecastStrip from './WeatherForecastStrip';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { User, Sparkles as SparklesIcon } from 'lucide-react';
+import AIChatPanel from './AIChatPanel';
 
 export const GlobalHeader: React.FC = () => {
     const { theme, setTheme } = useTheme();
@@ -16,6 +17,7 @@ export const GlobalHeader: React.FC = () => {
     const isDark = theme === 'dark';
     
     const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+    const [isAIChatOpen, setIsAIChatOpen] = React.useState(false);
     
     const roles = ['Admin', 'Employee', 'Customer', 'Contractor', 'Supplier'] as const;
 
@@ -43,6 +45,7 @@ export const GlobalHeader: React.FC = () => {
     ];
 
     return (
+        <>
         <header className={cn(
             "fixed top-0 left-0 w-full h-12 backdrop-blur-xl border-b z-[150] flex items-center justify-between px-6 select-none transition-colors duration-500",
             isDark ? "bg-black/40 border-white/5" : "bg-white/40 border-black/5"
@@ -103,13 +106,13 @@ export const GlobalHeader: React.FC = () => {
 
                 {/* AI Assistant Button */}
                 <button
-                    onClick={() => setActivePageId('E-03')}
+                    onClick={() => setIsAIChatOpen(o => !o)}
                     id="header-ai-assistant-btn"
                     className={cn(
                         "p-1.5 border hover:border-[#ec028b]/50 rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none",
-                        activePageId === 'E-03' ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10" : "bg-black/40 border-gray-700/60"
+                        isAIChatOpen ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10 shadow-[0_0_8px_rgba(236,2,139,0.3)]" : "bg-black/40 border-gray-700/60"
                     )}
-                    title="AI Assistant"
+                    title="AI Assistant — ARIA"
                 >
                     <SparklesIcon className="w-4 h-4" />
                 </button>
@@ -308,5 +311,9 @@ export const GlobalHeader: React.FC = () => {
                 </div>
             </div>
         </header>
+
+        {/* AI Chat Panel — rendered outside header to avoid z-index clipping */}
+        <AIChatPanel isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
+        </>
     );
 };
