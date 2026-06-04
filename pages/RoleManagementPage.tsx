@@ -5,8 +5,6 @@ import { userService } from '../lib/firebaseService';
 import { User, UserType } from '../types';
 import { 
     ShieldCheckIcon, 
-    UserIcon, 
-    IdentificationIcon,
     ArrowPathIcon,
     ExclamationTriangleIcon
 } from '../components/icons';
@@ -99,12 +97,8 @@ const RoleManagementPage: React.FC = () => {
                                     <tr key={user.id} className="hover:bg-white/5 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 overflow-hidden shadow-inner group-hover:border-[#ec028b]/50 transition-colors">
-                                                    {user.avatarUrl ? (
-                                                        <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <UserIcon className="w-5 h-5 text-gray-500" />
-                                                    )}
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-black border border-gray-700 flex items-center justify-center font-black text-[#ec028b] text-sm uppercase select-none overflow-hidden shadow-inner group-hover:border-[#ec028b]/50 transition-colors">
+                                                    {user.name.charAt(0)}
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-white group-hover:text-[#ec028b] transition-colors">{user.name}</p>
