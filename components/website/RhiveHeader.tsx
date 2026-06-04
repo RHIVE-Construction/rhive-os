@@ -30,15 +30,28 @@ const RhiveHeader: React.FC = () => {
         }
     };
 
-    const navLinks = [
-        { label: 'ABOUT', target: 'hero' },
-        { label: 'SERVICES', target: 'services' },
-        { label: 'PROCESS', target: 'process' },
-        { label: 'FINANCING', target: 'financing' },
-        { label: 'INSURANCE', target: 'insurance' },
-        { label: 'FAQ', target: 'faq' },
-        { label: 'CONTACT', target: 'contact' },
-    ];
+    const currentHomeId = (activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3')
+        ? activePageId
+        : (sessionStorage.getItem('lastHomepageId') || 'P-00');
+
+    const navLinks = currentHomeId === 'P-00-V3'
+        ? [
+            { label: 'ABOUT US', target: 'about' },
+            { label: 'SERVICES', target: 'services' },
+            { label: 'PROCESS', target: 'process' },
+            { label: 'FINANCING', target: 'financing' },
+            { label: 'CAREERS', target: 'careers' },
+            { label: 'CONTACT', target: 'contact' },
+          ]
+        : [
+            { label: 'ABOUT', target: 'about' },
+            { label: 'SERVICES', target: 'services' },
+            { label: 'PROCESS', target: 'process' },
+            { label: 'FINANCING', target: 'financing' },
+            { label: 'INSURANCE', target: 'insurance' },
+            { label: 'FAQ', target: 'faq' },
+            { label: 'CONTACT', target: 'contact' },
+          ];
 
     const scrollToSection = (id: string) => {
         // Dispatch virtual navigation events for sub-pages in OS recreation mode
@@ -68,41 +81,102 @@ const RhiveHeader: React.FC = () => {
                 element?.scrollIntoView({ behavior: 'smooth' });
             }, 100);
         } else {
-            const element = document.getElementById(id);
+            let targetId = id;
+            if (activePageId === 'P-00-V2') {
+                if (id === 'about') targetId = 'hero-d';
+                else if (id === 'services') targetId = 'protection-s';
+                else if (id === 'process') targetId = 'vision-i';
+                else if (id === 'financing') targetId = 'tech-c';
+            }
+            const element = document.getElementById(targetId);
             element?.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    const handleLinkClick = (id: string) => {
+        if (activePageId === 'P-00-V3') {
+            if (id === 'contact') {
+                const element = document.getElementById('contact');
+                element?.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                window.dispatchEvent(new CustomEvent('v3-open-lightbox', { detail: id }));
+            }
+        } else if (currentHomeId === 'P-00-V3') {
+            setActivePageId('P-00-V3');
+            setTimeout(() => {
+                if (id === 'contact') {
+                    const element = document.getElementById('contact');
+                    element?.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    window.dispatchEvent(new CustomEvent('v3-open-lightbox', { detail: id }));
+                }
+            }, 150);
+        } else {
+            scrollToSection(id);
         }
     };
 
     return (
         <header className="fixed top-0 left-0 right-0 z-[500] h-12 flex items-center px-12 transition-all duration-300">
+            {/* Custom High-Fidelity Metallic Styling */}
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes headerSheen {
+                    0% { transform: translateX(-150%) skewX(-30deg); }
+                    35%, 100% { transform: translateX(150%) skewX(-30deg); }
+                }
+                @keyframes metalSweep {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+                .animate-header-sheen {
+                    animation: headerSheen 7s infinite ease-in-out;
+                }
+                .btn-metal-sweep:hover .metal-sweep-element {
+                    animation: metalSweep 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+                }
+            `}} />
 
             {/* 1. Header Glass Chassis (Full Width, Ultra-Subtle Gradient) */}
-            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/40 to-transparent backdrop-blur-sm pointer-events-none border-b border-white/5" />
+            <div className="absolute top-0 left-0 right-0 h-12 bg-black/85 backdrop-blur-md pointer-events-none border-b border-white/10 overflow-hidden shadow-[0_2px_20px_rgba(0,0,0,0.8)]">
+                {/* Slow metallic ray sweeping horizontally */}
+                <div className="absolute inset-y-0 -left-1/2 w-1/3 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent animate-header-sheen" />
+            </div>
 
             {/* 2. Central Logo Chassis (The Notch) */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[320px] h-[100px] bg-black/60 backdrop-blur-xl rounded-b-[40px] pointer-events-none border-x border-b border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)]" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[320px] h-[95px] bg-black/90 backdrop-blur-xl rounded-b-[36px] pointer-events-none border-x border-b border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.9)] overflow-hidden">
+                {/* Metallic light beam reflection sweeping the capsule notch */}
+                <div className="absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent animate-header-sheen" style={{ animationDelay: '1.5s' }} />
+                
+                {/* Glowing tech neon circuit highlight at the bottom edge */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-[1.5px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent drop-shadow-[0_0_8px_rgba(236,2,139,0.9)]" />
+            </div>
 
             {/* EXIT BUTTON (Far Left) */}
             <div className="absolute left-10 flex items-center gap-6 z-10">
                 <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={handleExit}
-                    className="flex items-center gap-3 px-5 py-2.5 border-transparent group hover:border-rhive-pink/30 transition-all bg-transparent"
+                    className="flex items-center gap-2.5 px-4 py-2 border border-white/10 hover:border-rhive-pink/40 bg-black/40 backdrop-blur-md rounded-full text-slate-300 hover:text-white transition-all duration-300 relative overflow-hidden group btn-metal-sweep shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
                 >
-                    <LogOut size={16} className="text-rhive-pink group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-base font-black tracking-[0.3em] uppercase opacity-70 group-hover:opacity-100 transition-opacity text-white">Exit to Portal</span>
+                    {/* Metallic sweep shine effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full metal-sweep-element pointer-events-none" />
+                    
+                    <LogOut size={13} className="text-rhive-pink group-hover:text-white transition-colors duration-300" />
+                    <span className="text-[10px] font-black tracking-[0.2em] uppercase">Exit to Portal</span>
                 </motion.button>
             </div>
 
-            <nav className="flex-1 flex justify-end gap-6 z-10">
+            <nav className="flex-1 flex justify-end gap-6 z-10 ml-[180px]">
                 {navLinks.slice(0, 3).map((link) => (
                     <button
                         key={link.target}
-                        onClick={() => scrollToSection(link.target)}
-                        className="text-base font-black tracking-[0.3em] uppercase text-white/50 hover:text-rhive-pink transition-colors"
+                        onClick={() => handleLinkClick(link.target)}
+                        className="relative text-xs font-black tracking-[0.25em] uppercase text-slate-300 hover:text-white transition-all duration-300 py-1 group"
                     >
-                        {link.label}
+                        <span className="relative z-10">{link.label}</span>
+                        {/* Sleek expanding neon glow line */}
+                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center drop-shadow-[0_0_8px_rgba(236,2,139,0.8)]" />
                     </button>
                 ))}
             </nav>
@@ -113,15 +187,19 @@ const RhiveHeader: React.FC = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
-                        setActivePageId('P-00');
-                        window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
+                        if (currentHomeId === 'P-00-V3') {
+                            setActivePageId('P-00-V3');
+                        } else {
+                            setActivePageId('P-00');
+                            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
+                        }
                     }}
                     className="relative flex items-center justify-center mt-1"
                 >
                     <img
                         src="https://i.imgur.com/t0VcSgJ.png"
                         alt="RHIVE Logo"
-                        className="h-[80px] w-auto object-contain transition-opacity duration-300 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]"
+                        className="h-[80px] w-auto object-contain transition-opacity duration-300 drop-shadow-[0_0_8px_rgba(255,255,255,0.25)]"
                     />
                 </motion.button>
             </div>
@@ -132,10 +210,12 @@ const RhiveHeader: React.FC = () => {
                 {navLinks.slice(3).map((link) => (
                     <button
                         key={link.target}
-                        onClick={() => scrollToSection(link.target)}
-                        className="text-base font-black tracking-[0.3em] uppercase text-white/50 hover:text-rhive-pink transition-colors"
+                        onClick={() => handleLinkClick(link.target)}
+                        className="relative text-xs font-black tracking-[0.25em] uppercase text-slate-300 hover:text-white transition-all duration-300 py-1 group"
                     >
-                        {link.label}
+                        <span className="relative z-10">{link.label}</span>
+                        {/* Sleek expanding neon glow line */}
+                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center drop-shadow-[0_0_8px_rgba(236,2,139,0.8)]" />
                     </button>
                 ))}
 
@@ -144,7 +224,7 @@ const RhiveHeader: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => setTheme(isDark ? 'light' : 'dark')}
-                        className="p-2.5 rounded-full hover:text-rhive-pink transition-all group relative border border-transparent hover:border-rhive-pink/50 bg-black/50 text-white/80"
+                        className="p-2.5 rounded-full hover:text-rhive-pink transition-all group relative border border-white/10 hover:border-rhive-pink/50 bg-black/60 text-white/80"
                         title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
                     >
                         <div className="relative w-5 h-5 flex items-center justify-center">
@@ -168,7 +248,7 @@ const RhiveHeader: React.FC = () => {
                     <motion.a
                         href="tel:8887448301"
                         whileHover={{ scale: 1.1, color: '#ec028b' }}
-                        className="p-2.5 rounded-full border border-transparent hover:border-rhive-pink/50 transition-all text-rhive-pink bg-black/50"
+                        className="p-2.5 rounded-full border border-white/10 hover:border-rhive-pink/50 transition-all text-rhive-pink bg-black/60"
                         title="Call Us"
                     >
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

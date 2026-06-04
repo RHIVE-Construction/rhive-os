@@ -40,6 +40,9 @@ const AppContentAuthenticated: React.FC = () => {
         if (mainRef.current) {
             mainRef.current.scrollTop = 0;
         }
+        if (activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3') {
+            sessionStorage.setItem('lastHomepageId', activePageId);
+        }
     }, [activePageId]);
 
     useEffect(() => {
@@ -82,7 +85,7 @@ const AppContentAuthenticated: React.FC = () => {
 
     const CurrentPage = pageComponentMap[activePageId] || (() => <div className="p-10 text-gray-400">Select a page from the menu.</div>);
 
-    const isPublicRoute = (activePageId || '').startsWith('P-');
+    const isPublicRoute = activePageId?.startsWith('P-') ?? false;
 
     return (
         <div className={cn(
@@ -94,14 +97,15 @@ const AppContentAuthenticated: React.FC = () => {
                 dotColor={isDark ? "#ec028b" : "#ec028b"}
                 lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
             />
-            <GlobalHeader />
+            {!isPublicRoute && <GlobalHeader />}
 
-            <div className="relative z-10 flex h-full w-full pt-12">
-                <Sidebar />
+            <div className={cn("relative z-10 flex h-full w-full", !isPublicRoute ? "pt-12" : "pt-0")}>
+                {!isPublicRoute && <Sidebar />}
                 <main 
                     ref={mainRef}
                     className={cn(
-                    "flex-1 h-full overflow-y-auto relative border-l transition-colors duration-500",
+                    "flex-1 h-full overflow-y-auto relative transition-colors duration-500",
+                    !isPublicRoute && "border-l",
                     isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-black/5"
                 )}>
                     <CurrentPage />
@@ -152,6 +156,26 @@ const LoginBridge: React.FC = () => {
         const isPublicPage = (activePageId || '').startsWith('P-') && activePageId !== 'P-06' && activePageId !== '';
         const CurrentPublicPage = isPublicPage ? pageComponentMap[activePageId] : null;
 
+        if (isPublicPage && CurrentPublicPage) {
+            return (
+                <div className={cn(
+                    "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
+                    isDark ? "bg-black text-white" : "bg-[#F8F9FA] text-black"
+                )}>
+                    <CircuitryBackground
+                        backgroundColor={isDark ? "#000000" : "#F8F9FA"}
+                        dotColor={isDark ? "#ec028b" : "#ec028b"}
+                        lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
+                    />
+                    <main className="relative z-10 w-full h-full overflow-y-auto relative">
+                        <CurrentPublicPage />
+                    </main>
+                    <FloatingEstimator />
+                    {window.location.hostname === 'localhost' && <DevNavigator />}
+                </div>
+            );
+        }
+
         return (
             <div className={cn(
                 "fixed inset-0 w-screen h-screen overflow-hidden transition-colors duration-500",
@@ -164,11 +188,7 @@ const LoginBridge: React.FC = () => {
                 />
                 <GlobalHeader />
                 <main className="relative z-10 w-full h-full pt-12 flex items-center justify-center overflow-auto px-4">
-                    {CurrentPublicPage ? (
-                        <CurrentPublicPage />
-                    ) : (
-                        <LoginPage onLogin={login} />
-                    )}
+                    <LoginPage onLogin={login} />
                 </main>
                 <FloatingEstimator />
             </div>
