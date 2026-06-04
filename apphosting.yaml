@@ -55,3 +55,11 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  # Google Maps Embed + Static Maps API key
+  # Get from: https://console.cloud.google.com/apis/credentials
+  # Enable: Maps Embed API, Maps Static API, Maps JavaScript API
+  # Restrict to: https://rhive-os--rhive-os.us-central1.hosted.app/*
+  - variable: VITE_GOOGLE_MAPS_API_KEY
+    value: REPLACE_WITH_YOUR_MAPS_API_KEY
+    availability:
+      - BUILD
