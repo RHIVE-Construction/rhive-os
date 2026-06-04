@@ -167,22 +167,28 @@ const RhiveHeader: React.FC = () => {
                 </motion.button>
             </div>
 
-            <nav className="flex-1 flex justify-end gap-6 z-10 ml-[180px]">
+            <nav className="flex-1 flex justify-end gap-3 z-10 ml-[180px]">
                 {navLinks.slice(0, 3).map((link) => (
-                    <button
+                    <motion.button
                         key={link.target}
+                        whileHover={{ scale: 1.04, y: -0.5 }}
+                        whileTap={{ scale: 0.96 }}
                         onClick={() => handleLinkClick(link.target)}
-                        className="relative text-xs font-black tracking-[0.25em] uppercase text-slate-300 hover:text-white transition-all duration-300 py-1 group"
+                        className="relative flex items-center gap-2 px-3 py-1.5 border border-white/5 hover:border-rhive-pink/30 bg-white/[0.02] hover:bg-white/[0.06] rounded-full text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-white transition-all duration-300 overflow-hidden group btn-metal-sweep shadow-[0_1px_4px_rgba(0,0,0,0.3)]"
                     >
+                        {/* Metallic sweep shine effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full metal-sweep-element pointer-events-none" />
+                        
+                        {/* Glowing tech neon status dot */}
+                        <span className="w-1.5 h-1.5 rounded-full bg-rhive-pink/40 group-hover:bg-rhive-pink transition-all duration-300 shadow-[0_0_4px_rgba(236,2,139,0.2)] group-hover:shadow-[0_0_8px_rgba(236,2,139,0.8)] shrink-0" />
+                        
                         <span className="relative z-10">{link.label}</span>
-                        {/* Sleek expanding neon glow line */}
-                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center drop-shadow-[0_0_8px_rgba(236,2,139,0.8)]" />
-                    </button>
+                    </motion.button>
                 ))}
             </nav>
-
+ 
             {/* CENTRAL LOGO (Absolute Alignment for Perfect Spacing) */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[280px] h-[110px] flex items-center justify-center z-20 pointer-events-auto">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[280px] h-[110px] flex items-center justify-center z-20 pointer-events-none">
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -194,7 +200,7 @@ const RhiveHeader: React.FC = () => {
                             window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
                         }
                     }}
-                    className="relative flex items-center justify-center mt-1"
+                    className="relative flex items-center justify-center mt-1 pointer-events-auto"
                 >
                     <img
                         src="https://i.imgur.com/t0VcSgJ.png"
@@ -205,18 +211,24 @@ const RhiveHeader: React.FC = () => {
             </div>
             {/* Empty spacer to keep nav links apart */}
             <div className="mx-16 w-[140px] shrink-0" />
-
-            <nav className="flex-1 flex justify-start gap-6 items-center z-10">
+ 
+            <nav className="flex-1 flex justify-start gap-3 items-center z-10">
                 {navLinks.slice(3).map((link) => (
-                    <button
+                    <motion.button
                         key={link.target}
+                        whileHover={{ scale: 1.04, y: -0.5 }}
+                        whileTap={{ scale: 0.96 }}
                         onClick={() => handleLinkClick(link.target)}
-                        className="relative text-xs font-black tracking-[0.25em] uppercase text-slate-300 hover:text-white transition-all duration-300 py-1 group"
+                        className="relative flex items-center gap-2 px-3 py-1.5 border border-white/5 hover:border-rhive-pink/30 bg-white/[0.02] hover:bg-white/[0.06] rounded-full text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-white transition-all duration-300 overflow-hidden group btn-metal-sweep shadow-[0_1px_4px_rgba(0,0,0,0.3)]"
                     >
+                        {/* Metallic sweep shine effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full metal-sweep-element pointer-events-none" />
+                        
+                        {/* Glowing tech neon status dot */}
+                        <span className="w-1.5 h-1.5 rounded-full bg-rhive-pink/40 group-hover:bg-rhive-pink transition-all duration-300 shadow-[0_0_4px_rgba(236,2,139,0.2)] group-hover:shadow-[0_0_8px_rgba(236,2,139,0.8)] shrink-0" />
+                        
                         <span className="relative z-10">{link.label}</span>
-                        {/* Sleek expanding neon glow line */}
-                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-center drop-shadow-[0_0_8px_rgba(236,2,139,0.8)]" />
-                    </button>
+                    </motion.button>
                 ))}
 
                 <div className="h-6 w-[1px] bg-white/20 mx-4" />

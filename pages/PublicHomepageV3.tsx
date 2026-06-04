@@ -954,21 +954,21 @@ const PublicHomepageV3: React.FC = () => {
                                     <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// COMPANY DNA</div>
                                     
                                     <div className="grid md:grid-cols-[1.2fr_0.8fr] gap-10 items-start">
-                                        <div className="space-y-6">
-                                            <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">The RHIVE Transparency Decree</h3>
-                                            <p className="text-gray-400 font-serif italic text-base leading-relaxed">
+                                        <div className="space-y-6 max-w-[65ch]">
+                                            <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">The RHIVE Transparency Decree</h3>
+                                            <p className="text-gray-300 font-serif italic text-base leading-[1.65]">
                                                 RHIVE Construction is a proudly female-owned and operated company specializing in residential and commercial roofing. But roofing is only the beginning of our story.
                                             </p>
-                                            <div className="text-gray-400 text-sm leading-relaxed font-serif space-y-4 max-h-[30vh] overflow-y-auto pr-2">
+                                            <div className="text-gray-300 text-[15px] leading-[1.65] font-serif space-y-4 max-h-[30vh] overflow-y-auto pr-2">
                                                 <p>We were built to challenge an industry known for inflated pricing, vague bids, poor communication, and short-lived warranties. RHIVE exists to flip that script—with honesty, precision, and care. We bring a new standard to the industry: one rooted in transparency, technology, and trust.</p>
                                                 <p>By bypassing expensive brick-and-mortar showrooms and traditional high-pressure sales reps who claim commissions on every square, we direct-connect you with manufacturer-approved installers and itemized pricing sheets. Every dollar in your project cost is visible and trackable.</p>
                                             </div>
                                         </div>
                                         
                                         {/* Core Values Brief */}
-                                        <div className="bg-white/5 border border-white/10 p-6 rounded-xl space-y-4 font-serif">
-                                            <h4 className="text-white font-bold uppercase text-xs tracking-wider font-sans text-rhive-pink">Why We Exist</h4>
-                                            <ul className="text-xs text-gray-400 space-y-3">
+                                        <div className="bg-white/5 border border-white/10 p-6 rounded-xl space-y-4 font-serif max-w-[45ch]">
+                                            <h4 className="text-white font-bold uppercase text-xs tracking-wider font-sans text-rhive-pink leading-[1.2]">Why We Exist</h4>
+                                            <ul className="text-[13px] text-gray-300 space-y-3 leading-[1.6]">
                                                 <li className="flex gap-2">
                                                     <span className="text-rhive-pink">■</span>
                                                     <span><strong>Advanced Tech:</strong> Remote inspections powered by aerial drone mapping & AI audits.</span>
@@ -987,7 +987,7 @@ const PublicHomepageV3: React.FC = () => {
 
                                     {/* Meet Founders (Authentic Copy) */}
                                     <div className="border-t border-white/10 pt-8">
-                                        <h4 className="text-white font-bold uppercase text-xs tracking-widest font-sans mb-6">Meet Our Founders</h4>
+                                        <h4 className="text-white font-bold uppercase text-xs tracking-widest font-sans mb-6 leading-[1.2]">Meet Our Founders</h4>
                                         <div className="grid md:grid-cols-2 gap-6">
                                             {/* Kara Card */}
                                             <div className="flex gap-4 p-5 bg-white/[0.02] border border-white/5 rounded-xl">
@@ -996,11 +996,11 @@ const PublicHomepageV3: React.FC = () => {
                                                     alt="Kara Robinson" 
                                                     className="w-20 h-24 object-cover border border-rhive-pink/40 rounded shrink-0" 
                                                 />
-                                                <div>
-                                                    <h5 className="font-bold text-white uppercase text-sm">Kara Robinson</h5>
+                                                <div className="max-w-[40ch]">
+                                                    <h5 className="font-bold text-white uppercase text-sm leading-[1.2]">Kara Robinson</h5>
                                                     <span className="text-[10px] text-rhive-pink font-mono uppercase tracking-wider block mb-1">President & Founder</span>
-                                                    <p className="text-gray-500 text-[11px] font-serif italic mb-2">"Heart First. Mission Always."</p>
-                                                    <p className="text-gray-400 text-[11px] leading-normal font-serif">
+                                                    <p className="text-gray-400 text-xs font-serif italic mb-2 leading-[1.4]">"Heart First. Mission Always."</p>
+                                                    <p className="text-gray-300 text-xs leading-[1.6] font-serif">
                                                         Founded RHIVE to bring operational excellence, female leadership, and deep community impact to an industry long overdue for real transparency.
                                                     </p>
                                                 </div>
@@ -1013,11 +1013,11 @@ const PublicHomepageV3: React.FC = () => {
                                                     alt="Michael Robinson" 
                                                     className="w-20 h-24 object-cover border border-[#08137C]/40 rounded shrink-0" 
                                                 />
-                                                <div>
-                                                    <h5 className="font-bold text-white uppercase text-sm">Michael Robinson</h5>
+                                                <div className="max-w-[40ch]">
+                                                    <h5 className="font-bold text-white uppercase text-sm leading-[1.2]">Michael Robinson</h5>
                                                     <span className="text-[10px] text-[#22d3ee] font-mono uppercase tracking-wider block mb-1">CEO & Strategic Architect</span>
-                                                    <p className="text-gray-500 text-[11px] font-serif italic mb-2">"The Disruptor Who Builds Better."</p>
-                                                    <p className="text-gray-400 text-[11px] leading-normal font-serif">
+                                                    <p className="text-gray-400 text-xs font-serif italic mb-2 leading-[1.4]">"The Disruptor Who Builds Better."</p>
+                                                    <p className="text-gray-300 text-xs leading-[1.6] font-serif">
                                                         Decades of construction expertise. Formulated RHIVE's proprietary AI tools and remote logistics pipelines to drop markup costs for homeowners.
                                                     </p>
                                                 </div>
@@ -1050,8 +1050,8 @@ const PublicHomepageV3: React.FC = () => {
                             {activeLightbox === 'services' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// CAPABILITY CATALOG</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Monolithic Performance Engineering</h3>
-                                    <p className="text-gray-400 font-serif italic text-base leading-relaxed">
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">Monolithic Performance Engineering</h3>
+                                    <p className="text-gray-300 font-serif italic text-base leading-[1.65] max-w-[65ch]">
                                         Every roof we install represents a commercial-grade, multi-layered defense pipeline built to survive Utah's most challenging weather profiles.
                                     </p>
 
@@ -1098,10 +1098,10 @@ const PublicHomepageV3: React.FC = () => {
                                                     </span>
                                                 )}
                                                 <div>
-                                                    <h4 className="text-white font-black text-sm uppercase tracking-tight mb-0.5 font-display">{pkg.name}</h4>
+                                                    <h4 className="text-white font-black text-sm uppercase tracking-tight mb-0.5 font-display leading-[1.2]">{pkg.name}</h4>
                                                     <span className="text-rhive-pink text-[10px] font-mono uppercase block mb-3">{pkg.shingle}</span>
-                                                    <div className="text-[10px] text-gray-500 font-serif mb-4">Warranty: {pkg.warranty}</div>
-                                                    <ul className="space-y-2 text-[10px] text-gray-400 font-serif">
+                                                    <div className="text-xs text-gray-400 font-serif mb-4 leading-[1.4]">Warranty: {pkg.warranty}</div>
+                                                    <ul className="space-y-2 text-xs text-gray-300 font-serif leading-[1.5]">
                                                         {pkg.bullets.map((b, i) => (
                                                             <li key={i} className="flex items-start gap-1">
                                                                 <span className="text-rhive-pink">■</span>
@@ -1116,23 +1116,23 @@ const PublicHomepageV3: React.FC = () => {
 
                                     {/* Other Services Grid */}
                                     <div className="grid md:grid-cols-3 gap-4 pt-4 border-t border-white/10">
-                                        <div className="p-4 bg-white/[0.01] border border-white/5 rounded-lg">
-                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-2">
+                                        <div className="p-4 bg-white/[0.01] border border-white/5 rounded-lg max-w-[40ch]">
+                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-2 leading-[1.2]">
                                                 <Building2 size={12} className="text-rhive-pink" /> Flat &amp; Commercial Membrane
                                             </h4>
-                                            <p className="text-gray-500 text-[10px] leading-relaxed mt-1">High-tensile PVC/TPO membrane panels molecularly heat-welded for absolute NDL warranty readiness.</p>
+                                            <p className="text-gray-400 text-xs leading-[1.65] mt-2">High-tensile PVC/TPO membrane panels molecularly heat-welded for absolute NDL warranty readiness.</p>
                                         </div>
-                                        <div className="p-4 bg-white/[0.01] border border-white/5 rounded-lg">
-                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-2">
+                                        <div className="p-4 bg-white/[0.01] border border-white/5 rounded-lg max-w-[40ch]">
+                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-2 leading-[1.2]">
                                                 <Droplets size={12} className="text-rhive-pink" /> Gutter Defense Systems
                                             </h4>
-                                            <p className="text-gray-500 text-[10px] leading-relaxed mt-1">Seamless 6-inch custom extruded aluminum gutters with Leaf-Defense screens built on-site.</p>
+                                            <p className="text-gray-400 text-xs leading-[1.65] mt-2">Seamless 6-inch custom extruded aluminum gutters with Leaf-Defense screens built on-site.</p>
                                         </div>
-                                        <div className="p-4 bg-white/[0.01] border border-white/5 rounded-lg">
-                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-2">
+                                        <div className="p-4 bg-white/[0.01] border border-white/5 rounded-lg max-w-[40ch]">
+                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-2 leading-[1.2]">
                                                 <Wind size={12} className="text-rhive-pink" /> Automated Ice Management
                                             </h4>
-                                            <p className="text-gray-500 text-[10px] leading-relaxed mt-1">Self-regulating heat trace coils and low-profile snow retainers designed for high steep slopes.</p>
+                                            <p className="text-gray-400 text-xs leading-[1.65] mt-2">Self-regulating heat trace coils and low-profile snow retainers designed for high steep slopes.</p>
                                         </div>
                                     </div>
 
@@ -1161,8 +1161,8 @@ const PublicHomepageV3: React.FC = () => {
                             {activeLightbox === 'process' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// ZERO SURPRISES PROMISE</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">The 10-Stage Journey</h3>
-                                    <p className="text-gray-400 font-serif italic text-base leading-relaxed">
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">The 10-Stage Journey</h3>
+                                    <p className="text-gray-300 font-serif italic text-base leading-[1.65] max-w-[65ch]">
                                         Experience a construction project defined by absolute transparency, automated scheduling, and constant communications. Here is our 10-stage process from digital intake to asset handover:
                                     </p>
                                     <div className="grid md:grid-cols-2 gap-4 max-h-[40vh] overflow-y-auto pr-2">
@@ -1178,11 +1178,11 @@ const PublicHomepageV3: React.FC = () => {
                                             { num: "09", title: "INVOICING", desc: "Final accounting. 10% payment trigger upon completion and verified client satisfaction." },
                                             { num: "10", title: "COMPLETED", desc: "Asset handover. We deliver your Lifetime No-Leak Warranty and your Digital Property Vault." }
                                         ].map(s => (
-                                            <div key={s.num} className="border border-white/5 bg-white/[0.01] p-4 rounded-lg flex gap-3 items-start">
+                                            <div key={s.num} className="border border-white/5 bg-white/[0.01] p-4 rounded-lg flex gap-3 items-start max-w-[50ch]">
                                                 <span className="font-mono text-xs font-black text-rhive-pink p-1.5 border border-rhive-pink/20 bg-rhive-pink/5 rounded shrink-0">{s.num}</span>
                                                 <div>
-                                                    <h4 className="text-white font-bold uppercase text-xs tracking-wider">{s.title}</h4>
-                                                    <p className="text-gray-500 text-[11px] leading-relaxed mt-1">{s.desc}</p>
+                                                    <h4 className="text-white font-bold uppercase text-xs tracking-wider leading-[1.2]">{s.title}</h4>
+                                                    <p className="text-gray-400 text-xs leading-[1.6] mt-1.5">{s.desc}</p>
                                                 </div>
                                             </div>
                                         ))}
@@ -1212,8 +1212,8 @@ const PublicHomepageV3: React.FC = () => {
                             {activeLightbox === 'financing' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3 text-rhive-blue font-mono text-xs uppercase tracking-[0.3em]">// CAPITAL OPTIMIZATION</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Flexible Project Financing</h3>
-                                    <p className="text-gray-400 font-serif italic text-base leading-relaxed">
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">Flexible Project Financing</h3>
+                                    <p className="text-gray-300 font-serif italic text-base leading-[1.65] max-w-[65ch]">
                                         Brought to you in partnership with Enhancify. We construct structures and capital pathways to protect your home's integrity without interest friction.
                                     </p>
 
@@ -1224,15 +1224,15 @@ const PublicHomepageV3: React.FC = () => {
 
                                     {/* Traditional logic comparison */}
                                     <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-white/10">
-                                        <div>
-                                            <h4 className="font-bold text-white uppercase text-xs mb-1">The 50/40/10 Logic</h4>
-                                            <p className="text-gray-500 text-[11px] leading-relaxed font-serif">
+                                        <div className="max-w-[45ch]">
+                                            <h4 className="font-bold text-white uppercase text-xs mb-1.5 leading-[1.2]">The 50/40/10 Logic</h4>
+                                            <p className="text-gray-400 text-xs leading-[1.6] font-serif">
                                                 50% Material Deposit, 40% Roof Installation, and a final 10% held back until the final Quality QC Punch List inspection is signed off by you.
                                             </p>
                                         </div>
-                                        <div>
-                                            <h4 className="font-bold text-white uppercase text-xs mb-1">RPSP Commit Credit</h4>
-                                            <p className="text-gray-500 text-[11px] leading-relaxed font-serif">
+                                        <div className="max-w-[45ch]">
+                                            <h4 className="font-bold text-white uppercase text-xs mb-1.5 leading-[1.2]">RPSP Commit Credit</h4>
+                                            <p className="text-gray-400 text-xs leading-[1.6] font-serif">
                                                 Lock in your bid within 48 hours to credit the 10% follow-up chase cost directly back to your invoice total. Zero salesman, zero markup.
                                             </p>
                                         </div>
@@ -1262,37 +1262,37 @@ const PublicHomepageV3: React.FC = () => {
                             {activeLightbox === 'careers' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// MANIFESTO</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Join The Movement</h3>
-                                    <p className="text-gray-400 font-serif italic text-base leading-relaxed">
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">Join The Movement</h3>
+                                    <p className="text-gray-300 font-serif italic text-base leading-[1.65] max-w-[65ch]">
                                         Redefining what it means to work in skilled services. We combine craft precision with Quantum OS automation to unleash professionals.
                                     </p>
 
                                     {/* 3 Values block */}
                                     <div className="grid md:grid-cols-3 gap-4 pt-2">
-                                        <div className="p-4 border border-white/5 bg-white/[0.01] rounded-lg">
-                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-1.5 mb-1 text-rhive-pink">
+                                        <div className="p-4 border border-white/5 bg-white/[0.01] rounded-lg max-w-[32ch]">
+                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-1.5 mb-1.5 text-rhive-pink leading-[1.2]">
                                                 <Zap size={12} /> AI Driven
                                             </h4>
-                                            <p className="text-gray-500 text-[10px] leading-relaxed">We leverage proprietary remote tooling to handle CRM paperwork so you can solve client problems.</p>
+                                            <p className="text-gray-400 text-xs leading-[1.6]">We leverage proprietary remote tooling to handle CRM paperwork so you can solve client problems.</p>
                                         </div>
-                                        <div className="p-4 border border-white/5 bg-white/[0.01] rounded-lg">
-                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-1.5 mb-1 text-rhive-pink">
+                                        <div className="p-4 border border-white/5 bg-white/[0.01] rounded-lg max-w-[32ch]">
+                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-1.5 mb-1.5 text-rhive-pink leading-[1.2]">
                                                 <Sparkles size={12} /> High Energy
                                             </h4>
-                                            <p className="text-gray-500 text-[10px] leading-relaxed">A culture of extreme optimism, assertion, and unmatched, ineffable quality in every operation.</p>
+                                            <p className="text-gray-400 text-xs leading-[1.6]">A culture of extreme optimism, assertion, and unmatched, ineffable quality in every operation.</p>
                                         </div>
-                                        <div className="p-4 border border-white/5 bg-white/[0.01] rounded-lg">
-                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-1.5 mb-1 text-rhive-pink">
+                                        <div className="p-4 border border-white/5 bg-white/[0.01] rounded-lg max-w-[32ch]">
+                                            <h4 className="font-bold text-white uppercase text-xs flex items-center gap-1.5 mb-1.5 text-rhive-pink leading-[1.2]">
                                                 <Users size={12} /> Community
                                             </h4>
-                                            <p className="text-gray-500 text-[10px] leading-relaxed">Dedicated regional roof donation programs supporting veterans and educators.</p>
+                                            <p className="text-gray-400 text-xs leading-[1.6]">Dedicated regional roof donation programs supporting veterans and educators.</p>
                                         </div>
                                     </div>
 
                                     {/* Career jobs board teaser */}
                                     <div className="border border-white/10 p-5 rounded-xl bg-black/60 space-y-4">
                                         <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                                            <h4 className="text-white font-bold text-xs uppercase tracking-wider font-sans">Active Opportunities</h4>
+                                            <h4 className="text-white font-bold text-xs uppercase tracking-wider font-sans leading-[1.2]">Active Opportunities</h4>
                                             <span className="text-[9px] font-mono text-green-400 uppercase tracking-widest">● Live Opportunities</span>
                                         </div>
                                         <div className="space-y-3">
@@ -1303,10 +1303,10 @@ const PublicHomepageV3: React.FC = () => {
                                             ].map((j, i) => (
                                                 <div key={i} className="flex justify-between items-center p-3 bg-white/[0.01] border border-white/5 rounded hover:border-rhive-pink/40 transition-colors">
                                                     <div>
-                                                        <h5 className="text-white font-bold text-xs uppercase">{j.title}</h5>
-                                                        <span className="text-[9px] text-gray-500 uppercase tracking-widest">{j.dept} • {j.loc}</span>
+                                                        <h5 className="text-white font-bold text-xs uppercase leading-[1.2]">{j.title}</h5>
+                                                        <span className="text-[10px] text-gray-400 uppercase tracking-widest">{j.dept} • {j.loc}</span>
                                                     </div>
-                                                    <span className="text-[10px] font-mono text-gray-400">{j.pay}</span>
+                                                    <span className="text-xs font-mono text-gray-300">{j.pay}</span>
                                                 </div>
                                             ))}
                                         </div>
