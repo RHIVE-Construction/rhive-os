@@ -27,16 +27,16 @@ const StageNode = ({ number, title, description, isLast }: any) => (
 
 const OurProcessPage: React.FC = () => {
     const stages = [
-        { title: "LEAD", desc: "Digital intake & identification. We analyze your property's geometry via satellite data before we ever deploy a human." },
-        { title: "ESTIMATE", desc: "Instant ballpark numbers. Our AI uses Google Solar data to generate a low-friction financial starting point." },
-        { title: "QUOTE", desc: "Certified proposal. A human architect verifies every variable to provide a fixed-price packet valid for 14 days." },
-        { title: "SIGN & VERIFY", desc: "Digital contract & 50% deposit. We generate your secure 'Ghost Link' and unlock the client portal." },
-        { title: "SCHEDULE", desc: "Material & labor logistics. Permits are filed and the production queue is locked into our operational registry." },
-        { title: "PRE-INSTALL", desc: "Site preparation & approvals. Final coordination with homeowners to ensure zero-friction deployment." },
-        { title: "INSTALL", desc: "The build. Live photo feeds are streamed directly from your roof to your portal in real-time." },
-        { title: "PUNCH LIST", desc: "Quality assurance. A multi-point structural audit ensures every detail exceeds our ineffable standard." },
-        { title: "INVOICING", desc: "Final accounting. 10% payment trigger upon completion and verified client satisfaction." },
-        { title: "COMPLETED", desc: "Asset handover. We deliver your Lifetime No-Leak Warranty and your Digital Property Vault." }
+        { title: "DRONE SCAN", desc: "Digital intake & aerial assessment. We analyze your property's roof layout using high-resolution drone mapping before any work begins." },
+        { title: "BALLPARK ESTIMATE", desc: "Instant visual estimate. Our technology uses spatial data to generate an initial price estimate for your project." },
+        { title: "CERTIFIED QUOTE", desc: "Certified fixed-price proposal. Our team reviews every detail to provide a guaranteed contract price valid for 14 days." },
+        { title: "SECURE SIGN-OFF", desc: "Digital contract agreement. Review and sign your project agreement online to activate your project portal." },
+        { title: "SCHEDULING", desc: "Permits & project timeline. We secure local permits and lock in your delivery and construction dates." },
+        { title: "PRE-CONSTRUCTION", desc: "Site preparation checklist. We coordinate with you to ensure property safety and zero disruptions on build day." },
+        { title: "INSTALLATION", desc: "The build phase. Real-time updates and photo progress sent directly to your homeowner portal as we work." },
+        { title: "QUALITY AUDIT", desc: "Detailed quality inspection. A thorough physical audit of your completed roof to guarantee it meets our standards." },
+        { title: "FINAL REVIEW", desc: "Final walkthrough. Review of all work with you to ensure absolute satisfaction and sign off on completion." },
+        { title: "WARRANTY HANDOVER", desc: "System handover. We deliver your Lifetime No-Leak Warranty certificate and your digital documentation archive." }
     ];
 
     return (

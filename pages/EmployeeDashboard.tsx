@@ -492,7 +492,14 @@ const EmployeeDashboard: React.FC = () => {
                     { label: 'Completed',      value: loading ? '…' : completedCount, color: 'text-emerald-400',dot: 'bg-emerald-400' },
                     { label: 'In Install',     value: loading ? '…' : installCount,   color: 'text-orange-400', dot: 'bg-orange-400' },
                 ].map(({ label, value, color, dot }) => (
-                    <div key={label} className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 flex flex-col gap-1">
+                    <div 
+                        key={label} 
+                        className="bg-gray-900/60 border border-gray-800 p-4 flex flex-col gap-1"
+                        style={{
+                            clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
+                            WebkitClipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+                        }}
+                    >
                         <div className="flex items-center gap-2">
                             <span className={`w-2 h-2 rounded-full ${dot} shadow-[0_0_6px_currentColor]`} />
                             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{label}</span>
@@ -505,7 +512,13 @@ const EmployeeDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Sales Performance Card */}
                 <Card title="Sales Performance (Q3)" className="lg:col-span-2">
-                    <div className="h-48 bg-gray-900/50 rounded-lg flex items-center justify-center">
+                    <div 
+                        className="h-48 bg-gray-900/50 flex items-center justify-center"
+                        style={{
+                            clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)',
+                            WebkitClipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)'
+                        }}
+                    >
                         <ChartBarIcon className="w-12 h-12 text-gray-700" />
                         <p className="absolute text-gray-500 text-sm">Chart coming soon</p>
                     </div>
@@ -536,7 +549,14 @@ const EmployeeDashboard: React.FC = () => {
                     <div className="space-y-4">
                         {loading ? (
                             [1, 2, 3].map(i => (
-                                <div key={i} className="h-12 bg-gray-900 rounded-lg animate-pulse" />
+                                <div 
+                                    key={i} 
+                                    className="h-12 bg-gray-900 animate-pulse" 
+                                    style={{
+                                        clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
+                                        WebkitClipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+                                    }}
+                                />
                             ))
                         ) : recentProjects.length === 0 ? (
                             <div className="text-center py-8 text-gray-500 text-sm">No recent activity found.</div>
@@ -563,15 +583,33 @@ const EmployeeDashboard: React.FC = () => {
                 {/* Quick Stats */}
                 <Card title="Quick Stats">
                     <div className="space-y-4">
-                        <div className="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center">
+                        <div 
+                            className="p-3 bg-gray-900/50 flex justify-between items-center"
+                            style={{
+                                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
+                                WebkitClipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+                            }}
+                        >
                             <p className="text-sm text-gray-400">Leads</p>
                             <p className="text-2xl font-bold text-yellow-400">{loading ? '…' : leadCount}</p>
                         </div>
-                        <div className="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center">
+                        <div 
+                            className="p-3 bg-gray-900/50 flex justify-between items-center"
+                            style={{
+                                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
+                                WebkitClipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+                            }}
+                        >
                             <p className="text-sm text-gray-400">Quotes</p>
                             <p className="text-2xl font-bold text-indigo-400">{loading ? '…' : quoteCount}</p>
                         </div>
-                        <div className="p-3 bg-gray-900/50 rounded-lg flex justify-between items-center">
+                        <div 
+                            className="p-3 bg-gray-900/50 flex justify-between items-center"
+                            style={{
+                                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
+                                WebkitClipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+                            }}
+                        >
                             <p className="text-sm text-gray-400">Invoicing</p>
                             <p className="text-2xl font-bold text-green-400">{loading ? '…' : invoiceCount}</p>
                         </div>

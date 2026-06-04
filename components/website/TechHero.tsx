@@ -4,6 +4,7 @@ import { Zap, Shield, ArrowRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import PlexusShape from '../PlexusShape';
 import AddressScanInput from '../AddressScanInput';
+import { useNavigation } from '../../contexts/NavigationContext';
 
 // --- GlitchText Sub-component for TechHero ---
 const GlitchText = ({ text, className }: { text: string, className?: string }) => {
@@ -68,17 +69,43 @@ const GlitchText = ({ text, className }: { text: string, className?: string }) =
 };
 
 const TechHero: React.FC = () => {
+    const { setActivePageId } = useNavigation();
+    const [selectedLane, setSelectedLane] = useState<'leak' | 'estimate' | 'quote'>('estimate');
+    const [addressQuery, setAddressQuery] = useState('');
+
+    const handleLaneClick = (lane: 'leak' | 'estimate' | 'quote') => {
+        sessionStorage.removeItem('intakeActiveLeak');
+        sessionStorage.removeItem('intakeEmergencyTarp');
+        sessionStorage.removeItem('intakeScopeType');
+        sessionStorage.removeItem('intakePurchaseIntent');
+        sessionStorage.removeItem('globalSearchQuery');
+        
+        if (lane === 'leak') {
+            sessionStorage.setItem('intakeActiveLeak', 'true');
+            sessionStorage.setItem('intakeEmergencyTarp', 'true');
+        } else if (lane === 'estimate') {
+            sessionStorage.setItem('intakeScopeType', 'Replacement');
+            sessionStorage.setItem('intakePurchaseIntent', 'Exploring');
+        } else if (lane === 'quote') {
+            sessionStorage.setItem('intakeScopeType', 'Replacement');
+            sessionStorage.setItem('intakePurchaseIntent', 'Ready');
+        }
+        
+        setActivePageId('E-02a');
+    };
+
     return (
         <section className="relative min-h-[90vh] flex items-center justify-center pt-32 pb-24 overflow-hidden snap-start select-none">
             
-            {/* 1. Video Background Layer (Bottom) */}
+            {/* 1. Video Background Layer (Bottom) - Scaled and shifted to crop out top-left watermark logo */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                 <video
                     autoPlay
                     muted
                     loop
                     playsInline
-                    className="w-full h-full object-cover scale-100 filter brightness-[0.4]"
+                    className="w-full h-full object-cover filter brightness-[0.4]"
+                    style={{ transform: 'scale(1.12) translate(-3%, -3%)', transformOrigin: 'top left' }}
                 >
                     <source src="/vidupload/TRADESHOW MARKETING VIDEO.mp4" type="video/mp4" />
                 </video>
@@ -140,7 +167,7 @@ const TechHero: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8, delay: 0.6 }}
-                    className="w-full max-w-4xl relative mt-4"
+                    className="w-full max-w-4xl relative mt-4 flex flex-col items-center"
                 >
                     {/* Hand-drawn styled indicator overlay pointing to the scanner */}
                     <div className="absolute right-full mr-[-100px] top-[-100px] z-50 pointer-events-none hidden xl:flex flex-col items-end gap-1">
@@ -171,7 +198,38 @@ const TechHero: React.FC = () => {
                         </svg>
                     </div>
 
-                    <AddressScanInput id="hero-address-scanner" />
+                    {/* Selection Tabs - Half the height of the input field, sitting 5pt above the input field */}
+                    <div className="flex justify-center gap-3 mb-[5px] z-20 relative">
+                        {[
+                            { id: 'leak', label: 'Emergency Leak', color: 'border-red-500/40 hover:border-red-500 text-red-500', activeBg: 'bg-red-500/20 text-red-400 border-red-500' },
+                            { id: 'estimate', label: 'Instant Estimate', color: 'border-rhive-pink/40 hover:border-rhive-pink text-rhive-pink', activeBg: 'bg-rhive-pink/20 text-rhive-pink border-rhive-pink' },
+                            { id: 'quote', label: 'Certified Quote', color: 'border-rhive-gold/40 hover:border-rhive-gold text-rhive-gold', activeBg: 'bg-rhive-gold/20 text-rhive-gold border-rhive-gold' }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setSelectedLane(tab.id as any)}
+                                className={cn(
+                                    "h-8 px-5 flex items-center justify-center text-[10px] font-black uppercase tracking-widest border transition-all duration-300 backdrop-blur-md cursor-pointer",
+                                    selectedLane === tab.id ? tab.activeBg : `${tab.color} bg-black/60`
+                                )}
+                                style={{
+                                    clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)'
+                                }}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <AddressScanInput 
+                        id="hero-address-scanner" 
+                        value={addressQuery}
+                        onChange={setAddressQuery}
+                        onScan={() => {
+                            sessionStorage.setItem('globalSearchQuery', addressQuery);
+                            handleLaneClick(selectedLane);
+                        }}
+                    />
                 </motion.div>
             </div>
 
