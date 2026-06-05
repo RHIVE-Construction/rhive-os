@@ -101,18 +101,20 @@ export const GlobalHeader: React.FC = () => {
                     <MagnifyingGlassIcon className="w-4 h-4" />
                 </button>
 
-                {/* AI Assistant Button */}
-                <button
-                    onClick={() => setActivePageId('E-03')}
-                    id="header-ai-assistant-btn"
-                    className={cn(
-                        "p-1.5 border hover:border-[#ec028b]/50 rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none",
-                        activePageId === 'E-03' ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10" : "bg-black/40 border-gray-700/60"
-                    )}
-                    title="AI Assistant"
-                >
-                    <SparklesIcon className="w-4 h-4" />
-                </button>
+                {/* AI Assistant Button — hidden on login page */}
+                {activePageId !== 'P-06' && (
+                    <button
+                        onClick={() => setActivePageId('E-03')}
+                        id="header-ai-assistant-btn"
+                        className={cn(
+                            "p-1.5 border hover:border-[#ec028b]/50 rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none",
+                            activePageId === 'E-03' ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10" : "bg-black/40 border-gray-700/60"
+                        )}
+                        title="AI Assistant"
+                    >
+                        <SparklesIcon className="w-4 h-4" />
+                    </button>
+                )}
             </div>
 
             <div className="flex items-center gap-6">
