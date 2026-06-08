@@ -36,39 +36,56 @@ async function run() {
     const contactsSnap = await getDocs(contactsRef);
     const firebasePhones = [];
     contactsSnap.forEach(doc => {
-        let phone = doc.data().phone;
-        if(phone) firebasePhones.push(String(phone).replace(/\D/g, ''));
+        const data = doc.data();
+        if (data.phone) firebasePhones.push(String(data.phone).replace(/\D/g, ''));
+        if (data.mobile) firebasePhones.push(String(data.mobile).replace(/\D/g, ''));
+        if (data.homePhone) firebasePhones.push(String(data.homePhone).replace(/\D/g, ''));
+        if (data.otherPhone) firebasePhones.push(String(data.otherPhone).replace(/\D/g, ''));
     });
     console.log("Found " + firebasePhones.length + " contacts in Firebase (with valid phone numbers).");
 
-    // 2. Get Justcall Contacts
-    console.log("Fetching Justcall contacts...");
+    // 2. Get Justcall Contacts (All Pages)
+    console.log("Fetching all Justcall contacts...");
     let jcContacts = [];
-    try {
-        const jcResponse = await axios.get('https://api.justcall.io/v2.1/contacts', {
-            headers: {
-                'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
-                'Accept': 'application/json'
+    let page = 0;
+    while (true) {
+        try {
+            const jcResponse = await axios.get('https://api.justcall.io/v2.1/contacts', {
+                params: { page: page, limit: 50, across_team: true },
+                headers: {
+                    'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
+                    'Accept': 'application/json'
+                }
+            });
+            const pageContacts = jcResponse.data.data || [];
+            if (pageContacts.length === 0) {
+                break;
             }
-        });
-        jcContacts = jcResponse.data.data || [];
-        console.log("Found " + jcContacts.length + " contacts in Justcall (on page 1).");
-    } catch (e) {
-        console.error("Justcall API Error:", e.message);
-        return;
+            jcContacts.push(...pageContacts);
+            console.log(`Fetched page ${page} (${pageContacts.length} contacts)...`);
+            if (pageContacts.length < 50) {
+                break;
+            }
+            page++;
+        } catch (e) {
+            console.error(`Justcall API Error on page ${page}:`, e.message);
+            break;
+        }
     }
+    console.log(`Total Justcall contacts retrieved: ${jcContacts.length}`);
 
     const missingInFirebase = [];
     jcContacts.forEach(jc => {
-        if (!jc.phone) return;
-        let phoneStr = String(jc.phone).replace(/\D/g, '');
+        let rawPhone = jc.contact_number || jc.phone;
+        if (!rawPhone) return;
+        let phoneStr = String(rawPhone).replace(/\D/g, '');
         // Loose match (e.g. 10 digits match) to avoid +1 prefix issues
         let matched = false;
         for (let fp of firebasePhones) {
              if (fp === phoneStr || fp.includes(phoneStr) || phoneStr.includes(fp)) {
                  matched = true;
                  break;
-             }
+              }
         }
         if (!matched) {
             missingInFirebase.push(jc);
@@ -76,11 +93,11 @@ async function run() {
     });
 
     if (missingInFirebase.length === 0) {
-        console.log("\n✅ ALL JustCall contacts fetched are present in Firebase!");
+        console.log("\n✅ ALL JustCall contacts are present in Firebase!");
     } else {
         console.log("\n❌ Found " + missingInFirebase.length + " contacts in JustCall that are NOT in Firebase:");
         missingInFirebase.forEach(c => {
-            console.log(`  - Name: ${c.first_name || ''} ${c.last_name || ''} | Phone: ${c.phone}`);
+            console.log(`  - Name: ${c.first_name || ''} ${c.last_name || ''} | Phone: ${c.contact_number || c.phone || 'N/A'}`);
         });
     }
 }

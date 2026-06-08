@@ -47,6 +47,7 @@ import { WeatherReport } from '../components/WeatherReport';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, ProjectStage } from '../types';
 import { createProject as createProjectApi } from '../lib/api';
 import { getMapsApiKey } from '../lib/mapsConfig';
+import { firestoreService } from '../lib/firebaseService';
 
 // --- Reusable UI Components ---
 
@@ -545,7 +546,7 @@ const MethodButton: React.FC<{ label: string, active: boolean, onClick: () => vo
     </button>
 );
 
-const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, propertyName?: string, onSave: (c: Contact) => void, onCancel: () => void, isPrimary: boolean, projectCategory: string }> = ({ initialData, companyName, propertyName, onSave, onCancel, isPrimary, projectCategory }) => {
+const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, propertyName?: string, onSave: (c: Contact) => void, onCancel: () => void, isPrimary: boolean, projectCategory: string, existingContacts?: any[] }> = ({ initialData, companyName, propertyName, onSave, onCancel, isPrimary, projectCategory, existingContacts = [] }) => {
     const { users } = useMockDB();
     const [data, setData] = useState<Partial<Contact>>(initialData || {
         firstName: '', lastName: '', phone: '', email: '', role: projectCategory === 'Residential' ? 'Property Owner' : 'Property Manager', preferredContactMethod: 'Text', responsibilities: [], affiliations: []
@@ -581,6 +582,30 @@ const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, prope
         'Government': ['Contracting Officer', 'Site Representative', 'Facility Manager', 'Other']
     };
 
+    // Duplicate Check logic
+    const matchByName = existingContacts.find(c => {
+        if (c.id === data.id) return false;
+        const cFirst = (c.first_name || c.firstName || '').toLowerCase().trim();
+        const cLast = (c.last_name || c.lastName || '').toLowerCase().trim();
+        const inputFirst = (data.firstName || '').toLowerCase().trim();
+        const inputLast = (data.lastName || '').toLowerCase().trim();
+        return inputFirst && inputLast && cFirst === inputFirst && cLast === inputLast;
+    });
+
+    const matchByPhone = existingContacts.find(c => {
+        if (c.id === data.id) return false;
+        const inputPhone = String(data.phone || '').replace(/\D/g, '');
+        if (!inputPhone || inputPhone.length < 7) return false;
+
+        const phones = [c.phone, c.mobile, c.homePhone, c.otherPhone]
+            .map(p => String(p || '').replace(/\D/g, ''))
+            .filter(p => p.length >= 7);
+
+        return phones.some(p => p.includes(inputPhone) || inputPhone.includes(p));
+    });
+
+    const isDuplicate = !!(matchByName || matchByPhone);
+
     return (
         <Card className="animate-fade-in shadow-2xl relative overflow-hidden isolate">
             <CardContent className="p-10 space-y-10">
@@ -595,6 +620,19 @@ const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, prope
                     <div className="space-y-2"><QuestionLabel required>Phone Number</QuestionLabel><InputField placeholder="(000) 000-0000" value={data.phone} onChange={handlePhoneChange} /></div>
                     <div className="space-y-2"><QuestionLabel required>Email Address</QuestionLabel><InputField type="email" placeholder="example@domain.com" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} /></div>
                 </div>
+
+                {isDuplicate && (
+                    <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-400 text-xs font-mono space-y-1.5 animate-pulse" style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}>
+                        <p className="font-bold uppercase tracking-widest flex items-center gap-1.5 text-yellow-500">
+                            ⚠️ Warning: Duplicate Contact
+                        </p>
+                        <p>
+                            {matchByName && `A contact named "${matchByName.first_name || matchByName.firstName} ${matchByName.last_name || matchByName.lastName}" already exists.`}
+                            {matchByName && matchByPhone && " And "}
+                            {matchByPhone && `A contact with phone/mobile number "${matchByPhone.phone || matchByPhone.mobile}" already exists.`}
+                        </p>
+                    </div>
+                )}
 
                 <div className="space-y-4">
                     <QuestionLabel required isPink>Preferred Contact Method</QuestionLabel>
@@ -736,6 +774,15 @@ const CustomerInputPage: React.FC = () => {
     const [buyerIntent, setBuyerIntent] = useState<'Repair Estimate' | 'Instant Estimate' | 'Certified Quote' | 'Schedule Inspection' | null>(null);
     const [isIntentCollapsed, setIsIntentCollapsed] = useState(false);
     const [scheduledDetails, setScheduledDetails] = useState<string | null>(null);
+
+    const [existingContacts, setExistingContacts] = useState<any[]>([]);
+
+    useEffect(() => {
+        const unsub = firestoreService.subscribeToDocuments('contacts', (data) => {
+            setExistingContacts(data);
+        });
+        return () => unsub();
+    }, []);
     
     // Form Data Matrix
     const [intakeData, setIntakeData] = useState({
@@ -939,11 +986,11 @@ const CustomerInputPage: React.FC = () => {
                     <SectionHeader title="Contact Directory" icon={UserIcon} />
                     {contacts.map(c => (
                         editingContactId === c.id ?
-                            <ContactForm key={c.id} initialData={c} companyName={companyData.parentCompany} propertyName={companyData.propertyName} onSave={(upd) => { setContacts(prev => prev.map(ex => ex.id === upd.id ? upd : ex)); setEditingContactId(null); }} onCancel={() => setEditingContactId(null)} isPrimary={c.isPrimary} projectCategory={projectCategory} /> :
+                            <ContactForm key={c.id} initialData={c} companyName={companyData.parentCompany} propertyName={companyData.propertyName} onSave={(upd) => { setContacts(prev => prev.map(ex => ex.id === upd.id ? upd : ex)); setEditingContactId(null); }} onCancel={() => setEditingContactId(null)} isPrimary={c.isPrimary} projectCategory={projectCategory} existingContacts={existingContacts} /> :
                             <ContactCard key={c.id} contact={c} onEdit={() => setEditingContactId(c.id)} onDelete={() => setContacts(p => p.filter(x => x.id !== c.id))} />
                     ))}
                     {(isAddingContact || contacts.length === 0) && !editingContactId && (
-                        <ContactForm companyName={companyData.parentCompany} propertyName={companyData.propertyName} onSave={c => { setContacts(p => [...p, c]); setIsAddingContact(false); }} onCancel={() => setIsAddingContact(false)} isPrimary={contacts.length === 0} projectCategory={projectCategory} />
+                        <ContactForm companyName={companyData.parentCompany} propertyName={companyData.propertyName} onSave={c => { setContacts(p => [...p, c]); setIsAddingContact(false); }} onCancel={() => setIsAddingContact(false)} isPrimary={contacts.length === 0} projectCategory={projectCategory} existingContacts={existingContacts} />
                     )}
                     {!editingContactId && !isAddingContact && <div onClick={() => setIsAddingContact(true)} className="py-4 border-2 border-dashed border-gray-800/30 rounded-[24px] text-gray-600 hover:border-white/30 hover:text-white transition-all flex items-center justify-center font-black text-xs uppercase tracking-widest cursor-pointer group backdrop-blur-sm"><PlusIcon className="w-4 h-4 mr-2 group-hover:scale-125 transition-transform" /> Add Project Contact</div>}
                 </div>

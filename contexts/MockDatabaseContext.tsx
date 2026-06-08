@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Project, Property, User, ProjectStage, PROJECT_STAGES_ORDER } from '../types';
-import { contactService, userService } from '../lib/firebaseService';
+import { contactService, userService, userLogService } from '../lib/firebaseService';
 
 interface MockDatabaseContextType {
     users: User[];
@@ -294,7 +294,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 if (foundUser.role === 'Super Admin' && role !== 'Super Admin') {
                     sessionUser.role = role as any;
                 }
-                setSessionUser(sessionUser);
+                setCurrentUser(sessionUser);
                 userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, { email: sessionUser.email }, sessionUser);
                 return { success: true };
             }

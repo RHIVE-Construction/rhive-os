@@ -5,7 +5,7 @@ import { getFirestore, Firestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 
 // Safe check for import.meta.env to prevent crashes in non-Vite environments
-const safeEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+const safeEnv = (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {}) as any;
 
 // Check if Firebase environment variables are missing
 const isFirebaseConfigMissing = 

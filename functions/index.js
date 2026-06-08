@@ -272,10 +272,10 @@ exports.onContactCreatedSyncToJustCall = functions.firestore
         }
 
         try {
-            await axios.post('https://api.justcall.io/v1/contacts', {
-                first_name: data.first_name,
-                last_name: data.last_name,
-                phone: data.phone,
+            await axios.post('https://api.justcall.io/v2.1/contacts', {
+                first_name: data.first_name || 'Unknown',
+                last_name: data.last_name || '',
+                contact_number: data.phone,
                 email: data.email || ""
             }, {
                 headers: {
@@ -283,7 +283,7 @@ exports.onContactCreatedSyncToJustCall = functions.firestore
                     'Content-Type': 'application/json'
                 }
             });
-            console.log(`Successfully synced ${data.first_name} to JustCall.`);
+            console.log(`Successfully synced ${data.first_name || 'Unknown'} to JustCall.`);
         } catch (error) {
             console.error("Error syncing to JustCall:", error.response?.data || error.message);
         }
@@ -753,4 +753,248 @@ exports.getJustCallCommunications = functions.https.onRequest((req, res) => {
         }
     });
 });
+
+/**
+ * 7. Sync all JustCall Contacts, SMS and Calls to Firestore
+ * Loops through all pages of JustCall contacts and imports them.
+ * Also pulls recent calls and SMS to sync to Firestore logs.
+ */
+exports.syncJustCallContactsAndHistory = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        // Handle preflight
+        if (req.method === 'OPTIONS') {
+            res.set('Access-Control-Allow-Origin', '*');
+            res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            return res.status(204).send('');
+        }
+
+        if (!JUSTCALL_API_KEY || !JUSTCALL_API_SECRET) {
+            return res.status(500).json({ error: "Missing JustCall credentials" });
+        }
+
+        const db = admin.firestore();
+        const results = {
+            contactsSynced: 0,
+            callsSynced: 0,
+            textsSynced: 0,
+            errors: []
+        };
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        
+        async function fetchWithRetry(url, config, retries = 3, delayMs = 2000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    await sleep(1000); // 1 second delay between every request to prevent 429 in the first place
+                    return await axios.get(url, config);
+                } catch (err) {
+                    if (err.response?.status === 429 && i < retries - 1) {
+                        console.warn(`Got 429 Rate Limit. Waiting ${delayMs}ms before retry...`);
+                        await sleep(delayMs);
+                        delayMs *= 2;
+                        continue;
+                    }
+                    throw err;
+                }
+            }
+        }
+
+        try {
+            // 1. Sync Contacts
+            console.log("Syncing contacts from JustCall...");
+            let jcContacts = [];
+            let page = 0;
+            while (true) {
+                try {
+                    const jcResponse = await fetchWithRetry('https://api.justcall.io/v2.1/contacts', {
+                        params: { page: page, limit: 50, across_team: true },
+                        headers: {
+                            'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const pageContacts = jcResponse.data.data || [];
+                    if (pageContacts.length === 0) break;
+                    jcContacts.push(...pageContacts);
+                    if (pageContacts.length < 50) break;
+                    page++;
+                } catch (e) {
+                    console.error(`JustCall API Error fetching page ${page}:`, e.message);
+                    results.errors.push(`Error fetching page ${page}: ${e.message}`);
+                    break;
+                }
+            }
+
+            // Fetch existing Firestore contacts to check duplicates
+            const contactsSnap = await db.collection('contacts').get();
+            const existingPhones = new Set();
+            contactsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.phone) existingPhones.add(String(data.phone).replace(/\D/g, ''));
+                if (data.mobile) existingPhones.add(String(data.mobile).replace(/\D/g, ''));
+                if (data.homePhone) existingPhones.add(String(data.homePhone).replace(/\D/g, ''));
+                if (data.otherPhone) existingPhones.add(String(data.otherPhone).replace(/\D/g, ''));
+            });
+
+            for (const jc of jcContacts) {
+                const rawPhone = jc.contact_number || jc.phone;
+                if (!rawPhone) continue;
+                const cleanPhone = String(rawPhone).replace(/\D/g, '');
+
+                if (!existingPhones.has(cleanPhone)) {
+                    // Import contact
+                    const now = new Date().toISOString();
+                    await db.collection('contacts').add({
+                        first_name: jc.first_name || '',
+                        last_name: jc.last_name || '',
+                        full_name: `${jc.first_name || ''} ${jc.last_name || ''}`.trim(),
+                        phone: rawPhone,
+                        email: jc.email || `${cleanPhone}@justcall.io`,
+                        address: jc.address || '',
+                        created_at: now,
+                        updated_at: now,
+                        _source: 'justcall-sync',
+                        recordStatus: 'Available',
+                        projectRole: 'Owner'
+                    });
+                    existingPhones.add(cleanPhone); // Prevent duplicates inside loop
+                    results.contactsSynced++;
+                }
+            }
+
+            // 2. Sync SMS Logs
+            console.log("Syncing SMS from JustCall...");
+            let pageSms = 0;
+            let jcSms = [];
+            // Fetch up to 4 pages (200 SMS) to keep sync quick
+            while (pageSms < 4) {
+                try {
+                    const smsResponse = await fetchWithRetry('https://api.justcall.io/v2.1/texts', {
+                        params: { page: pageSms, limit: 50 },
+                        headers: {
+                            'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const pageSmsData = smsResponse.data.data || [];
+                    if (pageSmsData.length === 0) break;
+                    jcSms.push(...pageSmsData);
+                    if (pageSmsData.length < 50) break;
+                    pageSms++;
+                } catch (e) {
+                    console.error(`JustCall API Error fetching SMS page ${pageSms}:`, e.message);
+                    results.errors.push(`SMS page ${pageSms}: ${e.message}`);
+                    break;
+                }
+            }
+
+            for (const sms of jcSms) {
+                const smsId = sms.id || sms.sms_id;
+                if (!smsId) continue;
+                
+                const docRef = db.collection('sms_logs').doc(String(smsId));
+                const docSnap = await docRef.get();
+                
+                if (!docSnap.exists) {
+                    const direction = sms.direction || sms.sms_info?.direction || 'unknown';
+                    const eventType = direction.toLowerCase() === 'inbound' || direction.toLowerCase() === 'incoming' ? 'sms.received' : 'sms.sent';
+                    
+                    const smsData = {
+                        event_type: eventType,
+                        contact_number: sms.contact_number || sms.from || null,
+                        contact_name: sms.contact_name || null,
+                        justcall_number: sms.justcall_number || sms.to || null,
+                        message: sms.sms_info?.body || sms.body || sms.content || sms.message || '',
+                        agent_name: sms.agent_name || null,
+                        sms_id: smsId,
+                        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                        updated_at: admin.firestore.FieldValue.serverTimestamp()
+                    };
+                    await docRef.set(smsData);
+                    results.textsSynced++;
+                }
+            }
+
+            // 3. Sync Call Logs
+            console.log("Syncing Call Logs from JustCall...");
+            let pageCalls = 0;
+            let jcCalls = [];
+            // Fetch up to 4 pages (200 calls)
+            while (pageCalls < 4) {
+                try {
+                    const callsResponse = await fetchWithRetry('https://api.justcall.io/v2.1/calls', {
+                        params: { page: pageCalls, limit: 50 },
+                        headers: {
+                            'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const pageCallsData = callsResponse.data.data || [];
+                    if (pageCallsData.length === 0) break;
+                    jcCalls.push(...pageCallsData);
+                    if (pageCallsData.length < 50) break;
+                    pageCalls++;
+                } catch (e) {
+                    console.error(`JustCall API Error fetching calls page ${pageCalls}:`, e.message);
+                    results.errors.push(`Calls page ${pageCalls}: ${e.message}`);
+                    break;
+                }
+            }
+
+            for (const call of jcCalls) {
+                const callId = call.id || call.call_id;
+                if (!callId) continue;
+                
+                const docRef = db.collection('call_logs').doc(String(callId));
+                const docSnap = await docRef.get();
+                
+                if (!docSnap.exists) {
+                    const direction = call.direction || call.call_info?.direction || 'unknown';
+                    const eventType = direction.toLowerCase() === 'inbound' || direction.toLowerCase() === 'incoming' ? 'call.completed' : 'call.completed';
+                    
+                    const callData = {
+                        event_type: eventType,
+                        contact_number: call.contact_number || null,
+                        contact_name: call.contact_name || null,
+                        contact_email: call.contact_email || null,
+                        justcall_number: call.justcall_number || null,
+                        justcall_line_name: call.justcall_line_name || null,
+                        agent_id: call.agent_id || null,
+                        agent_name: call.agent_name || null,
+                        agent_email: call.agent_email || null,
+                        call_id: callId,
+                        call_sid: call.call_sid || null,
+                        call_date: call.call_date || null,
+                        call_time: call.call_time || null,
+                        duration: call.duration || (call.call_duration && call.call_duration.total_duration) || 0,
+                        direction: direction,
+                        call_type: call.call_type || null,
+                        recording_url: call.recording_url || null,
+                        transcript: call.transcript || '',
+                        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                        updated_at: admin.firestore.FieldValue.serverTimestamp()
+                    };
+                    await docRef.set(callData);
+                    results.callsSynced++;
+                }
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Sync completed successfully.",
+                results
+            });
+
+        } catch (error) {
+            console.error("Sync Error:", error);
+            return res.status(500).json({
+                success: false,
+                error: error.message,
+                results
+            });
+        }
+    });
+});
+
 

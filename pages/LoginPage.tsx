@@ -20,6 +20,7 @@ import { cn } from '../lib/utils';
 import { Button } from '../components/ui/button';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { passwordResetService } from '../lib/firebaseService';
 
 interface LoginPageProps {
