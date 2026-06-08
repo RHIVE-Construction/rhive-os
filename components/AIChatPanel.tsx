@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Sparkles, X, Send, Minimize2, RotateCcw, ChevronDown } from 'lucide-react';
-import { streamChat, isAIConfigured, type ChatMessage } from '../lib/aiService';
+import { streamChat, checkAIConfigured, type ChatMessage } from '../lib/aiService';
 import { cn } from '../lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -223,8 +223,8 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ isOpen, onClose }) => {
             text: m.text,
         }));
 
-        if (!isAIConfigured) {
-            await new Promise(r => setTimeout(r, 600));
+        const configured = await checkAIConfigured();
+        if (!configured) {
             setMessages(prev => prev.map(m =>
                 m.id === aiMsgId
                     ? {
@@ -471,7 +471,7 @@ const AIChatPanel: React.FC<AIChatPanelProps> = ({ isOpen, onClose }) => {
                             </div>
                             <div className="flex justify-between items-center mt-1.5 px-0.5">
                                 <span className="text-[8px] font-mono text-gray-700 uppercase tracking-wider">Enter to send · Shift+Enter newline</span>
-                                <span className="text-[8px] font-mono text-rhive-pink/50 uppercase tracking-wider">Gemini 3.5 Flash</span>
+                                <span className="text-[8px] font-mono text-rhive-pink/50 uppercase tracking-wider">Gemini 2.5 Flash</span>
                             </div>
                         </div>
                     </div>

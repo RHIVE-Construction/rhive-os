@@ -9,26 +9,37 @@ import { GoogleGenAI } from '@google/genai';
 // ---------------------------------------------------------------------------
 
 let _cachedKey: string | null = null;
+let _keyFetchPromise: Promise<string> | null = null;
 
 async function getApiKey(): Promise<string> {
     if (_cachedKey !== null) return _cachedKey;
 
-    // Fetch from the secure server-side config endpoint
-    try {
-        const res = await fetch('/api/config');
-        if (!res.ok) throw new Error(`/api/config returned ${res.status}`);
-        const data = await res.json();
-        _cachedKey = (data.geminiApiKey as string) || '';
-    } catch (err) {
-        console.warn('[RHIVE] Failed to load Gemini API key from /api/config:', err);
-        _cachedKey = '';
+    // Deduplicate concurrent fetches — reuse the same promise
+    if (!_keyFetchPromise) {
+        _keyFetchPromise = (async () => {
+            try {
+                const res = await fetch('/api/config');
+                if (!res.ok) throw new Error(`/api/config returned ${res.status}`);
+                const data = await res.json();
+                _cachedKey = (data.geminiApiKey as string) || '';
+            } catch (err) {
+                console.warn('[RHIVE] Failed to load Gemini API key from /api/config:', err);
+                _cachedKey = '';
+            }
+            return _cachedKey!;
+        })();
     }
-    return _cachedKey;
+    return _keyFetchPromise;
 }
 
-export let isAIConfigured = false;
+// isAIConfigured — async-safe: always resolves the key before checking
+export async function checkAIConfigured(): Promise<boolean> {
+    const key = await getApiKey();
+    return !!key;
+}
 
-// Pre-warm the key check so the UI can show the unconfigured state immediately
+// Kept for backwards compat in case anything reads it synchronously
+export let isAIConfigured = false;
 getApiKey().then(key => { isAIConfigured = !!key; });
 
 const SYSTEM_PROMPT = `You are ARIA — the RHIVE AI Operations Assistant.
