@@ -149,3 +149,109 @@ body {
 }
 @keyframes metallicShineVertical { 0% { background-position: 0% 0%; } 50% { background-position: 0% 100%; } 100% { background-position: 0% 0%; } }
 .animate-metallic-shine-vertical { animation: metallicShineVertical 6s ease-in-out infinite; background-size: 100% 200%; }
+
+@keyframes diagonal-gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.animate-text-gradient-pink {
+    background: linear-gradient(135deg, #ec028b 0%, #ffffff 50%, #ec028b 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: diagonal-gradient 5s ease infinite;
+}
+
+.animate-text-gradient-white {
+    background: linear-gradient(135deg, #9ca3af 0%, #ffffff 50%, #9ca3af 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: diagonal-gradient 5s ease infinite;
+}
+
+.animate-text-gradient-gold {
+    background: linear-gradient(135deg, #e2ab49 0%, #ffffff 50%, #e2ab49 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: diagonal-gradient 5s ease infinite;
+}
+
+.animate-text-gradient-blue {
+    background: linear-gradient(135deg, #08137c 0%, #ffffff 50%, #08137c 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: diagonal-gradient 5s ease infinite;
+}
+
+.animate-text-gradient-red {
+    background: linear-gradient(135deg, #ef4444 0%, #ffffff 50%, #ef4444 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: diagonal-gradient 5s ease infinite;
+}
+
+@keyframes blob-fluid-1 {
+    0% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; transform: translate(0, 0) scale(1) rotate(0deg); }
+    33% { border-radius: 70% 30% 52% 48% / 60% 40% 60% 40%; transform: translate(5px, -10px) scale(1.05) rotate(120deg); }
+    66% { border-radius: 28% 72% 35% 65% / 40% 60% 40% 60%; transform: translate(-8px, 8px) scale(0.95) rotate(240deg); }
+    100% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; transform: translate(0, 0) scale(1) rotate(360deg); }
+}
+
+@keyframes blob-fluid-2 {
+    0% { border-radius: 50% 50% 30% 70% / 50% 60% 40% 50%; transform: translate(0, 0) scale(1) rotate(0deg); }
+    50% { border-radius: 30% 70% 70% 30% / 50% 30% 70% 50%; transform: translate(-10px, 5px) scale(1.1) rotate(-180deg); }
+    100% { border-radius: 50% 50% 30% 70% / 50% 60% 40% 50%; transform: translate(0, 0) scale(1) rotate(-360deg); }
+}
+
+.ai-blob-container {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: blur(8px);
+}
+
+.ai-blob-1 {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    background: linear-gradient(135deg, rgba(236, 2, 139, 0.7) 0%, rgba(8, 19, 124, 0.7) 100%);
+    animation: blob-fluid-1 12s infinite linear;
+}
+
+.ai-blob-2 {
+    position: absolute;
+    width: 190px;
+    height: 190px;
+    background: linear-gradient(225deg, rgba(8, 19, 124, 0.6) 0%, rgba(255, 255, 255, 0.8) 100%);
+    animation: blob-fluid-2 9s infinite linear;
+    mix-blend-mode: screen;
+}
+
+.ai-blob-pulse {
+    animation: pulse-glow 3s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 25px rgba(236,2,139,0.5)); }
+}

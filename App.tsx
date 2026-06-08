@@ -78,7 +78,7 @@ const AppContentAuthenticated: React.FC = () => {
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
                 case 'Supplier': setActivePageId('S-01'); break;
-                case 'Public': setActivePageId('P-00'); break;
+                case 'Public': setActivePageId('P-00-V3'); break;
             }
         }
     }, [currentUser, setActivePageId, activePageId]);
@@ -122,34 +122,64 @@ const LoginBridge: React.FC = () => {
     const { activePageId, setActivePageId } = useNavigation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const mainRef = React.useRef<HTMLElement>(null);
 
     // Parse URL parameter on mount/popstate so direct links work
     useEffect(() => {
         const handleUrlChange = () => {
             const params = new URLSearchParams(window.location.search);
             const pageCode = params.get('page');
-            if (pageCode && pageCode !== activePageId) {
+            if (pageCode) {
                 setActivePageId(pageCode);
             }
         };
 
         handleUrlChange();
         window.addEventListener('popstate', handleUrlChange);
-        window.addEventListener('nav-page', handleUrlChange);
+        
+        const handleCustomNav = (e: any) => {
+            if (e.detail) setActivePageId(e.detail);
+        };
+        window.addEventListener('nav-page', handleCustomNav);
+
         return () => {
             window.removeEventListener('popstate', handleUrlChange);
-            window.removeEventListener('nav-page', handleUrlChange);
+            window.removeEventListener('nav-page', handleCustomNav);
         };
-    }, [activePageId, setActivePageId]);
+    }, [setActivePageId]);
 
     // Force non-public pages back to login/empty if logged out
     useEffect(() => {
         if (!currentUser) {
             if (activePageId && !(activePageId || '').startsWith('P-')) {
-                setActivePageId('');
+                setActivePageId('P-00-V3');
             }
         }
     }, [currentUser, activePageId, setActivePageId]);
+
+    // Sync browser URL bar with activePageId for unauthenticated users
+    useEffect(() => {
+        if (!currentUser && activePageId) {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('page') !== activePageId) {
+                const newUrl = `${window.location.pathname}?page=${activePageId}`;
+                window.history.pushState({ path: newUrl }, '', newUrl);
+            }
+        }
+    }, [activePageId, currentUser]);
+
+    // Scroll to top when activePageId changes for public layout
+    useEffect(() => {
+        if (!currentUser) {
+            console.log('LoginBridge: activePageId changed to:', activePageId);
+            if (mainRef.current) {
+                mainRef.current.scrollTop = 0;
+            }
+            if (activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3') {
+                sessionStorage.setItem('lastHomepageId', activePageId);
+            }
+        }
+    }, [activePageId, currentUser]);
 
     if (!currentUser) {
         // If a public page is active (except P-06 which is LoginPage itself), render that page inside the public layout!
@@ -167,7 +197,7 @@ const LoginBridge: React.FC = () => {
                         dotColor={isDark ? "#ec028b" : "#ec028b"}
                         lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
                     />
-                    <main className="relative z-10 w-full h-full overflow-y-auto relative">
+                    <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto relative">
                         <CurrentPublicPage />
                     </main>
                     <FloatingEstimator />

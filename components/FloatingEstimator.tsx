@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigation } from '../contexts/NavigationContext';
 import {
     Gauge,
     X,
@@ -21,20 +22,64 @@ import { cn } from '../lib/utils';
 type Step = 'address' | 'specs' | 'lead' | 'result' | 'chat';
 
 export const FloatingEstimator: React.FC = () => {
+    const { activePageId } = useNavigation();
     const [isOpen, setIsOpen] = useState(false);
     const [step, setStep] = useState<Step>('address');
     const [address, setAddress] = useState('');
     const [activeProtocol, setActiveProtocol] = useState<string | null>(null);
+    const [isVisible, setIsVisible] = useState(true);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<any>(null);
     const isApiReady = useGoogleMapsApi();
 
     useEffect(() => {
+        const isHomepage = ['P-00', 'P-00-V2', 'P-00-V3', 'P-Landing'].includes(activePageId);
+
+        if (!isHomepage) {
+            setIsVisible(true);
+            return;
+        }
+
+        // On homepage, hide by default until scrolled to capability catalog
+        setIsVisible(false);
+
+        const handleScroll = () => {
+            const servicesEl = document.getElementById('services') || document.getElementById('tech-c');
+            if (servicesEl) {
+                const rect = servicesEl.getBoundingClientRect();
+                if (rect.top <= window.innerHeight * 0.8) {
+                    setIsVisible(true);
+                } else {
+                    setIsVisible(false);
+                }
+            } else {
+                setIsVisible(false);
+            }
+        };
+
+        handleScroll();
+
+        window.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+        const interval = setInterval(handleScroll, 200);
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll, { capture: true });
+            clearInterval(interval);
+        };
+    }, [activePageId]);
+
+    useEffect(() => {
         const handleOpen = (e: any) => {
             setActiveProtocol(e.detail?.protocol || null);
             setIsOpen(true);
-            setStep('address');
+            if (e.detail?.address) {
+                setAddress(e.detail.address);
+                setStep('specs');
+            } else {
+                setAddress('');
+                setStep('address');
+            }
         };
         window.addEventListener('open-estimator', handleOpen);
         return () => window.removeEventListener('open-estimator', handleOpen);
@@ -87,26 +132,32 @@ export const FloatingEstimator: React.FC = () => {
     return (
         <>
             {/* 1. SIDE TAB BUTTON */}
-            <motion.button
-                onClick={() => {
-                    setStep('chat');
-                    setIsOpen(true);
-                }}
-                whileHover={{ scale: 1.05, x: -10 }}
-                whileTap={{ scale: 0.95 }}
-                className="fixed right-0 top-1/2 -translate-y-1/2 z-[600] flex items-center gap-3 bg-[var(--rhive-bg)] text-[var(--rhive-text)] px-4 py-10 rounded-l-3xl shadow-[-20px_0_40px_rgba(236,2,139,0.3)] hover:shadow-[-30px_0_60px_rgba(236,2,139,0.6)] transition-all group overflow-hidden border border-[var(--rhive-border)] outline-none"
-                initial={{ x: 100 }}
-                animate={{ x: 0 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-            >
-                <div className="absolute inset-0 bg-gradient-to-br from-rhive-pink/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex flex-col items-center gap-2 relative z-10">
-                    <Zap size={20} className="text-rhive-pink animate-pulse" />
-                    <span className="[writing-mode:vertical-lr] font-black text-base uppercase tracking-[0.6em] rotate-180">
-                        System Scan
-                    </span>
-                </div>
-            </motion.button>
+            <AnimatePresence>
+                {isVisible && (
+                    <motion.button
+                        key="system-scan-tab"
+                        onClick={() => {
+                            setStep('chat');
+                            setIsOpen(true);
+                        }}
+                        whileHover={{ scale: 1.05, x: -10 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="fixed right-0 top-1/2 -translate-y-1/2 z-[600] flex items-center gap-3 bg-[var(--rhive-bg)] text-[var(--rhive-text)] px-4 py-10 rounded-l-3xl shadow-[-20px_0_40px_rgba(236,2,139,0.3)] hover:shadow-[-30px_0_60px_rgba(236,2,139,0.6)] transition-all group overflow-hidden border border-[var(--rhive-border)] outline-none"
+                        initial={{ x: 100 }}
+                        animate={{ x: 0 }}
+                        exit={{ x: 100 }}
+                        transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-rhive-pink/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="flex flex-col items-center gap-2 relative z-10">
+                            <Zap size={20} className="text-rhive-pink animate-pulse" />
+                            <span className="[writing-mode:vertical-lr] font-black text-base uppercase tracking-[0.6em] rotate-180">
+                                System Scan
+                            </span>
+                        </div>
+                    </motion.button>
+                )}
+            </AnimatePresence>
 
             {/* 2. OVERLAY */}
             <AnimatePresence>

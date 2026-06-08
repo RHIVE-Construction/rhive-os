@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Zap, Shield, Star, Phone, CheckCircle2, ArrowRight, ChevronDown,
@@ -8,6 +8,7 @@ import {
     X, Sun, Sparkles
 } from 'lucide-react';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 import PlexusShape from '../components/PlexusShape';
 import RhiveHeader from '../components/website/RhiveHeader';
 import AddressScanInput from '../components/AddressScanInput';
@@ -17,9 +18,10 @@ import { cn } from '../lib/utils';
 
 // --- GLITCH TEXT COMPONENT ---
 const GlitchText = ({ text, className }: { text: string; className?: string }) => {
+    const isGradient = className?.includes('animate-text-gradient');
     return (
-        <div className={cn("relative inline-block", className)}>
-            <span className="relative z-10 block">{text}</span>
+        <div className={cn("relative inline-block", isGradient ? "" : className)}>
+            <span className={cn("relative z-10 block", isGradient ? className : "")}>{text}</span>
             <motion.span
                 className="absolute inset-0 z-20 text-[#ec028b] mix-blend-screen pointer-events-none select-none"
                 initial={{ opacity: 0 }}
@@ -97,95 +99,13 @@ const StickyCTABar: React.FC = () => {
 // --- CUSTOM INTERACTIVE COMPARISON DIAGRAM ---
 const CustomComparisonDiagram: React.FC = () => {
     return (
-        <div className="w-full flex flex-col gap-10">
-            {/* Standard Contractor Pricing Flow */}
-            <div className="relative p-8 border border-white/5 bg-white/[0.01] rounded-2xl overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full bg-gray-700" />
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                    <div className="flex flex-col">
-                        <span className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-1">// INEFFICIENCY FLOW</span>
-                        <h4 className="text-white font-black text-xl uppercase tracking-wider">Standard Contractor Prices</h4>
-                        <p className="text-gray-400 text-xs mt-1">High overhead and salesperson commissions inflated into every square.</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-gray-400">
-                        <div className="flex items-center gap-2 p-3 bg-white/5 border border-white/5 rounded">
-                            <Store size={14} className="text-gray-500" />
-                            <span>Brick &amp; Mortar</span>
-                        </div>
-                        <ChevronRight size={14} className="text-gray-700" />
-                        <div className="flex items-center gap-2 p-3 bg-white/5 border border-white/5 rounded">
-                            <Users size={14} className="text-gray-500" />
-                            <span>Office Staff</span>
-                        </div>
-                        <ChevronRight size={14} className="text-gray-700" />
-                        <div className="flex items-center gap-2 p-3 bg-white/5 border border-white/5 rounded">
-                            <Briefcase size={14} className="text-gray-500" />
-                            <span>Sales Rep</span>
-                        </div>
-                        <ChevronRight size={14} className="text-gray-700" />
-                        <div className="flex items-center gap-2 p-3 bg-white/5 border border-white/5 rounded">
-                            <Package size={14} className="text-gray-500" />
-                            <span>Warehouse</span>
-                        </div>
-                        <ChevronRight size={14} className="text-gray-700" />
-                        <div className="flex items-center gap-2 p-3 bg-white/5 border border-white/5 rounded">
-                            <Hammer size={14} className="text-gray-500" />
-                            <span>Basic Materials</span>
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-center md:items-end justify-center shrink-0 border-l border-white/10 pl-6">
-                        <span className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">Base Estimate</span>
-                        <span className="text-3xl font-black text-gray-300 line-through tracking-tighter mt-1">$19,500</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* VS Badge divider */}
-            <div className="flex justify-center -my-6 relative z-10">
-                <div className="w-12 h-12 bg-black border border-rhive-pink/40 text-rhive-pink font-mono text-sm font-black uppercase rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(236,2,139,0.3)]">
-                    VS
-                </div>
-            </div>
-
-            {/* RHIVE Construction Pricing Flow */}
-            <div className="relative p-8 border border-rhive-pink/30 bg-rhive-pink/[0.02] rounded-2xl overflow-hidden group shadow-[0_0_30px_rgba(236,2,139,0.05)]">
-                <div className="absolute top-0 left-0 w-1 h-full bg-rhive-pink shadow-[0_0_10px_rgba(236,2,139,1)]" />
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                    <div className="flex flex-col">
-                        <span className="text-rhive-pink font-mono text-[10px] uppercase tracking-widest mb-1">// THE QUANTUM SAVINGS FLOW</span>
-                        <h4 className="text-white font-black text-xl uppercase tracking-wider">RHIVE Construction</h4>
-                        <p className="text-gray-400 text-xs mt-1">Direct-to-installer scheduling and raw cost pricing.</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-white">
-                        <div className="flex items-center gap-2 p-3 bg-rhive-pink/10 border border-rhive-pink/20 rounded shadow-[0_0_10px_rgba(236,2,139,0.1)]">
-                            <Laptop size={14} className="text-rhive-pink" />
-                            <span>Mobile / Remote</span>
-                        </div>
-                        <ChevronRight size={14} className="text-rhive-pink" />
-                        <div className="flex items-center gap-2 p-3 bg-rhive-pink/10 border border-rhive-pink/20 rounded shadow-[0_0_10px_rgba(236,2,139,0.1)]">
-                            <UserCheck size={14} className="text-rhive-pink" />
-                            <span>Design Specialist</span>
-                        </div>
-                        <ChevronRight size={14} className="text-rhive-pink" />
-                        <div className="flex items-center gap-2 p-3 bg-rhive-pink/10 border border-rhive-pink/20 rounded shadow-[0_0_10px_rgba(236,2,139,0.1)]">
-                            <Handshake size={14} className="text-rhive-pink" />
-                            <span>Partner Install</span>
-                        </div>
-                        <ChevronRight size={14} className="text-rhive-pink" />
-                        <div className="flex items-center gap-2 p-3 bg-[#08137C]/20 border border-[#08137C]/50 rounded shadow-[0_0_10px_rgba(8,19,124,0.3)]">
-                            <Award size={14} className="text-rhive-blue" />
-                            <span>Premium Architectural</span>
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-center md:items-end justify-center shrink-0 border-l border-rhive-pink/20 pl-6">
-                        <span className="text-rhive-pink font-mono text-[10px] uppercase tracking-widest">Base Estimate</span>
-                        <div className="relative">
-                            <span className="text-4xl font-black text-white tracking-tighter mt-1">$14,250</span>
-                            <div className="absolute -inset-1 border border-rhive-pink rounded opacity-30 animate-pulse pointer-events-none" />
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div className="w-full relative border border-white/10 bg-black/60 rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(236,2,139,0.1)] group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-rhive-pink shadow-[0_0_10px_rgba(236,2,139,1)]" />
+            <img 
+                src="https://static.wixstatic.com/media/c5862a_7e539a778fd84771b8327f43dfc7dd0a~mv2.png/v1/fill/w_1200,h_675,al_c,q_90/dd.png" 
+                alt="Standard Contractor vs RHIVE comparison flow chart" 
+                className="w-full h-auto object-cover block transition-transform duration-700 group-hover:scale-[1.01]" 
+            />
         </div>
     );
 };
@@ -198,6 +118,40 @@ const PublicHomepageV3: React.FC = () => {
     const [capexSqft, setCapexSqft] = useState<number>(15000);
     const [capexComplexity, setCapexComplexity] = useState<'low' | 'medium' | 'high'>('medium');
     const [capexAge, setCapexAge] = useState<number>(10);
+
+    const emergencyInputRef = useRef<HTMLInputElement>(null);
+    const emergencyAutocompleteRef = useRef<any>(null);
+    const [emergencyAddress, setEmergencyAddress] = useState('');
+    const isApiReady = useGoogleMapsApi();
+
+    useEffect(() => {
+        if (!isApiReady || !emergencyInputRef.current || !window.google || !window.google.maps.places) return;
+        if (emergencyAutocompleteRef.current) return;
+
+        const autocomplete = new window.google.maps.places.Autocomplete(emergencyInputRef.current, {
+            types: ['address'],
+            fields: ['formatted_address'],
+            componentRestrictions: { country: 'us' }
+        });
+
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+                setEmergencyAddress(place.formatted_address);
+            } else if (emergencyInputRef.current) {
+                setEmergencyAddress(emergencyInputRef.current.value);
+            }
+        });
+
+        emergencyAutocompleteRef.current = autocomplete;
+
+        return () => {
+            if (emergencyAutocompleteRef.current) {
+                window.google.maps.event.clearInstanceListeners(emergencyAutocompleteRef.current);
+                emergencyAutocompleteRef.current = null;
+            }
+        };
+    }, [isApiReady, intakeTab]);
 
     useEffect(() => {
         const handleOpenLightbox = (e: any) => {
@@ -222,17 +176,15 @@ const PublicHomepageV3: React.FC = () => {
             {/* ── HERO SECTION (INTAKE) ─────────────────────────────────────── */}
             <section id="hero" className="relative min-h-[90vh] flex flex-col items-center justify-center pt-36 pb-24 overflow-hidden z-10">
                 <div className="container mx-auto px-6 text-center flex flex-col items-center max-w-5xl">
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-rhive-pink font-mono tracking-widest uppercase mb-8 text-[10px]"
-                    >
-                        <Zap size={12} className="animate-pulse" /> System Online // Utah Node Active
-                    </motion.div>
 
-                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-black uppercase leading-[0.85] tracking-tighter text-white mb-8">
-                        <GlitchText text="FINISH ON TOP." className="text-white drop-shadow-[0_0_30px_rgba(236,2,139,0.3)]" />
-                        <span className="text-rhive-pink ml-2 font-display">^</span>
+
+                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-sans font-normal uppercase leading-[0.85] tracking-tighter mb-8">
+                        <GlitchText text="FINISH ON TOP." className="animate-text-gradient-white drop-shadow-[0_0_30px_rgba(236,2,139,0.3)]" />
+                        <img 
+                            src="https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FImages%2Frhive%20pink%20icon.png?alt=media&token=a9982468-9ba9-498c-bd49-d2f6c1b9f4d1"
+                            alt="RHIVE Icon"
+                            className="inline-block h-[0.7em] w-auto align-top ml-3 drop-shadow-[0_0_15px_rgba(236,2,139,0.8)]"
+                        />
                     </h1>
 
                     <p className="text-lg md:text-xl font-medium text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed font-serif italic">
@@ -240,15 +192,25 @@ const PublicHomepageV3: React.FC = () => {
                         <span className="text-white font-bold not-italic">100% transparent costs, 100% satisfaction, zero surprises.</span>
                     </p>
 
-                    <button 
-                        onClick={() => {
-                            const processEl = document.getElementById('process');
-                            processEl?.scrollIntoView({ behavior: 'smooth' });
-                        }}
-                        className="text-xs font-mono tracking-widest uppercase text-slate-400 hover:text-white transition-colors flex items-center gap-2 mb-12"
-                    >
-                        Built by RHIVE.AI | View Our 10-Stage 'Zero Surprises' Process <ArrowRight size={12} />
-                    </button>
+                    <div className="flex flex-wrap items-center justify-center gap-4 mb-12 relative z-20">
+                        <button 
+                            onClick={() => setActiveLightbox('rhive-ai')}
+                            className="text-xs font-mono tracking-widest uppercase text-white hover:text-rhive-pink underline transition-all duration-300 flex items-center gap-2"
+                        >
+                            <Zap size={12} className="text-rhive-pink animate-pulse" />
+                            Built by RHIVE.AI
+                        </button>
+                        <button 
+                            onClick={() => {
+                                const processEl = document.getElementById('process');
+                                processEl?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="text-xs font-mono tracking-widest uppercase text-slate-300 hover:text-rhive-pink underline transition-all duration-300 flex items-center gap-2"
+                        >
+                            View Our 10-Stage 'Zero Surprises' Process
+                            <ArrowRight size={12} />
+                        </button>
+                    </div>
 
                     {/* Interactive Tab Control */}
                     <div className="w-full max-w-2xl bg-white/5 border border-white/10 p-1.5 rounded-full flex gap-1 mb-2 relative z-20">
@@ -276,7 +238,7 @@ const PublicHomepageV3: React.FC = () => {
                             onClick={() => setIntakeTab('quote')}
                             className={cn(
                                 "flex-1 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
-                                intakeTab === 'quote' ? "bg-[#08137C] text-white shadow-[0_0_15px_rgba(8,19,124,0.4)]" : "text-gray-400 hover:text-white"
+                                intakeTab === 'quote' ? "bg-[#e2ab49] text-black shadow-[0_0_15px_rgba(226,171,73,0.4)]" : "text-gray-400 hover:text-white"
                             )}
                         >
                             <CheckCircle2 size={14} />
@@ -287,7 +249,7 @@ const PublicHomepageV3: React.FC = () => {
                     <div className="w-full relative z-10">
                         {intakeTab === 'emergency' ? (
                             <div className="w-full max-w-2xl mx-auto mt-8 p-6 bg-red-950/20 border border-red-500/30 rounded-2xl text-left flex flex-col sm:flex-row justify-between items-center gap-6 animate-fade-in">
-                                <div>
+                                <div className="flex-1">
                                     <h4 className="text-red-400 font-bold uppercase text-sm tracking-wider flex items-center gap-2">
                                         <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
                                         Active Leak Detected?
@@ -301,20 +263,41 @@ const PublicHomepageV3: React.FC = () => {
                                         Learn More: 90-Day Tarps & Free Audits
                                     </button>
                                 </div>
-                                <button
-                                    onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { protocol: 'EMERGENCY BREACH' } }))}
-                                    className="px-8 py-4 bg-red-600 hover:bg-red-500 active:scale-95 text-white font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_15px_rgba(220,38,38,0.5)] shrink-0 w-full sm:w-auto"
-                                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
-                                >
-                                    Report Emergency Leak
-                                </button>
+                                <div className="flex flex-col gap-3 w-full sm:w-[320px] shrink-0">
+                                    <input
+                                        ref={emergencyInputRef}
+                                        type="text"
+                                        placeholder={isApiReady ? "ENTER EMERGENCY ADDRESS..." : "INITIALIZING..."}
+                                        value={emergencyAddress}
+                                        onChange={(e) => setEmergencyAddress(e.target.value)}
+                                        className="w-full bg-black/60 border border-red-500/30 focus:border-red-500 p-4 rounded-lg text-xs font-black uppercase tracking-widest outline-none text-red-400 placeholder-red-500/50 shadow-[0_0_10px_rgba(220,38,38,0.1)] focus:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all duration-300"
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            if (emergencyAddress) {
+                                                window.dispatchEvent(new CustomEvent('open-estimator', { 
+                                                    detail: { 
+                                                        protocol: 'EMERGENCY BREACH',
+                                                        address: emergencyAddress
+                                                    } 
+                                                }));
+                                            } else {
+                                                emergencyInputRef.current?.focus();
+                                            }
+                                        }}
+                                        className="w-full py-4 bg-red-600 hover:bg-red-500 active:scale-95 text-white font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_15px_rgba(220,38,38,0.5)] shrink-0"
+                                        style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                                    >
+                                        Report Emergency Leak
+                                    </button>
+                                </div>
                             </div>
                         ) : intakeTab === 'quote' ? (
                             <AddressScanInput 
                                 id="v3-intake-scanner" 
                                 placeholder="ENTER PROPERTY ADDRESS FOR CERTIFIED BID"
                                 buttonText="Build Certified Quote"
-                                themeColor="blue"
+                                themeColor="gold"
                             />
                         ) : (
                             <AddressScanInput 
@@ -332,8 +315,8 @@ const PublicHomepageV3: React.FC = () => {
             <section id="services" className="py-32 px-6 border-t border-white/5 bg-black/40 z-10 relative">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-20 text-left">
-                        <span className="text-[#ec028b] font-mono text-xs uppercase tracking-widest mb-3 block">// CAPABILITIES</span>
-                        <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4 text-white">Capability Catalog.</h2>
+                        <span className="font-mono text-xs uppercase tracking-widest mb-3 block animate-text-gradient-pink">// CAPABILITIES</span>
+                        <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4 animate-text-gradient-white">Capability Catalog.</h2>
                         <div className="w-20 h-1 bg-rhive-pink" />
                     </div>
 
@@ -415,9 +398,9 @@ const PublicHomepageV3: React.FC = () => {
                 <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-16 items-start mb-20">
                     <div className="space-y-8">
                         <div className="inline-block border border-rhive-pink/30 px-6 py-2 rounded-full bg-rhive-pink/10 shadow-[0_0_20px_rgba(236,2,139,0.3)]">
-                            <span className="text-rhive-pink font-bold text-xs tracking-[0.4em] uppercase">The Core Mission</span>
+                            <span className="font-bold text-xs tracking-[0.4em] uppercase animate-text-gradient-pink">The Core Mission</span>
                         </div>
-                        <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-tight text-white border-b border-white/5 pb-6">
+                        <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-tight animate-text-gradient-white border-b border-white/5 pb-6">
                             About RHIVE
                         </h2>
                         <p className="text-2xl leading-snug font-serif italic text-gray-300">
@@ -458,10 +441,10 @@ const PublicHomepageV3: React.FC = () => {
             <section id="process" className="py-32 px-6 border-y border-white/5 bg-white/[0.01] z-10 relative">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-20">
-                        <div className="inline-block border border-rhive-blue/50 px-4 py-1 rounded-full text-xs font-bold tracking-[0.2em] mb-4 uppercase bg-[#08137C]/10 text-white shadow-[0_0_15px_rgba(8,19,124,0.2)]">
-                            Zero Surprises Promise
+                        <div className="inline-block border border-rhive-blue/50 px-4 py-1 rounded-full text-xs font-bold tracking-[0.2em] mb-4 uppercase bg-[#08137C]/10 shadow-[0_0_15px_rgba(8,19,124,0.2)]">
+                            <span className="animate-text-gradient-white">Zero Surprises Promise</span>
                         </div>
-                        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white">The 10-Stage Journey</h2>
+                        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter animate-text-gradient-white">The 10-Stage Journey</h2>
                         <p className="text-gray-400 text-sm mt-3 max-w-xl mx-auto">Tracked, streamed, and audited transparency at every single mile-marker.</p>
                     </div>
 
@@ -500,8 +483,8 @@ const PublicHomepageV3: React.FC = () => {
             {/* ── FINANCING (0% APR & 50/40/10) ──────────────────────────────── */}
             <section id="financing" className="py-32 px-6 max-w-7xl mx-auto z-10 relative">
                 <div className="text-center mb-20">
-                    <span className="text-[#ec028b] font-mono text-xs uppercase tracking-widest mb-3 block">// CAPITAL &amp; LOGIC</span>
-                    <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white">0% APR for 18 Months.</h2>
+                    <span className="font-mono text-xs uppercase tracking-widest mb-3 block animate-text-gradient-pink">// CAPITAL &amp; LOGIC</span>
+                    <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter animate-text-gradient-white">0% APR for 18 Months.</h2>
                     <p className="text-gray-400 text-sm mt-3 max-w-xl mx-auto">Lending structures engineered to optimize capital allocation without interest friction.</p>
                 </div>
 
@@ -543,9 +526,9 @@ const PublicHomepageV3: React.FC = () => {
             {/* ── CAREERS (JOIN THE HIVE) ────────────────────────────────────── */}
             <section id="careers" className="py-32 px-6 max-w-5xl mx-auto text-center z-10 relative">
                 <div className="inline-block border border-rhive-pink/30 px-6 py-2 rounded-full bg-rhive-pink/10 mb-6 shadow-[0_0_20px_rgba(236,2,139,0.3)]">
-                    <span className="text-rhive-pink font-bold text-xs tracking-[0.4em] uppercase">Join The Hive</span>
+                    <span className="font-bold text-xs tracking-[0.4em] uppercase animate-text-gradient-pink">Join The Hive</span>
                 </div>
-                <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white mb-6">Our Hive is a Movement.</h2>
+                <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter animate-text-gradient-white mb-6">Our Hive is a Movement.</h2>
                 <p className="text-gray-300 text-lg md:text-xl font-serif italic max-w-2xl mx-auto leading-relaxed mb-12">
                     Every roof we install supports a bigger mission. At RHIVE, a percentage of every project goes directly into community reinvestment, workforce development, and giving back.
                 </p>
@@ -619,8 +602,8 @@ const PublicHomepageV3: React.FC = () => {
                             {/* Content based on active state */}
                             {activeLightbox === 'emergency' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-red-500 font-mono text-xs uppercase tracking-[0.3em]">// EMERGENCY MITIGATION</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Active Leak Containment Protocol</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-red">// EMERGENCY MITIGATION</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight animate-text-gradient-white">Active Leak Containment Protocol</h3>
                                     <p className="text-gray-400 font-serif italic text-base leading-relaxed">
                                         Utah's most responsive emergency damage control pipeline. We deploy certified specialists to isolate, protect, and document water intrusion events in real-time.
                                     </p>
@@ -662,8 +645,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'commercial' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// COMMERCIAL MATRIX</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Commercial Membrane Systems &amp; CAPEX Planner</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// COMMERCIAL MATRIX</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight animate-text-gradient-white">Commercial Membrane Systems &amp; CAPEX Planner</h3>
                                     <p className="text-gray-400 font-serif italic text-base leading-relaxed">
                                         High-tensile PVC and TPO deployments designed for extreme temperature tolerances and flat-roof drainage profiles. Itemized manufacturer certification and NDL warranty integration.
                                     </p>
@@ -784,8 +767,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'residential' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// RESIDENTIAL INFRASTRUCTURE</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Steep-Slope Residential Systems</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// RESIDENTIAL INFRASTRUCTURE</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight animate-text-gradient-white">Steep-Slope Residential Systems</h3>
                                     <p className="text-gray-400 font-serif italic text-base leading-relaxed">
                                         Highest quality residential builds using Owens Corning Duration® shingles. Formulated with patented SureNail® Technology for maximum grip and wind resistance.
                                     </p>
@@ -816,7 +799,7 @@ const PublicHomepageV3: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={() => {
-                                                setActivePageId('P-02a');
+                                                setActivePageId('P-02a-1');
                                                 setActiveLightbox(null);
                                             }}
                                             className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-black uppercase text-xs tracking-widest transition-all cursor-pointer"
@@ -830,8 +813,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'gutters' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// DRAINAGE SCIENCE</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Seamless Gutters &amp; High-Volume Evacuation</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// DRAINAGE SCIENCE</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight animate-text-gradient-white">Seamless Gutters &amp; High-Volume Evacuation</h3>
                                     <p className="text-gray-400 font-serif italic text-base leading-relaxed">
                                         Custom-extruded seamless systems fabricated directly on-site to exact millimeter measurements. Designed to protect foundations and landscaping from heavy Utah snow melts.
                                     </p>
@@ -848,13 +831,23 @@ const PublicHomepageV3: React.FC = () => {
                                             <p className="text-gray-500 text-xs leading-relaxed">Designed with 3\"x4\" downspout columns and micro-mesh leaf screens to accommodate up to 14 inches of rainwater per hour.</p>
                                         </div>
                                     </div>
-                                    <div className="pt-6">
+                                    <div className="pt-6 flex flex-col sm:flex-row gap-4">
                                         <button
-                                            onClick={() => setActiveLightbox(null)}
+                                            onClick={() => {
+                                                setActivePageId('P-02c');
+                                                setActiveLightbox(null);
+                                            }}
                                             className="px-8 py-4 bg-rhive-pink text-white font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_15px_rgba(236,2,139,0.3)] cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Add to Project Estimate
+                                            Explore Gutter Systems
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveLightbox(null)}
+                                            className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-black uppercase text-xs tracking-widest transition-all cursor-pointer"
+                                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                                        >
+                                            Dismiss Overview
                                         </button>
                                     </div>
                                 </div>
@@ -862,8 +855,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'icedefense' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// THERMAL PROTECTION</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Thermal Ice Defense &amp; Snow Control</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// THERMAL PROTECTION</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight animate-text-gradient-white">Thermal Ice Defense &amp; Snow Control</h3>
                                     <p className="text-gray-400 font-serif italic text-base leading-relaxed">
                                         Engineered thermal management designed to prevent ice dam backing, gutter sagging, and catastrophic snow slides on steep-slope roof sections.
                                     </p>
@@ -880,13 +873,23 @@ const PublicHomepageV3: React.FC = () => {
                                             <p className="text-gray-500 text-xs leading-relaxed">Solid steel color-matched snow guards designed to lock sliding snow packs in place, allowing controlled water melt off without sudden avalanches.</p>
                                         </div>
                                     </div>
-                                    <div className="pt-6">
+                                    <div className="pt-6 flex flex-col sm:flex-row gap-4">
                                         <button
-                                            onClick={() => setActiveLightbox(null)}
+                                            onClick={() => {
+                                                setActivePageId('P-02d');
+                                                setActiveLightbox(null);
+                                            }}
                                             className="px-8 py-4 bg-rhive-pink text-white font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_15px_rgba(236,2,139,0.3)] cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Request Ice Assessment
+                                            Explore Ice Management
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveLightbox(null)}
+                                            className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-black uppercase text-xs tracking-widest transition-all cursor-pointer"
+                                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                                        >
+                                            Dismiss Overview
                                         </button>
                                     </div>
                                 </div>
@@ -894,8 +897,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'solar' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// SYSTEM INTEGRATION</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Certified Solar Decoupling &amp; Protection</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// SYSTEM INTEGRATION</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight animate-text-gradient-white">Certified Solar Decoupling &amp; Protection</h3>
                                     <p className="text-gray-400 font-serif italic text-base leading-relaxed">
                                         Certified Detachment, Safe Storage, and Complete Re-Commissioning of residential solar systems. We coordinate directly with local utility partners to eliminate split liability.
                                     </p>
@@ -919,8 +922,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'portfolio' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// PORTFOLIO MONITORING</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight">Commercial Asset Audits &amp; Inspections</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// PORTFOLIO MONITORING</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight animate-text-gradient-white">Commercial Asset Audits &amp; Inspections</h3>
                                     <p className="text-gray-400 font-serif italic text-base leading-relaxed">
                                         Designed for facility managers, property developers, and HOA boards managing multiple roof systems. Live structural integrity mapping, predictive leaks, and automated alerts.
                                     </p>
@@ -949,13 +952,103 @@ const PublicHomepageV3: React.FC = () => {
                                 </div>
                             )}
 
+                            {activeLightbox === 'rhive-ai' && (
+                                <div className="space-y-8">
+                                    <div className="grid md:grid-cols-[0.8fr_1.2fr] gap-8 md:gap-12 items-stretch">
+                                        {/* Left Side: Animated Blob */}
+                                        <div className="flex flex-col items-center justify-center bg-black/40 border border-white/5 p-6 rounded-xl relative overflow-hidden group">
+                                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(236,2,139,0.1)_0%,transparent_70%)]" />
+                                            
+                                            <div className="ai-blob-container relative z-10 my-4">
+                                                <div className="ai-blob-pulse absolute inset-0">
+                                                    <div className="ai-blob-1 w-full h-full" />
+                                                </div>
+                                                <div className="ai-blob-2" />
+                                                
+                                                <div className="absolute w-4 h-4 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,1),0_0_40px_rgba(236,2,139,1)] z-20" />
+                                            </div>
+
+                                            <div className="w-full mt-6 space-y-2 font-mono text-[10px] text-gray-500 uppercase tracking-widest relative z-10">
+                                                <div className="flex justify-between border-b border-white/5 pb-1">
+                                                    <span>AGENT CORE:</span>
+                                                    <span className="text-rhive-pink animate-pulse">● ACTIVE / ONLINE</span>
+                                                </div>
+                                                <div className="flex justify-between border-b border-white/5 pb-1">
+                                                    <span>MODEL STATE:</span>
+                                                    <span className="text-white">DEEP-COGNITION v4.2</span>
+                                                </div>
+                                                <div className="flex justify-between border-b border-white/5 pb-1">
+                                                    <span>DEVIATION ACCURACY:</span>
+                                                    <span className="text-white">±0.003mm</span>
+                                                </div>
+                                                <div className="flex justify-between border-b border-white/5 pb-1">
+                                                    <span>NEURAL LINK:</span>
+                                                    <span className="text-rhive-gold">CONNECTED</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Side: Text & Capabilities */}
+                                        <div className="space-y-6 flex flex-col justify-center">
+                                            <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">
+                                                <Zap size={14} className="text-rhive-pink" /> // AUTONOMOUS INTEL ENGINE
+                                            </div>
+                                            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight leading-none">
+                                                <GlitchText text="RHIVE AI AGENT" className="animate-text-gradient-white" />
+                                            </h3>
+                                            <p className="text-gray-300 font-serif italic text-sm md:text-base leading-relaxed max-w-[60ch]">
+                                                Our proprietary neural orchestrator automates aerial cartography, instant quote compiling, and logistic dependencies with zero human latency.
+                                            </p>
+                                            
+                                            <div className="space-y-4 pt-2">
+                                                <div className="flex items-start gap-4 p-4 border border-white/5 bg-white/[0.02] hover:border-rhive-pink/30 hover:bg-white/[0.04] transition-all rounded-lg">
+                                                    <div className="p-2 border border-rhive-pink/30 bg-rhive-pink/10 text-rhive-pink rounded">
+                                                        <Laptop size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-white uppercase text-[10px] tracking-wider mb-1 font-sans">Autonomous Spatial Cartography</h4>
+                                                        <p className="text-gray-400 text-xs leading-relaxed font-serif">
+                                                            Processes multi-spectral satellite imagery and point-cloud aerial drone telemetry to calculate precise slope, height, and edge dimensions in under 3 minutes.
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-start gap-4 p-4 border border-white/5 bg-white/[0.02] hover:border-rhive-pink/30 hover:bg-white/[0.04] transition-all rounded-lg">
+                                                    <div className="p-2 border border-rhive-pink/30 bg-rhive-pink/10 text-rhive-pink rounded">
+                                                        <Sparkles size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-white uppercase text-[10px] tracking-wider mb-1 font-sans">Dynamic "Ceiling/Floor" Pricing</h4>
+                                                        <p className="text-gray-400 text-xs leading-relaxed font-serif">
+                                                            Instantly compiles shingle-waste matrices and labor cost floors to provide absolute price visibility, locked with a certified price guarantee.
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-start gap-4 p-4 border border-white/5 bg-white/[0.02] hover:border-rhive-pink/30 hover:bg-white/[0.04] transition-all rounded-lg">
+                                                    <div className="p-2 border border-rhive-pink/30 bg-rhive-pink/10 text-rhive-pink rounded">
+                                                        <Handshake size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-white uppercase text-[10px] tracking-wider mb-1 font-sans">Zero Surprises Scheduling</h4>
+                                                        <p className="text-gray-400 text-xs leading-relaxed font-serif">
+                                                            Directly coordinates manufacturer shipping logs, local permit nodes, and certified installation dispatch loops to completely bypass scheduling delays.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {activeLightbox === 'about' && (
                                 <div className="space-y-8">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// COMPANY DNA</div>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// COMPANY DNA</div>
                                     
                                     <div className="grid md:grid-cols-[1.2fr_0.8fr] gap-10 items-start">
                                         <div className="space-y-6 max-w-[65ch]">
-                                            <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">The RHIVE Transparency Decree</h3>
+                                            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight leading-[1.2] animate-text-gradient-white">The RHIVE Transparency Decree</h3>
                                             <p className="text-gray-300 font-serif italic text-base leading-[1.65]">
                                                 RHIVE Construction is a proudly female-owned and operated company specializing in residential and commercial roofing. But roofing is only the beginning of our story.
                                             </p>
@@ -1049,8 +1142,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'services' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// CAPABILITY CATALOG</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">Monolithic Performance Engineering</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// CAPABILITY CATALOG</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight leading-[1.2] animate-text-gradient-white">Monolithic Performance Engineering</h3>
                                     <p className="text-gray-300 font-serif italic text-base leading-[1.65] max-w-[65ch]">
                                         Every roof we install represents a commercial-grade, multi-layered defense pipeline built to survive Utah's most challenging weather profiles.
                                     </p>
@@ -1160,8 +1253,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'process' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// ZERO SURPRISES PROMISE</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">The 10-Stage Journey</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// ZERO SURPRISES PROMISE</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight leading-[1.2] animate-text-gradient-white">The 10-Stage Journey</h3>
                                     <p className="text-gray-300 font-serif italic text-base leading-[1.65] max-w-[65ch]">
                                         Experience a construction project defined by absolute transparency, automated scheduling, and constant communications. Here is our 10-stage process from digital intake to asset handover:
                                     </p>
@@ -1211,8 +1304,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'financing' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-blue font-mono text-xs uppercase tracking-[0.3em]">// CAPITAL OPTIMIZATION</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">Flexible Project Financing</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-blue">// CAPITAL OPTIMIZATION</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight leading-[1.2] animate-text-gradient-white">Flexible Project Financing</h3>
                                     <p className="text-gray-300 font-serif italic text-base leading-[1.65] max-w-[65ch]">
                                         Brought to you in partnership with Enhancify. We construct structures and capital pathways to protect your home's integrity without interest friction.
                                     </p>
@@ -1261,8 +1354,8 @@ const PublicHomepageV3: React.FC = () => {
 
                             {activeLightbox === 'careers' && (
                                 <div className="space-y-6">
-                                    <div className="flex items-center gap-3 text-rhive-pink font-mono text-xs uppercase tracking-[0.3em]">// MANIFESTO</div>
-                                    <h3 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-[1.2]">Join The Movement</h3>
+                                    <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.3em] animate-text-gradient-pink">// MANIFESTO</div>
+                                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tight leading-[1.2] animate-text-gradient-white">Join The Movement</h3>
                                     <p className="text-gray-300 font-serif italic text-base leading-[1.65] max-w-[65ch]">
                                         Redefining what it means to work in skilled services. We combine craft precision with Quantum OS automation to unleash professionals.
                                     </p>

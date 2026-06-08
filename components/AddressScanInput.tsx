@@ -10,7 +10,7 @@ interface AddressScanInputProps {
     id?: string;
     placeholder?: string;
     buttonText?: string;
-    themeColor?: 'pink' | 'blue';
+    themeColor?: 'pink' | 'blue' | 'gold';
 }
 
 export const AddressScanInput = ({
@@ -78,21 +78,30 @@ export const AddressScanInput = ({
     };
 
     const isPink = themeColor === 'pink';
+    const isGold = themeColor === 'gold';
 
     // Accent line stroke colors (SVG)
-    const accentStroke = isPink ? "#ec028b" : "#3b82f6";
-    const topGradVia = isPink ? "via-rhive-pink/40" : "via-blue-500/40";
-    const blinkDotFill = isPink ? "#ec028b" : "#3b82f6";
-    const inputPlaceholderClass = isPink ? "placeholder-rhive-pink/60 text-rhive-pink/90" : "placeholder-blue-400/60 text-blue-300/90";
+    const accentStroke = isPink ? "#ec028b" : (isGold ? "#e2ab49" : "#3b82f6");
+    const topGradVia = isPink ? "via-rhive-pink/40" : (isGold ? "via-[#e2ab49]/40" : "via-blue-500/40");
+    const blinkDotFill = isPink ? "#ec028b" : (isGold ? "#e2ab49" : "#3b82f6");
+    const inputPlaceholderClass = isPink 
+        ? "placeholder-rhive-pink/60 text-rhive-pink/90" 
+        : (isGold ? "placeholder-[#e2ab49]/60 text-[#e2ab49]/90" : "placeholder-blue-400/60 text-blue-300/90");
 
     // Left border animate pulse classes
-    const leftPulseClass = isPink ? "bg-rhive-pink shadow-[0_0_10px_rgba(236,2,139,1)]" : "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,1)]";
-    const rightPulseClass = isPink ? "bg-[#22d3ee] shadow-[0_0_10px_rgba(34,211,238,1)]" : "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,1)]";
+    const leftPulseClass = isPink 
+        ? "bg-rhive-pink shadow-[0_0_10px_rgba(236,2,139,1)]" 
+        : (isGold ? "bg-[#e2ab49] shadow-[0_0_10px_rgba(226,171,73,1)]" : "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,1)]");
+    const rightPulseClass = isPink 
+        ? "bg-[#22d3ee] shadow-[0_0_10px_rgba(34,211,238,1)]" 
+        : (isGold ? "bg-[#e2ab49] shadow-[0_0_10px_rgba(226,171,73,1)]" : "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,1)]");
 
     // Button style classes
     const buttonBgClass = isPink 
         ? "bg-rhive-pink shadow-[0_0_20px_rgba(236,2,139,0.4)]" 
-        : "bg-[#08137C] hover:bg-[#0c1c9c] shadow-[0_0_20px_rgba(8,19,124,0.6)] border border-[#0c1c9c]/50";
+        : (isGold 
+            ? "bg-[#e2ab49] hover:bg-[#d19a38] text-black shadow-[0_0_20px_rgba(226,171,73,0.5)] border border-[#d19a38]/50" 
+            : "bg-[#08137C] hover:bg-[#0c1c9c] shadow-[0_0_20px_rgba(8,19,124,0.6)] border border-[#0c1c9c]/50");
 
     return (
         <>
@@ -157,7 +166,7 @@ export const AddressScanInput = ({
                 {/* Premium Button Section */}
                 <button
                     onClick={handleScanClick}
-                    className={`relative h-full px-8 md:px-12 flex items-center justify-center gap-2 text-white font-black uppercase text-base tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shrink-0 z-20 ${buttonBgClass}`}
+                    className={`relative h-full px-8 md:px-12 flex items-center justify-center gap-2 ${isGold ? 'text-black' : 'text-white'} font-black uppercase text-base tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shrink-0 z-20 ${buttonBgClass}`}
                     style={{
                         clipPath: `polygon(0 0, 100% 0, 100% calc(100% - ${chamferSize}), calc(100% - ${chamferSize}) 100%, 0 100%)`
                     }}
@@ -166,7 +175,7 @@ export const AddressScanInput = ({
                     {isPink ? (
                         <Zap size={18} fill="currentColor" className="text-white" />
                     ) : (
-                        <CheckCircle2 size={18} className="text-white shrink-0" />
+                        <CheckCircle2 size={18} className={`shrink-0 ${isGold ? 'text-black' : 'text-white'}`} />
                     )}
                     <span className="relative z-10">{buttonText}</span>
                 </button>

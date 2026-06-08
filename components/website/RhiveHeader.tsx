@@ -32,7 +32,7 @@ const RhiveHeader: React.FC = () => {
 
     const currentHomeId = (activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3')
         ? activePageId
-        : (sessionStorage.getItem('lastHomepageId') || 'P-00');
+        : (sessionStorage.getItem('lastHomepageId') || 'P-00-V3');
 
     const navLinks = currentHomeId === 'P-00-V3'
         ? [
@@ -73,8 +73,8 @@ const RhiveHeader: React.FC = () => {
         }
 
         // Standard scrolling logic for live mode / external pages
-        if (activePageId !== 'P-00' && activePageId !== 'P-01') {
-            setActivePageId('P-00');
+        if (activePageId !== 'P-00' && activePageId !== 'P-00-V2' && activePageId !== 'P-00-V3' && activePageId !== 'P-01') {
+            setActivePageId('P-00-V3');
             // Give it a moment to mount before scrolling
             setTimeout(() => {
                 const element = document.getElementById(id);
@@ -153,40 +153,42 @@ const RhiveHeader: React.FC = () => {
 
             {/* EXIT BUTTON (Far Left) */}
             <div className="absolute left-10 flex items-center gap-6 z-10">
-                <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
+                <button
                     onClick={handleExit}
-                    className="flex items-center gap-2.5 px-4 py-2 border border-white/10 hover:border-rhive-pink/40 bg-black/40 backdrop-blur-md rounded-full text-slate-300 hover:text-white transition-all duration-300 relative overflow-hidden group btn-metal-sweep shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+                    className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300"
                 >
-                    {/* Metallic sweep shine effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full metal-sweep-element pointer-events-none" />
-                    
-                    <LogOut size={13} className="text-rhive-pink group-hover:text-white transition-colors duration-300" />
-                    <span className="text-[10px] font-black tracking-[0.2em] uppercase">Exit to Portal</span>
-                </motion.button>
+                    <LogOut size={13} className="text-rhive-pink shrink-0" />
+                    <span>Exit to Portal</span>
+                </button>
             </div>
 
-            <nav className="flex-1 flex justify-end gap-3 z-10 ml-[180px]">
+            <nav className="flex-1 flex justify-end items-center gap-8 z-10 ml-[180px]">
                 {navLinks.slice(0, 3).map((link) => (
-                    <motion.button
+                    <button
                         key={link.target}
-                        whileHover={{ scale: 1.04, y: -0.5 }}
-                        whileTap={{ scale: 0.96 }}
                         onClick={() => handleLinkClick(link.target)}
-                        className="relative flex items-center gap-2 px-3 py-1.5 border border-white/5 hover:border-rhive-pink/30 bg-white/[0.02] hover:bg-white/[0.06] rounded-full text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-white transition-all duration-300 overflow-hidden group btn-metal-sweep shadow-[0_1px_4px_rgba(0,0,0,0.3)]"
+                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300"
                     >
-                        {/* Metallic sweep shine effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full metal-sweep-element pointer-events-none" />
-                        
-                        {/* Glowing tech neon status dot */}
-                        <span className="w-1.5 h-1.5 rounded-full bg-rhive-pink/40 group-hover:bg-rhive-pink transition-all duration-300 shadow-[0_0_4px_rgba(236,2,139,0.2)] group-hover:shadow-[0_0_8px_rgba(236,2,139,0.8)] shrink-0" />
-                        
-                        <span className="relative z-10">{link.label}</span>
-                    </motion.button>
+                        {link.label}
+                    </button>
                 ))}
             </nav>
  
+            {/* Center Spacer to keep navigation links clear of the notch */}
+            <div className="w-[360px] shrink-0" />
+ 
+            <nav className="flex-1 flex justify-start items-center gap-8 z-10 mr-[180px]">
+                {navLinks.slice(3).map((link) => (
+                    <button
+                        key={link.target}
+                        onClick={() => handleLinkClick(link.target)}
+                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300"
+                    >
+                        {link.label}
+                    </button>
+                ))}
+            </nav>
+
             {/* CENTRAL LOGO (Absolute Alignment for Perfect Spacing) */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[280px] h-[110px] flex items-center justify-center z-20 pointer-events-none">
                 <motion.button
@@ -195,9 +197,10 @@ const RhiveHeader: React.FC = () => {
                     onClick={() => {
                         if (currentHomeId === 'P-00-V3') {
                             setActivePageId('P-00-V3');
+                        } else if (currentHomeId === 'P-00-V2') {
+                            setActivePageId('P-00-V2');
                         } else {
-                            setActivePageId('P-00');
-                            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
+                            setActivePageId('P-00-V3');
                         }
                     }}
                     className="relative flex items-center justify-center mt-1 pointer-events-auto"
@@ -209,66 +212,44 @@ const RhiveHeader: React.FC = () => {
                     />
                 </motion.button>
             </div>
-            {/* Empty spacer to keep nav links apart */}
-            <div className="mx-16 w-[140px] shrink-0" />
- 
-            <nav className="flex-1 flex justify-start gap-3 items-center z-10">
-                {navLinks.slice(3).map((link) => (
-                    <motion.button
-                        key={link.target}
-                        whileHover={{ scale: 1.04, y: -0.5 }}
-                        whileTap={{ scale: 0.96 }}
-                        onClick={() => handleLinkClick(link.target)}
-                        className="relative flex items-center gap-2 px-3 py-1.5 border border-white/5 hover:border-rhive-pink/30 bg-white/[0.02] hover:bg-white/[0.06] rounded-full text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-white transition-all duration-300 overflow-hidden group btn-metal-sweep shadow-[0_1px_4px_rgba(0,0,0,0.3)]"
-                    >
-                        {/* Metallic sweep shine effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full metal-sweep-element pointer-events-none" />
-                        
-                        {/* Glowing tech neon status dot */}
-                        <span className="w-1.5 h-1.5 rounded-full bg-rhive-pink/40 group-hover:bg-rhive-pink transition-all duration-300 shadow-[0_0_4px_rgba(236,2,139,0.2)] group-hover:shadow-[0_0_8px_rgba(236,2,139,0.8)] shrink-0" />
-                        
-                        <span className="relative z-10">{link.label}</span>
-                    </motion.button>
-                ))}
 
-                <div className="h-6 w-[1px] bg-white/20 mx-4" />
+            {/* THEME & PHONE CONTROLS (Far Right Symmetrical absolute alignment) */}
+            <div className="absolute right-10 flex items-center gap-4 z-10">
+                <div className="h-6 w-[1px] bg-white/20 mr-2" />
+                <button
+                    onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                    className="p-2.5 rounded-full hover:text-rhive-pink transition-all group relative border border-white/10 hover:border-rhive-pink/50 bg-black/60 text-white/80"
+                    title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                >
+                    <div className="relative w-5 h-5 flex items-center justify-center">
+                        <motion.div
+                            initial={false}
+                            animate={{ scale: isDark ? 0 : 1, rotate: isDark ? 90 : 0, opacity: isDark ? 0 : 1 }}
+                            className="absolute"
+                        >
+                            <Sun size={20} />
+                        </motion.div>
+                        <motion.div
+                            initial={false}
+                            animate={{ scale: isDark ? 1 : 0, rotate: isDark ? 0 : -90, opacity: isDark ? 1 : 0 }}
+                            className="absolute"
+                        >
+                            <Moon size={20} />
+                        </motion.div>
+                    </div>
+                </button>
 
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => setTheme(isDark ? 'light' : 'dark')}
-                        className="p-2.5 rounded-full hover:text-rhive-pink transition-all group relative border border-white/10 hover:border-rhive-pink/50 bg-black/60 text-white/80"
-                        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                    >
-                        <div className="relative w-5 h-5 flex items-center justify-center">
-                            <motion.div
-                                initial={false}
-                                animate={{ scale: isDark ? 0 : 1, rotate: isDark ? 90 : 0, opacity: isDark ? 0 : 1 }}
-                                className="absolute"
-                            >
-                                <Sun size={20} />
-                            </motion.div>
-                            <motion.div
-                                initial={false}
-                                animate={{ scale: isDark ? 1 : 0, rotate: isDark ? 0 : -90, opacity: isDark ? 1 : 0 }}
-                                className="absolute"
-                            >
-                                <Moon size={20} />
-                            </motion.div>
-                        </div>
-                    </button>
-
-                    <motion.a
-                        href="tel:8887448301"
-                        whileHover={{ scale: 1.1, color: '#ec028b' }}
-                        className="p-2.5 rounded-full border border-white/10 hover:border-rhive-pink/50 transition-all text-rhive-pink bg-black/60"
-                        title="Call Us"
-                    >
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                        </svg>
-                    </motion.a>
-                </div>
-            </nav>
+                <motion.a
+                    href="tel:8887448301"
+                    whileHover={{ scale: 1.1, color: '#ec028b' }}
+                    className="p-2.5 rounded-full border border-white/10 hover:border-rhive-pink/50 transition-all text-rhive-pink bg-[#000000]/60"
+                    title="Call Us"
+                >
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                </motion.a>
+            </div>
         </header>
     );
 };
