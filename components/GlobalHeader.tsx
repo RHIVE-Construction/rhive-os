@@ -104,8 +104,8 @@ export const GlobalHeader: React.FC = () => {
                         <MagnifyingGlassIcon className="w-4 h-4" />
                     </button>
 
-                    {/* AI Assistant Button — hidden on login page */}
-                    {activePageId !== 'P-06' && (
+                    {/* AI Assistant Button — hidden on login page and when unauthenticated */}
+                    {activePageId !== 'P-06' && currentUser && (
                         <button
                             onClick={() => setActivePageId('E-03')}
                             id="header-ai-assistant-btn"
