@@ -107,13 +107,13 @@ export const GlobalHeader: React.FC = () => {
                     {/* AI Assistant Button — hidden on login page and when unauthenticated */}
                     {activePageId !== 'P-06' && currentUser && (
                         <button
-                            onClick={() => setActivePageId('E-03')}
+                            onClick={() => setIsAIChatOpen(o => !o)}
                             id="header-ai-assistant-btn"
                             className={cn(
                                 "p-1.5 border hover:border-[#ec028b]/50 rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none",
-                                activePageId === 'E-03' ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10" : "bg-black/40 border-gray-700/60"
+                                isAIChatOpen ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10 shadow-[0_0_8px_rgba(236,2,139,0.3)]" : "bg-black/40 border-gray-700/60"
                             )}
-                            title="AI Assistant"
+                            title="AI Assistant — ARIA"
                         >
                             <SparklesIcon className="w-4 h-4" />
                         </button>
