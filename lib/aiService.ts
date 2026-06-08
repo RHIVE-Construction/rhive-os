@@ -3,44 +3,16 @@ import { GoogleGenAI } from '@google/genai';
 // ---------------------------------------------------------------------------
 // RHIVE AI Service — wraps @google/genai for the AI Assistant chat panel
 //
-// Security model: The Gemini API key is NEVER baked into the JS bundle.
-// It is fetched at runtime from /api/config (served by vite.config.ts on dev,
-// and by a Cloud Run sidecar on Firebase App Hosting in production).
+// Security model:
+//  - LOCAL DEV: Key is read from .env (gitignored) via import.meta.env
+//  - PRODUCTION: Firebase App Hosting injects VITE_GEMINI_API_KEY from GCP
+//    Secret Manager at BUILD TIME. Vite bakes it into the bundle.
+//    The key is never stored in git — only in Secret Manager.
 // ---------------------------------------------------------------------------
 
-let _cachedKey: string | null = null;
-let _keyFetchPromise: Promise<string> | null = null;
+const API_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY as string | undefined;
 
-async function getApiKey(): Promise<string> {
-    if (_cachedKey !== null) return _cachedKey;
-
-    // Deduplicate concurrent fetches — reuse the same promise
-    if (!_keyFetchPromise) {
-        _keyFetchPromise = (async () => {
-            try {
-                const res = await fetch('/api/config');
-                if (!res.ok) throw new Error(`/api/config returned ${res.status}`);
-                const data = await res.json();
-                _cachedKey = (data.geminiApiKey as string) || '';
-            } catch (err) {
-                console.warn('[RHIVE] Failed to load Gemini API key from /api/config:', err);
-                _cachedKey = '';
-            }
-            return _cachedKey!;
-        })();
-    }
-    return _keyFetchPromise;
-}
-
-// isAIConfigured — async-safe: always resolves the key before checking
-export async function checkAIConfigured(): Promise<boolean> {
-    const key = await getApiKey();
-    return !!key;
-}
-
-// Kept for backwards compat in case anything reads it synchronously
-export let isAIConfigured = false;
-getApiKey().then(key => { isAIConfigured = !!key; });
+export const isAIConfigured = !!API_KEY;
 
 const SYSTEM_PROMPT = `You are ARIA — the RHIVE AI Operations Assistant.
 
@@ -58,12 +30,10 @@ Always be concise, professional, and action-oriented. Use bullet points where he
 
 let ai: GoogleGenAI | null = null;
 
-const getClient = async (): Promise<GoogleGenAI> => {
+const getClient = (): GoogleGenAI => {
     if (!ai) {
-        const key = await getApiKey();
-        if (!key) throw new Error('VITE_GEMINI_API_KEY is not configured. Add it to your .env file and restart the dev server.');
-        ai = new GoogleGenAI({ apiKey: key });
-        isAIConfigured = true;
+        if (!API_KEY) throw new Error('VITE_GEMINI_API_KEY is not set.');
+        ai = new GoogleGenAI({ apiKey: API_KEY });
     }
     return ai;
 };
@@ -73,17 +43,20 @@ export interface ChatMessage {
     text: string;
 }
 
+// Async-safe configured check (resolves immediately since key is sync)
+export async function checkAIConfigured(): Promise<boolean> {
+    return !!API_KEY;
+}
+
 // ---------------------------------------------------------------------------
 // Stream a single turn, yielding text chunks as they arrive.
-// history = all prior messages in [{role, parts:[{text}]}] format for Gemini.
 // ---------------------------------------------------------------------------
 export async function* streamChat(
     history: ChatMessage[],
     userMessage: string
 ): AsyncGenerator<string, void, unknown> {
-    const client = await getClient();
+    const client = getClient();
 
-    // Build Gemini-format history (all turns EXCEPT the current one)
     const geminiHistory = history.map(m => ({
         role: m.role,
         parts: [{ text: m.text }],

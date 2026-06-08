@@ -8,25 +8,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Vite plugin that exposes a secure /api/config endpoint.
- * API keys are read server-side and returned as JSON.
- * They NEVER appear in any HTML or JS bundle.
+ * Vite plugin that exposes a /api/config endpoint during LOCAL DEV ONLY.
+ * This serves the Google Maps key to prevent it being bundled into JS.
  *
- * Keys served:
- *  - mapsApiKey        → VITE_GOOGLE_MAPS_API_KEY
- *  - geminiApiKey      → VITE_GEMINI_API_KEY
- *  - weatherApiKey     → VITE_GOOGLE_WEATHER_API_KEY
+ * NOTE: This middleware does NOT run in production.
+ * In production (Firebase App Hosting), the Maps key is injected by Vite
+ * via import.meta.env.VITE_GOOGLE_MAPS_API_KEY at build time from Secret Manager.
+ *
+ * The Gemini key uses import.meta.env.VITE_GEMINI_API_KEY directly —
+ * injected from Secret Manager at build time, never stored in git.
  */
-function configApiPlugin(config: {
-  mapsApiKey: string;
-  geminiApiKey: string;
-  weatherApiKey: string;
-}): Plugin {
+function configApiPlugin(mapsApiKey: string): Plugin {
   const handler = (req: any, res: any, next: any) => {
     if (req.url === '/api/config') {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Cache-Control', 'no-store');
-      res.end(JSON.stringify(config));
+      res.end(JSON.stringify({ mapsApiKey }));
     } else {
       next();
     }
@@ -52,16 +49,9 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      configApiPlugin({
-        mapsApiKey: env.VITE_GOOGLE_MAPS_API_KEY || '',
-        geminiApiKey: env.VITE_GEMINI_API_KEY || '',
-        weatherApiKey: env.VITE_GOOGLE_WEATHER_API_KEY || '',
-      }),
+      configApiPlugin(env.VITE_GOOGLE_MAPS_API_KEY || ''),
     ],
     define: {
-      // NOTE: All API keys are intentionally NOT here.
-      // They are served exclusively via the /api/config server endpoint
-      // and never embedded in the client JS bundle.
       'process.env.VITE_GOOGLE_WEATHER_API_KEY': JSON.stringify(env.VITE_GOOGLE_WEATHER_API_KEY),
     },
     resolve: {
