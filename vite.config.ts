@@ -9,15 +9,24 @@ const __dirname = path.dirname(__filename);
 
 /**
  * Vite plugin that exposes a secure /api/config endpoint.
- * The Google Maps API key is read from process.env server-side
- * and returned as JSON — it never appears in any HTML or JS bundle.
+ * API keys are read server-side and returned as JSON.
+ * They NEVER appear in any HTML or JS bundle.
+ *
+ * Keys served:
+ *  - mapsApiKey        → VITE_GOOGLE_MAPS_API_KEY
+ *  - geminiApiKey      → VITE_GEMINI_API_KEY
+ *  - weatherApiKey     → VITE_GOOGLE_WEATHER_API_KEY
  */
-function configApiPlugin(mapsApiKey: string): Plugin {
+function configApiPlugin(config: {
+  mapsApiKey: string;
+  geminiApiKey: string;
+  weatherApiKey: string;
+}): Plugin {
   const handler = (req: any, res: any, next: any) => {
     if (req.url === '/api/config') {
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Cache-Control', 'no-store'); // Never cache — secrets shouldn't be cached
-      res.end(JSON.stringify({ mapsApiKey }));
+      res.setHeader('Cache-Control', 'no-store');
+      res.end(JSON.stringify(config));
     } else {
       next();
     }
@@ -43,14 +52,17 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      configApiPlugin(env.VITE_GOOGLE_MAPS_API_KEY || ''),
+      configApiPlugin({
+        mapsApiKey: env.VITE_GOOGLE_MAPS_API_KEY || '',
+        geminiApiKey: env.VITE_GEMINI_API_KEY || '',
+        weatherApiKey: env.VITE_GOOGLE_WEATHER_API_KEY || '',
+      }),
     ],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      // NOTE: All API keys are intentionally NOT here.
+      // They are served exclusively via the /api/config server endpoint
+      // and never embedded in the client JS bundle.
       'process.env.VITE_GOOGLE_WEATHER_API_KEY': JSON.stringify(env.VITE_GOOGLE_WEATHER_API_KEY),
-      // NOTE: VITE_GOOGLE_MAPS_API_KEY is intentionally NOT here.
-      // It is served exclusively via the /api/config backend endpoint.
     },
     resolve: {
       alias: {

@@ -2,11 +2,34 @@ import { GoogleGenAI } from '@google/genai';
 
 // ---------------------------------------------------------------------------
 // RHIVE AI Service — wraps @google/genai for the AI Assistant chat panel
+//
+// Security model: The Gemini API key is NEVER baked into the JS bundle.
+// It is fetched at runtime from /api/config (served by vite.config.ts on dev,
+// and by a Cloud Run sidecar on Firebase App Hosting in production).
 // ---------------------------------------------------------------------------
 
-const API_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY as string | undefined;
+let _cachedKey: string | null = null;
 
-export const isAIConfigured = !!API_KEY;
+async function getApiKey(): Promise<string> {
+    if (_cachedKey !== null) return _cachedKey;
+
+    // Fetch from the secure server-side config endpoint
+    try {
+        const res = await fetch('/api/config');
+        if (!res.ok) throw new Error(`/api/config returned ${res.status}`);
+        const data = await res.json();
+        _cachedKey = (data.geminiApiKey as string) || '';
+    } catch (err) {
+        console.warn('[RHIVE] Failed to load Gemini API key from /api/config:', err);
+        _cachedKey = '';
+    }
+    return _cachedKey;
+}
+
+export let isAIConfigured = false;
+
+// Pre-warm the key check so the UI can show the unconfigured state immediately
+getApiKey().then(key => { isAIConfigured = !!key; });
 
 const SYSTEM_PROMPT = `You are ARIA — the RHIVE AI Operations Assistant.
 
@@ -24,10 +47,12 @@ Always be concise, professional, and action-oriented. Use bullet points where he
 
 let ai: GoogleGenAI | null = null;
 
-const getClient = (): GoogleGenAI => {
+const getClient = async (): Promise<GoogleGenAI> => {
     if (!ai) {
-        if (!API_KEY) throw new Error('VITE_GEMINI_API_KEY is not set.');
-        ai = new GoogleGenAI({ apiKey: API_KEY });
+        const key = await getApiKey();
+        if (!key) throw new Error('VITE_GEMINI_API_KEY is not configured. Add it to your .env file and restart the dev server.');
+        ai = new GoogleGenAI({ apiKey: key });
+        isAIConfigured = true;
     }
     return ai;
 };
@@ -45,7 +70,7 @@ export async function* streamChat(
     history: ChatMessage[],
     userMessage: string
 ): AsyncGenerator<string, void, unknown> {
-    const client = getClient();
+    const client = await getClient();
 
     // Build Gemini-format history (all turns EXCEPT the current one)
     const geminiHistory = history.map(m => ({
@@ -54,7 +79,7 @@ export async function* streamChat(
     }));
 
     const chat = client.chats.create({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-2.5-flash',
         config: { systemInstruction: SYSTEM_PROMPT },
         history: geminiHistory,
     });

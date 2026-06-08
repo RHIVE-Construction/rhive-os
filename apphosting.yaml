@@ -1,52 +1,83 @@
-# Settings for Backend (on Cloud Run).
-# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
+# Firebase App Hosting — Cloud Run configuration
+# See https://firebase.google.com/docs/app-hosting/configure
 runConfig:
   minInstances: 0
 
-# Environment variables and secrets.
+# ─────────────────────────────────────────────────────────────────────────────
+# ALL values are stored in GCP Secret Manager — ZERO plaintext secrets here.
+# This file is safe to commit to a public repository.
+#
+# One-time secret setup (run once per secret, then never again):
+#   gcloud secrets create <secret-name> --project=rhive-os
+#   echo -n "YOUR_VALUE" | gcloud secrets versions add <secret-name> --data-file=-
+#
+# Firebase App Hosting auto-grants the service account access on first deploy.
+# ─────────────────────────────────────────────────────────────────────────────
 env:
+  # ── Firebase config ────────────────────────────────────────────────────────
   - variable: VITE_FIREBASE_API_KEY
-    value: AIzaSyBI7Ae41_JcMtHLuAzit3ajoTRHjETtCt8
+    secret: firebase-api-key
     availability:
       - BUILD
       - RUNTIME
+
   - variable: VITE_FIREBASE_AUTH_DOMAIN
-    value: rhive-os.firebaseapp.com
+    secret: firebase-auth-domain
     availability:
       - BUILD
       - RUNTIME
+
   - variable: VITE_FIREBASE_PROJECT_ID
-    value: rhive-os
+    secret: firebase-project-id
     availability:
       - BUILD
       - RUNTIME
+
   - variable: VITE_FIREBASE_STORAGE_BUCKET
-    value: rhive-os.firebasestorage.app
+    secret: firebase-storage-bucket
     availability:
       - BUILD
       - RUNTIME
+
   - variable: VITE_FIREBASE_MESSAGING_SENDER_ID
-    value: "672274474306"
+    secret: firebase-messaging-sender-id
     availability:
       - BUILD
       - RUNTIME
+
   - variable: VITE_FIREBASE_APP_ID
-    value: 1:672274474306:web:226d0a7064e8ae894e14db
+    secret: firebase-app-id
     availability:
       - BUILD
       - RUNTIME
+
   - variable: VITE_FIREBASE_MEASUREMENT_ID
-    value: G-T8H6BQPK3H
+    secret: firebase-measurement-id
     availability:
       - BUILD
       - RUNTIME
+
+  # ── Third-party API keys ───────────────────────────────────────────────────
+  - variable: VITE_GEMINI_API_KEY
+    secret: gemini-api-key
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: VITE_GOOGLE_MAPS_API_KEY
+    secret: google-maps-api-key
+    availability:
+      - BUILD
+      - RUNTIME
+
   - variable: VITE_GOOGLE_WEATHER_API_KEY
-    value: AIzaSyCOTpHodVEPLC3G96KwFnX8JF-0DOpgBBI
+    secret: google-weather-api-key
     availability:
       - BUILD
       - RUNTIME
+
   - variable: VITE_OPENWEATHER_API_KEY
-    value: 2da7006fc5394b3bbdbfe8171b048768
+    secret: openweather-api-key
     availability:
       - BUILD
       - RUNTIME
