@@ -14,7 +14,7 @@
         "justcall": {
             "url": "https://mcp.justcall.host/mcp",
             "headers": {
-                "Authorization": "Bearer 6a0b779d910b4a047ab80db48c0e4a17269fb271:2c4912dd17dfcf981621c47d2707c795c4d09ab7"
+                "Authorization": "Bearer YOUR_JUSTCALL_TOKEN"
             }
         }
     }

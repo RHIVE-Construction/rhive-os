@@ -1,6 +1,6 @@
 const axios = require('axios');
-const KEY = '6a0b779d910b4a047ab80db48c0e4a17269fb271';
-const SECRET = '2c4912dd17dfcf981621c47d2707c795c4d09ab7';
+const KEY = 'YOUR_JUSTCALL_API_KEY';
+const SECRET = 'YOUR_JUSTCALL_API_SECRET';
 
 // JustCall v2.1 Documentation: https://developer.justcall.io/api/reference/contacts
 async function testAuth() {
