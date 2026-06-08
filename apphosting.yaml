@@ -60,6 +60,6 @@ env:
   # Enable: Maps Embed API, Maps Static API, Maps JavaScript API
   # Restrict to: https://rhive-os--rhive-os.us-central1.hosted.app/*
   - variable: VITE_GOOGLE_MAPS_API_KEY
-    value: REPLACE_WITH_YOUR_MAPS_API_KEY
+    value: AIzaSyAKE58hL99Sl5AATLEt-B3h9NQGxf778cY
     availability:
       - BUILD
