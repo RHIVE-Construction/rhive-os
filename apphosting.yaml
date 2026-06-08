@@ -4,60 +4,68 @@ runConfig:
   minInstances: 0
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ALL values are stored in GCP Secret Manager — ZERO plaintext secrets here.
-# This file is safe to commit to a public repository.
+# Firebase config values are public identifiers (safe to commit).
+# Sensitive API keys use Secret Manager — zero plaintext secrets in this file.
 #
-# One-time secret setup (run once per secret, then never again):
-#   gcloud secrets create <secret-name> --project=rhive-os
-#   echo -n "YOUR_VALUE" | gcloud secrets versions add <secret-name> --data-file=-
+# To create secrets (one-time setup):
+#   gcloud secrets create gemini-api-key --project=rhive-os
+#   echo -n "YOUR_KEY" | gcloud secrets versions add gemini-api-key --data-file=-
 #
-# Firebase App Hosting auto-grants the service account access on first deploy.
+#   gcloud secrets create google-maps-api-key --project=rhive-os
+#   echo -n "YOUR_KEY" | gcloud secrets versions add google-maps-api-key --data-file=-
+#
+#   gcloud secrets create google-weather-api-key --project=rhive-os
+#   echo -n "YOUR_KEY" | gcloud secrets versions add google-weather-api-key --data-file=-
+#
+#   gcloud secrets create openweather-api-key --project=rhive-os
+#   echo -n "YOUR_KEY" | gcloud secrets versions add openweather-api-key --data-file=-
 # ─────────────────────────────────────────────────────────────────────────────
 env:
-  # ── Firebase config ────────────────────────────────────────────────────────
+  # ── Firebase config (public identifiers — safe as plaintext) ──────────────
   - variable: VITE_FIREBASE_API_KEY
-    secret: firebase-api-key
+    value: AIzaSyBI7Ae41_JcMtHLuAzit3ajoTRHjETtCt8
     availability:
       - BUILD
       - RUNTIME
 
   - variable: VITE_FIREBASE_AUTH_DOMAIN
-    secret: firebase-auth-domain
+    value: rhive-os.firebaseapp.com
     availability:
       - BUILD
       - RUNTIME
 
   - variable: VITE_FIREBASE_PROJECT_ID
-    secret: firebase-project-id
+    value: rhive-os
     availability:
       - BUILD
       - RUNTIME
 
   - variable: VITE_FIREBASE_STORAGE_BUCKET
-    secret: firebase-storage-bucket
+    value: rhive-os.firebasestorage.app
     availability:
       - BUILD
       - RUNTIME
 
   - variable: VITE_FIREBASE_MESSAGING_SENDER_ID
-    secret: firebase-messaging-sender-id
+    value: "672274474306"
     availability:
       - BUILD
       - RUNTIME
 
   - variable: VITE_FIREBASE_APP_ID
-    secret: firebase-app-id
+    value: 1:672274474306:web:226d0a7064e8ae894e14db
     availability:
       - BUILD
       - RUNTIME
 
   - variable: VITE_FIREBASE_MEASUREMENT_ID
-    secret: firebase-measurement-id
+    value: G-T8H6BQPK3H
     availability:
       - BUILD
       - RUNTIME
 
-  # ── Third-party API keys ───────────────────────────────────────────────────
+  # ── Sensitive API keys — stored in GCP Secret Manager ─────────────────────
+  # Run setup-secrets.sh once to create these secrets before first deploy.
   - variable: VITE_GEMINI_API_KEY
     secret: gemini-api-key
     availability:
