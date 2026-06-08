@@ -89,16 +89,3 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  - variable: VITE_GEMINI_API_KEY
-    value: AIzaSyC6-RDd8ijIS6BYg3hbYCk8F16li-74KWM
-    availability:
-      - BUILD
-      - RUNTIME
-  # Google Maps Embed + Static Maps API key
-  # Get from: https://console.cloud.google.com/apis/credentials
-  # Enable: Maps Embed API, Maps Static API, Maps JavaScript API
-  # Restrict to: https://rhive-os--rhive-os.us-central1.hosted.app/*
-  - variable: VITE_GOOGLE_MAPS_API_KEY
-    value: AIzaSyAKE58hL99Sl5AATLEt-B3h9NQGxf778cY
-    availability:
-      - BUILD
