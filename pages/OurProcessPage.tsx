@@ -2,8 +2,10 @@
 import React from 'react';
 import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
-import { Check, BoltIcon } from '../components/icons';
+import { Check, BoltIcon, ShieldCheckIcon } from '../components/icons';
 import { cn } from '../lib/utils';
+import ContextualCTA from '../components/ContextualCTA';
+import GlobalBottomCTA from '../components/GlobalBottomCTA';
 
 const StageNode = ({ number, title, description, isLast }: any) => (
     <div className="flex gap-6 md:gap-10 items-start">
@@ -14,27 +16,27 @@ const StageNode = ({ number, title, description, isLast }: any) => (
             {!isLast && <div className="w-0.5 h-24 md:h-20 bg-gradient-to-b from-[#ec028b] to-transparent -mt-2 opacity-50" />}
         </div>
         <div className="pt-1 pb-10">
-            <h4 className="text-lg md:text-xl font-bold text-[var(--rhive-text)] uppercase tracking-tight mb-2 flex items-center font-display italic">
+            <h4 className="text-lg md:text-xl leading-tight font-bold text-[var(--rhive-text)] uppercase tracking-tight mb-2 flex items-center font-display italic">
                 {title}
                 <BoltIcon className="w-4 h-4 ml-2 text-[#ec028b] opacity-50" />
             </h4>
-            <p className="text-[var(--rhive-text-muted)] text-sm leading-relaxed max-w-xl font-serif italic">{description}</p>
+            <p className="text-[var(--rhive-text-muted)] text-base leading-relaxed max-w-prose font-serif italic">{description}</p>
         </div>
     </div>
 );
 
 const OurProcessPage: React.FC = () => {
     const stages = [
-        { title: "LEAD", desc: "Digital intake & identification. We analyze your property's geometry via satellite data before we ever deploy a human." },
-        { title: "ESTIMATE", desc: "Instant ballpark numbers. Our AI uses Google Solar data to generate a low-friction financial starting point." },
-        { title: "QUOTE", desc: "Certified proposal. A human architect verifies every variable to provide a fixed-price packet valid for 14 days." },
-        { title: "SIGN & VERIFY", desc: "Digital contract & 50% deposit. We generate your secure 'Ghost Link' and unlock the client portal." },
-        { title: "SCHEDULE", desc: "Material & labor logistics. Permits are filed and the production queue is locked into our operational registry." },
-        { title: "PRE-INSTALL", desc: "Site preparation & approvals. Final coordination with homeowners to ensure zero-friction deployment." },
-        { title: "INSTALL", desc: "The build. Live photo feeds are streamed directly from your roof to your portal in real-time." },
-        { title: "PUNCH LIST", desc: "Quality assurance. A multi-point structural audit ensures every detail exceeds our ineffable standard." },
-        { title: "INVOICING", desc: "Final accounting. 10% payment trigger upon completion and verified client satisfaction." },
-        { title: "COMPLETED", desc: "Asset handover. We deliver your Lifetime No-Leak Warranty and your Digital Property Vault." }
+        { title: "DRONE SCAN", desc: "Digital intake & aerial assessment. We analyze your property's roof layout using high-resolution drone mapping before any work begins." },
+        { title: "BALLPARK ESTIMATE", desc: "Instant visual estimate. Our technology uses spatial data to generate an initial price estimate for your project." },
+        { title: "CERTIFIED QUOTE", desc: "Certified fixed-price proposal. Our team reviews every detail to provide a guaranteed contract price valid for 14 days." },
+        { title: "SECURE SIGN-OFF", desc: "Digital contract agreement. Review and sign your project agreement online to activate your project portal." },
+        { title: "SCHEDULING", desc: "Permits & project timeline. We secure local permits and lock in your delivery and construction dates." },
+        { title: "PRE-CONSTRUCTION", desc: "Site preparation checklist. We coordinate with you to ensure property safety and zero disruptions on build day." },
+        { title: "INSTALLATION", desc: "The build phase. Real-time updates and photo progress sent directly to your homeowner portal as we work." },
+        { title: "QUALITY AUDIT", desc: "Detailed quality inspection. A thorough physical audit of your completed roof to guarantee it meets our standards." },
+        { title: "FINAL REVIEW", desc: "Final walkthrough. Review of all work with you to ensure absolute satisfaction and sign off on completion." },
+        { title: "WARRANTY HANDOVER", desc: "System handover. We deliver your Lifetime No-Leak Warranty certificate and your digital documentation archive." }
     ];
 
     return (
@@ -42,13 +44,40 @@ const OurProcessPage: React.FC = () => {
             title="The 10-Stage Journey"
             description="Experience a construction project defined by transparency, automation, and consistent communication."
         >
+            {/* 1-2-3 Summary Graphic */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="bg-black/40 border border-white/10 p-6 text-center">
+                    <div className="text-4xl font-black text-[#ec028b] mb-4 font-display italic">1</div>
+                    <h3 className="text-white font-bold uppercase tracking-widest mb-2">Assess</h3>
+                    <p className="text-gray-400 text-sm">AI-powered mapping & instant quote.</p>
+                </div>
+                <div className="bg-black/40 border border-white/10 p-6 text-center">
+                    <div className="text-4xl font-black bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent mb-4 font-display italic">2</div>
+                    <h3 className="text-white font-bold uppercase tracking-widest mb-2">Approve</h3>
+                    <p className="text-gray-400 text-sm">Fixed-cost transparent contracts.</p>
+                </div>
+                <div className="bg-black/40 border border-white/10 p-6 text-center">
+                    <div className="text-4xl font-black text-rhive-gold mb-4 font-display italic">3</div>
+                    <h3 className="text-white font-bold uppercase tracking-widest mb-2">Deploy</h3>
+                    <p className="text-gray-400 text-sm">Certified swift installation.</p>
+                </div>
+            </div>
+
+            {/* Trust Badge */}
+            <div className="mb-12 flex justify-center">
+                <div className="inline-flex items-center gap-4 px-6 py-3 bg-green-500/10 border border-green-500/30 rounded-full">
+                    <ShieldCheckIcon className="w-6 h-6 text-green-500" />
+                    <span className="text-green-400 font-bold uppercase tracking-widest text-sm">Licensed, Bonded, and Insured</span>
+                </div>
+            </div>
+
             <Card className="p-0 border-0">
                 <div className="p-8 md:p-12">
                     <div className="mb-10 p-6 bg-[#ec028b]/5 border border-[#ec028b]/20 flex items-center gap-4" style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}>
                         <Check className="w-8 h-8 text-green-400 shrink-0" />
                         <div>
-                            <h3 className="text-[var(--rhive-text)] font-bold uppercase tracking-widest text-sm font-display">Automated Transparency</h3>
-                            <p className="text-[var(--rhive-text-muted)] text-xs mt-1 font-serif">Our system prevents "ghosting" by sending automated status alerts at every transition stage.</p>
+                            <h3 className="text-[var(--rhive-text)] font-bold uppercase tracking-widest text-base font-display leading-tight">Automated Transparency</h3>
+                            <p className="text-[var(--rhive-text-muted)] text-base mt-1 font-serif leading-relaxed max-w-prose">Our system prevents "ghosting" by sending automated status alerts at every transition stage.</p>
                         </div>
                     </div>
 
@@ -60,9 +89,14 @@ const OurProcessPage: React.FC = () => {
                 </div>
             </Card>
 
-            <div className="mt-8 text-center pb-12">
-                <p className="text-[var(--rhive-text-muted)] text-[10px] font-mono uppercase tracking-[0.4em] opacity-50">RHIVE QOS V.3.0 // PROCESS_ENGINE_ACTIVE</p>
-            </div>
+            {/* Contextual CTA */}
+            <ContextualCTA 
+                message="Ready for a stress-free installation?" 
+                buttonText="Start the Process Today" 
+            />
+
+            {/* Global CTA */}
+            <GlobalBottomCTA />
         </PageContainer>
     );
 };

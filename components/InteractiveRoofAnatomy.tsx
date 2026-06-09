@@ -1,308 +1,163 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Info } from "lucide-react";
 
-interface RoofMarker {
-    id: string;
-    label: string;
-    description: string;
-    image?: string;
-    dotPos: { x: number; y: number };
-    labelPos: { x: number; y: number };
-    customContent?: React.ReactNode;
-}
-
-// Markers mapping to coordinates in a 100x100 SVG space holding the 3D model
-const markers: RoofMarker[] = [
+// Data for the interactive components
+const rhiveSystemParts = [
     {
-        id: 'full-metal',
-        label: "FULL METAL FLASHINGS",
-        description: "28 G Steel Flashing along the 'roof to wall' as needed. We handle all local building permits and manufacturer warranty registrations so you don't have to.",
-        image: 'https://static.wixstatic.com/media/c5862a_4fae850cf3ac440cbcbba81dbec2b7a6~mv2.jpg',
-        dotPos: { x: 44, y: 23 },
-        labelPos: { x: 15, y: 23 }
+        name: 'O.C HIP AND RIDGE CAP',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FO.C_%20Hip%20and%20Ridge%20Cap.mp4?alt=media&token=0bfa938c-3a06-44ec-a78f-30671aaf3e3f',
+        description: 'Shingles specifically designed to be installed on the hips and ridges of the roof, providing an extra layer of protection and a finished look.',
+        packageInfo: 'OURHIVE installs manufacturer-approved hip and ridge cap shingles with a 130 mph wind resistance, designed for longevity and total system performance.',
     },
     {
-        id: 'pipe-flashings',
-        label: "FULL METAL PIPE FLASHINGS",
-        description: "All jackets replaced and sealed. RHIVE guarantees a leak-free installation for the lifetime of the roof, exceeding standard contractor warranties.",
-        image: 'https://static.wixstatic.com/media/c5862a_63ac038e810a4346987d02d0e171ba79~mv2.jpg',
-        dotPos: { x: 48, y: 20 },
-        labelPos: { x: 25, y: 8 }
+        name: 'O.C. SKY RUNNER RIDGE VENT',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FO.C.%20SKY%20RUNNER%20RIDGE%20VENT.mp4?alt=media&token=65b17f9d-6685-467e-b125-9bf4c3a05da6',
+        description: 'A system of vents that allows for proper airflow in the attic, helping to prevent heat and moisture buildup.',
+        packageInfo: 'OURHIVE ensures manufacturer and building code compliance with soffit/deck mounted intake vents and ridge/hip vents for exhaust ventilation.',
     },
     {
-        id: 'pro-armor',
-        label: "O.C. PRO ARMOR UNDERLAYMENT",
-        description: "A synthetic water-shedding barrier. We strictly adhere to manufacturer guidelines to ensure the full system is protected by your warranty.",
-        image: 'https://static.wixstatic.com/media/c5862a_43781d1ec90b48aa844293b849fae05a~mv2.jpeg',
-        dotPos: { x: 54, y: 34 },
-        labelPos: { x: 75, y: 20 }
+        name: 'FIELD SHINGLES',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FCHOOSE%20YOUR%20SHINGLES.mp4?alt=media&token=83e09fa9-9838-4ad6-af76-ff01e440eefe',
+        description: "The main shingles that cover the majority of the roof's surface.",
+        packageInfo: 'OURHIVE\'s package includes "Performance: Flex: Designer: Premium Designer" shingles with a 130 mph wind rating and a 50-year lifetime warranty.',
+        isLink: true,
+        href: '/quote'
     },
     {
-        id: 'ice-water',
-        label: "O.C. WEATHERLOCK ICE & WATER",
-        description: "Vital protection for valleys safely installed under our strict No-Layover policy to ensure structural integrity and maximum lifespan.",
-        image: 'https://static.wixstatic.com/media/c5862a_babe9c016a734f31b3be88b8ef2e9ccc~mv2.avif',
-        dotPos: { x: 54, y: 42 },
-        labelPos: { x: 80, y: 42 }
+        name: 'DRIP METAL',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FDRIP%20METAL.mp4?alt=media&token=2ab78b80-2db5-452c-a029-45e27510d9ad',
+        description: 'A metal flashing installed at the edges of the roof to prevent water from running down and damaging the fascia and siding.',
+        packageInfo: 'OURHIVE installs a 28-gauge steel drip edge around the entire perimeter of the roof per manufacturer specifications.',
     },
     {
-        id: 'hip-ridge',
-        label: "O.C HIP AND RIDGE CAP",
-        description: "Extra protection along hips and ridges. Enjoy a fully transparent quoting process with exact cost breakdowns for every material.",
-        image: 'https://static.wixstatic.com/media/c5862a_fd58a699e8354cecb37bf96134693fc7~mv2.avif',
-        dotPos: { x: 50, y: 41 },
-        labelPos: { x: 30, y: 35 }
+        name: 'FULL METAL PIPE FLASHINGS',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FFULL%20METAL%20PIPE%20FLASHINGS.mp4?alt=media&token=c2445f5b-1792-417d-a50d-64510471df34',
+        description: 'Flashing materials that seal the areas around vent pipes to prevent leaks.',
+        packageInfo: 'OURHIVE uses full metal pipe jacks for lifetime longevity, replacing all jackets, and sealing and painting them to prevent oxidation.',
     },
     {
-        id: 'starter-strip',
-        label: "O.C. STARTER STRIP+",
-        description: "Ensures a perfect seal along the roof's edge. Our precise installation method safeguards against 130 MPH high winds with $2M liability insurance.",
-        image: 'https://static.wixstatic.com/media/c5862a_445728697a264bc4a949908dc3f1efb5~mv2.jpg',
-        dotPos: { x: 50, y: 65 },
-        labelPos: { x: 75, y: 70 }
+        name: 'FULL METAL FLASHINGS',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FFULL%20METAL%20FLASHINGS.mp4?alt=media&token=9b49d1fa-8b00-4cc9-9483-a4141251be71',
+        description: 'A metal material used to direct water away from critical areas of the roof, such as where the roof meets a wall.',
+        packageInfo: 'OURHIVE uses 28-gauge steel flashing along the "roof to wall" areas as needed, including "L Metal" for headwalls and "Step Flashing" for sidewalls.',
     },
     {
-        id: 'shingles',
-        label: "CHOOSE YOUR SHINGLES",
-        description: "Select from our premium upgrade paths: O.C. Duration Flex®, GAF Woodland® Designer Series, or GAF Grand Sequoia® Premium.",
-        dotPos: { x: 60, y: 45 },
-        labelPos: { x: 58, y: 25 },
-        customContent: (
-            <div className="grid grid-cols-4 gap-2 mt-2 w-full">
-                <div className="flex flex-col gap-1 items-center">
-                    <img src="/oc_duration_standard.png" className="w-full aspect-square object-cover border border-white/20" alt="Standard" />
-                    <span className="text-[6px] text-white/70 uppercase text-center leading-tight">Standard<br/>Duration</span>
-                </div>
-                <div className="flex flex-col gap-1 items-center">
-                    <img src="/duration_flex_shingle.png" className="w-full aspect-square object-cover border border-[var(--rhive-pink)]/30" alt="Flex" />
-                    <span className="text-[6px] text-[var(--rhive-pink)]/80 uppercase text-center leading-tight font-semibold">Flex<br/>Upgrade</span>
-                </div>
-                <div className="flex flex-col gap-1 items-center">
-                    <img src="/gaf_woodland_shingle.png" className="w-full aspect-square object-cover border border-[var(--rhive-pink)]/60" alt="Designer" />
-                    <span className="text-[6px] text-[var(--rhive-pink)] uppercase text-center leading-tight font-semibold">Designer<br/>Series</span>
-                </div>
-                <div className="flex flex-col gap-1 items-center">
-                    <img src="/gaf_woodland_shingle.png" className="w-full aspect-square object-cover border border-[var(--rhive-pink)]" alt="Premium" />
-                    <span className="text-[6px] text-[var(--rhive-pink)] uppercase text-center leading-tight font-bold">Premium<br/>Designer</span>
-                </div>
-            </div>
-        )
+        name: 'O.C. PRO ARMOR UNDERLAYMENT',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FO.C.%20PRO%20ARMOR%20UNDERLAYMENT.mp4?alt=media&token=30279028-2eb1-4f34-bdfa-6e8a21443f11',
+        description: 'A synthetic barrier that acts as a water-shedding layer beneath the shingles.',
+        packageInfo: 'OURHIVE installs a manufacturer-approved synthetic underlayment over the entire field of the roof not already covered by the ice and water shield.',
     },
     {
-        id: 'ridge-vent',
-        label: "RIDGE PROWLER (VENT)",
-        description: "Exhaust vents protect the interior. Featuring the new Ridge Prowler product, leveraging advanced airflow mechanics to pinpoint exhaust vulnerabilities.",
-        image: 'https://static.wixstatic.com/media/c5862a_121f7c74c02c4853b4763e18610b8473~mv2.webp',
-        dotPos: { x: 60, y: 38 },
-        labelPos: { x: 72, y: 10 }
+        name: 'O.C. STARTER STRIP+',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FO.C.%20STARTER%20STRIP%2B.mp4?alt=media&token=d360262a-8f8d-437d-a60d-fba1ae56ce94',
+        description: 'A strip of shingles placed along the eaves and rakes to ensure a straight edge and a strong seal against high winds.',
+        packageInfo: 'OURHIVE installs starter shingles on all eaves to provide a straight edge and an effective seal against wind uplift.',
     },
     {
-        id: 'drip-metal',
-        label: "DRIP METAL",
-        description: "Ensures optimal water runoff. Save up to $1,000 on your project with our flexible financing starting at $0 Down and 0% APR.",
-        image: 'https://static.wixstatic.com/media/c5862a_9177c0981c2e4fe1bffd91d37d4b6e0c~mv2.jpg',
-        dotPos: { x: 73, y: 55 },
-        labelPos: { x: 80, y: 25 }
+        name: 'O.C. WEATHERLOCK ICE & WATER',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FO.C.%20WEATHERLOCK%20ICE%20%26%20WATER.mp4?alt=media&token=a4138b36-6dfc-4169-a2fe-8314fc99feac',
+        description: 'A self-adhering, waterproof membrane that provides a critical secondary layer of protection in vulnerable areas of the roof.',
+        packageInfo: 'OURHIVE installs a manufacturer-approved self-adhering waterproofing underlayment in key areas like valleys, pipe penetrations, and eaves (24 inches past the internal wall line) to comply with building codes.',
     },
     {
-        id: 'intake-vent',
-        label: "O.C INFLOW (DECK MOUNT AIR INTAKE)",
-        description: "Intake vents protect interior components via deck mounting. Our strict adherence to the 'RHIVE Way' ensures precise placement for critical airflow balancing.",
-        image: 'https://static.wixstatic.com/media/c5862a_fa09114631a942baad681a667a2f5dd6~mv2.jpg',
-        dotPos: { x: 67, y: 75.5 },
-        labelPos: { x: 85, y: 40 }
-    }
+        name: 'O.C. INFLOW INTAKE VENT',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FO.C.%20INFLOW%20INTAKE%20VENT.mp4?alt=media&token=ae599d9c-2d2a-45c0-a62e-29ca3fd54f70',
+        description: 'A system of vents that allows for proper airflow in the attic, helping to prevent heat and moisture buildup.',
+        packageInfo: 'OURHIVE ensures manufacturer and building code compliance with soffit/deck mounted intake vents and ridge/hip vents for exhaust ventilation.',
+    },
+    {
+        name: 'COMFORT',
+        video: 'https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2Fcomfort.mp4?alt=media&token=c067cd0f-2246-4da9-a054-68117e391361',
+        description: 'Attic insulation to improve your home\'s energy efficiency and comfort.',
+        packageInfo: 'OURHIVE ensures proper insulation levels to maintain a comfortable temperature in your home and reduce energy costs.',
+    },
 ];
 
-export const InteractiveRoofAnatomy: React.FC = () => {
-    const [isSectionHovered, setIsSectionHovered] = useState(false);
-    const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
+export const InteractiveRoofAnatomy = () => {
+    const defaultVideo = "https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FParts%20of%20Asphalt%20Roof%2FDisplay.mp4?alt=media&token=89cf58bc-8ae3-4d2b-8cf5-09ec0b057f91";
+    const [hoveredPart, setHoveredPart] = useState<(typeof rhiveSystemParts)[0] | null>(null);
 
-    const activeMarker = markers.find(m => m.id === activeMarkerId) || null;
+    const currentVideo = hoveredPart ? hoveredPart.video : defaultVideo;
+    const currentDescription = hoveredPart ? hoveredPart.description : "Hover over a component to explore the anatomy of a RHIVE roof system.";
+    const currentPackageInfo = hoveredPart ? hoveredPart.packageInfo : "";
+    const currentPartName = hoveredPart ? hoveredPart.name : "The RHIVE System";
 
-    const handleMouseLeaveSection = () => {
-        setIsSectionHovered(false);
-        setActiveMarkerId(null);
+    const PartButton = ({ part }: { part: (typeof rhiveSystemParts)[0] }) => {
+        const buttonContent = (
+            <button
+                onMouseEnter={() => setHoveredPart(part)}
+                className="w-full text-left p-3 rounded-full border-2 border-primary text-primary font-semibold transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:shadow-[0_0_20px_hsl(var(--primary))] focus:bg-primary focus:text-primary-foreground focus:shadow-[0_0_20px_hsl(var(--primary))]"
+            >
+                {part.name === 'FIELD SHINGLES' ? 'CHOOSE YOUR SHINGLES' : part.name}
+            </button>
+        );
+
+        if (part.isLink && part.href) {
+            return <a href={part.href} className="block w-full">{buttonContent}</a>;
+        }
+
+        return buttonContent;
     };
 
     return (
-        <section className="relative w-full py-24 select-none bg-black">
+        <section className="relative w-full py-24 bg-black select-none">
             <div className="max-w-[1400px] mx-auto px-4 relative z-10 flex flex-col items-center">
-                
-                {/* Header Context */}
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mix-blend-difference">
-                        System <span className="text-[var(--rhive-pink)]">Anatomy</span>
-                    </h2>
-                    <p className="text-gray-400 max-w-2xl mx-auto mt-4 font-serif text-lg">
-                        Hover over our certified component pipeline. Explore the architecture designed to outlast typical warranties.
-                    </p>
-                </div>
-
-                {/* Main Interactive Diagram Container */}
-                <div 
-                    className="relative w-full max-w-[1000px] aspect-[4/3] bg-transparent overflow-visible group"
-                    ref={containerRef}
-                    onMouseEnter={() => setIsSectionHovered(true)}
-                    onMouseLeave={handleMouseLeaveSection}
-                >
-                    {/* The LIVE 3D Base Image (Clean) */}
-                    <img
-                        src="/Components%20clean.png"
-                        alt="3D Roof Anatomy Diagram"
-                        className="absolute inset-0 w-full h-full object-contain pointer-events-none z-0"
-                    />
-
-                    {/* Interactive Hotspots & Lines via SVG */}
-                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full z-20 pointer-events-none">
-                        <defs>
-                            <filter id="pinkGlow" x="-20%" y="-20%" width="140%" height="140%">
-                                <feGaussianBlur stdDeviation="0.6" result="blur" />
-                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                            </filter>
-                        </defs>
-
-                        {markers.map((marker) => {
-                            const isActive = activeMarkerId === marker.id;
-                            const isVisible = !isSectionHovered || isActive;
-
-                            return (
-                                <g key={`svg-${marker.id}`}>
-                                    {/* LINE */}
-                                    <line
-                                        x1={marker.dotPos.x}
-                                        y1={marker.dotPos.y}
-                                        x2={marker.labelPos.x}
-                                        y2={marker.labelPos.y + 1.5}
-                                        stroke="#ec028b"
-                                        strokeWidth="0.25"
-                                        filter="url(#pinkGlow)"
-                                        className="transition-all duration-700 ease-out"
-                                        style={{
-                                            strokeDasharray: 200,
-                                            strokeDashoffset: isVisible ? 0 : 200,
-                                            opacity: isVisible ? 1 : 0
-                                        }}
+                <Card className="bg-transparent backdrop-blur-sm border-none shadow-none mt-12 w-full max-w-[1400px]">
+                    <CardHeader className="text-center">
+                        <CardTitle className="text-3xl font-bold tracking-tighter sm:text-4xl text-white drop-shadow-[0_0_10px_hsl(var(--primary))]">
+                            THE RHIVE SYSTEM
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-stretch">
+                            <div className="md:order-1 md:col-span-3 flex flex-col">
+                                <div className="relative w-full rounded-lg overflow-hidden border-2 border-primary shadow-[0_0_40px_-10px_hsl(var(--primary))] bg-black">
+                                    {/* Base video to maintain dimensions */}
+                                    <video
+                                        src={defaultVideo}
+                                        autoPlay
+                                        muted
+                                        loop
+                                        playsInline
+                                        className={`w-full h-auto max-h-[60vh] object-contain p-6 transition-opacity duration-500 ease-in-out ${currentVideo === defaultVideo ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
                                     />
-                                    
-                                    {/* VISUAL DOT (always visible) */}
-                                    <circle
-                                        cx={marker.dotPos.x}
-                                        cy={marker.dotPos.y}
-                                        r={isActive ? 1.0 : 0.6}
-                                        fill="#ec028b"
-                                        filter="url(#pinkGlow)"
-                                        className="transition-all duration-300 pointer-events-none"
-                                        style={{
-                                            boxShadow: '0 0 10px #ec028b'
-                                        }}
-                                    />
-
-                                    {/* INVISIBLE HITBOX for the dot to make it easier to hover */}
-                                    <circle
-                                        cx={marker.dotPos.x}
-                                        cy={marker.dotPos.y}
-                                        r={2.5}
-                                        fill="transparent"
-                                        className="cursor-crosshair pointer-events-auto"
-                                        onMouseEnter={() => setActiveMarkerId(marker.id)}
-                                        onMouseLeave={() => setActiveMarkerId(null)}
-                                    />
-                                </g>
-                            );
-                        })}
-                    </svg>
-
-                    {/* HTML Overlays for Text labels */}
-                    {markers.map(marker => {
-                        const isActive = activeMarkerId === marker.id;
-                        const isVisible = !isSectionHovered || isActive;
-
-                        return (
-                            <div 
-                                key={`label-${marker.id}`}
-                                className={`absolute pointer-events-none whitespace-nowrap transition-all duration-700 ease-out flex flex-col items-center z-30
-                                    ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'}
-                                `}
-                                style={{
-                                    left: `${marker.labelPos.x}%`,
-                                    top: `${marker.labelPos.y}%`,
-                                    transform: 'translate(-50%, -50%)',
-                                    textShadow: '0 0 10px rgba(0,0,0,1), 0 0 20px rgba(236,2,139,0.5)'
-                                }}
-                            >
-                                <div className="text-[9px] md:text-[11px] font-black text-white px-2 py-0.5 uppercase tracking-[0.1em] font-sans">
-                                    {marker.label}
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {/* HUD POPUP for active item */}
-                    <div
-                        className={`pointer-events-none absolute w-[260px] md:w-[320px] bg-[#000000]/95 backdrop-blur-3xl border border-white/10 p-5 z-50
-                            transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) shadow-[0_0_50px_rgba(236,2,139,0.15)]
-                            ${activeMarker ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}
-                        `}
-                        style={{
-                            clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)',
-                            left: `${activeMarker ? Math.min(activeMarker.labelPos.x + 5, 60) : 50}%`,
-                            top: `${activeMarker ? Math.min(activeMarker.labelPos.y + 5, 50) : 50}%`,
-                        }}
-                    >
-                        {/* Nano-Banana High-Fidelity Corner Constraints */}
-                        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[var(--rhive-pink)]/40 rounded-tl-xl"></div>
-                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[var(--rhive-pink)]/40 rounded-br-xl"></div>
-
-                        {activeMarker && (
-                            <div className="relative">
-                                {/* Component Scan Header */}
-                                <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-[var(--rhive-pink)] animate-pulse rounded-full shadow-[0_0_8px_#ec028b]"></div>
-                                        <span className="text-[9px] text-[var(--rhive-pink)] font-mono uppercase tracking-[0.3em]">
-                                            System Node: Active
-                                        </span>
-                                    </div>
-                                    <span className="text-[8px] text-gray-500 font-mono italic">RHIVE OS V.2.1</span>
-                                </div>
-
-                                <h3 className="text-white font-bold text-lg leading-tight uppercase mb-1 tracking-tight">
-                                    {activeMarker.label}
-                                </h3>
-                                <div className="text-[var(--rhive-pink)] font-mono text-[8px] uppercase tracking-widest mb-4 opacity-80">
-                                    Certified Component Pipeline
-                                </div>
-
-                                {activeMarker.image && (
-                                    <div className="w-full h-32 mb-4 bg-black overflow-hidden border border-white/10 relative">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
-                                        <img
-                                            src={activeMarker.image}
-                                            alt={activeMarker.label}
-                                            className="w-full h-full object-cover scale-110"
+                                    {/* Overlay videos */}
+                                    {rhiveSystemParts.map(part => (
+                                        <video
+                                            key={part.name}
+                                            src={part.video}
+                                            autoPlay
+                                            muted
+                                            loop
+                                            playsInline
+                                            className={`absolute inset-0 w-full h-full object-contain p-6 transition-opacity duration-500 ease-in-out ${currentVideo === part.video ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none z-0'}`}
                                         />
-                                        <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1">
-                                            <div className="w-1 h-1 bg-[var(--rhive-pink)]"></div>
-                                            <span className="text-[7px] text-white/70 font-mono uppercase tracking-widest">Target Acquired</span>
+                                    ))}
+                                </div>
+                                <div className="flex-grow mt-4">
+                                    <h3 className="text-2xl font-bold text-primary drop-shadow-[0_0_10px_hsl(var(--primary))]">
+                                        {currentPartName}
+                                    </h3>
+                                    {hoveredPart ? (
+                                        <div className="mt-4 p-4 rounded-lg border-2 border-primary/50 text-left">
+                                            <p className="text-base text-muted-foreground">{currentDescription}</p>
+                                            {currentPackageInfo && <p className="text-base mt-2 text-primary-foreground"><strong className="text-primary">OURHIVE Package Includes:</strong> {currentPackageInfo}</p>}
                                         </div>
-                                    </div>
-                                )}
-
-                                <p className="text-gray-400 text-xs leading-relaxed font-serif tracking-wide border-l-2 border-[var(--rhive-pink)]/50 pl-3">
-                                    {activeMarker.description}
-                                </p>
-                                
-                                {activeMarker.customContent && (
-                                    <div className="mt-4">
-                                        {activeMarker.customContent}
-                                    </div>
-                                )}
+                                    ) : (
+                                        <div className="mt-4 p-4 rounded-lg border-2 border-primary/50 text-left flex flex-col justify-center">
+                                            <p className="text-muted-foreground font-semibold flex items-center gap-2"><Info className="h-5 w-5"/> {currentDescription}</p>
+                                            <p className="text-base text-muted-foreground/50 mt-2">Engineered for Performance. Installed with Purpose. Guaranteed for Life.</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        )}
-                    </div>
-                </div>
-
+                            <div className="md:order-2 md:col-span-2 space-y-2 max-h-[70vh] overflow-y-auto pr-2" onMouseLeave={() => setHoveredPart(null)}>
+                                {rhiveSystemParts.map(part => <PartButton key={part.name} part={part} />)}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </section>
     );

@@ -1,0 +1,569 @@
+[Speaker 1]
+Okay.
+
+[Speaker 1]
+So, we have a ballpark. Estimate. We have a quote. We have an inspection and we have a call. Those are the four things that they can do.
+
+[Speaker 2]
+Okay, so the
+
+[Speaker 1]
+Ballpark estimate? They would come in. To our website. They would hit on a ballpark estimate or instant estimate on the left hand side of the screen that pops out. And then it says.
+
+[Speaker 3]
+The same thing. If you like a ballpark estimate, so no, it
+
+[Speaker 1]
+Says, what's your address? It's always the first thing. So they put their address in, because if they no matter what they want, we now have their address. Okay. Um.
+
+[Speaker 3]
+So they can come through.
+
+[Speaker 2]
+Okay, so on
+
+[Speaker 1]
+The web called, they put in their address, and then they verify their address so that it has the light box that pops up. So they verify it.
+
+[Speaker 3]
+And then.
+
+[Speaker 1]
+Once they verified their address, now it needs to ask them the question that actually identifies. Um.
+
+[Speaker 2]
+So, then it could
+
+[Speaker 1]
+Go to. Is it residential or commercial? Or government.
+
+[Speaker 4]
+And
+
+[Speaker 2]
+Then it could
+
+[Speaker 1]
+Go to. Is it an insurance claim?
+
+[Speaker 2]
+Insurance
+
+[Speaker 1]
+Claim.
+
+[Speaker 3]
+I don't know. Insurance, whatever. Okay.
+
+[Speaker 1]
+You don't even have an S you're a kitty?
+
+[Speaker 1]
+Okay, and then after the insurance claim. I think we ask if they have an active leak.
+
+[Speaker 1]
+Or maybe, that's right after addresses. Confirm their address. Do you have an active leak yes or no? No, okay.
+
+[Speaker 2]
+I think it should be.
+
+[Speaker 2]
+It's
+
+[Speaker 4]
+An S on the first one, not the nah, okay? Well, like, I got closer. Okay, so because
+
+[Speaker 3]
+Now, it's saying, like, what are you so address? What are you? I think that order's great! And then, do you have an active leak, and if they do, is this an insurance claim, like, are you? Choosing to file through Insurance? If it's a yes, and if it's a no? Because it could be wind damage or whatever. So it doesn't matter, but I feel like
+
+[Speaker 1]
+So active leak, yes or no. And then, if it's yes, do they want a emergency tarp? 100, it's 150 bucks, so you could just go down and then to the right, like? Because it'll be 3A, so it's okay, yeah,
+
+[Speaker 3]
+Yeah, I'm gonna.
+
+[Speaker 1]
+Hey, you can write insurance right now.
+
+[Speaker 3]
+Yeah, egg salad. So? Um. 3a. And then.
+
+[Speaker 1]
+Yeah. Tarp
+
+[Speaker 3]
+Emergency tarp.
+
+[Speaker 1]
+Just put tarp 150 question mark.
+
+[Speaker 2]
+Okay, so
+
+[Speaker 3]
+Insurance claim, yes, what's the claim for? And then also
+
+[Speaker 1]
+Wind date. 4b is date. For the insurance. So, insurance claim is. Four, Four A's. What type of damage 4B is the date and then
+
+[Speaker 3]
+Info?
+
+[Speaker 1]
+Yeah, do you have additional? Info, and then maybe it gives an example
+
+[Speaker 3]
+Because maybe it's also, um. Insurance claim, yes, and then. Have you started a claim? Yes, what type of claim? The date and do you?
+
+[Speaker 1]
+Yeah, and I have that in the in
+
+[Speaker 3]
+This, like we should already have that written out.
+
+[Speaker 2]
+Okay,
+
+[Speaker 1]
+Yeah. Over here. Carrier claim type of damage, date of loss, how much is their deductible? And then, is it approved in process? They're just interested, or they're not sure. So they want us to evaluate it, but not necessarily like. Want to go forward yet? Yeah, they just
+
+[Speaker 3]
+Want to see. So
+
+[Speaker 4]
+It could just be interesting type things. Yeah.
+
+[Speaker 1]
+But this is them filling it out because this is a. They're coming through the web. Yeah.
+
+[Speaker 3]
+And then, so are we wanting to do it to?
+
+[Speaker 3]
+I guess. Are we wanting if they do have an active claim open and they're finding good carrier or a roofer? Do we want them to put in their claim information now? No, okay.
+
+[Speaker 1]
+So
+
+[Speaker 3]
+That is a later thing of like info, so we don't necessarily need info. Yeah,
+
+[Speaker 1]
+So I think on this one insurance claim.
+
+[Speaker 4]
+Um,
+
+[Speaker 1]
+Status. Approved in progress or interested?
+
+[Speaker 3]
+Well, yeah, it's whatever is there, right? But this has
+
+[Speaker 1]
+Too much because this is the employee one.
+
+[Speaker 3]
+Okay, so.
+
+[Speaker 1]
+So insurance claim. Um, status.
+
+[Speaker 1]
+And that can be that that can actually be number four is. Um. Is it approved in process, or are you just interested? And then 4B would be type of damage. No for. So?
+
+[Speaker 2]
+Three
+
+[Speaker 1]
+Is, do you have an active leak? 3A is, do you want a tarp so four is? What is your insurance claim status so? They could have no insurance. Approved in process or interested? And no insurance will be the first option that's Auto selected, so they can just hit next. Or they can just click it, or you know what I mean, it's easy. If they hit. Yes, or interested, or whatever. Then, it says. Type of damage.
+
+[Speaker 1]
+So here, here. Yep.
+
+[Speaker 3]
+4a's
+
+[Speaker 1]
+Type of damage, okay? Nice.
+
+[Speaker 2]
+Yeah.
+
+[Speaker 1]
+And then the goal would be. Was it, you know, did? Did you have it during one of these days? And it would show the storm history for their address. And they could either select one or they could say input.
+
+[Speaker 2]
+Um, I don't
+
+[Speaker 1]
+Know. Um, skip.
+
+[Speaker 3]
+Okay. And then.
+
+[Speaker 2]
+And
+
+[Speaker 3]
+Then jackable.
+
+[Speaker 1]
+Now, it goes to.
+
+[Speaker 1]
+I actually skipped the contact information.
+
+[Speaker 1]
+I'll just switch
+
+[Speaker 3]
+These around so you could go because now AC,
+
+[Speaker 1]
+Whatever if. Active leak is no, and insurance is no. Then it would say, do you want a ballpark?
+
+[Speaker 2]
+Yeah, but if they say no, then it's
+
+[Speaker 3]
+Automatically going to go to five. But if they say yes, this is the order it goes in.
+
+[Speaker 1]
+Yeah. It's confusing me because this one it has the contact name as the third question, because that's when they call in, so they're not afraid of us asking what their name is right. Whereas on their website, we're not trying to ask them for information until they're already. So far, in the funnel, we know they want information. Right? So, we wrote it under ballpark, but that kind of is, like, the whole web flow. It's not the ballpark flow. So? Um.
+
+[Speaker 1]
+Because this would mean that it has to be a quote. It's no longer a ballpark. If we're even going that far, unless we're riding just the full thing. So, what's the next question? I think the insurance is done for now. Um. After inherit has the billing.
+
+[Speaker 2]
+Well, and yeah, if they do ballpark or quilt, so that,
+
+[Speaker 1]
+And then after that, it's repair replacement.
+
+[Speaker 1]
+And then, should we offer a both option?
+
+[Speaker 2]
+No, because
+
+[Speaker 3]
+If they're going to do repair then.
+
+[Speaker 1]
+We always give repairs a quote.
+
+[Speaker 3]
+Yeah, but we usually go out there, don't we? And a replacement. It's just like, oh yeah, here's your Ariel.
+
+[Speaker 2]
+Okay, so if they
+
+[Speaker 1]
+Said.
+
+[Speaker 1]
+Every repair we're trying to sell a replacement. And so, instead of. Making them feel like we're tricking them.
+
+[Speaker 1]
+I don't know. Okay, so if they say repair, then we say. Repair photos or inspection? If they say replacement. We say, do you want a ballpark? You know, planning for the next couple of years? Or certified quote. Looking to install in the next few weeks? Next 15 days.
+
+[Speaker 1]
+Because that's when their coat will expire.
+
+[Speaker 2]
+It's snowing
+
+[Speaker 1]
+A lot now!
+
+[Speaker 2]
+Okay, so now
+
+[Speaker 1]
+If they come in, they do their address and it's commercial or government. It then? We know that it's going to schedule an inspection.
+
+[Speaker 3]
+Um,
+
+[Speaker 1]
+If it's residential, then we need to go on to the next. Um, to number three, which is active leak if they have a. Active leak. We know we need. Um. We're going to be scheduling an inspection. And then we want to ask them if they need an emergency tarp. Let them know it's 150 for standard size leaks. Um, if they say no to active leak, then they move on to the next. So, if it's an insurance claim? Um, started. Or in process. Um, or they're interested. Um, so if they want to do an insurance claim or they're doing one already, then we ask them what type of damage and the date if they say no. Then, we skip to number five.
+
+[Speaker 1]
+Oh, on the insurance. If they say, yes, we know we're scheduling an inspection.
+
+[Speaker 1]
+Oh, number four for the insurance claim. We know that we're scheduling an inspection if they say yes. Okay, so then we're at number five. So if they said address the residential. Um.
+
+[Speaker 1]
+They could have done. Active leak. And now they're looking for a repair. And so. If they want to repair it, then we ask if they have repair photos. They can see the damage clearly, and we can send them an estimate with unforeseen's built in so they can see what happens. And then, if they want a replacement. Um. If they had an active leak, then we would give them a we would say, okay, we need to get you a certified quote. If they don't have an active leak. They don't have insurance.
+
+[Speaker 1]
+And they don't need a repair. Then they need a quote. So the only way that they would need? Ballpark estimate is if they were residential.
+
+[Speaker 1]
+With. Leak. No insurance. No repair. And they're not looking to purchase anytime soon. They're the tire kickers. That's perfect. That's the perfect funnel, because it it? Weeds them out in every section.
+
+[Speaker 3]
+And gives inspection options throughout the whole thing.
+
+[Speaker 1]
+Uh-Huh!
+
+[Speaker 3]
+To schedule an inspection.
+
+[Speaker 1]
+Yeah, so let's say commercial says. Um, I have an active leak. We ask if they need an emergency.
+
+[Speaker 2]
+Tarp tarp.
+
+[Speaker 1]
+Um, if the leak is found, its minimum of 150 to stop the leak. Temporarily, you know, emergency? Because if it's a flat roof? I don't know what that looks like.
+
+[Speaker 1]
+And so on, Commercial. If it's an active leak, the tarp option needs to say. Uh, generally, do you need? Do you want us to do an emergency? Leak stop! Um. For asphalt roofs, it's generally 150 dollars for flat roofs. It depends upon the size and and the issue that's happening.
+
+[Speaker 3]
+Yeah, and we could do like 150 to 350 on asphalt and, and you could even say with flat roof. Um. Assess Dawn job!
+
+[Speaker 2]
+Or whatever, okay?
+
+[Speaker 1]
+And we could say generally 350 to a thousand.
+
+[Speaker 2]
+Well,
+
+[Speaker 3]
+That's a repair at that point. That's not just an emergency tarp.
+
+[Speaker 1]
+350 to 600.
+
+[Speaker 1]
+Well, what if we need to provide $500 a tarp?
+
+[Speaker 3]
+Yeah, I agree, right? It's more, just like. Actually, yeah, so
+
+[Speaker 1]
+On the commercial and the government for the for 3A, it needs to just have more. Um. Give more explanation about the tarping and the emergency leak issue. Um, on commercials, they say insurance. Then, we would still say typoder date if they say no, which would be the first option. Then, we would ask if they're looking for a repair replacement commercials, usually looking for a repair. Um. And so we'll ask him if they have photos of the repair. They usually will say, no, we haven't been on the roof or we can't get on the roof. Or that's why we're calling you guys.
+
+[Speaker 1]
+And we say, great, uh. Generally, we do a repair and a replacement option for you. Let's get that inspection scheduled. And get you guys taken care of. I know, I feel like we can handle anyone.
+
+[Speaker 2]
+Through
+
+[Speaker 1]
+That. Funnel, I think that's great. And I feel
+
+[Speaker 3]
+Like, depending at the end of it, obviously like, we're gonna answer all the questions, no matter what. And then, if they said yes to it? Insurance, right? Like, now, we automatically know at the very end. We're going to schedule an inspection, so it's just going to pop up that at the end. You know. Or if it's commercial, they're going to answer all the questions. And then, at the end inspection. Or government, you know? And so
+
+[Speaker 1]
+Now on the website. What we're looking at is that when they click? Buy now! Schedule now, how much is my roof? It comes to this flow.
+
+[Speaker 2]
+When they go to
+
+[Speaker 1]
+The instant estimate tool, it looks like a different tool,
+
+[Speaker 3]
+But it's the same thing.
+
+[Speaker 1]
+And
+
+[Speaker 2]
+Then.
+
+[Speaker 1]
+When we get to the repair replacement question five? The repair should show. Sorry, not question five.
+
+[Speaker 1]
+The quote. Estimate.
+
+[Speaker 2]
+So, it'd be number
+
+[Speaker 1]
+Six because they're looking for an estimate at that point.
+
+[Speaker 1]
+So, number six is. Great! Would you like?
+
+[Speaker 1]
+Oh, it's 5B. Sorry, so 5B is. Do you want a ballpark and so at at 5B? It's a light box that pops up and one box says ballpark estimate. On the left and then the one on the right, says certified quote. And then they show what they have. Included, and what they don't have included, and the ballpark estimate doesn't include inspections or insurance or. Um. Leak repairs.
+
+[Speaker 1]
+Or guaranteed pricing. It's too volatile something like that, right? But we also can't make it look like you don't want that at all, no matter what. It's like, get this. If you're planning for budgeting. Get this if you're planning on comparing quotes and installing. I don't think
+
+[Speaker 3]
+It has to show what you get and what you don't get. I think it just used to say that.
+
+[Speaker 1]
+Okay.
+
+[Speaker 3]
+And. I think that it explains it. It makes it easy, it's clean, and.
+
+[Speaker 5]
+It. Yeah, okay. So now.
+
+[Speaker 1]
+If they're doing a ballpark estimate. It asks, this is really cool.
+
+[Speaker 2]
+Um. Residential.
+
+[Speaker 2]
+Yeah, just
+
+[Speaker 3]
+A ballpark for planning and budgeting future project. Quote. Like installing now comparing?
+
+[Speaker 5]
+Other bids.
+
+[Speaker 1]
+Okay, so for the ballpark, the questions that it asks?
+
+[Speaker 1]
+I'm not actually seeing them. Let me go to.
+
+[Speaker 2]
+Princess.
+
+[Speaker 2]
+Okay.
+
+[Speaker 6]
+If it's ballpark pricing.
+
+[Speaker 1]
+Then we ask. How many existing layers, how many chimney, skylights, and swamp coolers? And then we ask if they want to get gutter ballpark pricing. Um, and then that has them measure. The runs of their gutters. Let us know how many Corners there are. And then, how many downspouts with how many stories? And then it asks if they want to get a heat Trace instant estimate. And that does has them measure the runs. How many downspouts and how big their Eve is?
+
+[Speaker 2]
+Um,
+
+[Speaker 1]
+And then it'll give them their full estimate. Oh, and then they schedule an estimate follow-up. When do you want us to follow up with you to answer? These questions, and so they can schedule a date, or they could probably hit skip. I'm not ready to purchase.
+
+[Speaker 3]
+Yeah, so it's not to answer these questions. It's. Like, when are you planning on actually installing? And getting your roof done.
+
+[Speaker 2]
+For
+
+[Speaker 3]
+Getting this project done so, then after
+
+[Speaker 1]
+They schedule their estimate follow-up. Now, they put in. Great! Let's grab a couple of details from you.
+
+[Speaker 2]
+Just send this
+
+[Speaker 3]
+Over to send it
+
+[Speaker 1]
+Over.
+
+[Speaker 2]
+Yep, we
+
+[Speaker 1]
+Got everything calculated. Where can we send it? And then it sends it to them. Ideally, at this stage, it gives them. Customer portal. And they're in the estimate stage. And so now they can request a quote easily anywhere that they're at.
+
+[Speaker 3]
+And we could even say that too. Or it's like?
+
+[Speaker 1]
+When you're ready, we have all your information.
+
+[Speaker 2]
+Uh-Huh, or
+
+[Speaker 3]
+It's like, we'll send this to you here. You can always come back to it and check for it in our customer portal or whatever.
+
+[Speaker 3]
+Okay, so if
+
+[Speaker 1]
+They do a quote, then it asks how many layers?
+
+[Speaker 1]
+Um. On our end has us choose the.
+
+[Speaker 1]
+Roof access type? Is it ladder, drone or roof hatch, and then how big of a ladder do we need? If we're doing an inspection?
+
+[Speaker 2]
+So, that's pretty cool,
+
+[Speaker 1]
+But that wouldn't be for them. So, if they're doing a quote, they would do how many layers. Um.
+
+[Speaker 2]
+And that's.
+
+[Speaker 1]
+Even take! Do they have even take? That's the question we need.
+
+[Speaker 1]
+It's brilliant!
+
+[Speaker 2]
+And then we
+
+[Speaker 1]
+Can figure out if they have a satellite dish swamp cooler solar panels. Um. Oh, we need to know if they want additional structures quoted.
+
+[Speaker 1]
+And then project details they can enter, and then they can upload blueprints or specifications if they have those.
+
+[Speaker 1]
+And then it would go. Great! Let's fill out your information to. Send your certified quote over, and it would sign them up. It would get their contact information.
+
+[Speaker 1]
+Which is the contact info here? It would verify their billing information. And get them. Customer portal login? Um, so now we know what's the preferred contact method, and they can log in and talk to us there? See their quotes approve their quotes? Or in the estimate stage, they can request the quote.
+
+[Speaker 2]
+So, as
+
+[Speaker 1]
+The instant estimate, it's going to be a pop-out that looks like a cool tool. That leads to this funnel as the other call to action buttons. It's going to open up. The cool tool that leads to these options, and it's going to guide them and let them know. Like, if you have an active leak?
+
+[Speaker 1]
+You know because they could go through the insta estimate and then all of a sudden. It's not an instant estimate. So, like you were saying, it needs to say. Based upon your answers.
+
+[Speaker 1]
+In 5B, it could say.
+
+[Speaker 1]
+It could gray out the ballpark based upon your answers. Um, you need a certified, you know you need a more in-depth? Quote. We're unable to give you. Price for what you're looking for?
+
+[Speaker 3]
+And then it could be, like, don't worry. The like, numbers come over quickly, whatever?
+
+[Speaker 1]
+Supposed to be 24 hour turnaround.
+
+[Speaker 7]
+217.
+
+[Speaker 8]
+So really
+
+[Speaker 1]
+Quick on. Employ. World. The customer input page needs to stay the same because the employee is entering in the information during a call. Um. And then on the. Public pages. We need it to be.
+
+[Speaker 1]
+Yeah, modified to be. Customer or user? Level. Where it's not asking? Name and information until after they've put in all their information to get either their instant estimate and their quote. Or their quote. Because when they call in, we're just finding their information first if they exist when they go to our. Website, they know if they exist or not, so they would just be going into this as a new person that's discovering. And so, then we don't want to be asking for their information immediately until we have enough information. To actually input them in their project into our system.

@@ -61,7 +61,7 @@ export const AboutUsLightbox: React.FC<AboutUsLightboxProps> = ({ isOpen, onClos
                         <div className="w-full md:w-3/5 p-8 md:p-12 relative z-10 flex flex-col justify-center">
 
                             <div className="inline-block border border-rhive-pink/30 px-4 py-1 rounded-full bg-rhive-pink/10 mb-6 self-start">
-                                <span className="text-rhive-pink font-bold text-xs tracking-[0.2em] uppercase">Who We Are</span>
+                                <span className="text-rhive-pink font-bold text-base tracking-[0.2em] uppercase">Who We Are</span>
                             </div>
 
                             <h2 className="text-3xl md:text-4xl font-black uppercase text-white tracking-tight leading-tight mb-4">
@@ -76,11 +76,11 @@ export const AboutUsLightbox: React.FC<AboutUsLightboxProps> = ({ isOpen, onClos
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
                                 <div className="flex items-start gap-4">
                                     <div className="p-2 bg-rhive-blue/10 rounded-sm border border-rhive-blue/30 shrink-0">
-                                        <ShieldCheckIcon className="w-6 h-6 text-rhive-blue" />
+                                        <ShieldCheckIcon className="w-6 h-6" color="url(#blue-white-grad)" />
                                     </div>
                                     <div>
-                                        <h4 className="text-white font-bold text-sm uppercase mb-1">Total Transparency</h4>
-                                        <p className="text-[#9CA3AF] text-xs">No hidden fees, no salesman markup.</p>
+                                        <h4 className="text-white font-bold text-base uppercase mb-1">Total Transparency</h4>
+                                        <p className="text-[#9CA3AF] text-base">No hidden fees, no salesman markup.</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
@@ -88,8 +88,8 @@ export const AboutUsLightbox: React.FC<AboutUsLightboxProps> = ({ isOpen, onClos
                                         <UserIcon className="w-6 h-6 text-rhive-pink" />
                                     </div>
                                     <div>
-                                        <h4 className="text-white font-bold text-sm uppercase mb-1">Human Impact</h4>
-                                        <p className="text-[#9CA3AF] text-xs">Community reinvestment on every job.</p>
+                                        <h4 className="text-white font-bold text-base uppercase mb-1">Human Impact</h4>
+                                        <p className="text-[#9CA3AF] text-base">Community reinvestment on every job.</p>
                                     </div>
                                 </div>
                             </div>
@@ -102,7 +102,7 @@ export const AboutUsLightbox: React.FC<AboutUsLightboxProps> = ({ isOpen, onClos
                                         window.location.href = '/aboutus';
                                         window.scrollTo(0, 0);
                                     }}
-                                    className="group relative px-6 py-4 bg-transparent border border-[var(--border-color)] text-white font-bold uppercase tracking-widest text-sm hover:border-rhive-pink transition-all flexitems-center justify-center gap-2 overflow-hidden w-full sm:w-auto text-center"
+                                    className="group relative px-6 py-4 bg-transparent border border-[var(--border-color)] text-white font-bold uppercase tracking-widest text-base hover:border-rhive-pink transition-all flexitems-center justify-center gap-2 overflow-hidden w-full sm:w-auto text-center"
                                     style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                                 >
                                     <span className="relative z-10 flex items-center justify-center gap-2">Read Full Story <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" /></span>

@@ -89,13 +89,13 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
                 {/* Header */}
                 <div className="flex items-start justify-between p-5 border-b border-gray-800">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ec028b] mb-1">
+                        <p className="text-base font-black uppercase tracking-[0.3em] text-[#ec028b] mb-1">
                             Schedule Follow-Up
                         </p>
                         <h2 className="text-lg font-black text-white leading-tight">
                             {project.name || 'Project'}
                         </h2>
-                        <p className="text-xs text-gray-500 mt-0.5 font-mono">
+                        <p className="text-base text-gray-500 mt-0.5 font-mono">
                             {project.current_stage || 'Pipeline Record'}
                         </p>
                     </div>
@@ -112,14 +112,14 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
                         <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center">
                             <CheckCircleIcon className="w-8 h-8 text-green-400" />
                         </div>
-                        <p className="text-green-400 font-bold text-sm uppercase tracking-widest">Scheduled!</p>
-                        <p className="text-gray-500 text-xs text-center">Event added to your calendar.</p>
+                        <p className="text-green-400 font-bold text-base uppercase tracking-widest">Scheduled!</p>
+                        <p className="text-gray-500 text-base text-center">Event added to your calendar.</p>
                     </div>
                 ) : (
                     <div className="p-5 space-y-5">
                         {/* Type selector */}
                         <div>
-                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">
+                            <p className="text-base text-gray-500 uppercase font-black tracking-widest mb-2">
                                 Follow-Up Type
                             </p>
                             <div className="grid grid-cols-2 gap-3">
@@ -139,7 +139,7 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
                                         >
                                             <Icon className="w-5 h-5 shrink-0" />
                                             <div className="text-left">
-                                                <p className="text-xs font-black uppercase tracking-wider">
+                                                <p className="text-base font-black uppercase tracking-wider">
                                                     {cfg.label}
                                                 </p>
                                             </div>
@@ -152,7 +152,7 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
                         {/* Date & Time */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1 flex items-center gap-1">
+                                <label className="text-base text-gray-500 uppercase font-black tracking-widest mb-1 flex items-center gap-1">
                                     <CalendarIcon className="w-3 h-3" />
                                     Date
                                 </label>
@@ -161,11 +161,11 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
                                     value={date}
                                     min={today}
                                     onChange={(e) => setDate(e.target.value)}
-                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ec028b]/60 focus:ring-1 focus:ring-[#ec028b]/20 transition-all [color-scheme:dark]"
+                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-base focus:outline-none focus:border-[#ec028b]/60 focus:ring-1 focus:ring-[#ec028b]/20 transition-all [color-scheme:dark]"
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1 flex items-center gap-1">
+                                <label className="text-base text-gray-500 uppercase font-black tracking-widest mb-1 flex items-center gap-1">
                                     <ClockIcon className="w-3 h-3" />
                                     Time
                                 </label>
@@ -173,14 +173,14 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
                                     type="time"
                                     value={time}
                                     onChange={(e) => setTime(e.target.value)}
-                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#ec028b]/60 focus:ring-1 focus:ring-[#ec028b]/20 transition-all [color-scheme:dark]"
+                                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-base focus:outline-none focus:border-[#ec028b]/60 focus:ring-1 focus:ring-[#ec028b]/20 transition-all [color-scheme:dark]"
                                 />
                             </div>
                         </div>
 
                         {/* Notes */}
                         <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1 block">
+                            <label className="text-base text-gray-500 uppercase font-black tracking-widest mb-1 block">
                                 Notes (Optional)
                             </label>
                             <textarea
@@ -188,7 +188,7 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
                                 onChange={(e) => setNotes(e.target.value)}
                                 placeholder="Discussion topics, directions, objectives..."
                                 rows={3}
-                                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-[#ec028b]/60 focus:ring-1 focus:ring-[#ec028b]/20 transition-all resize-none"
+                                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-base placeholder-gray-600 focus:outline-none focus:border-[#ec028b]/60 focus:ring-1 focus:ring-[#ec028b]/20 transition-all resize-none"
                             />
                         </div>
 
@@ -196,7 +196,7 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
                         <div className="flex items-center gap-3 pt-1">
                             <button
                                 onClick={onClose}
-                                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-800 text-gray-500 hover:border-gray-600 hover:text-white text-sm font-bold uppercase tracking-widest transition-all"
+                                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-800 text-gray-500 hover:border-gray-600 hover:text-white text-base font-bold uppercase tracking-widest transition-all"
                             >
                                 Cancel
                             </button>
@@ -204,7 +204,7 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
                                 onClick={handleSave}
                                 disabled={!date || saving}
                                 className={cn(
-                                    'flex-1 px-4 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all duration-300',
+                                    'flex-1 px-4 py-2.5 rounded-xl text-base font-black uppercase tracking-widest transition-all duration-300',
                                     'bg-[#ec028b]/10 border border-[#ec028b]/40 text-[#ec028b]',
                                     'hover:bg-[#ec028b]/20 hover:border-[#ec028b]/70 hover:shadow-[0_0_20px_rgba(236,2,139,0.2)]',
                                     'disabled:opacity-40 disabled:pointer-events-none',

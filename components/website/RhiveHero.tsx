@@ -21,7 +21,7 @@ const RhiveHero: React.FC = () => {
                     transition={{ duration: 1.2, ease: "easeOut" }}
                     className="max-w-5xl mx-auto"
                 >
-                    <h2 className="text-[10px] font-black tracking-[0.6em] text-rhive-pink uppercase mb-8 ml-[0.6em]">
+                    <h2 className="text-base font-black tracking-[0.6em] text-rhive-pink uppercase mb-8 ml-[0.6em]">
                         Precision Engineering // Radical Transparency
                     </h2>
 
@@ -38,12 +38,12 @@ const RhiveHero: React.FC = () => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
-                        <button className="group relative px-12 py-5 bg-rhive-pink text-white font-black uppercase text-xs tracking-[0.3em] overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(236,2,139,0.4)]">
+                        <button className="group relative px-12 py-5 bg-rhive-pink text-white font-black uppercase text-base tracking-[0.3em] overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(236,2,139,0.4)]">
                             <span className="relative z-10">Start Estimate</span>
                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                         </button>
 
-                        <button className="px-12 py-5 border border-white/20 text-white font-black uppercase text-xs tracking-[0.3em] hover:bg-white/5 transition-all">
+                        <button className="px-12 py-5 border border-white/20 text-white font-black uppercase text-base tracking-[0.3em] hover:bg-white/5 transition-all">
                             Our Process
                         </button>
                     </div>

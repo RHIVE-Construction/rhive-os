@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils';
 
 const ComparisonItem = ({ label, rhive, others }: { label: string, rhive: boolean, others: boolean }) => (
     <div className="grid grid-cols-[2fr_1fr_1fr] gap-4 py-6 border-b border-white/5 items-center group">
-        <span className="text-sm font-bold uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">{label}</span>
+        <span className="text-base font-bold uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">{label}</span>
         <div className="flex justify-center">
             {rhive ? (
                 <div className="w-8 h-8 rounded-full bg-rhive-pink/20 border border-rhive-pink flex items-center justify-center shadow-[0_0_10px_rgba(236,2,139,0.3)]">
@@ -32,15 +32,15 @@ const RhiveComparison: React.FC = () => {
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-20">
                         <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4 text-white">THE RHIVE WAY.</h2>
-                        <p className="text-rhive-pink text-[10px] font-bold tracking-[0.4em] uppercase">Engineered for Transparency</p>
+                        <p className="text-rhive-pink text-base font-bold tracking-[0.4em] uppercase">Engineered for Transparency</p>
                     </div>
 
                     <div className="relative isolate">
                         {/* Header */}
                         <div className="grid grid-cols-[2fr_1fr_1fr] gap-4 pb-8 border-b border-white/10">
-                            <span className="text-[10px] font-black tracking-widest text-gray-600 uppercase">Capability / Feature</span>
-                            <span className="text-[10px] font-black tracking-widest text-rhive-pink uppercase text-center">RHIVE QOS</span>
-                            <span className="text-[10px] font-black tracking-widest text-gray-600 uppercase text-center">Legacy Contractors</span>
+                            <span className="text-base font-black tracking-widest text-gray-600 uppercase">Capability / Feature</span>
+                            <span className="text-base font-black tracking-widest text-rhive-pink uppercase text-center">RHIVE QOS</span>
+                            <span className="text-base font-black tracking-widest text-gray-600 uppercase text-center">Legacy Contractors</span>
                         </div>
 
                         <ComparisonItem label="AI-Aided Satellite Estimation" rhive={true} others={false} />

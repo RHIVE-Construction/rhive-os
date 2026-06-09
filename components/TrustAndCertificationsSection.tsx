@@ -51,7 +51,7 @@ const TrustAndCertificationsSection = () => {
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <Award className="w-6 h-6 text-[var(--rhive-pink)]" />
-                            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)]">
+                            <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)]">
                                 Elite Qualification Standard
                             </span>
                         </div>
@@ -69,8 +69,8 @@ const TrustAndCertificationsSection = () => {
                                 <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Star className="w-3 h-3 text-[var(--rhive-pink)]" />
                                 </div>
-                                <h4 className="text-white font-bold text-xs uppercase tracking-widest mb-1 group-hover:text-[var(--rhive-pink)] transition-colors">Owens Corning</h4>
-                                <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Preferred Contractor</p>
+                                <h4 className="text-white font-bold text-base uppercase tracking-widest mb-1 group-hover:text-[var(--rhive-pink)] transition-colors">Owens Corning</h4>
+                                <p className="text-gray-500 text-base uppercase font-bold tracking-widest">Preferred Contractor</p>
                             </button>
                             <button 
                                 onClick={() => setGafOpen(true)}
@@ -79,25 +79,25 @@ const TrustAndCertificationsSection = () => {
                                 <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Star className="w-3 h-3 text-[#e2ab49]" />
                                 </div>
-                                <h4 className="text-white font-bold text-xs uppercase tracking-widest mb-1 group-hover:text-[#e2ab49] transition-colors">GAF Certified</h4>
-                                <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Master Installer Status</p>
+                                <h4 className="text-white font-bold text-base uppercase tracking-widest mb-1 group-hover:text-[#e2ab49] transition-colors">GAF Certified</h4>
+                                <p className="text-gray-500 text-base uppercase font-bold tracking-widest">Master Installer Status</p>
                             </button>
                         </div>
 
-                        <p className="text-gray-400 font-sans text-sm leading-relaxed mb-6 text-balance">
+                        <p className="text-gray-400 font-sans text-base leading-relaxed mb-6 text-balance">
                             These badges represent a <span className="text-white font-bold">top 1% industry standard</span>. They are not simply bought; they are aggressively earned through rigorous background checks, financial audits, and <strong>mandatory on-site manufacturer inspections</strong> that verify absolute compliance with engineering tolerances.
                         </p>
                         
-                        <p className="text-gray-300 font-sans text-sm leading-relaxed mb-8 border-l-2 border-[var(--rhive-pink)] pl-4">
+                        <p className="text-gray-300 font-sans text-base leading-relaxed mb-8 border-l-2 border-[var(--rhive-pink)] pl-4">
                             Because we execute installations to precise manufacturer engineering tolerances, your roof qualifies for <span className="text-[#ec028b]">50-Year Non-Prorated</span> lifetime coverage that uncertified competitors cannot legally offer.
                         </p>
 
                         {/* Celebratory Badge */}
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-[var(--rhive-pink)] via-[#00D1FF] to-[var(--rhive-pink)] opacity-30 blur group-hover:opacity-100 group-hover:animate-pulse transition duration-1000"></div>
+                            <div className="absolute -inset-1 bg-gradient-to-r from-[var(--rhive-pink)] via-[var(--rhive-blue)] to-[var(--rhive-pink)] opacity-30 blur group-hover:opacity-100 group-hover:animate-pulse transition duration-1000"></div>
                             <div className="relative flex items-center gap-3 px-6 py-3 bg-black border border-white/20 w-fit cursor-default">
                                 <Shield className="w-5 h-5 text-[var(--rhive-pink)] animate-bounce" />
-                                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white">Preferred Protection Upgrade Unlocked</span>
+                                <span className="text-base font-black uppercase tracking-[0.3em] text-white">Preferred Protection Upgrade Unlocked</span>
                             </div>
                         </div>
                     </div>
@@ -127,8 +127,8 @@ const TrustAndCertificationsSection = () => {
                                         {reviews[currentSlide].name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h4 className="text-white font-bold text-xs uppercase tracking-widest">{reviews[currentSlide].name}</h4>
-                                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">{reviews[currentSlide].role}</p>
+                                        <h4 className="text-white font-bold text-base uppercase tracking-widest">{reviews[currentSlide].name}</h4>
+                                        <p className="text-gray-500 text-base font-bold uppercase tracking-widest">{reviews[currentSlide].role}</p>
                                     </div>
                                 </div>
                             </div>
@@ -145,7 +145,7 @@ const TrustAndCertificationsSection = () => {
 
                             {/* Trust Badge Note */}
                             <div className="absolute bottom-[-10px] left-10 translate-y-full pt-4">
-                                <div className="text-[10px] uppercase tracking-widest text-[#e2ab49] font-black">
+                                <div className="text-base uppercase tracking-widest text-[#e2ab49] font-black">
                                     ★ 4.9 Stars on 399 Reviews
                                 </div>
                             </div>
@@ -160,19 +160,19 @@ const TrustAndCertificationsSection = () => {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-black/80 animate-in fade-in duration-300">
                     <div className="relative w-full max-w-2xl bg-[#0a0a0a] border border-[var(--rhive-pink)]/30 p-12 overflow-hidden shadow-[0_0_100px_rgba(236,2,139,0.2)]">
                         <div className="absolute top-0 right-0 p-8">
-                             <button onClick={() => setOcOpen(false)} className="text-gray-500 hover:text-white transition-colors uppercase font-black text-xs tracking-widest">Close [x]</button>
+                             <button onClick={() => setOcOpen(false)} className="text-gray-500 hover:text-white transition-colors uppercase font-black text-base tracking-widest">Close [x]</button>
                         </div>
                         <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-6">OWENS CORNING PREFERRED</h3>
-                        <div className="space-y-6 text-gray-400 font-sans text-sm">
+                        <div className="space-y-6 text-gray-400 font-sans text-base">
                             <p>As an OC Preferred Contractor, RHIVE has met strict requirements including general liability insurance, workers compensation, and a clean history with no unresolved better business bureau complaints.</p>
                             <ul className="space-y-4">
                                 <li className="flex gap-4">
                                     <div className="w-1 h-6 bg-[var(--rhive-pink)]" />
-                                    <div><span className="text-white font-bold uppercase text-xs block mb-1">Mandatory Training</span> Crews must pass regular installation and safety training modules directly from the manufacturer.</div>
+                                    <div><span className="text-white font-bold uppercase text-base block mb-1">Mandatory Training</span> Crews must pass regular installation and safety training modules directly from the manufacturer.</div>
                                 </li>
                                 <li className="flex gap-4">
                                     <div className="w-1 h-6 bg-[var(--rhive-pink)]" />
-                                    <div><span className="text-white font-bold uppercase text-xs block mb-1">Job-Site Audits</span> Owens Corning reserved the right to audit our job sites randomly to ensure shingle layouts meet warranty specs.</div>
+                                    <div><span className="text-white font-bold uppercase text-base block mb-1">Job-Site Audits</span> Owens Corning reserved the right to audit our job sites randomly to ensure shingle layouts meet warranty specs.</div>
                                 </li>
                             </ul>
                         </div>
@@ -184,19 +184,19 @@ const TrustAndCertificationsSection = () => {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-black/80 animate-in fade-in duration-300">
                     <div className="relative w-full max-w-2xl bg-[#0a0a0a] border border-[#e2ab49]/30 p-12 overflow-hidden shadow-[0_0_100px_rgba(226,171,73,0.2)]">
                         <div className="absolute top-0 right-0 p-8">
-                             <button onClick={() => setGafOpen(false)} className="text-gray-500 hover:text-white transition-colors uppercase font-black text-xs tracking-widest">Close [x]</button>
+                             <button onClick={() => setGafOpen(false)} className="text-gray-500 hover:text-white transition-colors uppercase font-black text-base tracking-widest">Close [x]</button>
                         </div>
                         <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-6">GAF MASTER INSTALLER</h3>
-                        <div className="space-y-6 text-gray-400 font-sans text-sm">
+                        <div className="space-y-6 text-gray-400 font-sans text-base">
                             <p>GAF Certification is reserved for contractors who demonstrate stability and a commitment to high-performance system installations across residential and commercial sectors.</p>
                             <ul className="space-y-4">
                                 <li className="flex gap-4">
                                     <div className="w-1 h-6 bg-[#e2ab49]" />
-                                    <div><span className="text-white font-bold uppercase text-xs block mb-1">Precision Execution</span> Mastery of GAF Cobra ventilation systems and Pro-Start starter strips to prevent blow-offs.</div>
+                                    <div><span className="text-white font-bold uppercase text-base block mb-1">Precision Execution</span> Mastery of GAF Cobra ventilation systems and Pro-Start starter strips to prevent blow-offs.</div>
                                 </li>
                                 <li className="flex gap-4">
                                     <div className="w-1 h-6 bg-[#e2ab49]" />
-                                    <div><span className="text-white font-bold uppercase text-xs block mb-1">Financial Integrity</span> Proof of stable business operations ensuring we are here to back your warranty for decades.</div>
+                                    <div><span className="text-white font-bold uppercase text-base block mb-1">Financial Integrity</span> Proof of stable business operations ensuring we are here to back your warranty for decades.</div>
                                 </li>
                             </ul>
                         </div>

@@ -2,7 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap } from './icons';
 
-export const AddressScanInput = ({ id }: { id?: string }) => {
+interface AddressScanInputProps {
+    id?: string;
+    value?: string;
+    onChange?: (val: string) => void;
+    onScan?: (address: string) => void;
+}
+
+export const AddressScanInput: React.FC<AddressScanInputProps> = ({ 
+    id, 
+    value, 
+    onChange, 
+    onScan 
+}) => {
     const chamferSize = "16px";
     const clipPathValue = `polygon(
         ${chamferSize} 0,
@@ -16,6 +28,7 @@ export const AddressScanInput = ({ id }: { id?: string }) => {
     const fullText = "ENTER PROJECT ADDRESS";
     const [placeholder, setPlaceholder] = useState("");
     const [index, setIndex] = useState(0);
+    const [localVal, setLocalVal] = useState("");
 
     useEffect(() => {
         if (index < fullText.length) {
@@ -33,8 +46,55 @@ export const AddressScanInput = ({ id }: { id?: string }) => {
         }
     }, [index]);
 
+    const isControlled = value !== undefined;
+    const currentVal = isControlled ? value : localVal;
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        if (!isControlled) {
+            setLocalVal(val);
+        }
+        if (onChange) {
+            onChange(val);
+        }
+    };
+
+    const handleScanClick = () => {
+        if (onScan) {
+            onScan(currentVal || "525 Aspen Meadow Dr, Logan, UT");
+        } else {
+            window.dispatchEvent(new CustomEvent('open-roof-configurator', { 
+                detail: { 
+                    address: currentVal || "525 Aspen Meadow Dr, Logan, UT",
+                    mode: 'estimate'
+                } 
+            }));
+        }
+    };
+
     return (
-        <div id={id} className="relative flex w-full max-w-2xl mx-auto h-16 group mt-8 scroll-mt-40 isolate">
+        <div id={id} className="relative flex w-full max-w-2xl mx-auto h-16 group mt-8 scroll-mt-40 isolate breathing-glow">
+            <style>{`
+                @keyframes border-breathe {
+                    0%, 100% {
+                        box-shadow: 0 0 10px 1px rgba(236, 2, 139, 0.25);
+                    }
+                    50% {
+                        box-shadow: 0 0 20px 2px rgba(236, 2, 139, 0.45);
+                    }
+                }
+                .breathing-glow {
+                    animation: border-breathe 4s ease-in-out infinite;
+                    transition: box-shadow 0.3s ease-out, transform 0.3s ease-out;
+                    border-radius: 4px;
+                }
+                .breathing-glow:hover, .breathing-glow:focus-within {
+                    animation: none;
+                    box-shadow: 0 0 28px 4px rgba(236, 2, 139, 0.7);
+                    transform: scale(1.005);
+                }
+            `}</style>
+
             {/* 1. Background Layer (Clipped) */}
             <div
                 className="absolute inset-0 bg-black/80 backdrop-blur-xl z-0"
@@ -93,14 +153,16 @@ export const AddressScanInput = ({ id }: { id?: string }) => {
                 <input
                     type="text"
                     placeholder={placeholder}
-                    className="bg-transparent text-white w-full h-full outline-none placeholder-rhive-pink/60 font-black uppercase text-[12px] md:text-[14px] tracking-[0.2em] text-left"
+                    value={currentVal}
+                    onChange={handleInputChange}
+                    className="bg-transparent text-white w-full h-full outline-none placeholder-white font-black uppercase text-[12px] md:text-[14px] tracking-[0.2em] text-left"
                 />
             </div>
 
             {/* Premium Button Section */}
             <button
-                onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { protocol: 'PUBLIC SCAN' } }))}
-                className="relative h-full px-8 md:px-12 flex items-center justify-center gap-2 bg-rhive-pink text-white font-black uppercase text-[13px] tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(236,2,139,0.4)] shrink-0 z-20"
+                onClick={handleScanClick}
+                className="relative h-full px-8 md:px-12 flex items-center justify-center gap-2 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white font-black uppercase text-[13px] tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(236,2,139,0.2)] shrink-0 z-20"
                 style={{
                     clipPath: `polygon(0 0, 100% 0, 100% calc(100% - ${chamferSize}), calc(100% - ${chamferSize}) 100%, 0 100%)`
                 }}

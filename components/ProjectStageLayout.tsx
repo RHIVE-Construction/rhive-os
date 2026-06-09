@@ -149,7 +149,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                 <div className="p-10 flex flex-col items-center justify-center min-h-[50vh] text-center">
                     <BriefcaseIcon className="w-16 h-16 text-gray-700 mb-4" />
                     <p className="text-gray-400 font-bold text-lg">Project record not found</p>
-                    <p className="text-gray-600 text-sm mt-1 mb-6">
+                    <p className="text-gray-600 text-base mt-1 mb-6">
                         The project may have been deleted or moved.
                     </p>
                     <Button onClick={handleBack}>
@@ -171,7 +171,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                         <button
                             onClick={handleBack}
-                            className="flex-none flex items-center gap-2 text-gray-500 hover:text-rhive-pink transition-colors text-xs font-bold uppercase tracking-widest group"
+                            className="flex-none flex items-center gap-2 text-gray-500 hover:text-rhive-pink transition-colors text-base font-bold uppercase tracking-widest group"
                         >
                             <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
                             Pipeline
@@ -185,21 +185,21 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                                     {project.name || 'Unnamed Project'}
                                 </h1>
                                 <span className={cn(
-                                    'flex-none text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border',
+                                    'flex-none text-base font-black uppercase tracking-widest px-2 py-0.5 rounded border',
                                     getStageBadgeClass(project.current_stage)
                                 )}>
                                     {project.current_stage || stageLabel}
                                 </span>
                                 {project.project_type && (
-                                    <span className="flex-none text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-gray-700 text-gray-500 bg-gray-900">
+                                    <span className="flex-none text-base font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-gray-700 text-gray-500 bg-gray-900">
                                         {project.project_type}
                                     </span>
                                 )}
                             </div>
-                            <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                            <div className="flex items-center gap-1 text-base text-gray-500 mt-0.5">
                                 <MapPinIcon className="w-3 h-3 flex-none" />
                                 <span className="truncate">{getAddress(project)}</span>
-                                <span className="text-gray-700 ml-2 font-mono text-[10px]">
+                                <span className="text-gray-700 ml-2 font-mono text-base">
                                     ID: {project.id?.slice(-8)}
                                 </span>
                             </div>
@@ -212,7 +212,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                         {/* ── Schedule Follow-Up button ── */}
                         <button
                             onClick={() => setShowFollowUp(true)}
-                            className="group flex items-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400 font-black text-xs uppercase tracking-wider hover:bg-purple-500/20 hover:border-purple-500/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300"
+                            className="group flex items-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400 font-black text-base uppercase tracking-wider hover:bg-purple-500/20 hover:border-purple-500/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300"
                             title="Schedule a follow-up call or visit"
                         >
                             <CalendarIcon className="w-3.5 h-3.5" />
@@ -221,7 +221,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
 
                         {/* ── Advance stage button ── */}
                         {isCompleted ? (
-                            <div className="flex items-center gap-2 text-emerald-400 px-4 py-2 border border-emerald-500/30 bg-emerald-500/10 rounded-xl text-xs font-black uppercase tracking-widest">
+                            <div className="flex items-center gap-2 text-emerald-400 px-4 py-2 border border-emerald-500/30 bg-emerald-500/10 rounded-xl text-base font-black uppercase tracking-widest">
                                 <CheckCircleIcon className="w-4 h-4" />
                                 Completed
                             </div>
@@ -229,7 +229,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                             <button
                                 onClick={handleAdvanceStage}
                                 disabled={advancing}
-                                className="group relative flex items-center gap-2 px-4 py-2 bg-[#ec028b]/10 border border-[#ec028b]/40 rounded-xl text-[#ec028b] font-black text-xs uppercase tracking-wider hover:bg-[#ec028b]/20 hover:border-[#ec028b]/70 hover:shadow-[0_0_20px_rgba(236,2,139,0.2)] transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none overflow-hidden"
+                                className="group relative flex items-center gap-2 px-4 py-2 bg-[#ec028b]/10 border border-[#ec028b]/40 rounded-xl text-[#ec028b] font-black text-base uppercase tracking-wider hover:bg-[#ec028b]/20 hover:border-[#ec028b]/70 hover:shadow-[0_0_20px_rgba(236,2,139,0.2)] transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none overflow-hidden"
                             >
                                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#ec028b] to-transparent opacity-60" />
                                 {advancing ? (
@@ -253,7 +253,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                             return (
                                 <React.Fragment key={step.stage}>
                                     <div className={cn(
-                                        "flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter transition-all",
+                                        "flex items-center gap-1.5 px-2 py-1 rounded text-base font-black uppercase tracking-tighter transition-all",
                                         isPast && "text-emerald-500 opacity-70",
                                         isCurrent && "text-[#ec028b] bg-[#ec028b]/10 border border-[#ec028b]/30",
                                         isFuture && "text-gray-700"
@@ -312,12 +312,12 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                     <h1 className="text-2xl font-extrabold text-white uppercase tracking-tight">
                         {stageLabel} Records
                     </h1>
-                    <p className="text-gray-500 text-xs mt-1 uppercase tracking-widest font-bold">
+                    <p className="text-gray-500 text-base mt-1 uppercase tracking-widest font-bold">
                         Click a record to open its detail view
                     </p>
                 </div>
                 <div className={cn(
-                    'flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest',
+                    'flex items-center gap-1.5 text-base font-bold uppercase tracking-widest',
                     loading ? 'text-yellow-400 animate-pulse' : 'text-green-400'
                 )}>
                     <span className={cn('w-2 h-2 rounded-full', loading ? 'bg-yellow-400' : 'bg-green-400 shadow-[0_0_8px_#4ade80]')} />
@@ -335,7 +335,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                 <div className="flex flex-col items-center justify-center border border-dashed border-gray-800 rounded-xl p-20 bg-gray-900/20 text-center">
                     <BriefcaseIcon className="w-16 h-16 text-gray-700 mb-4 opacity-30" />
                     <p className="text-gray-500 font-bold text-lg">No projects in {stageLabel}</p>
-                    <p className="text-gray-700 text-sm mt-2">
+                    <p className="text-gray-700 text-base mt-2">
                         Records will appear here when they reach this pipeline stage.
                     </p>
                     <Button
@@ -362,20 +362,20 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                                     {p.name || 'Unnamed Project'}
                                 </h3>
                                 {getAddress(p) && (
-                                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                    <div className="flex items-center gap-1 text-base text-gray-500 mt-1">
                                         <MapPinIcon className="w-3 h-3 flex-none" />
                                         <span className="truncate">{getAddress(p)}</span>
                                     </div>
                                 )}
                                 <div className="flex items-center gap-2 mt-2">
                                     <span className={cn(
-                                        'text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border',
+                                        'text-base font-black uppercase tracking-widest px-2 py-0.5 rounded border',
                                         getStageBadgeClass(p.current_stage)
                                     )}>
                                         {p.current_stage}
                                     </span>
                                     {p.project_type && (
-                                        <span className="text-[9px] text-gray-600 font-bold uppercase tracking-wider">
+                                        <span className="text-base text-gray-600 font-bold uppercase tracking-wider">
                                             {p.project_type}
                                         </span>
                                     )}

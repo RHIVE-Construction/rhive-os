@@ -34,9 +34,9 @@ const UrgencyGridSection = () => {
             icon: <Droplet className="w-8 h-8" />,
             title: "INTERIOR WATER STAINS",
             desc: "If you see ceiling stains, thousands of dollars in hidden decking and insulation rot have already occurred above it. Immediate action is critical.",
-            color: "text-[#00D1FF]",
-            bgHover: "hover:bg-[#00D1FF]/20",
-            borderColor: "hover:border-[#00D1FF]/50",
+            color: "text-blue-500",
+            bgHover: "hover:bg-blue-500/20",
+            borderColor: "hover:border-blue-500/50",
             image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600"
         }
     ];
@@ -49,7 +49,7 @@ const UrgencyGridSection = () => {
                 <div className="text-center mb-16">
                     <div className="inline-flex items-center gap-2 border border-red-500/30 px-6 py-2 bg-red-500/10 mb-6 backdrop-blur-md">
                         <AlertCircle className="w-4 h-4 text-red-500 hidden sm:block" />
-                        <span className="text-red-500 font-black text-xs uppercase tracking-[0.3em]">Critical System Failure</span>
+                        <span className="text-red-500 font-black text-base uppercase tracking-[0.3em]">Critical System Failure</span>
                     </div>
                     
                     <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-6">
@@ -82,7 +82,7 @@ const UrgencyGridSection = () => {
                                     {sign.title}
                                 </h3>
                                 
-                                <p className="text-gray-400 font-sans text-xs leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
+                                <p className="text-gray-400 font-sans text-base leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
                                     {sign.desc}
                                 </p>
                             </div>

@@ -212,13 +212,13 @@ export const EstimateCalculatorTool: React.FC = () => {
 const InputGroup: React.FC<{ label: string, id: string, value: any, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void, type?: string }> =
     ({ label, id, ...props }) => (
         <div>
-            <Label htmlFor={id} className="text-sm text-gray-300">{label}</Label>
+            <Label htmlFor={id} className="text-base text-gray-300">{label}</Label>
             <Input id={id} className="mt-1" {...props} />
         </div>
     );
 
 const BreakdownRow: React.FC<{ label: string, value: number, isBold?: boolean }> = ({ label, value, isBold }) => (
-    <div className={`flex justify-between text-sm ${isBold ? 'font-bold text-white' : 'text-gray-300'}`}>
+    <div className={`flex justify-between text-base ${isBold ? 'font-bold text-white' : 'text-gray-300'}`}>
         <span>{label}</span>
         <span>{formatCurrency(value)}</span>
     </div>

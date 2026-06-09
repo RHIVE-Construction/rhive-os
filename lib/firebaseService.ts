@@ -272,13 +272,15 @@ export const firestoreService = {
     // This function automatically creates the collection if it doesn't exist
     addDocument: async (collectionName: string, data: DocumentData) => {
         try {
+            // Firestore fails on undefined fields, serialize to strip undefined
+            const cleanData = JSON.parse(JSON.stringify(data));
             // Adding a document implicitly 'creates' the collection
             const docRef = await addDoc(collection(db, collectionName), {
-                ...data,
+                ...cleanData,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             });
-            return { success: true, id: docRef.id, data: { id: docRef.id, ...data } };
+            return { success: true, id: docRef.id, data: { id: docRef.id, ...cleanData } };
         } catch (error: any) {
             console.error(`Error adding to ${collectionName}:`, error);
             return { success: false, error: error.message };
@@ -335,9 +337,10 @@ export const firestoreService = {
 
     updateDocument: async (collectionName: string, id: string, data: any) => {
         try {
+            const cleanData = JSON.parse(JSON.stringify(data));
             const docRef = doc(db, collectionName, id);
-            await updateDoc(docRef, { ...data, updated_at: new Date().toISOString() });
-            return { success: true, data: { id, ...data } };
+            await updateDoc(docRef, { ...cleanData, updated_at: new Date().toISOString() });
+            return { success: true, data: { id, ...cleanData } };
         } catch (error: any) {
             console.error(`Error updating ${collectionName} ${id}:`, error);
             return { success: false, error: error.message };
@@ -359,9 +362,10 @@ export const firestoreService = {
             const batch = writeBatch(db);
             const colRef = collection(db, collectionName);
             dataArray.forEach(data => {
+                const cleanData = JSON.parse(JSON.stringify(data));
                 const newDocRef = doc(colRef);
                 batch.set(newDocRef, {
-                    ...data,
+                    ...cleanData,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 });
@@ -492,9 +496,13 @@ export const projectService = {
         let projectsFired = false;
         let leadsFired = false;
         let dealsFired = false;
+        let notified = false;
 
         const notify = () => {
+            if (notified) return;
             if (!projectsFired || !leadsFired || !dealsFired) return;
+            notified = true;
+            clearTimeout(safetyTimer);
             const merged = [...projectDocs, ...leadDocs, ...dealDocs]
                 .sort((a, b) =>
                     new Date(b.updated_at || b.created_at || b._importedAt || 0).getTime() -
@@ -503,6 +511,15 @@ export const projectService = {
                 .slice(0, limitCount);
             callback(merged);
         };
+
+        const safetyTimer = setTimeout(() => {
+            if (!notified) {
+                projectsFired = true;
+                leadsFired = true;
+                dealsFired = true;
+                notify();
+            }
+        }, 800);
 
         const unsubP = onSnapshot(
             collection(db, 'projects'),
@@ -520,7 +537,12 @@ export const projectService = {
             () => { dealsFired = true; notify(); }
         );
 
-        return () => { unsubP(); unsubL(); unsubD(); };
+        return () => {
+            clearTimeout(safetyTimer);
+            unsubP();
+            unsubL();
+            unsubD();
+        };
     },
     getById: (id: string) => firestoreService.getDocument('projects', id),
     createBatch: (dataArray: any[]) => firestoreService.createBatch('projects', dataArray),
@@ -704,13 +726,14 @@ export const userService = {
     // Write a Firestore user doc using a specific ID (e.g. Firebase Auth UID)
     createWithId: async (id: string, data: any) => {
         try {
+            const cleanData = JSON.parse(JSON.stringify(data));
             const docRef = doc(db, 'users', id);
             await setDoc(docRef, {
-                ...data,
-                created_at: data.created_at || new Date().toISOString(),
+                ...cleanData,
+                created_at: cleanData.created_at || new Date().toISOString(),
                 updated_at: new Date().toISOString()
             });
-            return { success: true, id, data: { id, ...data } };
+            return { success: true, id, data: { id, ...cleanData } };
         } catch (error: any) {
             console.error('Error creating user with ID:', error);
 
@@ -730,8 +753,6 @@ export const userService = {
         }
     }
 };
-
-
 
 export const dashboardService = {
     getStats: async () => {

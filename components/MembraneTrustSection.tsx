@@ -50,7 +50,7 @@ const MembraneTrustSection = () => {
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <Building2 className="w-6 h-6 text-[var(--rhive-pink)]" />
-                            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)]">
+                            <span className="font-mono text-base font-bold uppercase tracking-[0.4em] text-[var(--rhive-pink)]">
                                 Commercial Certification Standard
                             </span>
                         </div>
@@ -68,25 +68,25 @@ const MembraneTrustSection = () => {
                                 <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Star className="w-3 h-3 text-[#e2ab49]" />
                                 </div>
-                                <h4 className="text-white font-bold text-xs uppercase tracking-widest mb-1 group-hover:text-[#e2ab49] transition-colors">GAF Certified</h4>
-                                <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Master Select Commercial</p>
+                                <h4 className="text-white font-bold text-base uppercase tracking-widest mb-1 group-hover:text-[#e2ab49] transition-colors">GAF Certified</h4>
+                                <p className="text-gray-500 text-base uppercase font-bold tracking-widest">Master Select Commercial</p>
                             </button>
                         </div>
 
-                        <p className="text-gray-400 font-sans text-sm leading-relaxed mb-6 text-balance">
+                        <p className="text-gray-400 font-sans text-base leading-relaxed mb-6 text-balance">
                             These commercial designations represent a <span className="text-white font-bold">top 1% industry standard</span>. They are earned through rigorous financial audits, multi-million dollar liability prerequisites, and <strong>mandatory on-site manufacturer engineering inspections</strong> during live commercial membrane installations.
                         </p>
                         
-                        <p className="text-gray-300 font-sans text-sm leading-relaxed mb-8 border-l-2 border-[var(--rhive-pink)] pl-4">
+                        <p className="text-gray-300 font-sans text-base leading-relaxed mb-8 border-l-2 border-[var(--rhive-pink)] pl-4">
                             Because we execute complex commercial installations strictly to low-slope engineering tolerances, your facility qualifies for the <span className="text-[#ec028b]">Diamond Pledge NDL (No Dollar Limit) Warranty</span>, providing absolute coverage that uncertified competitors cannot legally issue.
                         </p>
 
                         {/* Celebratory Badge */}
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-[var(--rhive-pink)] via-[#00D1FF] to-[var(--rhive-pink)] opacity-30 blur group-hover:opacity-100 group-hover:animate-pulse transition duration-1000"></div>
+                            <div className="absolute -inset-1 bg-gradient-to-r from-[var(--rhive-pink)] via-[var(--rhive-blue)] to-[var(--rhive-pink)] opacity-30 blur group-hover:opacity-100 group-hover:animate-pulse transition duration-1000"></div>
                             <div className="relative flex items-center gap-3 px-6 py-3 bg-black border border-white/20 w-fit cursor-default">
                                 <Shield className="w-5 h-5 text-[var(--rhive-pink)] animate-bounce" />
-                                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white">Commercial NDL Upgrade Unlocked</span>
+                                <span className="text-base font-black uppercase tracking-[0.3em] text-white">Commercial NDL Upgrade Unlocked</span>
                             </div>
                         </div>
                     </div>
@@ -116,8 +116,8 @@ const MembraneTrustSection = () => {
                                         {reviews[currentSlide].name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h4 className="text-white font-bold text-xs uppercase tracking-widest">{reviews[currentSlide].name}</h4>
-                                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">{reviews[currentSlide].role}</p>
+                                        <h4 className="text-white font-bold text-base uppercase tracking-widest">{reviews[currentSlide].name}</h4>
+                                        <p className="text-gray-500 text-base font-bold uppercase tracking-widest">{reviews[currentSlide].role}</p>
                                     </div>
                                 </div>
                             </div>
@@ -134,7 +134,7 @@ const MembraneTrustSection = () => {
 
                             {/* Trust Badge Note */}
                             <div className="absolute bottom-[-10px] left-10 translate-y-full pt-4">
-                                <div className="text-[10px] uppercase tracking-widest text-[#e2ab49] font-black">
+                                <div className="text-base uppercase tracking-widest text-[#e2ab49] font-black">
                                     ★ 5.0 Stars on Commercial Projects
                                 </div>
                             </div>
@@ -149,19 +149,19 @@ const MembraneTrustSection = () => {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-black/80 animate-in fade-in duration-300">
                     <div className="relative w-full max-w-2xl bg-[#0a0a0a] border border-[#e2ab49]/30 p-12 overflow-hidden shadow-[0_0_100px_rgba(226,171,73,0.2)]">
                         <div className="absolute top-0 right-0 p-8">
-                             <button onClick={() => setGafOpen(false)} className="text-gray-500 hover:text-white transition-colors uppercase font-black text-xs tracking-widest">Close [x]</button>
+                             <button onClick={() => setGafOpen(false)} className="text-gray-500 hover:text-white transition-colors uppercase font-black text-base tracking-widest">Close [x]</button>
                         </div>
                         <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-6">GAF MASTER SELECT™</h3>
-                        <div className="space-y-6 text-gray-400 font-sans text-sm">
+                        <div className="space-y-6 text-gray-400 font-sans text-base">
                             <p>Less than 1% of roofing contractors nationwide achieve Master Select™ status. This commercial designation allows us to offer the Diamond Pledge NDL (No Dollar Limit) Roof Guarantee.</p>
                             <ul className="space-y-4">
                                 <li className="flex gap-4">
                                     <div className="w-1 h-6 bg-[#e2ab49]" />
-                                    <div><span className="text-white font-bold uppercase text-xs block mb-1">Commercial Expertise</span> Demonstrated continuous operation and expertise in low-slope TPO, PVC, and liquid-applied systems.</div>
+                                    <div><span className="text-white font-bold uppercase text-base block mb-1">Commercial Expertise</span> Demonstrated continuous operation and expertise in low-slope TPO, PVC, and liquid-applied systems.</div>
                                 </li>
                                 <li className="flex gap-4">
                                     <div className="w-1 h-6 bg-[#e2ab49]" />
-                                    <div><span className="text-white font-bold uppercase text-xs block mb-1">Stringent Inspections</span> Warranty issuance requires a passing grade from an independent GAF Field Services Engineer on the finished roof.</div>
+                                    <div><span className="text-white font-bold uppercase text-base block mb-1">Stringent Inspections</span> Warranty issuance requires a passing grade from an independent GAF Field Services Engineer on the finished roof.</div>
                                 </li>
                             </ul>
                         </div>

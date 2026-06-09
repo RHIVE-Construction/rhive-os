@@ -56,7 +56,7 @@ const QuantitySelector: React.FC<{ value: number; onChange: (newValue: number) =
                     key={opt}
                     onClick={() => onChange(opt)}
                     className={cn(
-                        "w-10 h-8 rounded-md text-sm font-medium transition-colors duration-200",
+                        "w-10 h-8 rounded-md text-base font-medium transition-colors duration-200",
                         value === opt ? 'bg-[#ec028b] text-white' : 'text-gray-300 hover:bg-gray-600'
                     )}
                 >
@@ -76,7 +76,7 @@ const LayerSelector: React.FC<{ value: RoofLayers; onChange: (newValue: RoofLaye
                     key={opt}
                     onClick={() => onChange(opt)}
                     className={cn(
-                        "px-4 h-8 rounded-md text-sm font-medium transition-colors duration-200 flex-grow",
+                        "px-4 h-8 rounded-md text-base font-medium transition-colors duration-200 flex-grow",
                         value === opt ? 'bg-[#ec028b] text-white' : 'text-gray-300 hover:bg-gray-600'
                     )}
                 >
@@ -211,7 +211,7 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                                                                         <img key={index} src={img} alt={`${feature} example ${index + 1}`} className="rounded-md object-cover aspect-[4/3]" />
                                                                     ))}
                                                                 </div>
-                                                                <p className="text-xs">{featureTooltips[feature].description}</p>
+                                                                <p className="text-base">{featureTooltips[feature].description}</p>
                                                             </TooltipContent>
                                                         </Tooltip>
                                                     </div>
@@ -245,7 +245,7 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                                 title="Understanding Roof Layers">
                             </iframe>
                         </div>
-                        <p className="text-sm text-gray-300">
+                        <p className="text-base text-gray-300">
                             The number of existing shingle layers significantly impacts the project's cost. Each additional layer requires more labor to remove and increases the weight, leading to higher disposal (dump) fees. In the upcoming video, we'll show you how to quickly spot signs of multiple layers from the ground.
                         </p>
                     </div>

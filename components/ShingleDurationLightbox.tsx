@@ -87,7 +87,7 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                 O.C. DURATION <span className="text-[var(--rhive-pink)]">FOUNDATION</span>
                                 <img src="/oc-logo.png" alt="OC Preferred" className="h-8 grayscale group-hover:grayscale-0 transition-all opacity-80" />
                             </h2>
-                            <p className="text-[var(--rhive-pink)] font-mono text-xs uppercase tracking-[0.3em] mt-1 italic font-bold text-left">Comprehensive System Specification</p>
+                            <p className="text-[var(--rhive-pink)] font-mono text-base uppercase tracking-[0.3em] mt-1 italic font-bold text-left">Comprehensive System Specification</p>
                         </div>
                     </div>
                     <button
@@ -107,7 +107,7 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                 <Activity className="w-24 h-24" />
                             </div>
                         </div>
-                        <h3 className="text-white font-black text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <h3 className="text-white font-black text-base uppercase tracking-widest mb-4 flex items-center gap-2">
                             <Shield className="w-4 h-4 text-[var(--rhive-pink)]" /> System Overview
                         </h3>
                         <p className="text-gray-300 font-serif text-lg leading-relaxed italic text-left">
@@ -126,8 +126,8 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                 className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-[2s]"
                             />
                             <div className="absolute bottom-4 left-4 z-20">
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--rhive-pink)] bg-black/60 px-3 py-1 backdrop-blur-md">HARDWARE: DURATION SERIES</span>
-                                <h4 className="text-white font-black text-xs mt-2 uppercase tracking-widest">SURENAIL® TECHNOLOGY FABRIC STRIP</h4>
+                                <span className="text-base font-black uppercase tracking-[0.3em] text-[var(--rhive-pink)] bg-black/60 px-3 py-1 backdrop-blur-md">HARDWARE: DURATION SERIES</span>
+                                <h4 className="text-white font-black text-base mt-2 uppercase tracking-widest">SURENAIL® TECHNOLOGY FABRIC STRIP</h4>
                             </div>
                         </div>
 
@@ -140,8 +140,8 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                 className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-[2s]"
                             />
                             <div className="absolute bottom-4 left-4 z-20">
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400 bg-black/60 px-3 py-1 backdrop-blur-md">RHIVE DEPLOYMENT: PAST JOB</span>
-                                <h4 className="text-white font-black text-xs mt-2 uppercase tracking-widest">CERTIFIED PREFERRED INSTALLATION</h4>
+                                <span className="text-base font-black uppercase tracking-[0.3em] bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent bg-black/60 px-3 py-1 backdrop-blur-md">RHIVE DEPLOYMENT: PAST JOB</span>
+                                <h4 className="text-white font-black text-base mt-2 uppercase tracking-widest">CERTIFIED PREFERRED INSTALLATION</h4>
                             </div>
                         </div>
                     </div>
@@ -161,12 +161,12 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                         <div key={iIdx} className="group relative p-6 bg-white/[0.01] border border-white/5 hover:border-[var(--rhive-pink)]/40 transition-all duration-500 hover:bg-white/[0.03]">
                                             <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[var(--rhive-pink)]/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                             <div className="flex justify-between items-start mb-3">
-                                                <h5 className="text-[11px] font-black text-[var(--rhive-pink)] uppercase tracking-[0.2em]">
+                                                <h5 className="text-base font-black text-[var(--rhive-pink)] uppercase tracking-[0.2em]">
                                                     {item.label}
                                                 </h5>
                                                 <CheckCircle2 className="w-4 h-4 text-gray-700 group-hover:text-green-500 transition-colors" />
                                             </div>
-                                            <p className="text-gray-400 text-[12px] font-serif leading-relaxed group-hover:text-gray-200 transition-colors">
+                                            <p className="text-gray-400 text-base font-serif leading-relaxed group-hover:text-gray-200 transition-colors">
                                                 {item.desc}
                                             </p>
                                         </div>
@@ -187,7 +187,7 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                                         </div>
                                                         <div>
                                                             <h4 className="text-2xl font-black text-white uppercase tracking-tighter">WARRANTY ARCHITECTURE</h4>
-                                                            <p className="text-[var(--rhive-pink)] font-mono text-xs font-bold uppercase tracking-[0.3em] italic">Dual-Shield Protection Logic</p>
+                                                            <p className="text-[var(--rhive-pink)] font-mono text-base font-bold uppercase tracking-[0.3em] italic">Dual-Shield Protection Logic</p>
                                                         </div>
                                                     </div>
 
@@ -195,24 +195,24 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                                         {/* RHIVE SIDE */}
                                                         <div className="relative pl-8 border-l-2 border-[var(--rhive-pink)]/50">
                                                             <div className="absolute -left-[9px] top-0 w-4 h-4 bg-[var(--rhive-pink)] rotate-45 shadow-[0_0_15px_rgba(236,2,139,1)]"></div>
-                                                            <h5 className="text-xs font-black text-[var(--rhive-pink)] uppercase tracking-widest mb-4">RHIVE INSTALLER NO-LEAK GUARANTEE</h5>
-                                                            <p className="text-gray-300 font-serif text-[13px] leading-relaxed italic border-b border-white/5 pb-4 mb-4">
+                                                            <h5 className="text-base font-black text-[var(--rhive-pink)] uppercase tracking-widest mb-4">RHIVE INSTALLER NO-LEAK GUARANTEE</h5>
+                                                            <p className="text-gray-300 font-serif text-base leading-relaxed italic border-b border-white/5 pb-4 mb-4">
                                                                 "Covers 100% of repairs for any water intrusion caused by improper installation for the standard lifecycle of the roof."
                                                             </p>
-                                                            <div className="flex items-center gap-3 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                                            <div className="flex items-center gap-3 text-base font-black text-gray-500 uppercase tracking-widest">
                                                                 <Activity className="w-3 h-3 text-[var(--rhive-pink)]" />
                                                                 <span>[ ACTIVE RHIVE INTERNAL PROTOCOL ]</span>
                                                             </div>
                                                         </div>
 
                                                         {/* OC SIDE */}
-                                                        <div className="relative pl-8 border-l-2 border-cyan-500/30">
-                                                            <div className="absolute -left-[9px] top-0 w-4 h-4 bg-cyan-500/50 rotate-45"></div>
-                                                            <h5 className="text-xs font-black text-white uppercase tracking-widest mb-4 italic">OC PREFERRED PROTECTION (TOTAL SYSTEM)</h5>
-                                                            <p className="text-gray-400 font-serif text-[13px] leading-relaxed border-b border-white/5 pb-4 mb-4">
+                                                        <div className="relative pl-8 border-l-2 border-rhive-blue/30">
+                                                            <div className="absolute -left-[9px] top-0 w-4 h-4 bg-rhive-blue/50 rotate-45"></div>
+                                                            <h5 className="text-base font-black text-white uppercase tracking-widest mb-4 italic">OC PREFERRED PROTECTION (TOTAL SYSTEM)</h5>
+                                                            <p className="text-gray-400 font-serif text-base leading-relaxed border-b border-white/5 pb-4 mb-4">
                                                                 50 Years Non-Prorated Material & Labor. Includes 10-Year Workmanship backup from OC if RHIVE goes out of business.
                                                             </p>
-                                                            <div className="flex items-center gap-3 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                                            <div className="flex items-center gap-3 text-base font-black text-gray-500 uppercase tracking-widest">
                                                                 <img src="/oc-logo.png" alt="OC" className="h-4 grayscale invert opacity-70" />
                                                                 <span>[ MANUFACTURER BONDED ]</span>
                                                             </div>
@@ -232,8 +232,8 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                         <div className="flex items-start gap-4">
                             <AlertCircle className="w-5 h-5 text-yellow-500 mt-1" />
                             <div>
-                                <h5 className="text-[10px] font-black text-yellow-500 uppercase tracking-widest mb-1">SYSTEM PROTOCOL 01: SUBSTITUTIONS</h5>
-                                <p className="text-gray-400 text-[11px] font-serif italic">
+                                <h5 className="text-base font-black text-yellow-500 uppercase tracking-widest mb-1">SYSTEM PROTOCOL 01: SUBSTITUTIONS</h5>
+                                <p className="text-gray-400 text-base font-serif italic">
                                     RHIVE Construction may substitute materials with those of the same kind and quality only if the specified material is unavailable and will ensure all manufacturer warranty requirements remain fully intact.
                                 </p>
                             </div>
@@ -245,12 +245,12 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                         <div className="flex items-center gap-4">
                             <img src="/oc-logo.png" alt="Owens Corning" className="h-8 opacity-100 transition-all cursor-crosshair" />
                             <div className="h-8 w-[1px] bg-white/10"></div>
-                            <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest text-left">
+                            <div className="text-base font-mono text-gray-500 uppercase tracking-widest text-left">
                                 Certified Preferred <br /> Contractor System
                             </div>
                         </div>
                         <div className="flex gap-4">
-                            <button className="px-6 py-3 border border-white/10 text-white font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all">
+                            <button className="px-6 py-3 border border-white/10 text-white font-black uppercase text-base tracking-widest hover:bg-white hover:text-black transition-all">
                                 Download Full Spec PDF
                             </button>
                         </div>

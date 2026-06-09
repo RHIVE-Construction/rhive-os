@@ -56,7 +56,6 @@ const PasswordStrength: React.FC<{ password: string }> = ({ password }) => {
     const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'][score];
     const barColors = ['', 'bg-red-500', 'bg-yellow-500', 'bg-blue-400', 'bg-green-400'];
     const textColors = ['', 'text-red-500', 'text-yellow-500', 'text-blue-400', 'text-green-400'];
-
     if (!password) return null;
 
     return (
