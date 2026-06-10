@@ -30,6 +30,7 @@ setup-secrets.sh
 # REFERENCES (TOGGLE: Comment out to allow AI indexing; Un-comment to protect during push)
 REFERENCES/
 
+
 # Environment variables (already covered above by .env and .env.*)
 
 # Firebase credentials — NEVER commit to git
