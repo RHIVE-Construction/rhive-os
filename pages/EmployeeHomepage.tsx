@@ -809,7 +809,7 @@ const EmployeeHomepage: React.FC = () => {
 
                     {/* Quick Actions */}
                     <Card title="Quick Actions">
-                        <div className={`grid grid-cols-2 ${currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin' ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-4`}>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <Button
                                 variant="secondary"
                                 className="flex-col h-24 hover:bg-gray-900 hover:border-[#ec028b]/50 hover:shadow-[0_0_15px_rgba(236,2,139,0.15)] transition-all bg-black/40 border-gray-700"
@@ -843,16 +843,6 @@ const EmployeeHomepage: React.FC = () => {
                                 <ChartPieIcon className="w-6 h-6 mb-2 text-[#ec028b]" />
                                 <span className="text-xs uppercase font-bold tracking-wide">Reports</span>
                             </Button>
-                            {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && (
-                                <Button
-                                    variant="secondary"
-                                    className="flex-col h-24 hover:bg-gray-900 hover:border-[#ec028b]/50 hover:shadow-[0_0_15px_rgba(236,2,139,0.15)] transition-all bg-black/40 border-gray-700"
-                                    onClick={() => setActivePageId('A-01')}
-                                >
-                                    <ShieldCheckIcon className="w-6 h-6 mb-2 text-[#ec028b]" />
-                                    <span className="text-xs uppercase font-bold tracking-wide">Settings</span>
-                                </Button>
-                            )}
                         </div>
                     </Card>
 

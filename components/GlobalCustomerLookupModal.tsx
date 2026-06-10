@@ -98,6 +98,10 @@ export const GlobalCustomerLookupModal: React.FC = () => {
         return () => clearTimeout(handler);
     }, [searchQuery]);
 
+    // --- AUTOCOMPLETE SUGGESTIONS STATE ---
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
+
     useEffect(() => {
         const handleOpen = () => {
             if (!currentUser || (currentUser.role !== 'Employee' && currentUser.role !== 'Admin' && currentUser.role !== 'Super Admin')) {
@@ -194,6 +198,56 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     }, [searchQuery]);
 
     if (!shouldRender) return null;
+
+    // --- AUTOCOMPLETE SUGGESTIONS (computed from raw searchQuery) ---
+    const suggestionsQuery = searchQuery.trim().toLowerCase();
+    const autocompleteSuggestions: { label: string; type: string; id?: string }[] = [];
+
+    if (suggestionsQuery.length >= 1) {
+        // Customer names
+        users.forEach(u => {
+            if (u.role !== 'Customer') return;
+            if (u.name.toLowerCase().includes(suggestionsQuery)) {
+                autocompleteSuggestions.push({ label: u.name, type: 'Contact', id: u.id });
+            }
+        });
+
+        // Property addresses
+        properties.forEach(p => {
+            if (p.address_full.toLowerCase().includes(suggestionsQuery)) {
+                autocompleteSuggestions.push({ label: p.address_full, type: 'Address', id: p._id });
+            }
+        });
+
+        // Project names
+        projects.forEach(pr => {
+            if (pr.name.toLowerCase().includes(suggestionsQuery)) {
+                autocompleteSuggestions.push({ label: pr.name, type: 'Project', id: pr._id });
+            }
+        });
+    }
+
+    // Deduplicate by label and limit to 5
+    const seenLabels = new Set<string>();
+    const uniqueSuggestions = autocompleteSuggestions.filter(s => {
+        if (seenLabels.has(s.label.toLowerCase())) return false;
+        seenLabels.add(s.label.toLowerCase());
+        return true;
+    }).slice(0, 5);
+
+    // Helper: wrap matched part of text with a highlight span
+    const highlightMatch = (text: string, query: string) => {
+        if (!query) return <>{text}</>;
+        const idx = text.toLowerCase().indexOf(query.toLowerCase());
+        if (idx === -1) return <>{text}</>;
+        return (
+            <>
+                {text.slice(0, idx)}
+                <span className="text-rhive-pink font-black">{text.slice(idx, idx + query.length)}</span>
+                {text.slice(idx + query.length)}
+            </>
+        );
+    };
 
     // --- DEEP SMART SEARCH LOGIC (Debounced) ---
     const searchLower = debouncedSearchQuery.toLowerCase().trim();
@@ -354,18 +408,82 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                             type="text" 
                             placeholder="Type to search (e.g. Thompson, Logan, Quote, Michael)..." 
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={handleKeyDown}
+                            onChange={(e) => { setSearchQuery(e.target.value); setShowSuggestions(true); setHighlightedSuggestion(-1); }}
+                            onKeyDown={(e) => {
+                                // Arrow key navigation for autocomplete
+                                if (uniqueSuggestions.length > 0 && showSuggestions) {
+                                    if (e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        setHighlightedSuggestion(h => Math.min(h + 1, uniqueSuggestions.length - 1));
+                                        return;
+                                    }
+                                    if (e.key === 'ArrowUp') {
+                                        e.preventDefault();
+                                        setHighlightedSuggestion(h => Math.max(h - 1, -1));
+                                        return;
+                                    }
+                                    if (e.key === 'Enter' && highlightedSuggestion >= 0) {
+                                        e.preventDefault();
+                                        setSearchQuery(uniqueSuggestions[highlightedSuggestion].label);
+                                        setShowSuggestions(false);
+                                        setHighlightedSuggestion(-1);
+                                        return;
+                                    }
+                                    if (e.key === 'Escape') {
+                                        setShowSuggestions(false);
+                                        return;
+                                    }
+                                }
+                                handleKeyDown(e);
+                            }}
                             className="w-full bg-black/60 border border-gray-700 focus:border-[#ec028b] py-3.5 pl-12 pr-4 outline-none text-white text-xs font-semibold tracking-wide transition-all"
                             style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
                             autoFocus
                         />
-                        {searchQuery.trim() !== '' && searchResults.length === 0 && (
+                        {searchQuery.trim() !== '' && searchResults.length === 0 && uniqueSuggestions.length === 0 && (
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-rhive-pink font-bold uppercase tracking-widest font-mono pointer-events-none animate-pulse">
                                 No record found. Press Tab to register
                             </span>
                         )}
                     </div>
+
+                    {/* Autocomplete Suggestions Dropdown */}
+                    {showSuggestions && uniqueSuggestions.length > 0 && (
+                        <div 
+                            className="mt-2 border border-rhive-pink/20 bg-[#050505] shadow-[0_0_20px_rgba(236,2,139,0.08)] overflow-hidden"
+                            style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                        >
+                            <div className="px-3 py-1.5 border-b border-gray-900 flex items-center gap-2">
+                                <span className="text-[8px] font-black uppercase tracking-widest text-rhive-pink">Autocomplete</span>
+                                <span className="text-[8px] text-gray-600 font-mono">↑↓ navigate · Enter to select · Esc to close</span>
+                            </div>
+                            {uniqueSuggestions.map((s, i) => (
+                                <button
+                                    key={i}
+                                    onMouseDown={(e) => { e.preventDefault(); setSearchQuery(s.label); setShowSuggestions(false); setHighlightedSuggestion(-1); }}
+                                    onMouseEnter={() => setHighlightedSuggestion(i)}
+                                    className={cn(
+                                        'w-full flex items-center justify-between px-4 py-2.5 text-left text-xs transition-all duration-100 outline-none cursor-pointer border-b border-gray-900/60 last:border-0',
+                                        i === highlightedSuggestion
+                                            ? 'bg-rhive-pink/10 text-white'
+                                            : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                                    )}
+                                >
+                                    <span className="flex items-center gap-2 min-w-0">
+                                        <span className={cn('text-[7px] font-black uppercase tracking-widest shrink-0 px-1.5 py-0.5 rounded',
+                                            s.type === 'Contact' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                            s.type === 'Address' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                                            'bg-rhive-pink/10 text-rhive-pink border border-rhive-pink/20'
+                                        )}>{s.type}</span>
+                                        <span className="truncate font-medium">{highlightMatch(s.label, suggestionsQuery)}</span>
+                                    </span>
+                                    {i === highlightedSuggestion && (
+                                        <span className="shrink-0 text-[9px] text-rhive-pink/70 font-mono ml-2">↵</span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Hidden elements outside of dropdown for E2E click and query compatibility */}
