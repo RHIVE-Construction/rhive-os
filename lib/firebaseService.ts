@@ -543,7 +543,11 @@ export const userService = {
 export const passwordResetService = {
     /**
      * Generates a reset token and stores it directly on the user document
-     * in the `users` collection. No separate password_resets collection needed.
+     * in the `users` collection, then triggers the Cloud Function to email
+     * the secure link. The token is NEVER returned to the browser.
+     *
+     * Security: Always returns the same "success" shape regardless of whether
+     * the email is registered — prevents user enumeration.
      */
     createResetToken: async (email: string) => {
         try {
@@ -552,16 +556,20 @@ export const passwordResetService = {
             // 1. Verify user exists
             const userResult = await userService.getByEmail(normalizedEmail);
             if (!userResult.success || !userResult.data) {
-                return { success: false, error: 'No account found with this email address.' };
+                // Silently succeed — no enumeration of registered emails
+                return { success: true };
             }
 
             const userDoc = userResult.data as any;
 
-            // 2. Generate secure token: random hex + timestamp
-            const randomBytes = Array.from({ length: 16 }, () => Math.floor(Math.random() * 256));
-            const token = randomBytes.map(b => b.toString(16).padStart(2, '0')).join('') + Date.now().toString(36);
+            // 2. Generate secure token: 32 cryptographically random hex chars + timestamp base-36
+            const randomValues = new Uint8Array(32);
+            crypto.getRandomValues(randomValues);
+            const token = Array.from(randomValues)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('') + Date.now().toString(36);
 
-            // 3. Store token + expiry directly on the user document (1 hour window)
+            // 3. Store token + 1-hour expiry on the user document
             const expiry = new Date(Date.now() + 3600 * 1000).toISOString();
             const updateResult = await userService.update(userDoc.id, {
                 reset_token: token,
@@ -570,10 +578,33 @@ export const passwordResetService = {
             });
 
             if (!updateResult.success) {
-                return { success: false, error: updateResult.error || 'Failed to generate reset token.' };
+                return { success: false, error: 'Failed to generate reset token.' };
             }
 
-            return { success: true, token, email: normalizedEmail };
+            // 4. Build the reset link (used by the Cloud Function)
+            const origin = typeof window !== 'undefined' ? window.location.origin : 'https://rhive-os.web.app';
+            const resetLink = `${origin}/?page=P-07&token=${token}`;
+
+            // 5. Call Cloud Function to send email — token never touches the browser response
+            const fnUrl = `https://us-central1-rhive-os.cloudfunctions.net/sendPasswordResetEmail`;
+            try {
+                const response = await fetch(fnUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: normalizedEmail, resetLink })
+                });
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    console.error('[passwordResetService] Cloud Function error:', errData);
+                    return { success: false, error: 'Email dispatch failed. Please try again.' };
+                }
+            } catch (fetchErr: any) {
+                console.error('[passwordResetService] Failed to reach email Cloud Function:', fetchErr.message);
+                return { success: false, error: 'Email service unavailable. Please try again later.' };
+            }
+
+            // Success — token NOT returned to browser
+            return { success: true };
         } catch (error: any) {
             console.error('Error in createResetToken:', error);
             return { success: false, error: error.message };

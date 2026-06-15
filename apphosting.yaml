@@ -89,3 +89,19 @@ env:
     availability:
       - BUILD
       - RUNTIME
+
+  # ── Password Reset Email (Gmail SMTP via Cloud Functions) ─────────────────
+  # One-time setup:
+  #   gcloud secrets create gmail-user --project=rhive-os
+  #   echo -n "your-email@gmail.com" | gcloud secrets versions add gmail-user --data-file=-
+  #   gcloud secrets create gmail-app-password --project=rhive-os
+  #   echo -n "your-app-password" | gcloud secrets versions add gmail-app-password --data-file=-
+  - variable: GMAIL_USER
+    secret: gmail-user
+    availability:
+      - RUNTIME
+
+  - variable: GMAIL_APP_PASSWORD
+    secret: gmail-app-password
+    availability:
+      - RUNTIME

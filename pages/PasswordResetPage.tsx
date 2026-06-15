@@ -33,8 +33,6 @@ const PasswordResetPage: React.FC = () => {
     // Request State (State A)
     const [requestEmail, setRequestEmail] = useState('');
     const [isRequested, setIsRequested] = useState(false);
-    const [generatedToken, setGeneratedToken] = useState('');
-    const [generatedLink, setGeneratedLink] = useState('');
     const [loadingRequest, setLoadingRequest] = useState(false);
 
     // Override State (State B)
@@ -85,13 +83,12 @@ const PasswordResetPage: React.FC = () => {
         const res = await passwordResetService.createResetToken(requestEmail);
         setLoadingRequest(false);
 
-        if (res.success && res.token) {
-            setGeneratedToken(res.token);
-            const link = `${window.location.origin}/?page=P-07&token=${res.token}`;
-            setGeneratedLink(link);
+        if (res.success) {
+            // Always show success — even if email wasn't found, to prevent user enumeration.
+            // The Cloud Function handles whether the email is sent.
             setIsRequested(true);
         } else {
-            setErrorMessage(res.error || 'Failed to dispatch secure link. Verify registered status.');
+            setErrorMessage(res.error || 'Service temporarily unavailable. Please try again.');
         }
     };
 
@@ -377,16 +374,20 @@ const PasswordResetPage: React.FC = () => {
                                     <div className="w-12 h-12 bg-green-950/20 border border-green-500/30 rounded-xl flex items-center justify-center mx-auto mb-2 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.2)]">
                                         <ShieldCheckIcon className="w-6 h-6" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-white uppercase tracking-widest">Protocol Initialized</h3>
+                                    <h3 className="text-lg font-bold text-white uppercase tracking-widest">Check Your Email</h3>
                                     <p className="text-gray-400 text-xs leading-relaxed max-w-sm mx-auto">
-                                        A secure recovery link has been dispatched to your email address. Please check your inbox and follow the instructions to reset your password.
+                                        If <strong className="text-white">{requestEmail}</strong> is registered in our system, a secure password recovery link has been dispatched to that address.
+                                        Please check your inbox (and spam folder) — the link expires in <strong className="text-rhive-pink">1 hour</strong>.
                                     </p>
+                                    <div className="p-3 bg-black/40 border border-gray-800 text-[10px] font-mono text-gray-600 text-left">
+                                        ⚠ For security, we never confirm whether an email is registered.
+                                    </div>
                                     <Button
                                         variant="secondary"
-                                        onClick={() => setIsRequested(false)}
+                                        onClick={() => { setIsRequested(false); setRequestEmail(''); }}
                                         className="w-full text-xs font-black tracking-widest"
                                     >
-                                        Request Another Link
+                                        Try a Different Email
                                     </Button>
                                 </div>
                             )}
