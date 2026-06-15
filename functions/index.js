@@ -299,7 +299,7 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
                 return res.status(401).json({ error: 'Invalid webhook signature.' });
             }
         } else {
-            // Log but do not reject — older webhooks may not include signature headers
+            // Log but do not reject Ã¢â‚¬â€ older webhooks may not include signature headers
             console.warn('No x-justcall-signature-version header. Proceeding without verification.');
         }
 
@@ -372,17 +372,10 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
     });
 });
 
-
 /**
  * 4. sendPasswordResetEmail
- * Accepts { email, resetLink } from the frontend after a token is generated.
- * Sends a branded RHIVE password reset email via Nodemailer + Gmail SMTP.
- *
- * Security:
- *  - Rate-limited: max 3 requests per email per hour (tracked in Firestore `password_reset_rate_limits`)
- *  - No user enumeration: always returns 200 success regardless of whether email is registered
- *  - Gmail credentials read from GCP Secret Manager (never in code)
- *  - Validates that a reset_token actually exists on the user doc before sending (no spoofing)
+ * Accepts { email } only â€” reads OTP from Firestore server-side.
+ * Rate-limited (3/hr), no user enumeration, Gmail credentials from env.
  */
 exports.sendPasswordResetEmail = functions.https.onRequest((req, res) => {
     return cors(req, res, async () => {
@@ -390,11 +383,8 @@ exports.sendPasswordResetEmail = functions.https.onRequest((req, res) => {
             return res.status(405).json({ error: 'Method Not Allowed' });
         }
 
-        const { email, resetLink } = req.body;
-
-        // Basic input validation
-        if (!email || typeof email !== 'string' || !resetLink || typeof resetLink !== 'string') {
-            // Return 200 to avoid enumeration — client already handles missing fields
+        const { email } = req.body;
+        if (!email || typeof email !== 'string') {
             return res.status(200).json({ success: true });
         }
 
@@ -402,10 +392,8 @@ exports.sendPasswordResetEmail = functions.https.onRequest((req, res) => {
         const db = admin.firestore();
 
         try {
-            // ── 1. Rate Limiting ──────────────────────────────────────────────
-            // Allow max 3 reset requests per email per hour
+            // â”€â”€ 1. Rate Limiting (max 3 per email per hour) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             const rateLimitRef = db.collection('password_reset_rate_limits').doc(
-                // Hash the email so we don't store PII as a document ID
                 crypto.createHash('sha256').update(normalizedEmail).digest('hex')
             );
             const rateLimitDoc = await rateLimitRef.get();
@@ -415,11 +403,9 @@ exports.sendPasswordResetEmail = functions.https.onRequest((req, res) => {
             if (rateLimitDoc.exists) {
                 const { count, window_start } = rateLimitDoc.data();
                 if ((now - window_start) < oneHour && count >= 3) {
-                    console.warn(`[sendPasswordResetEmail] Rate limit exceeded for email hash.`);
-                    // Return success to avoid enumeration; email simply won't be sent
+                    console.warn('[sendPasswordResetEmail] Rate limit exceeded.');
                     return res.status(200).json({ success: true });
                 }
-                // Reset window if expired, otherwise increment
                 if ((now - window_start) >= oneHour) {
                     await rateLimitRef.set({ count: 1, window_start: now });
                 } else {
@@ -429,178 +415,114 @@ exports.sendPasswordResetEmail = functions.https.onRequest((req, res) => {
                 await rateLimitRef.set({ count: 1, window_start: now });
             }
 
-            // ── 2. Verify the user has a valid token in Firestore ─────────────
-            // This prevents spoofed calls to send emails with fake links
+            // â”€â”€ 2. Read OTP directly from Firestore â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             const usersSnap = await db.collection('users')
                 .where('email', '==', normalizedEmail)
                 .limit(1)
                 .get();
 
             if (usersSnap.empty) {
-                // User not found — return success silently (no enumeration)
-                console.log(`[sendPasswordResetEmail] No user found for email. Suppressing.`);
+                console.log('[sendPasswordResetEmail] No user found. Suppressing.');
                 return res.status(200).json({ success: true });
             }
 
             const userDoc = usersSnap.docs[0].data();
-            if (!userDoc.reset_token || !userDoc.reset_token_expiry) {
-                console.warn(`[sendPasswordResetEmail] No reset token found on user doc. Suppressing.`);
+
+            if (!userDoc.reset_otp || !userDoc.reset_otp_expiry) {
+                console.warn('[sendPasswordResetEmail] No OTP on user doc. Suppressing.');
                 return res.status(200).json({ success: true });
             }
 
-            // Verify the token hasn't expired before emailing
-            if (new Date(userDoc.reset_token_expiry).getTime() < now) {
-                console.warn(`[sendPasswordResetEmail] Token already expired. Suppressing.`);
+            if (new Date(userDoc.reset_otp_expiry).getTime() < now) {
+                console.warn('[sendPasswordResetEmail] OTP expired. Suppressing.');
                 return res.status(200).json({ success: true });
             }
 
-            // Verify the reset link actually contains this user's token (tamper check)
-            if (!resetLink.includes(userDoc.reset_token)) {
-                console.error(`[sendPasswordResetEmail] resetLink token mismatch. Possible spoofing attempt.`);
-                return res.status(200).json({ success: true });
-            }
-
-            // ── 3. Build & Send Email ─────────────────────────────────────────
-            const gmailUser = process.env.GMAIL_USER;
+            // ── 3. Send OTP email ─────────────────────────────────────────────
+            // Production sender: always support@rhiveconstruction.com
+            const SENDER_EMAIL = 'support@rhiveconstruction.com';
+            const gmailUser = process.env.GMAIL_USER || SENDER_EMAIL;
             const gmailPass = process.env.GMAIL_APP_PASSWORD;
 
-            if (!gmailUser || !gmailPass) {
-                console.error('[sendPasswordResetEmail] Gmail credentials not set in environment.');
-                return res.status(500).json({ error: 'Email service not configured.' });
+            let transporter;
+            let fromAddress = '"RHIVE QOS Security" <' + SENDER_EMAIL + '>';
+            let isTestMode = false;
+
+            if (gmailPass) {
+                // Production: Gmail SMTP with App Password
+                transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: { user: gmailUser, pass: gmailPass }
+                });
+            } else {
+                // Dev fallback: Ethereal test SMTP (no Gmail App Password needed)
+                console.log('[sendPasswordResetEmail] Gmail App Password not set — using Ethereal test SMTP.');
+                const testAccount = await nodemailer.createTestAccount();
+                transporter = nodemailer.createTransport({
+                    host: 'smtp.ethereal.email',
+                    port: 587,
+                    secure: false,
+                    auth: { user: testAccount.user, pass: testAccount.pass }
+                });
+                fromAddress = '"RHIVE QOS Security" <' + testAccount.user + '>';
+                isTestMode = true;
             }
 
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: { user: gmailUser, pass: gmailPass }
-            });
-
             const displayName = userDoc.name || userDoc.display_name || normalizedEmail.split('@')[0];
-            const expiryTime = new Date(userDoc.reset_token_expiry).toLocaleString('en-US', {
-                timeZone: 'America/Chicago',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
+            const otp = userDoc.reset_otp;
+            const otpFormatted = otp.slice(0, 3) + ' ' + otp.slice(3);
+
+            const htmlBody = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>'
+                + '<title>RHIVE QOS Verification Code</title></head>'
+                + '<body style="margin:0;padding:0;background:#000;font-family:Arial,sans-serif;">'
+                + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#000;padding:40px 0;"><tr><td align="center">'
+                + '<table width="520" cellpadding="0" cellspacing="0" style="border:1px solid #374151;background:#000;max-width:520px;width:100%;">'
+                + '<tr><td style="background:linear-gradient(90deg,#ec028b,#08137C);height:3px;"></td></tr>'
+                + '<tr><td style="padding:28px 36px 20px;border-bottom:1px solid #1f2937;">'
+                + '<span style="color:#ec028b;font-size:20px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;">RHIVE</span>'
+                + '<span style="color:#6b7280;font-size:9px;letter-spacing:0.35em;text-transform:uppercase;margin-left:8px;">Quantum OS</span>'
+                + '</td></tr>'
+                + '<tr><td style="padding:32px 36px;">'
+                + '<p style="color:#ec028b;font-size:9px;font-weight:900;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 10px;">Password Recovery</p>'
+                + '<h1 style="color:#fff;font-size:20px;font-weight:900;margin:0 0 16px;text-transform:uppercase;">Your Verification Code</h1>'
+                + '<p style="color:#9ca3af;font-size:13px;line-height:1.7;margin:0 0 28px;">Hello <strong style="color:#fff;">' + displayName + '</strong>,<br/>'
+                + 'Use the 6-digit code below to reset your password. Expires in <strong style="color:#ec028b;">15 minutes</strong>.</p>'
+                + '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">'
+                + '<tr><td align="center" style="background:#0a0a0a;border:1px solid #ec028b;border-left:3px solid #ec028b;padding:28px 20px;">'
+                + '<p style="color:#6b7280;font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;margin:0 0 12px;">VERIFICATION CODE</p>'
+                + '<p style="color:#fff;font-size:48px;font-weight:900;font-family:monospace;letter-spacing:0.3em;margin:0;line-height:1;">' + otpFormatted + '</p>'
+                + '<p style="color:#4b5563;font-size:10px;font-family:monospace;margin:12px 0 0;">Expires in 15 minutes</p>'
+                + '</td></tr></table>'
+                + '<p style="color:#4b5563;font-size:11px;line-height:1.6;">If you did not request this, ignore this email. Never share this code.</p>'
+                + '</td></tr>'
+                + '<tr><td style="padding:16px 36px;border-top:1px solid #1f2937;">'
+                + '<p style="color:#374151;font-size:9px;text-transform:uppercase;text-align:center;margin:0;">RHIVE Industries 2025 - Do Not Forward</p>'
+                + '</td></tr>'
+                + '<tr><td style="background:linear-gradient(90deg,#08137C,#ec028b);height:2px;"></td></tr>'
+                + '</table></td></tr></table></body></html>';
+
+            const info = await transporter.sendMail({
+                from: fromAddress,
+                to: normalizedEmail,
+                subject: otp + ' - Your RHIVE QOS Verification Code',
+                html: htmlBody,
+                text: 'RHIVE QOS\n\nHello ' + displayName + ',\nVerification code: ' + otpFormatted + '\nExpires in 15 minutes.\nRHIVE Industries 2025'
             });
 
-            const htmlBody = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RHIVE QOS — Secure Password Recovery</title>
-</head>
-<body style="margin:0;padding:0;background-color:#000000;font-family:'Rubik',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#000;padding:40px 0;">
-    <tr>
-      <td align="center">
-        <table width="560" cellpadding="0" cellspacing="0" border="0"
-               style="border:1px solid #374151;background:#000;max-width:560px;width:100%;">
+            if (isTestMode) {
+                const previewUrl = nodemailer.getTestMessageUrl(info);
+                console.log('[sendPasswordResetEmail] TEST MODE â€” preview email at:', previewUrl);
+                // Return preview URL so it can be surfaced during development
+                return res.status(200).json({ success: true, testMode: true, previewUrl });
+            }
 
-          <!-- Pink top accent bar -->
-          <tr>
-            <td style="background:linear-gradient(90deg,#ec028b,#08137C);height:3px;"></td>
-          </tr>
-
-          <!-- Header -->
-          <tr>
-            <td style="padding:32px 40px 24px;border-bottom:1px solid #1f2937;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td>
-                    <span style="color:#ec028b;font-size:22px;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;">RHIVE</span>
-                    <span style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:0.4em;text-transform:uppercase;margin-left:8px;vertical-align:middle;">Quantum OS</span>
-                  </td>
-                  <td align="right">
-                    <span style="color:#374151;font-size:9px;font-family:monospace;letter-spacing:0.2em;">SECURITY PROTOCOL</span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Body -->
-          <tr>
-            <td style="padding:36px 40px;">
-              <p style="color:#ec028b;font-size:9px;font-weight:900;letter-spacing:0.4em;text-transform:uppercase;margin:0 0 12px;">Password Recovery Request</p>
-              <h1 style="color:#ffffff;font-size:24px;font-weight:900;margin:0 0 20px;letter-spacing:0.05em;text-transform:uppercase;">Secure Reset Link</h1>
-              <p style="color:#9ca3af;font-size:13px;line-height:1.7;margin:0 0 28px;">
-                Hello <strong style="color:#fff;">${displayName}</strong>,<br/><br/>
-                A password recovery request was initiated for your RHIVE QOS account.
-                Click the button below to set a new password. This link is valid for <strong style="color:#ec028b;">1 hour</strong>
-                and expires at <strong style="color:#fff;">${expiryTime} CT</strong>.
-              </p>
-
-              <!-- CTA Button -->
-              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
-                <tr>
-                  <td style="background:linear-gradient(135deg,rgba(236,2,139,0.2),rgba(8,19,124,0.2));border:1px solid rgba(236,2,139,0.5);padding:0;">
-                    <a href="${resetLink}"
-                       style="display:inline-block;padding:16px 40px;color:#ffffff;font-size:11px;font-weight:900;text-decoration:none;letter-spacing:0.25em;text-transform:uppercase;">
-                      Reset My Password →
-                    </a>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Security notice -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1f2937;background:#0a0a0a;margin-bottom:24px;">
-                <tr>
-                  <td style="padding:16px 20px;">
-                    <p style="color:#6b7280;font-size:10px;font-family:monospace;letter-spacing:0.1em;margin:0 0 6px;text-transform:uppercase;">⚠ Security Notice</p>
-                    <p style="color:#6b7280;font-size:11px;line-height:1.6;margin:0;">
-                      If you did not request this, <strong style="color:#9ca3af;">ignore this email</strong> — your password remains unchanged.
-                      Do not share this link with anyone. RHIVE staff will never ask for it.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="color:#374151;font-size:10px;font-family:monospace;margin:0;">
-                Link expires: <span style="color:#6b7280;">${expiryTime} CT</span>
-              </p>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="padding:20px 40px;border-top:1px solid #1f2937;">
-              <p style="color:#374151;font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;text-align:center;margin:0;">
-                RHIVE Industries © 2025 • Restricted Access • Do Not Forward
-              </p>
-            </td>
-          </tr>
-
-          <!-- Pink bottom accent bar -->
-          <tr>
-            <td style="background:linear-gradient(90deg,#08137C,#ec028b);height:2px;"></td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-
-            const mailOptions = {
-                from: `"RHIVE QOS Security" <${gmailUser}>`,
-                to: normalizedEmail,
-                subject: '🔐 RHIVE QOS — Your Secure Password Recovery Link',
-                html: htmlBody,
-                // Plain text fallback
-                text: `RHIVE QOS — Password Recovery\n\nHello ${displayName},\n\nA password recovery link has been generated for your account.\n\nReset Link (valid 1 hour):\n${resetLink}\n\nIf you did not request this, ignore this email.\n\nRHIVE Industries © 2025`
-            };
-
-            await transporter.sendMail(mailOptions);
-
-            console.log(`[sendPasswordResetEmail] Recovery email sent successfully.`);
+            console.log('[sendPasswordResetEmail] OTP email sent.');
             return res.status(200).json({ success: true });
 
         } catch (error) {
             console.error('[sendPasswordResetEmail] Error:', error.message);
-            // Return 500 only for genuine server errors (after all safety checks passed)
-            return res.status(500).json({ error: 'Failed to dispatch recovery email.' });
+            return res.status(500).json({ error: 'Failed to send recovery email.' });
         }
     });
 });
+

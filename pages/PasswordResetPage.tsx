@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from '../components/ui/card';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useNavigation } from '../contexts/NavigationContext';
-import { passwordResetService, userLogService } from '../lib/firebaseService';
+import { passwordResetService } from '../lib/firebaseService';
 import {
     KeyIcon,
-    ArrowRightIcon,
     ArrowLeftIcon,
     EnvelopeIcon,
     EyeIcon,
@@ -14,387 +12,558 @@ import {
     ShieldCheckIcon,
     ExclamationTriangleIcon,
     CheckCircleIcon,
-    ClockIcon
 } from '../components/icons';
-import { cn } from '../lib/utils';
+
+// ── OTP 6-box input ────────────────────────────────────────────────────────────
+interface OtpInputProps {
+    value: string;
+    onChange: (val: string) => void;
+    onComplete?: (val: string) => void;
+    disabled?: boolean;
+}
+
+const OtpInput: React.FC<OtpInputProps> = ({ value, onChange, onComplete, disabled }) => {
+    const refs = [
+        useRef<HTMLInputElement>(null),
+        useRef<HTMLInputElement>(null),
+        useRef<HTMLInputElement>(null),
+        useRef<HTMLInputElement>(null),
+        useRef<HTMLInputElement>(null),
+        useRef<HTMLInputElement>(null),
+    ];
+
+    const chars = value.split('');
+
+    const handleChange = (idx: number, raw: string) => {
+        const char = raw.replace(/\D/g, '').slice(-1);
+        const next = chars.slice();
+        next[idx] = char;
+        // Trim to 6
+        while (next.length < 6) next.push('');
+        const newVal = next.slice(0, 6).join('').replace(/ /g, '');
+        onChange(newVal);
+        if (char && idx < 5) {
+            refs[idx + 1].current?.focus();
+        }
+        const filled = newVal.replace(/\s/g, '');
+        if (filled.length === 6) onComplete?.(filled);
+    };
+
+    const handleKeyDown = (idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Backspace') {
+            if (!chars[idx] && idx > 0) {
+                const next = chars.slice();
+                next[idx - 1] = '';
+                onChange(next.join(''));
+                refs[idx - 1].current?.focus();
+            } else {
+                const next = chars.slice();
+                next[idx] = '';
+                onChange(next.join(''));
+            }
+        } else if (e.key === 'ArrowLeft' && idx > 0) {
+            refs[idx - 1].current?.focus();
+        } else if (e.key === 'ArrowRight' && idx < 5) {
+            refs[idx + 1].current?.focus();
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        onChange(pasted.padEnd(6, ' ').slice(0, 6));
+        if (pasted.length > 0) {
+            refs[Math.min(pasted.length, 5)].current?.focus();
+        }
+        if (pasted.length === 6) onComplete?.(pasted);
+    };
+
+    return (
+        <div className="flex gap-2 justify-center" onPaste={handlePaste}>
+            {[0, 1, 2, 3, 4, 5].map((idx) => {
+                const digit = chars[idx] && chars[idx].trim() ? chars[idx] : '';
+                const isFilled = digit !== '';
+                return (
+                    <div key={idx} className="relative">
+                        {/* Chamfered border */}
+                        <div
+                            className={`absolute inset-0 transition-all duration-200 ${isFilled ? 'bg-rhive-pink/20 border border-rhive-pink' : 'bg-black/60 border border-gray-700'}`}
+                            style={{
+                                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
+                            }}
+                        />
+                        <input
+                            ref={refs[idx]}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={digit}
+                            disabled={disabled}
+                            onChange={(e) => handleChange(idx, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(idx, e)}
+                            className={`relative z-10 w-11 h-14 text-center text-2xl font-black font-mono bg-transparent outline-none transition-all duration-200
+                                ${isFilled ? 'text-white' : 'text-gray-500'}
+                                disabled:opacity-40 cursor-text`}
+                            style={{ background: 'transparent' }}
+                        />
+                        {/* Bottom indicator */}
+                        <div
+                            className={`absolute bottom-0 left-0 right-0 h-0.5 transition-all duration-200 ${isFilled ? 'bg-rhive-pink shadow-[0_0_8px_rgba(236,2,139,0.8)]' : 'bg-transparent'}`}
+                        />
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+// ── Shared card frame ──────────────────────────────────────────────────────────
+const ResetCard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const chamfer = '24px';
+    const clip = `polygon(${chamfer} 0, 100% 0, 100% calc(100% - ${chamfer}), calc(100% - ${chamfer}) 100%, 0 100%, 0 ${chamfer})`;
+    return (
+        <div className="relative w-full max-w-md">
+            {/* Border frame */}
+            <div className="absolute inset-0" style={{ clipPath: clip }}>
+                <div className="absolute inset-0 bg-gray-700" />
+                <div className="absolute inset-[1px] bg-black" />
+            </div>
+            {/* Pink accent on TL chamfer */}
+            <svg className="absolute top-0 left-0 w-6 h-6 z-20 overflow-visible pointer-events-none">
+                <line x1="8" y1="16" x2="16" y2="8" stroke="#ec028b" strokeWidth="2" strokeLinecap="square"
+                    className="drop-shadow-[0_0_3px_rgba(236,2,139,0.8)]" />
+            </svg>
+            {/* Pink accent on BR chamfer */}
+            <svg className="absolute bottom-0 right-0 w-6 h-6 z-20 overflow-visible pointer-events-none">
+                <line x1="8" y1="16" x2="16" y2="8" stroke="#ec028b" strokeWidth="2" strokeLinecap="square"
+                    className="drop-shadow-[0_0_3px_rgba(236,2,139,0.8)]" />
+            </svg>
+            <div className="relative z-10 p-8">{children}</div>
+        </div>
+    );
+};
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
+type Step = 'email' | 'otp' | 'password' | 'success';
 
 const PasswordResetPage: React.FC = () => {
     const { setActivePageId } = useNavigation();
 
-    // Query parameters parsing
-    const [token, setToken] = useState<string | null>(null);
-
-    // Flow State
-    const [isTokenFlow, setIsTokenFlow] = useState(false);
-    const [verificationStatus, setVerificationStatus] = useState<'idle' | 'verifying' | 'valid' | 'invalid'>('idle');
-    const [verifiedEmail, setVerifiedEmail] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
-
-    // Request State (State A)
-    const [requestEmail, setRequestEmail] = useState('');
-    const [isRequested, setIsRequested] = useState(false);
-    const [loadingRequest, setLoadingRequest] = useState(false);
-
-    // Override State (State B)
+    const [step, setStep] = useState<Step>('email');
+    const [email, setEmail] = useState('');
+    const [otpValue, setOtpValue] = useState('');
+    const [resetToken, setResetToken] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [loadingReset, setLoadingReset] = useState(false);
-    const [resetSuccess, setResetSuccess] = useState(false);
+    const [showNew, setShowNew] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [resendTimer, setResendTimer] = useState(60);
+    const [countdown, setCountdown] = useState(5);
 
-    // Auto Redirect Timer
-    const [countdown, setCountdown] = useState(3);
-
-    // Parse URL on mount
+    // Handle ?token= in URL for backward-compat direct-link flow
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        const urlToken = params.get('token');
-        if (urlToken) {
-            setToken(urlToken);
-            setIsTokenFlow(true);
-            verifyToken(urlToken);
-        } else {
-            setIsTokenFlow(false);
-            setVerificationStatus('idle');
+        const token = params.get('token');
+        if (token) {
+            setResetToken(token);
+            setStep('password');
         }
-    }, [window.location.search]);
+    }, []);
 
-    // Token verification helper
-    const verifyToken = async (tokenStr: string) => {
-        setVerificationStatus('verifying');
-        const res = await passwordResetService.verifyResetToken(tokenStr);
-        if (res.success && res.email) {
-            setVerifiedEmail(res.email);
-            setVerificationStatus('valid');
-        } else {
-            setErrorMessage(res.error || 'The secure recovery token is invalid or expired.');
-            setVerificationStatus('invalid');
-        }
-    };
-
-    // Handler to request a recovery link
-    const handleRequestLink = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!requestEmail) return;
-        setLoadingRequest(true);
-        setErrorMessage('');
-
-        const res = await passwordResetService.createResetToken(requestEmail);
-        setLoadingRequest(false);
-
-        if (res.success) {
-            // Always show success — even if email wasn't found, to prevent user enumeration.
-            // The Cloud Function handles whether the email is sent.
-            setIsRequested(true);
-        } else {
-            setErrorMessage(res.error || 'Service temporarily unavailable. Please try again.');
-        }
-    };
-
-    // Handler to execute password override
-    const handlePasswordReset = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!token) return;
-
-        if (newPassword.length < 6) {
-            setErrorMessage('Password must be at least 6 characters long.');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            setErrorMessage('New passwords do not match.');
-            return;
-        }
-
-        setLoadingReset(true);
-        setErrorMessage('');
-
-        const res = await passwordResetService.completePasswordReset(token, newPassword);
-        setLoadingReset(false);
-
-        if (res.success) {
-            setResetSuccess(true);
-            userLogService.logAction(
-                'USER_PASSWORD_RESET',
-                `Password successfully reset via recovery link`,
-                { email: verifiedEmail }
-            );
-        } else {
-            setErrorMessage(res.error || 'Secure override transaction failed. Token might be expired.');
-        }
-    };
-
-    // Countdown and clear URL query parameters on success redirect
+    // Resend countdown when on OTP step
     useEffect(() => {
-        if (!resetSuccess) return;
+        if (step !== 'otp') return;
+        setResendTimer(60);
+        const t = setInterval(() => {
+            setResendTimer((prev) => {
+                if (prev <= 1) { clearInterval(t); return 0; }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(t);
+    }, [step]);
 
-        const timer = setInterval(() => {
+    // Success redirect countdown
+    useEffect(() => {
+        if (step !== 'success') return;
+        setCountdown(5);
+        const t = setInterval(() => {
             setCountdown((prev) => {
                 if (prev <= 1) {
-                    clearInterval(timer);
-                    executeRedirect();
+                    clearInterval(t);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    setActivePageId('P-06');
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
+        return () => clearInterval(t);
+    }, [step]);
 
-        return () => clearInterval(timer);
-    }, [resetSuccess]);
-
-    const executeRedirect = () => {
-        // Clear all query params in url for a clean landing state
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setActivePageId('P-06'); // Redirect to LoginPage (or empty page, which defaults to Login)
+    // ── Step 1: Submit email ───────────────────────────────────────────────────
+    const handleEmailSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email.trim()) return;
+        setLoading(true);
+        setError('');
+        const res = await passwordResetService.createResetToken(email.trim());
+        setLoading(false);
+        if (res.success) {
+            setOtpValue('');
+            setStep('otp');
+        } else {
+            setError(res.error || 'Something went wrong. Please try again.');
+        }
     };
 
-    return (
-        <div className="h-full flex items-center justify-center p-6 bg-black/40 isolate font-sans selection:bg-[#ec028b]/40">
-            <div className="w-full max-w-xl animate-fade-in">
-                {/* STATE 1: Token Flow is present and completed successfully */}
-                {resetSuccess ? (
-                    <Card className="p-8 relative overflow-hidden text-center border-[#ec028b]/40 bg-black/80">
-                        {/* Pink glowing accent bar */}
-                        <div className="absolute top-0 left-0 w-full h-1 bg-[#ec028b] shadow-[0_0_15px_#ec028b]" />
+    // ── Step 2: Verify OTP ─────────────────────────────────────────────────────
+    const handleOtpSubmit = async () => {
+        const code = otpValue.replace(/\s/g, '');
+        if (code.length !== 6) {
+            setError('Please enter the full 6-digit code.');
+            return;
+        }
+        setLoading(true);
+        setError('');
+        const res = await (passwordResetService as any).verifyOtpCode(email.trim(), code);
+        setLoading(false);
+        if (res.success && res.token) {
+            setResetToken(res.token);
+            setStep('password');
+        } else {
+            setError(res.error || 'Invalid code. Please try again.');
+        }
+    };
 
-                        <div className="w-16 h-16 bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-gray-800 shadow-[0_0_15px_rgba(236,2,139,0.3)]">
-                            <CheckCircleIcon className="w-8 h-8 text-[#ec028b] animate-pulse" />
-                        </div>
+    // Resend code
+    const handleResend = async () => {
+        if (resendTimer > 0) return;
+        setLoading(true);
+        setError('');
+        await passwordResetService.createResetToken(email.trim());
+        setOtpValue('');
+        setLoading(false);
+        setResendTimer(60);
+    };
 
-                        <h2 className="text-2xl font-black text-white uppercase tracking-widest">Override Successful</h2>
-                        <p className="text-gray-500 text-[10px] mt-2 uppercase font-black tracking-widest">Credentials Reprogrammed</p>
+    // ── Step 3: Set new password ───────────────────────────────────────────────
+    const handlePasswordSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newPassword.length < 6) {
+            setError('Password must be at least 6 characters.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+        setLoading(true);
+        setError('');
+        const res = await passwordResetService.completePasswordReset(resetToken, newPassword);
+        setLoading(false);
+        if (res.success) {
+            setStep('success');
+        } else {
+            setError(res.error || 'Failed to update password. Please try again.');
+        }
+    };
 
-                        <div className="my-8 p-6 bg-gray-900/60 rounded-2xl border border-gray-800 text-sm font-mono max-w-md mx-auto leading-relaxed text-gray-300">
-                            Your password override has been successfully completed in our secure database registry.
-                            <div className="mt-4 flex items-center justify-center gap-2 text-[#ec028b] font-bold text-xs uppercase tracking-wider">
-                                <ClockIcon className="w-4 h-4 animate-spin" />
-                                Redirection in {countdown}s
-                            </div>
-                        </div>
+    // ── Renders ────────────────────────────────────────────────────────────────
+    const renderEmail = () => (
+        <ResetCard>
+            <div className="mb-6 flex items-center gap-3">
+                <div className="p-2 bg-rhive-pink/10 border border-rhive-pink/30 text-rhive-pink">
+                    <EnvelopeIcon className="w-5 h-5" />
+                </div>
+                <div>
+                    <p className="text-[10px] text-rhive-pink font-bold tracking-[0.3em] uppercase">Recovery Protocol</p>
+                    <h1 className="text-lg font-black text-white tracking-tight uppercase">Reset Password</h1>
+                </div>
+            </div>
 
-                        <Button onClick={executeRedirect} className="w-full h-12 text-xs font-black tracking-[0.2em]">
-                            Establish Login Gateway
-                            <ArrowRightIcon className="w-4 h-4 ml-2" />
-                        </Button>
-                    </Card>
-                ) : isTokenFlow ? (
-                    /* STATE B: REDEMPTION (Token present in URL) */
-                    <div>
-                        {verificationStatus === 'verifying' && (
-                            <Card className="p-8 text-center border-gray-800 bg-black/60">
-                                <div className="py-12 flex flex-col items-center justify-center">
-                                    <div className="relative w-14 h-14 border border-gray-800 rounded-xl flex items-center justify-center mb-6">
-                                        <div className="absolute inset-2 border-t-2 border-r-2 border-[#ec028b] rounded-full animate-spin" />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-white uppercase tracking-widest">Validating Override Token</h3>
-                                    <p className="text-gray-500 text-xs font-mono mt-2">Checking Firestore secure registry...</p>
-                                </div>
-                            </Card>
-                        )}
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">
+                        Registered Email
+                    </label>
+                    <Input
+                        id="reset-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        required
+                        autoComplete="email"
+                        className="bg-black/60 border-gray-700 text-white placeholder:text-gray-600 focus:border-rhive-pink focus:ring-rhive-pink/20"
+                    />
+                </div>
 
-                        {verificationStatus === 'invalid' && (
-                            <Card className="p-8 relative overflow-hidden border-red-500/30 bg-black/80">
-                                {/* Red alert accent bar */}
-                                <div className="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_15px_#ef4444]" />
-
-                                <div className="text-center mb-8">
-                                    <div className="w-16 h-16 bg-red-950/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-900/30 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                                        <ExclamationTriangleIcon className="w-8 h-8 text-red-500" />
-                                    </div>
-                                    <h2 className="text-2xl font-black text-white uppercase tracking-widest">Security Exception</h2>
-                                    <p className="text-red-500 text-[10px] mt-2 uppercase font-black tracking-widest">Access Protocol Rejected</p>
-                                </div>
-
-                                <div className="p-6 bg-red-950/10 rounded-2xl border border-red-900/20 text-sm font-mono text-center text-red-200/80 mb-8">
-                                    {errorMessage}
-                                </div>
-
-                                <Button 
-                                    variant="secondary" 
-                                    onClick={() => {
-                                        window.history.replaceState({}, document.title, window.location.pathname);
-                                        setActivePageId('P-06');
-                                    }} 
-                                    className="w-full h-12 text-xs font-black tracking-widest border-red-900/40 text-red-400 hover:bg-red-950/10 hover:border-red-500/50"
-                                >
-                                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                                    Back to Gateway
-                                </Button>
-                            </Card>
-                        )}
-
-                        {verificationStatus === 'valid' && (
-                            <Card className="p-8 relative overflow-hidden border-[#ec028b]/30 bg-black/60">
-                                {/* Pink accent bar */}
-                                <div className="absolute top-0 left-0 w-full h-1 bg-[#ec028b] shadow-[0_0_15px_#ec028b]" />
-
-                                <div className="text-center mb-8">
-                                    <div className="w-16 h-16 bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-800 shadow-pink-glow-sm">
-                                        <KeyIcon className="w-8 h-8 text-[#ec028b]" />
-                                    </div>
-                                    <h2 className="text-2xl font-black text-white uppercase tracking-widest">Update Password</h2>
-                                    <p className="text-gray-500 text-[10px] mt-2 uppercase font-black tracking-widest">Enter your new credentials below to reprogram your security registry profile</p>
-                                </div>
-
-                                <form onSubmit={handlePasswordReset} className="space-y-6">
-                                    {/* New Password Input */}
-                                    <div className="space-y-2 relative group">
-                                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                                            New Secure Password
-                                        </label>
-                                        <div className="relative">
-                                            <Input
-                                                id="new-password"
-                                                type={showNewPassword ? 'text' : 'password'}
-                                                placeholder="••••••••••••"
-                                                value={newPassword}
-                                                onChange={e => setNewPassword(e.target.value)}
-                                                required
-                                                className="pr-12"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-rhive-pink transition-colors"
-                                            >
-                                                {showNewPassword ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Confirm Password Input */}
-                                    <div className="space-y-2 relative group">
-                                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                                            Confirm Secure Password
-                                        </label>
-                                        <div className="relative">
-                                            <Input
-                                                id="confirm-password"
-                                                type={showConfirmPassword ? 'text' : 'password'}
-                                                placeholder="••••••••••••"
-                                                value={confirmPassword}
-                                                onChange={e => setConfirmPassword(e.target.value)}
-                                                required
-                                                className="pr-12"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-rhive-pink transition-colors"
-                                            >
-                                                {showConfirmPassword ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {errorMessage && (
-                                        <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest text-center animate-pulse">
-                                            {errorMessage}
-                                        </p>
-                                    )}
-
-                                    <div className="pt-2">
-                                        <Button
-                                            type="submit"
-                                            disabled={loadingReset}
-                                            className="w-full h-12 text-xs font-black tracking-[0.2em] shadow-pink-glow"
-                                        >
-                                            {loadingReset ? 'Updating Password…' : 'Update Password'}
-                                            <ArrowRightIcon className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    </div>
-                                </form>
-                            </Card>
-                        )}
-                    </div>
-                ) : (
-                    /* STATE A: REQUEST LINK (No token in URL) */
-                    <div className="space-y-6">
-                        <Card className="p-8 relative overflow-hidden border-gray-800 bg-black/60">
-                            {/* Pink accent bar */}
-                            <div className="absolute top-0 left-0 w-full h-1 bg-[#ec028b] shadow-[0_0_15px_#ec028b]" />
-
-                            <div className="text-center mb-8">
-                                <div className="w-16 h-16 bg-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-800 shadow-pink-glow-sm">
-                                    <KeyIcon className="w-8 h-8 text-[#ec028b]" />
-                                </div>
-                                <h2 className="text-2xl font-black text-white uppercase tracking-widest">Access Recovery</h2>
-                                <p className="text-gray-500 text-[10px] mt-2 uppercase font-black tracking-widest">QOS Secure Recovery Protocol</p>
-                            </div>
-
-                            {!isRequested ? (
-                                <form onSubmit={handleRequestLink} className="space-y-6">
-                                    <p className="text-gray-400 text-xs leading-relaxed text-center">
-                                        Input your registered employee or portal email. A secure, high-clearance cryptographically generated override link will be dispatched.
-                                    </p>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                                            Your Registered Email
-                                        </label>
-                                        <Input
-                                            id="recovery-email"
-                                            placeholder="employee@rhive.com"
-                                            type="email"
-                                            value={requestEmail}
-                                            onChange={e => setRequestEmail(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-
-                                    {errorMessage && (
-                                        <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest text-center animate-pulse">
-                                            {errorMessage}
-                                        </p>
-                                    )}
-
-                                    <div className="flex gap-4">
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            onClick={() => setActivePageId('P-06')}
-                                            className="flex-none px-5 h-12 bg-gray-900 border-gray-800 text-gray-500 hover:bg-gray-800 hover:text-white rounded-xl uppercase tracking-widest text-[10px] font-black"
-                                        >
-                                            <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                                            Back
-                                        </Button>
-                                        <Button
-                                            type="submit"
-                                            disabled={loadingRequest}
-                                            className="flex-1 h-12 text-xs font-black tracking-[0.2em] shadow-pink-glow"
-                                        >
-                                            {loadingRequest ? 'Dispatching…' : 'Generate Recovery Link'}
-                                            <ArrowRightIcon className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    </div>
-                                </form>
-                            ) : (
-                                <div className="text-center py-4 space-y-6">
-                                    <div className="w-12 h-12 bg-green-950/20 border border-green-500/30 rounded-xl flex items-center justify-center mx-auto mb-2 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.2)]">
-                                        <ShieldCheckIcon className="w-6 h-6" />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-white uppercase tracking-widest">Check Your Email</h3>
-                                    <p className="text-gray-400 text-xs leading-relaxed max-w-sm mx-auto">
-                                        If <strong className="text-white">{requestEmail}</strong> is registered in our system, a secure password recovery link has been dispatched to that address.
-                                        Please check your inbox (and spam folder) — the link expires in <strong className="text-rhive-pink">1 hour</strong>.
-                                    </p>
-                                    <div className="p-3 bg-black/40 border border-gray-800 text-[10px] font-mono text-gray-600 text-left">
-                                        ⚠ For security, we never confirm whether an email is registered.
-                                    </div>
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => { setIsRequested(false); setRequestEmail(''); }}
-                                        className="w-full text-xs font-black tracking-widest"
-                                    >
-                                        Try a Different Email
-                                    </Button>
-                                </div>
-                            )}
-                        </Card>
+                {error && (
+                    <div className="flex items-start gap-2 p-3 bg-red-950/40 border border-red-800/60 text-red-400 text-xs">
+                        <ExclamationTriangleIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>{error}</span>
                     </div>
                 )}
+
+                <Button
+                    type="submit"
+                    disabled={loading || !email.trim()}
+                    className="w-full bg-rhive-pink hover:bg-rhive-pink/90 text-white font-black tracking-widest uppercase text-xs py-3 shadow-pink-glow disabled:opacity-50"
+                >
+                    {loading ? 'Sending...' : 'Send Verification Code →'}
+                </Button>
+
+                <button
+                    type="button"
+                    onClick={() => setActivePageId('P-06')}
+                    className="w-full flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors mt-2"
+                >
+                    <ArrowLeftIcon className="w-3 h-3" />
+                    Back to Login
+                </button>
+            </form>
+        </ResetCard>
+    );
+
+    const renderOtp = () => (
+        <ResetCard>
+            <div className="mb-6 flex items-center gap-3">
+                <div className="p-2 bg-rhive-pink/10 border border-rhive-pink/30 text-rhive-pink">
+                    <KeyIcon className="w-5 h-5" />
+                </div>
+                <div>
+                    <p className="text-[10px] text-rhive-pink font-bold tracking-[0.3em] uppercase">Step 2 of 3</p>
+                    <h1 className="text-lg font-black text-white tracking-tight uppercase">Enter Code</h1>
+                </div>
             </div>
+
+            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+                A 6-digit code was sent from{' '}
+                <strong className="text-white">support@rhiveconstruction.com</strong>{' '}
+                to <strong className="text-white">{email}</strong>.
+                Enter it below. Expires in 15 minutes.
+            </p>
+
+
+
+            <div className="mb-6">
+                <OtpInput
+                    value={otpValue}
+                    onChange={setOtpValue}
+                    onComplete={handleOtpSubmit}
+                    disabled={loading}
+                />
+            </div>
+
+            {error && (
+                <div className="flex items-start gap-2 p-3 mb-4 bg-red-950/40 border border-red-800/60 text-red-400 text-xs">
+                    <ExclamationTriangleIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>{error}</span>
+                </div>
+            )}
+
+            <Button
+                onClick={handleOtpSubmit}
+                disabled={loading || otpValue.replace(/\s/g, '').length !== 6}
+                className="w-full bg-rhive-pink hover:bg-rhive-pink/90 text-white font-black tracking-widest uppercase text-xs py-3 shadow-pink-glow disabled:opacity-50 mb-4"
+            >
+                {loading ? 'Verifying...' : 'Verify Code →'}
+            </Button>
+
+            <div className="flex items-center justify-between">
+                <button
+                    type="button"
+                    onClick={() => { setStep('email'); setError(''); }}
+                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                    <ArrowLeftIcon className="w-3 h-3" />
+                    Change email
+                </button>
+                <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resendTimer > 0 || loading}
+                    className={`text-xs transition-colors ${resendTimer > 0 ? 'text-gray-600 cursor-not-allowed' : 'text-rhive-pink hover:text-rhive-pink/80'}`}
+                >
+                    {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend code'}
+                </button>
+            </div>
+        </ResetCard>
+    );
+
+    const renderPassword = () => (
+        <ResetCard>
+            <div className="mb-6 flex items-center gap-3">
+                <div className="p-2 bg-rhive-pink/10 border border-rhive-pink/30 text-rhive-pink">
+                    <ShieldCheckIcon className="w-5 h-5" />
+                </div>
+                <div>
+                    <p className="text-[10px] text-rhive-pink font-bold tracking-[0.3em] uppercase">Step 3 of 3</p>
+                    <h1 className="text-lg font-black text-white tracking-tight uppercase">New Password</h1>
+                </div>
+            </div>
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">
+                        New Password
+                    </label>
+                    <div className="relative">
+                        <Input
+                            id="new-password"
+                            type={showNew ? 'text' : 'password'}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Min. 6 characters"
+                            required
+                            autoComplete="new-password"
+                            className="bg-black/60 border-gray-700 text-white placeholder:text-gray-600 focus:border-rhive-pink pr-10"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowNew(!showNew)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                        >
+                            {showNew ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-xs font-bold text-gray-400 tracking-widest uppercase mb-2">
+                        Confirm Password
+                    </label>
+                    <div className="relative">
+                        <Input
+                            id="confirm-password"
+                            type={showConfirm ? 'text' : 'password'}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Re-enter password"
+                            required
+                            autoComplete="new-password"
+                            className="bg-black/60 border-gray-700 text-white placeholder:text-gray-600 focus:border-rhive-pink pr-10"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowConfirm(!showConfirm)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+                        >
+                            {showConfirm ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Password match indicator */}
+                {confirmPassword && (
+                    <div className={`flex items-center gap-2 text-xs ${newPassword === confirmPassword ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {newPassword === confirmPassword
+                            ? <><CheckCircleIcon className="w-3.5 h-3.5" /> Passwords match</>
+                            : <><ExclamationTriangleIcon className="w-3.5 h-3.5" /> Passwords do not match</>
+                        }
+                    </div>
+                )}
+
+                {error && (
+                    <div className="flex items-start gap-2 p-3 bg-red-950/40 border border-red-800/60 text-red-400 text-xs">
+                        <ExclamationTriangleIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                <Button
+                    type="submit"
+                    disabled={loading || !newPassword || !confirmPassword}
+                    className="w-full bg-rhive-pink hover:bg-rhive-pink/90 text-white font-black tracking-widest uppercase text-xs py-3 shadow-pink-glow disabled:opacity-50"
+                >
+                    {loading ? 'Updating...' : 'Update Password →'}
+                </Button>
+            </form>
+        </ResetCard>
+    );
+
+    const renderSuccess = () => (
+        <ResetCard>
+            <div className="text-center py-4">
+                <div className="mx-auto mb-6 w-16 h-16 flex items-center justify-center bg-emerald-950/40 border border-emerald-700/60 text-emerald-400"
+                    style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
+                    <CheckCircleIcon className="w-8 h-8" />
+                </div>
+                <p className="text-[10px] text-emerald-400 font-bold tracking-[0.3em] uppercase mb-2">Recovery Complete</p>
+                <h1 className="text-xl font-black text-white uppercase tracking-tight mb-3">Password Updated</h1>
+                <p className="text-xs text-gray-400 mb-6">
+                    Your password has been successfully changed.<br />
+                    Redirecting to login in{' '}
+                    <strong className="text-white">{countdown}</strong> seconds.
+                </p>
+                <Button
+                    onClick={() => {
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        setActivePageId('P-06');
+                    }}
+                    className="w-full bg-rhive-pink hover:bg-rhive-pink/90 text-white font-black tracking-widest uppercase text-xs py-3 shadow-pink-glow"
+                >
+                    Back to Login →
+                </Button>
+            </div>
+        </ResetCard>
+    );
+
+    // ── Step progress indicator ────────────────────────────────────────────────
+    const steps = [
+        { id: 'email', label: 'Email' },
+        { id: 'otp', label: 'Verify' },
+        { id: 'password', label: 'Password' },
+    ];
+    const currentStepIdx = steps.findIndex((s) => s.id === step);
+
+    return (
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4 py-12">
+            {/* Logo */}
+            <div className="mb-8 text-center">
+                <span className="text-rhive-pink font-black text-2xl tracking-[0.2em] uppercase">RHIVE</span>
+                <span className="text-gray-600 text-[10px] font-bold tracking-[0.4em] uppercase ml-2 align-middle">Quantum OS</span>
+            </div>
+
+            {/* Step progress (not on success) */}
+            {step !== 'success' && (
+                <div className="flex items-center gap-2 mb-8">
+                    {steps.map((s, i) => (
+                        <React.Fragment key={s.id}>
+                            <div className="flex items-center gap-1.5">
+                                <div className={`w-6 h-6 flex items-center justify-center text-[10px] font-black transition-all duration-300
+                                    ${i < currentStepIdx ? 'bg-emerald-700 text-white' : i === currentStepIdx ? 'bg-rhive-pink text-white shadow-pink-glow-sm' : 'bg-gray-800 text-gray-600'}`}
+                                    style={{ clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)' }}
+                                >
+                                    {i < currentStepIdx ? '✓' : i + 1}
+                                </div>
+                                <span className={`text-[10px] font-bold tracking-widest uppercase hidden sm:block ${i === currentStepIdx ? 'text-white' : 'text-gray-600'}`}>
+                                    {s.label}
+                                </span>
+                            </div>
+                            {i < steps.length - 1 && (
+                                <div className={`w-8 h-px transition-all duration-300 ${i < currentStepIdx ? 'bg-emerald-700' : 'bg-gray-800'}`} />
+                            )}
+                        </React.Fragment>
+                    ))}
+                </div>
+            )}
+
+            {/* Step content */}
+            <div className="w-full max-w-md">
+                {step === 'email' && renderEmail()}
+                {step === 'otp' && renderOtp()}
+                {step === 'password' && renderPassword()}
+                {step === 'success' && renderSuccess()}
+            </div>
+
+            {/* Footer */}
+            <p className="mt-8 text-[10px] text-gray-700 tracking-widest uppercase">
+                RHIVE Industries © 2025 • Restricted Access
+            </p>
         </div>
     );
 };

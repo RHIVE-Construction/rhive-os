@@ -542,71 +542,132 @@ export const userService = {
 
 export const passwordResetService = {
     /**
-     * Generates a reset token and stores it directly on the user document
-     * in the `users` collection, then triggers the Cloud Function to email
-     * the secure link. The token is NEVER returned to the browser.
-     *
-     * Security: Always returns the same "success" shape regardless of whether
-     * the email is registered — prevents user enumeration.
+     * Generates a secure reset token + 6-digit OTP and stores both on the user doc.
+     * Calls the Cloud Function to email the OTP. Token never exposed to the browser.
+     * Always returns success regardless of email existence (prevents user enumeration).
      */
     createResetToken: async (email: string) => {
         try {
             const normalizedEmail = email.toLowerCase().trim();
 
-            // 1. Verify user exists
+            // 1. Verify user exists (silently succeed if not found)
             const userResult = await userService.getByEmail(normalizedEmail);
             if (!userResult.success || !userResult.data) {
-                // Silently succeed — no enumeration of registered emails
                 return { success: true };
             }
 
             const userDoc = userResult.data as any;
 
-            // 2. Generate secure token: 32 cryptographically random hex chars + timestamp base-36
+            // 2. Generate secure 72-char reset token
             const randomValues = new Uint8Array(32);
             crypto.getRandomValues(randomValues);
             const token = Array.from(randomValues)
                 .map(b => b.toString(16).padStart(2, '0'))
                 .join('') + Date.now().toString(36);
 
-            // 3. Store token + 1-hour expiry on the user document
-            const expiry = new Date(Date.now() + 3600 * 1000).toISOString();
+            // 3. Generate 6-digit OTP using Web Crypto (100000-999999)
+            const otpBuffer = new Uint32Array(1);
+            crypto.getRandomValues(otpBuffer);
+            const otp = String((otpBuffer[0] % 900000) + 100000);
+
+            // 4. Store token (1h) + OTP (15 min) on user doc
+            const tokenExpiry = new Date(Date.now() + 3600 * 1000).toISOString();
+            const otpExpiry = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
             const updateResult = await userService.update(userDoc.id, {
                 reset_token: token,
-                reset_token_expiry: expiry,
+                reset_token_expiry: tokenExpiry,
+                reset_otp: otp,
+                reset_otp_expiry: otpExpiry,
+                reset_otp_attempts: 0,
                 updated_at: new Date().toISOString()
             });
 
             if (!updateResult.success) {
-                return { success: false, error: 'Failed to generate reset token.' };
+                return { success: false, error: 'Failed to generate reset code.' };
             }
 
-            // 4. Build the reset link (used by the Cloud Function)
-            const origin = typeof window !== 'undefined' ? window.location.origin : 'https://rhive-os.web.app';
-            const resetLink = `${origin}/?page=P-07&token=${token}`;
-
-            // 5. Call Cloud Function to send email — token never touches the browser response
+            // 5. Call Cloud Function to email the OTP — OTP never returned to browser
             const fnUrl = `https://us-central1-rhive-os.cloudfunctions.net/sendPasswordResetEmail`;
             try {
                 const response = await fetch(fnUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: normalizedEmail, resetLink })
+                    body: JSON.stringify({ email: normalizedEmail })
                 });
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
                     console.error('[passwordResetService] Cloud Function error:', errData);
-                    return { success: false, error: 'Email dispatch failed. Please try again.' };
+                    return { success: false, error: 'Failed to send reset email. Please try again.' };
                 }
+                // In test mode the function returns { success, testMode, previewUrl }
+                const respData = await response.json().catch(() => ({}));
+                return { success: true, testMode: respData.testMode || false, previewUrl: respData.previewUrl || null };
             } catch (fetchErr: any) {
                 console.error('[passwordResetService] Failed to reach email Cloud Function:', fetchErr.message);
-                return { success: false, error: 'Email service unavailable. Please try again later.' };
+                return { success: false, error: 'Email service is unavailable. Please try again later.' };
             }
 
-            // Success — token NOT returned to browser
-            return { success: true };
         } catch (error: any) {
             console.error('Error in createResetToken:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Verifies the 6-digit OTP sent to the user's email.
+     * Returns the reset_token on success (used by completePasswordReset).
+     * Max 5 attempts before OTP is invalidated.
+     */
+    verifyOtpCode: async (email: string, otp: string) => {
+        try {
+            const normalizedEmail = email.toLowerCase().trim();
+            const userResult = await userService.getByEmail(normalizedEmail);
+
+            if (!userResult.success || !userResult.data) {
+                return { success: false, error: 'Invalid verification code.' };
+            }
+
+            const userDoc = userResult.data as any;
+
+            // Check attempt limit
+            const attempts = userDoc.reset_otp_attempts || 0;
+            if (attempts >= 5) {
+                return { success: false, error: 'Too many attempts. Please request a new code.' };
+            }
+
+            // Check OTP expiry
+            if (!userDoc.reset_otp_expiry || new Date(userDoc.reset_otp_expiry).getTime() < Date.now()) {
+                return { success: false, error: 'This code has expired. Please request a new one.' };
+            }
+
+            // Check OTP value
+            if (!userDoc.reset_otp || userDoc.reset_otp !== otp.trim()) {
+                // Increment failed attempts
+                await userService.update(userDoc.id, {
+                    reset_otp_attempts: attempts + 1,
+                    updated_at: new Date().toISOString()
+                });
+                const remaining = 4 - attempts;
+                return {
+                    success: false,
+                    error: remaining > 0
+                        ? `Incorrect code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
+                        : 'Too many incorrect attempts. Please request a new code.'
+                };
+            }
+
+            // OTP correct — clear OTP fields, keep reset_token for password reset
+            await userService.update(userDoc.id, {
+                reset_otp: null,
+                reset_otp_expiry: null,
+                reset_otp_attempts: null,
+                updated_at: new Date().toISOString()
+            });
+
+            return { success: true, token: userDoc.reset_token };
+        } catch (error: any) {
+            console.error('Error in verifyOtpCode:', error);
             return { success: false, error: error.message };
         }
     },
@@ -623,13 +684,13 @@ export const passwordResetService = {
             const snapshot = await getDocs(q);
 
             if (snapshot.empty) {
-                return { success: false, error: 'This secure recovery link is invalid or has already been used.' };
+                return { success: false, error: 'This recovery link is invalid or has already been used.' };
             }
 
             const userDoc = snapshot.docs.map(mapDoc)[0];
 
             if (!userDoc.reset_token_expiry || new Date(userDoc.reset_token_expiry).getTime() < Date.now()) {
-                return { success: false, error: 'This secure recovery link has expired.' };
+                return { success: false, error: 'This recovery link has expired.' };
             }
 
             return { success: true, email: userDoc.email, userId: userDoc.id };
@@ -640,25 +701,24 @@ export const passwordResetService = {
     },
 
     /**
-     * Completes the password reset by updating password_hash on the user document
-     * and clearing the reset token fields — all within the `users` collection.
+     * Completes password reset — updates password_hash and clears all reset fields.
      */
     completePasswordReset: async (token: string, newPassword: string) => {
         try {
-            // 1. Verify token and get userId directly
             const verification = await passwordResetService.verifyResetToken(token);
             if (!verification.success || !verification.userId) {
                 return { success: false, error: verification.error || 'Token verification failed.' };
             }
 
-            // 2. Hash the new password
             const passwordHash = await hashPassword(newPassword);
 
-            // 3. Update password_hash and clear reset token fields on the user document
             const updateResult = await userService.update(verification.userId, {
                 password_hash: passwordHash,
                 reset_token: null,
                 reset_token_expiry: null,
+                reset_otp: null,
+                reset_otp_expiry: null,
+                reset_otp_attempts: null,
                 updated_at: new Date().toISOString()
             });
 
