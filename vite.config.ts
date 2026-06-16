@@ -8,15 +8,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Vite plugin that exposes a secure /api/config endpoint.
- * The Google Maps API key is read from process.env server-side
- * and returned as JSON — it never appears in any HTML or JS bundle.
+ * Vite plugin that exposes a /api/config endpoint during LOCAL DEV ONLY.
+ * This serves the Google Maps key to prevent it being bundled into JS.
+ *
+ * NOTE: This middleware does NOT run in production.
+ * In production (Firebase App Hosting), the Maps key is injected by Vite
+ * via import.meta.env.VITE_GOOGLE_MAPS_API_KEY at build time from Secret Manager.
+ *
+ * The Gemini key uses import.meta.env.VITE_GEMINI_API_KEY directly —
+ * injected from Secret Manager at build time, never stored in git.
  */
 function configApiPlugin(mapsApiKey: string): Plugin {
   const handler = (req: any, res: any, next: any) => {
     if (req.url === '/api/config') {
       res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Cache-Control', 'no-store'); // Never cache — secrets shouldn't be cached
+      res.setHeader('Cache-Control', 'no-store');
       res.end(JSON.stringify({ mapsApiKey }));
     } else {
       next();
@@ -46,11 +52,7 @@ export default defineConfig(({ mode }) => {
       configApiPlugin(env.VITE_GOOGLE_MAPS_API_KEY || ''),
     ],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       'process.env.VITE_GOOGLE_WEATHER_API_KEY': JSON.stringify(env.VITE_GOOGLE_WEATHER_API_KEY),
-      // NOTE: VITE_GOOGLE_MAPS_API_KEY is intentionally NOT here.
-      // It is served exclusively via the /api/config backend endpoint.
     },
     resolve: {
       alias: {

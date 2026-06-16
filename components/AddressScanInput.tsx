@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap } from './icons';
 import { CheckCircle2 } from 'lucide-react';
@@ -29,51 +29,50 @@ export const AddressScanInput = ({
         0 ${chamferSize}
     )`;
 
-    const inputRef = useRef<HTMLInputElement>(null);
-    const autocompleteRef = useRef<any>(null);
-    const isApiReady = useGoogleMapsApi();
-    
-    const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-    const [isEstimatorOpen, setIsEstimatorOpen] = useState(false);
+    const fullText = "ENTER PROJECT ADDRESS";
+    const [placeholder, setPlaceholder] = useState("");
+    const [index, setIndex] = useState(0);
+    const [localVal, setLocalVal] = useState("");
 
     useEffect(() => {
-        if (!isApiReady || !inputRef.current || !window.google || !window.google.maps.places) return;
-        if (autocompleteRef.current) return;
+        if (index < fullText.length) {
+            const timeout = setTimeout(() => {
+                setPlaceholder(prev => prev + fullText[index]);
+                setIndex(index + 1);
+            }, 50);
+            return () => clearTimeout(timeout);
+        } else {
+            const resetTimeout = setTimeout(() => {
+                setPlaceholder("");
+                setIndex(0);
+            }, 5000);
+            return () => clearTimeout(resetTimeout);
+        }
+    }, [index]);
 
-        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-            types: ['address'],
-            fields: ['formatted_address', 'geometry'],
-            componentRestrictions: { country: 'us' },
-        });
+    const isControlled = value !== undefined;
+    const currentVal = isControlled ? value : localVal;
 
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace();
-            if (place.geometry && place.geometry.location && place.formatted_address) {
-                setSelectedPlace({
-                    address: place.formatted_address,
-                    latitude: place.geometry.location.lat(),
-                    longitude: place.geometry.location.lng(),
-                });
-            }
-        });
-
-        autocompleteRef.current = autocomplete;
-
-        return () => {
-            if (autocompleteRef.current) {
-                window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
-                autocompleteRef.current = null;
-            }
-            document.querySelectorAll('.pac-container').forEach((el) => el.remove());
-        };
-    }, [isApiReady]);
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        if (!isControlled) {
+            setLocalVal(val);
+        }
+        if (onChange) {
+            onChange(val);
+        }
+    };
 
     const handleScanClick = () => {
-        if (selectedPlace) {
-            setIsEstimatorOpen(true);
+        if (onScan) {
+            onScan(currentVal || "525 Aspen Meadow Dr, Logan, UT");
         } else {
-            // Optional: prompt user or just focus input
-            inputRef.current?.focus();
+            window.dispatchEvent(new CustomEvent('open-roof-configurator', { 
+                detail: { 
+                    address: currentVal || "525 Aspen Meadow Dr, Logan, UT",
+                    mode: 'estimate'
+                } 
+            }));
         }
     };
 
@@ -104,13 +103,27 @@ export const AddressScanInput = ({
             : "bg-[#08137C] hover:bg-[#0c1c9c] shadow-[0_0_20px_rgba(8,19,124,0.6)] border border-[#0c1c9c]/50");
 
     return (
-        <>
-            <div id={id} className="relative flex w-full max-w-2xl mx-auto h-16 group mt-8 scroll-mt-40 isolate">
-                {/* 1. Background Layer (Clipped) */}
-                <div
-                    className="absolute inset-0 bg-black/80 backdrop-blur-xl z-0"
-                    style={{ clipPath: clipPathValue }}
-                />
+        <div id={id} className="relative flex w-full max-w-2xl mx-auto h-16 group mt-8 scroll-mt-40 isolate breathing-glow">
+            <style>{`
+                @keyframes border-breathe {
+                    0%, 100% {
+                        box-shadow: 0 0 10px 1px rgba(236, 2, 139, 0.25);
+                    }
+                    50% {
+                        box-shadow: 0 0 20px 2px rgba(236, 2, 139, 0.45);
+                    }
+                }
+                .breathing-glow {
+                    animation: border-breathe 4s ease-in-out infinite;
+                    transition: box-shadow 0.3s ease-out, transform 0.3s ease-out;
+                    border-radius: 4px;
+                }
+                .breathing-glow:hover, .breathing-glow:focus-within {
+                    animation: none;
+                    box-shadow: 0 0 28px 4px rgba(236, 2, 139, 0.7);
+                    transform: scale(1.005);
+                }
+            `}</style>
 
                 {/* 2. CIRCUITRY BORDERS (Consistent with Design System) */}
                 <div className="absolute left-0 top-4 bottom-0 w-[1px] bg-gray-700 z-10 overflow-hidden">
@@ -181,12 +194,19 @@ export const AddressScanInput = ({
                 </button>
             </div>
 
-            {isEstimatorOpen && selectedPlace && (
-                <div className="fixed inset-0 z-[999] bg-black animate-fade-in text-left">
-                    <EstimatorFlow onClose={() => setIsEstimatorOpen(false)} initialPlace={selectedPlace} />
-                </div>
-            )}
-        </>
+            {/* Premium Button Section */}
+            <button
+                onClick={handleScanClick}
+                className="relative h-full px-8 md:px-12 flex items-center justify-center gap-2 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white font-black uppercase text-[13px] tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(236,2,139,0.2)] shrink-0 z-20"
+                style={{
+                    clipPath: `polygon(0 0, 100% 0, 100% calc(100% - ${chamferSize}), calc(100% - ${chamferSize}) 100%, 0 100%)`
+                }}
+            >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
+                <Zap size={18} fill="currentColor" className="text-white" />
+                <span className="relative z-10">Scan My Roof</span>
+            </button>
+        </div>
     );
 };
 

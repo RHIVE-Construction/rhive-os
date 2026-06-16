@@ -35,6 +35,8 @@ interface NavigationContextType {
     setSelectedContactId: (id: string | null) => void;
     selectedAccountId: string | null;
     setSelectedAccountId: (id: string | null) => void;
+    showEditorMenu: boolean;
+    setShowEditorMenu: (show: boolean) => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -45,6 +47,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
     const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+    const [showEditorMenu, setShowEditorMenu] = useState<boolean>(true);
 
     /** Used by Sidebar: clears related selectedId(s) so profile pages show their list */
     const navigateToPage = React.useCallback((id: string) => {
@@ -55,6 +58,15 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (toClear.includes('selectedAccountId')) setSelectedAccountId(null);
         setActivePageId(id);
     }, []);
+
+    // Automatically hide/show editor menu when changing pages
+    React.useEffect(() => {
+        if (activePageId.startsWith('P-')) {
+            setShowEditorMenu(false);
+        } else {
+            setShowEditorMenu(true);
+        }
+    }, [activePageId]);
 
     return (
         <NavigationContext.Provider value={{
@@ -69,6 +81,8 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             setSelectedContactId,
             selectedAccountId,
             setSelectedAccountId,
+            showEditorMenu,
+            setShowEditorMenu,
         }}>
             {children}
         </NavigationContext.Provider>
@@ -80,3 +94,4 @@ export const useNavigation = () => {
     if (!context) throw new Error("useNavigation must be used within NavigationProvider");
     return context;
 };
+

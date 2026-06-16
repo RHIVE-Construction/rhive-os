@@ -8,15 +8,19 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { Sidebar } from './components/Sidebar';
 import LoginPage from './pages/LoginPage';
 import { GlobalHeader } from './components/GlobalHeader';
+import RhiveHeader from './components/website/RhiveHeader';
 import { pageComponentMap } from './pageRegistry';
 import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
+import HunniChatWidget from './components/website/HunniChatWidget';
 import { DevNavigator } from './components/DevNavigator';
+import { GlobalCustomerLookupModal } from './components/GlobalCustomerLookupModal';
+import { GlobalWeatherModal } from './components/GlobalWeatherModal';
 import { cn } from './lib/utils';
 import { session } from './lib/session';
 
 const AppContentAuthenticated: React.FC = () => {
-    const { activePageId, setActivePageId } = useNavigation();
+    const { activePageId, setActivePageId, showEditorMenu } = useNavigation();
     const { currentUser } = useMockDB();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -49,7 +53,34 @@ const AppContentAuthenticated: React.FC = () => {
         const params = new URLSearchParams(window.location.search);
         const pageCode = params.get('page');
         if (pageCode) {
-            setActivePageId(pageCode);
+            // If logged in and trying to go to login page P-06, redirect to dashboard directly
+            if (currentUser && pageCode === 'P-06') {
+                let target = 'E-01';
+                switch (currentUser.role) {
+                    case 'Customer': target = 'C-01'; break;
+                    case 'Contractor': target = 'CO-01'; break;
+                    case 'Supplier': target = 'S-01'; break;
+                }
+                setActivePageId(target);
+                // Clean up query param immediately
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.delete('page');
+                const newSearch = newParams.toString();
+                const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+                window.history.replaceState({}, '', newUrl);
+                return;
+            }
+
+            if (pageCode !== activePageId) {
+                setActivePageId(pageCode);
+            } else {
+                // Only clean up the page query param once activePageId matches it
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.delete('page');
+                const newSearch = newParams.toString();
+                const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+                window.history.replaceState({}, '', newUrl);
+            }
         }
 
         const handleCustomNav = (e: any) => {
@@ -57,20 +88,10 @@ const AppContentAuthenticated: React.FC = () => {
         };
         window.addEventListener('nav-page', handleCustomNav);
         return () => window.removeEventListener('nav-page', handleCustomNav);
-    }, []); // Run only on mount
+    }, [activePageId, setActivePageId, currentUser]);
 
     useEffect(() => {
-        if (activePageId) {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('page') !== activePageId) {
-                const newUrl = `${window.location.pathname}?page=${activePageId}`;
-                window.history.pushState({ path: newUrl }, '', newUrl);
-            }
-        }
-    }, [activePageId]);
-
-    useEffect(() => {
-        if (currentUser && !activePageId) {
+        if (currentUser && (!activePageId || activePageId === 'P-06')) {
             switch (currentUser.role) {
                 case 'Super Admin': setActivePageId('SA-01'); break;
                 case 'Admin': setActivePageId('E-01'); break; // Unified entry point
@@ -112,6 +133,9 @@ const AppContentAuthenticated: React.FC = () => {
                 </main>
             </div>
             <FloatingEstimator />
+            <HunniChatWidget />
+            <GlobalCustomerLookupModal />
+            <GlobalWeatherModal />
             {window.location.hostname === 'localhost' && <DevNavigator />}
         </div>
     );
@@ -182,9 +206,11 @@ const LoginBridge: React.FC = () => {
     }, [activePageId, currentUser]);
 
     if (!currentUser) {
-        // If a public page is active (except P-06 which is LoginPage itself), render that page inside the public layout!
-        const isPublicPage = (activePageId || '').startsWith('P-') && activePageId !== 'P-06' && activePageId !== '';
-        const CurrentPublicPage = isPublicPage ? pageComponentMap[activePageId] : null;
+        const isLoginPage = activePageId === 'P-06';
+        const hasOwnHeader = activePageId === 'P-00' || activePageId === 'P-00a' || activePageId === 'P-00b' || !activePageId;
+        const isPagePublic = activePageId && activePageId.startsWith('P-');
+        const targetPageId = isPagePublic ? activePageId : 'P-00';
+        const CurrentPage = pageComponentMap[targetPageId] || pageComponentMap['P-00'];
 
         if (isPublicPage && CurrentPublicPage) {
             return (
@@ -221,6 +247,10 @@ const LoginBridge: React.FC = () => {
                     <LoginPage onLogin={login} />
                 </main>
                 <FloatingEstimator />
+                <HunniChatWidget />
+                <GlobalCustomerLookupModal />
+                <GlobalWeatherModal />
+                {window.location.hostname === 'localhost' && <DevNavigator />}
             </div>
         );
     }

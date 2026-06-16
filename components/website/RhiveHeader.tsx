@@ -1,28 +1,36 @@
-
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Sun, Moon, LogOut } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sun, Moon, LogOut, Menu, X, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMockDB } from '../../contexts/MockDatabaseContext';
+import PlexusShape from '../PlexusShape';
+
+
+
 
 const RhiveHeader: React.FC = () => {
     const { setActivePageId, activePageId, lastPortalPageId } = useNavigation();
     const { setTheme, theme } = useTheme();
-    const { logout, currentUser } = useMockDB();
+    const { logout, currentUser, login } = useMockDB();
     const isDark = theme === 'dark';
+
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+    const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+
 
     const handleExit = () => {
         if (lastPortalPageId) {
             setActivePageId(lastPortalPageId);
         } else if (currentUser) {
-            // Fallback dashboard based on role
             switch (currentUser.role) {
                 case 'Employee': setActivePageId('E-01'); break;
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
                 case 'Supplier': setActivePageId('S-01'); break;
+                case 'Admin': setActivePageId('E-01'); break;
+                case 'Super Admin': setActivePageId('E-01'); break;
                 default: logout();
             }
         } else {
@@ -54,7 +62,6 @@ const RhiveHeader: React.FC = () => {
           ];
 
     const scrollToSection = (id: string) => {
-        // Dispatch virtual navigation events for sub-pages in OS recreation mode
         if (id === 'hero' || id === 'about') {
             window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'about' } }));
             return;
@@ -251,6 +258,9 @@ const RhiveHeader: React.FC = () => {
                 </motion.a>
             </div>
         </header>
+
+
+        </>
     );
 };
 
