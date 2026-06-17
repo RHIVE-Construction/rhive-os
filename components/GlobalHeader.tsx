@@ -1,13 +1,93 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage, Locale } from '../contexts/LanguageContext';
 import { cn } from '../lib/utils';
-import { RhiveLogo, SunIcon2 as SunIcon, MoonIcon2 as MoonIcon, GlobeAlt as Globe, MagnifyingGlassIcon } from './icons';
+import { RhiveLogo, SunIcon2 as SunIcon, MoonIcon2 as MoonIcon, GlobeAlt as Globe, MagnifyingGlassIcon, BellIcon } from './icons';
 import WeatherForecastStrip from './WeatherForecastStrip';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { User, Sparkles as SparklesIcon } from 'lucide-react';
 import AIChatPanel from './AIChatPanel';
+
+// ─── Notification Bell Widget ────────────────────────────────────────────────
+const NotificationBell: React.FC = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [notifications, setNotifications] = useState([
+        { id: '1', title: 'Emergency Tarping Required', message: 'Tarping request detected for property 4505 Industrial Parkway.', time: '5m ago', read: false },
+        { id: '2', title: 'Address Collision Detected', message: 'Linda Hansen and Tyler Hansen duplicated record merge needed.', time: '20m ago', read: false },
+        { id: '3', title: 'Boise Lead Routed', message: 'Lead from Boise region automatically flagged and held.', time: '1h ago', read: true }
+    ]);
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+    return (
+        <div className="relative">
+            <button
+                id="btn-notification-bell"
+                onClick={() => setIsOpen(o => !o)}
+                className={cn(
+                    "p-1.5 border rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none relative",
+                    isOpen
+                        ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10 shadow-[0_0_8px_rgba(236,2,139,0.3)]"
+                        : "bg-black/40 border-gray-700/60 hover:border-[#ec028b]/50"
+                )}
+                title="System Notifications"
+            >
+                <BellIcon className="w-4 h-4" />
+                {unreadCount > 0 && (
+                    <span
+                        id="notification-badge"
+                        className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rhive-pink text-white font-mono text-[8px] font-black flex items-center justify-center rounded-full border border-black shadow-[0_0_5px_rgba(236,2,139,0.8)] animate-pulse"
+                    >
+                        {unreadCount}
+                    </span>
+                )}
+            </button>
+
+            {isOpen && (
+                <>
+                    <div className="fixed inset-0 z-[199]" onClick={() => setIsOpen(false)} />
+                    <div
+                        id="notification-dropdown"
+                        className="absolute right-0 mt-2.5 w-80 bg-black/95 border border-gray-800 shadow-2xl p-4 space-y-3 z-[200] animate-fade-in backdrop-blur-xl"
+                        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                    >
+                        <div className="flex justify-between items-center border-b border-gray-800 pb-2">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">System Alerts</span>
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={markAllRead}
+                                    className="text-[9px] font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-colors cursor-pointer"
+                                >
+                                    Mark all read
+                                </button>
+                            )}
+                        </div>
+                        <div className="space-y-2.5 max-h-64 overflow-y-auto">
+                            {notifications.map(n => (
+                                <div
+                                    key={n.id}
+                                    className={cn(
+                                        "p-2.5 border transition-colors flex flex-col gap-1",
+                                        n.read ? "bg-black/20 border-gray-800 text-gray-400" : "bg-rhive-pink/5 border-[#ec028b]/20 text-white"
+                                    )}
+                                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black uppercase tracking-wider truncate mr-2">{n.title}</span>
+                                        <span className="text-[8px] font-mono text-gray-500 whitespace-nowrap">{n.time}</span>
+                                    </div>
+                                    <p className="text-[10px] leading-relaxed text-gray-400 font-medium">{n.message}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
 
 export const GlobalHeader: React.FC = () => {
     const { theme, setTheme } = useTheme();
@@ -104,19 +184,22 @@ export const GlobalHeader: React.FC = () => {
                         <MagnifyingGlassIcon className="w-4 h-4" />
                     </button>
 
-                    {/* AI Assistant Button — hidden on login page and when unauthenticated */}
+                    {/* AI Assistant Button + Notification Bell — hidden on login page and when unauthenticated */}
                     {activePageId !== 'P-06' && currentUser && (
-                        <button
-                            onClick={() => setIsAIChatOpen(o => !o)}
-                            id="header-ai-assistant-btn"
-                            className={cn(
-                                "p-1.5 border hover:border-[#ec028b]/50 rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none",
-                                isAIChatOpen ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10 shadow-[0_0_8px_rgba(236,2,139,0.3)]" : "bg-black/40 border-gray-700/60"
-                            )}
-                            title="AI Assistant — ARIA"
-                        >
-                            <SparklesIcon className="w-4 h-4" />
-                        </button>
+                        <>
+                            <button
+                                onClick={() => setIsAIChatOpen(o => !o)}
+                                id="header-ai-assistant-btn"
+                                className={cn(
+                                    "p-1.5 border hover:border-[#ec028b]/50 rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none",
+                                    isAIChatOpen ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10 shadow-[0_0_8px_rgba(236,2,139,0.3)]" : "bg-black/40 border-gray-700/60"
+                                )}
+                                title="AI Assistant — ARIA"
+                            >
+                                <SparklesIcon className="w-4 h-4" />
+                            </button>
+                            <NotificationBell />
+                        </>
                     )}
                 </div>
 
