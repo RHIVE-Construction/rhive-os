@@ -18,7 +18,6 @@ import {
     ArrowRightIcon,
     ChartPieIcon,
     ShieldCheckIcon,
-    BellIcon,
 } from '../components/icons';
 import { PAGE_GROUPS } from '../constants';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -27,82 +26,6 @@ import { projectService, dashboardService, firestoreService } from '../lib/fireb
 import WeatherForecastStrip from '../components/WeatherForecastStrip';
 import { getStagePageId, cn } from '../lib/utils';
 
-// Stateful Notification Bell Widget
-const NotificationBell: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [notifications, setNotifications] = useState([
-        { id: '1', title: 'Emergency Tarping Required', message: 'Tarping request detected for property 4505 Industrial Parkway.', time: '5m ago', read: false },
-        { id: '2', title: 'Address Collision Detected', message: 'Linda Hansen and Tyler Hansen duplicated record merge needed.', time: '20m ago', read: false },
-        { id: '3', title: 'Boise Lead Routed', message: 'Lead from Boise region automatically flagged and held.', time: '1h ago', read: true }
-    ]);
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    const toggleOpen = () => setIsOpen(!isOpen);
-    const markAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    };
-
-    return (
-        <div className="relative">
-            <button 
-                id="btn-notification-bell"
-                onClick={toggleOpen} 
-                className="relative p-2 text-gray-400 hover:text-white bg-black/40 border border-gray-850 hover:border-rhive-pink transition-all flex items-center justify-center rounded-xl shadow-[0_0_10px_rgba(236,2,139,0.05)] hover:shadow-pink-glow-sm cursor-pointer outline-none"
-            >
-                <BellIcon className="w-5 h-5" />
-                {unreadCount > 0 && (
-                    <span 
-                        id="notification-badge"
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-rhive-pink text-white font-mono text-[9px] font-black flex items-center justify-center rounded-full border border-black shadow-[0_0_5px_rgba(236,2,139,0.8)] animate-pulse"
-                    >
-                        {unreadCount}
-                    </span>
-                )}
-            </button>
-
-            {isOpen && (
-                <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                    <div 
-                        id="notification-dropdown"
-                        className="absolute right-0 mt-2.5 w-80 bg-[#050505] border border-gray-800 shadow-2xl p-4 space-y-3 z-50 animate-fade-in"
-                        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
-                    >
-                        <div className="flex justify-between items-center border-b border-gray-850 pb-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">System Alerts</span>
-                            {unreadCount > 0 && (
-                                <button 
-                                    onClick={markAllRead} 
-                                    className="text-[9px] font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-colors cursor-pointer"
-                                >
-                                    Mark all read
-                                </button>
-                            )}
-                        </div>
-                        <div className="space-y-2.5 max-h-64 overflow-y-auto">
-                            {notifications.map(n => (
-                                <div 
-                                    key={n.id} 
-                                    className={cn(
-                                        "p-2.5 border transition-colors flex flex-col gap-1",
-                                        n.read ? "bg-black/20 border-gray-905 text-gray-400" : "bg-rhive-pink/5 border-[#ec028b]/20 text-white"
-                                    )}
-                                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
-                                >
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-black uppercase tracking-wider truncate mr-2">{n.title}</span>
-                                        <span className="text-[8px] font-mono text-gray-500 whitespace-nowrap">{n.time}</span>
-                                    </div>
-                                    <p className="text-[10px] leading-relaxed text-gray-400 font-medium">{n.message}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </>
-            )}
-        </div>
-    );
-};
 
 // Task Item Component
 const TaskItem = ({ label, initialStatus, badge }: { label: string; initialStatus: boolean; badge?: string }) => {
@@ -769,7 +692,6 @@ const EmployeeHomepage: React.FC = () => {
         <PageContainer
             title={page?.name || 'Employee Homepage'}
             description="Welcome back. Here is your daily command center."
-            headerAction={<NotificationBell />}
         >
             {/* --- STATS OVERVIEW --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
