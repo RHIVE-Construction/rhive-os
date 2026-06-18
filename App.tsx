@@ -129,7 +129,7 @@ const AppContentAuthenticated: React.FC = () => {
                     !isPublicRoute && "border-l",
                     isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-black/5"
                 )}>
-                    <CurrentPage />
+                    <CurrentPage key={activePageId} />
                 </main>
             </div>
             <FloatingEstimator />
@@ -147,6 +147,19 @@ const LoginBridge: React.FC = () => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const mainRef = React.useRef<HTMLElement>(null);
+    const [justSignedOut, setJustSignedOut] = React.useState(false);
+    const prevUserRef = React.useRef(currentUser);
+
+    // Detect transition from logged-in → logged-out (i.e., actual logout)
+    useEffect(() => {
+        if (prevUserRef.current && !currentUser) {
+            setJustSignedOut(true);
+        }
+        if (!prevUserRef.current && currentUser) {
+            setJustSignedOut(false);
+        }
+        prevUserRef.current = currentUser;
+    }, [currentUser]);
 
     // Parse URL parameter on mount/popstate so direct links work
     useEffect(() => {
@@ -172,11 +185,11 @@ const LoginBridge: React.FC = () => {
         };
     }, [setActivePageId]);
 
-    // Force non-public pages back to login/empty if logged out
+    // Force non-public pages back to P-06 (login) if logged out
     useEffect(() => {
         if (!currentUser) {
             if (activePageId && !(activePageId || '').startsWith('P-')) {
-                setActivePageId('P-00-V3');
+                setActivePageId('P-06');
             }
         }
     }, [currentUser, activePageId, setActivePageId]);
@@ -212,7 +225,32 @@ const LoginBridge: React.FC = () => {
         const targetPageId = isPagePublic ? activePageId : 'P-00';
         const CurrentPage = pageComponentMap[targetPageId] || pageComponentMap['P-00'];
 
-        if (isPublicPage && CurrentPublicPage) {
+        if (isPagePublic && CurrentPage) {
+            // P-06 is the login page — must always be rendered with onLogin wired up
+            if (activePageId === 'P-06') {
+                return (
+                    <div className={cn(
+                        "fixed inset-0 w-screen h-screen overflow-hidden transition-colors duration-500",
+                        isDark ? "bg-black text-white" : "bg-[#F8F9FA] text-black"
+                    )}>
+                        <CircuitryBackground
+                            backgroundColor={isDark ? "#000000" : "#F8F9FA"}
+                            dotColor={isDark ? "#ec028b" : "#ec028b"}
+                            lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
+                        />
+                        <GlobalHeader />
+                        <main ref={mainRef} className="relative z-10 w-full h-full pt-12 flex items-center justify-center overflow-auto px-4">
+                            <LoginPage onLogin={login} justSignedOut={justSignedOut} />
+                        </main>
+                        <FloatingEstimator />
+                        <HunniChatWidget />
+                        <GlobalCustomerLookupModal />
+                        <GlobalWeatherModal />
+                        {window.location.hostname === 'localhost' && <DevNavigator />}
+                    </div>
+                );
+            }
+
             return (
                 <div className={cn(
                     "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
@@ -224,7 +262,7 @@ const LoginBridge: React.FC = () => {
                         lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
                     />
                     <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto relative">
-                        <CurrentPublicPage />
+                        <CurrentPage />
                     </main>
                     <FloatingEstimator />
                     {window.location.hostname === 'localhost' && <DevNavigator />}
@@ -244,7 +282,7 @@ const LoginBridge: React.FC = () => {
                 />
                 <GlobalHeader />
                 <main className="relative z-10 w-full h-full pt-12 flex items-center justify-center overflow-auto px-4">
-                    <LoginPage onLogin={login} />
+                    <LoginPage onLogin={login} justSignedOut={justSignedOut} />
                 </main>
                 <FloatingEstimator />
                 <HunniChatWidget />

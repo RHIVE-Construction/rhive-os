@@ -264,39 +264,16 @@
       window.googleMapsApiLoaded = true;
       window.dispatchEvent(new Event('google-maps-api-ready'));
     }
-    // Key is injected by Vite at build time from VITE_GOOGLE_MAPS_API_KEY in .env
-    // It is NOT hardcoded here — never commit your .env file.
     (function () {
-      var key = typeof __VITE_GOOGLE_MAPS_API_KEY__ !== 'undefined'
-        ? __VITE_GOOGLE_MAPS_API_KEY__
-        : (typeof process !== 'undefined' && process.env && process.env.VITE_GOOGLE_MAPS_API_KEY)
-          ? process.env.VITE_GOOGLE_MAPS_API_KEY
-          : '';
-
-      function loadMapsScript(apiKey) {
-        if (!apiKey) {
-          console.warn('[RHIVE] VITE_GOOGLE_MAPS_API_KEY is not set — Maps features disabled.');
-          return;
-        }
-        var s = document.createElement('script');
-        s.async = true;
-        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady';
-        document.head.appendChild(s);
+      var apiKey = '%VITE_GOOGLE_MAPS_API_KEY%';
+      if (!apiKey || apiKey === '%VITE_GOOGLE_MAPS_API_KEY%') {
+        console.warn('[RHIVE] VITE_GOOGLE_MAPS_API_KEY is not set — Maps features disabled.');
+        return;
       }
-
-      if (key) {
-        loadMapsScript(key);
-      } else {
-        fetch('/api/config')
-          .then(function (res) { return res.json(); })
-          .then(function (data) {
-            loadMapsScript(data.mapsApiKey || 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA');
-          })
-          .catch(function (err) {
-            console.error('[RHIVE] Failed to fetch maps key from config API:', err);
-            loadMapsScript('AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA');
-          });
-      }
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady';
+      document.head.appendChild(s);
     })();
   </script>
   <link rel="stylesheet" href="/index.css">

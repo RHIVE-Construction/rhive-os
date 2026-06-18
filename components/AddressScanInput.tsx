@@ -11,13 +11,19 @@ interface AddressScanInputProps {
     placeholder?: string;
     buttonText?: string;
     themeColor?: 'pink' | 'blue' | 'gold';
+    value?: string;
+    onChange?: (val: string) => void;
+    onScan?: (val: string) => void;
 }
 
 export const AddressScanInput = ({
     id,
-    placeholder = "ENTER PROJECT ADDRESS",
+    placeholder: placeholderProp = "ENTER PROJECT ADDRESS",
     buttonText = "Scan My Roof",
-    themeColor = "pink"
+    themeColor = "pink",
+    value,
+    onChange,
+    onScan,
 }: AddressScanInputProps) => {
     const chamferSize = "16px";
     const clipPathValue = `polygon(
@@ -29,26 +35,29 @@ export const AddressScanInput = ({
         0 ${chamferSize}
     )`;
 
-    const fullText = "ENTER PROJECT ADDRESS";
-    const [placeholder, setPlaceholder] = useState("");
+    const fullText = placeholderProp;
+    const [animatedPlaceholder, setAnimatedPlaceholder] = useState("");
     const [index, setIndex] = useState(0);
     const [localVal, setLocalVal] = useState("");
+    const [selectedPlace, setSelectedPlace] = useState<any>(null);
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
 
     useEffect(() => {
         if (index < fullText.length) {
             const timeout = setTimeout(() => {
-                setPlaceholder(prev => prev + fullText[index]);
+                setAnimatedPlaceholder(prev => prev + fullText[index]);
                 setIndex(index + 1);
             }, 50);
             return () => clearTimeout(timeout);
         } else {
             const resetTimeout = setTimeout(() => {
-                setPlaceholder("");
+                setAnimatedPlaceholder("");
                 setIndex(0);
             }, 5000);
             return () => clearTimeout(resetTimeout);
         }
-    }, [index]);
+    }, [index, fullText]);
 
     const isControlled = value !== undefined;
     const currentVal = isControlled ? value : localVal;
@@ -167,7 +176,7 @@ export const AddressScanInput = ({
                     <input
                         ref={inputRef}
                         type="text"
-                        placeholder={placeholder}
+                        placeholder={animatedPlaceholder}
                         className={`bg-transparent text-white w-full h-full outline-none font-black uppercase text-base tracking-[0.2em] text-left ${inputPlaceholderClass}`}
                         onChange={() => {
                             // If they start typing again after selecting, clear the selected place so they have to re-select
@@ -192,20 +201,6 @@ export const AddressScanInput = ({
                     )}
                     <span className="relative z-10">{buttonText}</span>
                 </button>
-            </div>
-
-            {/* Premium Button Section */}
-            <button
-                onClick={handleScanClick}
-                className="relative h-full px-8 md:px-12 flex items-center justify-center gap-2 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white font-black uppercase text-[13px] tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(236,2,139,0.2)] shrink-0 z-20"
-                style={{
-                    clipPath: `polygon(0 0, 100% 0, 100% calc(100% - ${chamferSize}), calc(100% - ${chamferSize}) 100%, 0 100%)`
-                }}
-            >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                <Zap size={18} fill="currentColor" className="text-white" />
-                <span className="relative z-10">Scan My Roof</span>
-            </button>
         </div>
     );
 };

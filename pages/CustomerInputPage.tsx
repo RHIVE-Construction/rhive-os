@@ -2166,7 +2166,7 @@ const CustomerInputPage: React.FC = () => {
         alert("Navigating to Property Profile (Simulated)");
     };
 
-    const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+    const MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
 
     const updateLayerCount = (count: number) => {
         // Simplified: Just store the count, reset materials

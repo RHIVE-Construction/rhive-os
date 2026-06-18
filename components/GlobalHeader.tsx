@@ -290,6 +290,7 @@ export const GlobalHeader: React.FC = () => {
                                                 onClick={() => {
                                                     setIsProfileOpen(false);
                                                     logout();
+                                                    setActivePageId('P-06');
                                                 }}
                                                 className="w-full px-3 py-1.5 bg-red-950/20 hover:bg-red-900/35 border border-red-900/40 hover:border-red-500/50 rounded-lg text-[9px] font-extrabold uppercase tracking-widest text-red-400 text-left transition-all"
                                             >

@@ -52,6 +52,7 @@ export default defineConfig(({ mode }) => {
       configApiPlugin(env.VITE_GOOGLE_MAPS_API_KEY || ''),
     ],
     define: {
+      '__VITE_GOOGLE_MAPS_API_KEY__': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY || ''),
       'process.env.VITE_GOOGLE_WEATHER_API_KEY': JSON.stringify(env.VITE_GOOGLE_WEATHER_API_KEY),
     },
     resolve: {

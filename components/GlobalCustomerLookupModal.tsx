@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
+import { getMapsApiKey } from '../lib/mapsConfig';
 import { cn } from '../lib/utils';
 
 // Local inline search icon
@@ -91,6 +92,9 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     const [shouldRender, setShouldRender] = useState(false);
     const [isAnimatingIn, setIsAnimatingIn] = useState(false);
     const [confirmedAddress, setConfirmedAddress] = useState<{ lat: number; lng: number; label: string } | null>(null);
+    const [mapsApiKey, setMapsApiKey] = useState('');
+
+    useEffect(() => { getMapsApiKey().then(setMapsApiKey); }, []);
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -563,7 +567,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                                 {/* Satellite thumbnail */}
                                 <div className="relative shrink-0 w-28 h-20 overflow-hidden">
                                     <img
-                                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${confirmedAddress.lat},${confirmedAddress.lng}&zoom=18&size=224x160&maptype=satellite&markers=color:0xec028b%7C${confirmedAddress.lat},${confirmedAddress.lng}&key=AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA`}
+                                        src={mapsApiKey ? `https://maps.googleapis.com/maps/api/staticmap?center=${confirmedAddress.lat},${confirmedAddress.lng}&zoom=18&size=224x160&maptype=satellite&markers=color:0xec028b%7C${confirmedAddress.lat},${confirmedAddress.lng}&key=${mapsApiKey}` : ''}
                                         alt="Map preview"
                                         className="w-full h-full object-cover opacity-90"
                                     />
@@ -597,6 +601,8 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                                                 setIsOpen(false);
                                                 sessionStorage.setItem('globalSearchQuery', searchQuery);
                                                 sessionStorage.setItem('globalSearchQueryType', 'Address');
+                                                // globalSearchAddressData is already set by the place_changed listener
+                                                // — just ensure it's present so CustomerInputPage opens the map modal
                                                 setActivePageId('E-02a');
                                             }}
                                             className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors"

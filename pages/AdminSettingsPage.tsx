@@ -15,7 +15,7 @@ import {
     KeyIcon
 } from '../components/icons';
 
-const PricingRow = ({ name, unit, cost, onEdit }: { name: string, unit: string, cost: string, onEdit: () => void }) => (
+const PricingRow = ({ name, unit, cost, onEdit }: { key?: React.Key, name: string, unit: string, cost: string, onEdit: () => void }) => (
     <div className="grid grid-cols-3 items-center p-3 bg-gray-900/40 border border-gray-800/40 rounded-xl hover:bg-gray-800/30 transition-all">
         <span className="text-gray-300 font-medium text-sm">{name}</span>
         <span className="text-gray-400 text-xs font-mono">{unit}</span>

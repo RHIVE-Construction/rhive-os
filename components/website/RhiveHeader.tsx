@@ -31,10 +31,10 @@ const RhiveHeader: React.FC = () => {
                 case 'Supplier': setActivePageId('S-01'); break;
                 case 'Admin': setActivePageId('E-01'); break;
                 case 'Super Admin': setActivePageId('E-01'); break;
-                default: logout();
+                default: setActivePageId('P-06'); break;
             }
         } else {
-            logout();
+            setActivePageId('P-06');
         }
     };
 
@@ -158,16 +158,18 @@ const RhiveHeader: React.FC = () => {
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-[1.5px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent drop-shadow-[0_0_8px_rgba(236,2,139,0.9)]" />
             </div>
 
-            {/* EXIT BUTTON (Far Left) */}
-            <div className="absolute left-10 flex items-center gap-6 z-10">
-                <button
-                    onClick={handleExit}
-                    className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300"
-                >
-                    <LogOut size={13} className="text-rhive-pink shrink-0" />
-                    <span>Exit to Portal</span>
-                </button>
-            </div>
+            {/* EXIT BUTTON (Far Left) — only shown when logged in */}
+            {currentUser && (
+                <div className="absolute left-10 flex items-center gap-6 z-10">
+                    <button
+                        onClick={handleExit}
+                        className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300"
+                    >
+                        <LogOut size={13} className="text-rhive-pink shrink-0" />
+                        <span>Exit to Portal</span>
+                    </button>
+                </div>
+            )}
 
             <nav className="flex-1 flex justify-end items-center gap-8 z-10 ml-[180px]">
                 {navLinks.slice(0, 3).map((link) => (
@@ -256,11 +258,23 @@ const RhiveHeader: React.FC = () => {
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
                 </motion.a>
+
+                <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleExit}
+                    className="p-2.5 rounded-full border border-white/10 hover:border-rhive-pink/50 transition-all text-white/70 hover:text-rhive-pink bg-[#000000]/60"
+                    title={currentUser ? `Portal — ${currentUser.name}` : 'Sign In to Portal'}
+                >
+                    {currentUser?.avatarUrl ? (
+                        <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-5 h-5 rounded-full object-cover" />
+                    ) : (
+                        <User size={20} />
+                    )}
+                </motion.button>
             </div>
+
         </header>
-
-
-        </>
     );
 };
 

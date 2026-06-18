@@ -24,6 +24,7 @@ import PlexusShape from '../components/PlexusShape';
 
 interface LoginPageProps {
     onLogin: (role: UserType, password?: string, email?: string) => Promise<any>;
+    justSignedOut?: boolean;
 }
 
 // ─── Floating label input with 8px Chamfer border ───
@@ -115,17 +116,25 @@ const QuickBypassPanel: React.FC<{ onLogin: (role: any, password?: string, email
     );
 };
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, justSignedOut }) => {
     const { theme } = useTheme();
     const { t } = useLanguage();
     const { setActivePageId } = useNavigation();
     const isDark = theme === 'dark';
 
+    const [signedOutBanner, setSignedOutBanner] = React.useState(!!justSignedOut);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Auto-dismiss the signed-out banner after 5s
+    React.useEffect(() => {
+        if (!signedOutBanner) return;
+        const t = setTimeout(() => setSignedOutBanner(false), 5000);
+        return () => clearTimeout(t);
+    }, [signedOutBanner]);
 
     const showError = (msg: string) => {
         setError(msg);
@@ -233,6 +242,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                 <div className="h-[1px] w-10 bg-gradient-to-l from-transparent to-gray-700" />
                             </div>
                         </div>
+
+                        {/* ── SIGNED OUT BANNER ── */}
+                        {signedOutBanner && (
+                            <div className="relative z-20 mb-6 flex items-center gap-3 px-4 py-3 bg-green-950/50 border border-green-600/40 animate-fade-in" style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}>
+                                <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_#4ade80] shrink-0" />
+                                <div className="flex-1">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-green-400">Session Terminated</p>
+                                    <p className="text-[9px] text-green-600 font-mono mt-0.5">You have been securely signed out of RHIVE QOS.</p>
+                                </div>
+                                <button onClick={() => setSignedOutBanner(false)} className="text-green-700 hover:text-green-400 transition-colors text-xs font-black">✕</button>
+                            </div>
+                        )}
 
                         {/* ── CREDENTIALS FORM ── */}
                         <div className="relative z-20 animate-slide-up max-w-sm mx-auto">
