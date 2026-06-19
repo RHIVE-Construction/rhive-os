@@ -4,7 +4,8 @@ import { Button } from './ui/button';
 import { XIcon, Check, SatelliteIcon, CameraIcon, PlusIcon, TrashIcon } from './icons';
 import { CircuitryBackground } from './CircuitryBackground';
 import { cn } from '../lib/utils';
-import { createTaggedBuilding } from '../lib/mockData';
+import { generateBuildingFromLatLng } from '../lib/mockData';
+import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 
 interface AddressConfirmationProps {
   place: Place;
@@ -39,38 +40,13 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
   const streetViewRef = useRef<HTMLDivElement>(null);
   const panoramaRef = useRef<any>(null);
   const [isStreetViewAvailable, setIsStreetViewAvailable] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newAreaSq, setNewAreaSq] = useState('5.00');
-  const [newPitch, setNewPitch] = useState('4');
 
-  const handleAddBuildingSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!buildingData) return;
-
-    const area = parseFloat(newAreaSq);
-    const pitch = parseInt(newPitch, 10);
-    if (isNaN(area) || area <= 0 || isNaN(pitch) || pitch < 0) return;
-
-    const nextIndex = buildingData.buildings.length + 1;
-    const newBuilding = createTaggedBuilding(nextIndex, area, pitch);
-
-    setBuildingData(prev => {
-        if (!prev) return prev;
-        return {
-            ...prev,
-            buildings: [...prev.buildings, newBuilding]
-        };
-    });
-
-    onSurveyChange(prev => ({
-        ...prev,
-        includedBuildingIds: [...prev.includedBuildingIds, newBuilding.id]
-    }));
-
-    setShowAddForm(false);
-    setNewAreaSq('5.00');
-    setNewPitch('4');
-  };
+  // Interactive Maps and Pin Drop states
+  const isApiReady = useGoogleMapsApi();
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const [isAddingPin, setIsAddingPin] = useState(false);
 
   const handleDeleteBuilding = (buildingId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -100,7 +76,114 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
       });
   };
 
+  // 1. Initialize Interactive Satellite Google Map
+  useEffect(() => {
+    if (!isApiReady || !mapRef.current || map) return;
 
+    const mapInstance = new window.google.maps.Map(mapRef.current, {
+      center: { lat: place.latitude, lng: place.longitude },
+      zoom: 20,
+      mapTypeId: 'satellite',
+      disableDefaultUI: true,
+      zoomControl: true,
+      tilt: 0,
+    });
+
+    setMap(mapInstance);
+  }, [isApiReady, place.latitude, place.longitude, map]);
+
+  // 2. Set Map Cursor Style in Pin Dropping Mode
+  useEffect(() => {
+    if (!map) return;
+    map.setOptions({
+      draggableCursor: isAddingPin ? 'crosshair' : null,
+      draggingCursor: isAddingPin ? 'crosshair' : null,
+    });
+  }, [map, isAddingPin]);
+
+  // 3. Map Click Handler for Tagging Buildings
+  useEffect(() => {
+    if (!map) return;
+
+    const clickListener = window.google.maps.event.addListener(map, 'click', (e: any) => {
+      if (!isAddingPin) return;
+
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+
+      setBuildingData(prev => {
+        if (!prev) return prev;
+        const nextIndex = prev.buildings.length + 1;
+        const newBuilding = generateBuildingFromLatLng(lat, lng, nextIndex);
+        
+        onSurveyChange(survey => {
+          if (!survey.includedBuildingIds.includes(newBuilding.id)) {
+            return {
+              ...survey,
+              includedBuildingIds: [...survey.includedBuildingIds, newBuilding.id]
+            };
+          }
+          return survey;
+        });
+
+        return {
+          ...prev,
+          buildings: [...prev.buildings, newBuilding]
+        };
+      });
+
+      setIsAddingPin(false);
+    });
+
+    return () => {
+      window.google.maps.event.removeListener(clickListener);
+    };
+  }, [map, isAddingPin, setBuildingData, onSurveyChange]);
+
+  // 4. Render Markers for All Buildings (Included/Excluded styled accordingly)
+  useEffect(() => {
+    if (!map || !buildingData) return;
+
+    // Clear old markers
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+
+    // Redraw markers
+    buildingData.buildings.forEach((building, idx) => {
+      const lat = building.lat ?? place.latitude;
+      const lng = building.lng ?? place.longitude;
+      const isIncluded = surveyState.includedBuildingIds.includes(building.id);
+
+      const marker = new window.google.maps.Marker({
+        position: { lat, lng },
+        map: map,
+        label: {
+          text: (idx + 1).toString(),
+          color: '#ffffff',
+          fontWeight: 'bold',
+          fontSize: '14px'
+        },
+        icon: {
+          path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z',
+          fillColor: isIncluded ? '#ec028b' : '#4b5563', // pink if included, gray if excluded
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 1.5,
+          scale: 1.2,
+          labelOrigin: new window.google.maps.Point(0, -30)
+        },
+        title: `BLD ${idx + 1}`
+      });
+
+      marker.addListener('click', () => {
+        handleBuildingToggle(building.id);
+      });
+
+      markersRef.current.push(marker);
+    });
+  }, [map, buildingData, surveyState.includedBuildingIds, place.latitude, place.longitude]);
+
+  // 5. Initialize Street View Panorama
   useEffect(() => {
     const initPanorama = () => {
       if (streetViewRef.current && window.google) {
@@ -155,11 +238,21 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
         
         <main className="relative z-10 w-full max-w-4xl">
             <div className="bg-black/70 backdrop-blur-md rounded-xl border border-gray-800 shadow-2xl shadow-pink-500/10 overflow-hidden">
-                {/* Image Part */}
-                <div className="relative w-full aspect-[16/10]">
-                    {view === 'satellite' && (
-                      <img src={satelliteViewUrl} alt="Satellite view of property" className="absolute inset-0 w-full h-full object-cover" />
+                {/* Image/Map Part */}
+                <div className="relative w-full aspect-[16/10] bg-gray-950">
+                    {/* Interactive Google Map for Satellite View */}
+                    <div 
+                        ref={mapRef} 
+                        className="absolute inset-0 w-full h-full"
+                        style={{ display: view === 'satellite' ? 'block' : 'none' }}
+                    />
+                    
+                    {/* Fallback image if map is loading or not ready */}
+                    {(!isApiReady || !map) && view === 'satellite' && (
+                        <img src={satelliteViewUrl} alt="Satellite view of property" className="absolute inset-0 w-full h-full object-cover animate-pulse" />
                     )}
+
+                    {/* Street View or Fallback street view image */}
                     {view === 'street' && !isStreetViewAvailable && (
                         <img src={streetViewUrl} alt="Street view of property" className="absolute inset-0 w-full h-full object-cover" />
                     )}
@@ -168,8 +261,25 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                         className="absolute inset-0"
                         style={{ visibility: view === 'street' && isStreetViewAvailable ? 'visible' : 'hidden' }}
                     />
+
+                    {/* Floating Add Pin Banner */}
+                    {isAddingPin && (
+                        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-black/90 border border-pink-500 text-white px-4 py-2 rounded-md shadow-lg flex items-center space-x-3 backdrop-blur-md">
+                            <span className="text-sm font-semibold text-pink-400 font-sans">
+                                Click on the satellite map to place BLD {buildingData ? buildingData.buildings.length + 1 : 2}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => setIsAddingPin(false)}
+                                className="px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-xs text-white font-semibold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
+                    
                     {/* Vignette Effect */}
-                    <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0px 0px 100px 20px rgba(0,0,0,0.7)' }} />
+                    <div className="absolute inset-0 pointer-events-none z-10" style={{ boxShadow: 'inset 0px 0px 100px 20px rgba(0,0,0,0.7)' }} />
                 </div>
             
                 {/* Controls Part */}
@@ -186,7 +296,10 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-lg font-medium text-gray-300">Buildings on Property</h3>
                             <button
-                                onClick={() => setShowAddForm(true)}
+                                onClick={() => {
+                                    setView('satellite');
+                                    setIsAddingPin(true);
+                                }}
                                 className="inline-flex items-center text-sm font-semibold text-pink-400 hover:text-pink-300 transition-colors gap-1 px-3 py-1.5 rounded bg-pink-500/10 border border-pink-500/20 hover:bg-pink-500/20"
                             >
                                 <PlusIcon className="h-4 w-4" />
@@ -230,60 +343,6 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                                 );
                             })}
                         </div>
-
-                        {/* Inline Add Form */}
-                        {showAddForm && (
-                            <form onSubmit={handleAddBuildingSubmit} className="mt-4 p-4 rounded-lg border border-pink-500/30 bg-[#121212]/90 space-y-4 animate-fade-in">
-                                <h4 className="text-base font-bold text-white">Tag New Building (BLD {buildingData ? buildingData.buildings.length + 1 : 1})</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-400 uppercase mb-1">Estimated Area (SQ)</label>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0.1"
-                                            value={newAreaSq}
-                                            onChange={(e) => setNewAreaSq(e.target.value)}
-                                            className="w-full bg-[#1a1a1a] border border-gray-800 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500 font-mono"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-400 uppercase mb-1">Roof Pitch</label>
-                                        <select
-                                            value={newPitch}
-                                            onChange={(e) => setNewPitch(e.target.value)}
-                                            className="w-full bg-[#1a1a1a] border border-gray-800 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500"
-                                        >
-                                            <option value="3">3/12</option>
-                                            <option value="4">4/12</option>
-                                            <option value="5">5/12</option>
-                                            <option value="6">6/12</option>
-                                            <option value="7">7/12</option>
-                                            <option value="8">8/12</option>
-                                            <option value="9">9/12</option>
-                                            <option value="10">10/12</option>
-                                            <option value="12">12/12</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="flex justify-end space-x-2 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAddForm(false)}
-                                        className="px-4 py-2 rounded text-sm font-semibold text-gray-400 hover:text-white transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-4 py-2 rounded text-sm font-bold text-white bg-[#ec028b] hover:bg-pink-700 transition-colors shadow-md shadow-pink-500/20"
-                                    >
-                                        Add Building
-                                    </button>
-                                </div>
-                            </form>
-                        )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-gray-800/80 pt-4">

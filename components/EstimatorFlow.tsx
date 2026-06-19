@@ -133,6 +133,7 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
                     onSurveyChange={setSurveyState}
                     onContinue={handleRoofOptionsContinue}
                     onStartOver={handleStartNew}
+                    onBack={() => setAppState('addressConfirmation')}
                 />
             )
         }

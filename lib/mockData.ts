@@ -119,3 +119,33 @@ export function createTaggedBuilding(index: number, areaSq: number, pitchIn12: n
     facets
   };
 }
+
+export function generateBuildingFromLatLng(lat: number, lng: number, index: number): Building {
+  const random = pseudoRandom(lat, lng);
+  // Simulating an outbuilding/secondary structure size based on coordinates (e.g. 40 to 140 sqm, ~4.3 to 15 SQ)
+  const baseArea = 40 + random * 100;
+  const numFacets = 2 + Math.floor(random * 4); // 2 to 6 facets
+  const facets: RoofFacet[] = [];
+
+  for (let j = 0; j < numFacets; j++) {
+    const facetArea = baseArea / numFacets;
+    const isSteep = random > 0.5;
+    // pitches in degrees: e.g. 4/12 (18.4) to 6/12 (22.6)
+    const pitchDegrees = isSteep ? 22.6 + (j % 2) * 4 : 18.4 + (j % 2) * 4;
+    
+    facets.push({
+      id: `BLD_${index}_f${j}`,
+      areaMeters: facetArea,
+      pitchDegrees: pitchDegrees,
+    });
+  }
+
+  return {
+    id: `BLD_${index}`,
+    totalAreaMeters: baseArea,
+    facets: facets,
+    lat,
+    lng
+  };
+}
+

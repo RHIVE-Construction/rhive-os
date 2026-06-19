@@ -25,6 +25,8 @@ export interface Building {
   id: string;
   facets: RoofFacet[];
   totalAreaMeters: number;
+  lat?: number;
+  lng?: number;
 }
 
 export interface BuildingData {
