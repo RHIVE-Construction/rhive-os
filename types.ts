@@ -27,6 +27,7 @@ export interface Building {
   totalAreaMeters: number;
   lat?: number;
   lng?: number;
+  polygonVertices?: { lat: number; lng: number }[];
 }
 
 export interface BuildingData {

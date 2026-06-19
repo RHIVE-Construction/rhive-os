@@ -5,6 +5,7 @@ import { XIcon, Check, SatelliteIcon, CameraIcon, PlusIcon, TrashIcon } from './
 import { CircuitryBackground } from './CircuitryBackground';
 import { cn } from '../lib/utils';
 import { generateBuildingFromLatLng } from '../lib/mockData';
+import { Switch } from './ui/switch';
 import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 
 interface AddressConfirmationProps {
@@ -46,19 +47,59 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<any>(null);
   const markersRef = useRef<any[]>([]);
+  const gPolygonsMapRef = useRef<Map<string, any>>(new Map());
+  
   const [isAddingPin, setIsAddingPin] = useState(false);
+  const [focusedBuildingId, setFocusedBuildingId] = useState<string | null>(null);
+
+  // Centroid calculator helper
+  const getPolygonCenter = (vertices: { lat: number; lng: number }[], fallbackLat: number, fallbackLng: number) => {
+    if (!vertices || vertices.length === 0) return { lat: fallbackLat, lng: fallbackLng };
+    let minLat = Infinity, maxLat = -Infinity;
+    let minLng = Infinity, maxLng = -Infinity;
+    vertices.forEach(v => {
+      if (v.lat < minLat) minLat = v.lat;
+      if (v.lat > maxLat) maxLat = v.lat;
+      if (v.lng < minLng) minLng = v.lng;
+      if (v.lng > maxLng) maxLng = v.lng;
+    });
+    return {
+      lat: (minLat + maxLat) / 2,
+      lng: (minLng + maxLng) / 2
+    };
+  };
+
+  // Set initial focus
+  useEffect(() => {
+    if (buildingData && !focusedBuildingId) {
+      setFocusedBuildingId(buildingData.buildings[0]?.id || null);
+    }
+  }, [buildingData, focusedBuildingId]);
+
+  // Clean up polygons on unmount
+  useEffect(() => {
+    return () => {
+      gPolygonsMapRef.current.forEach(poly => poly.setMap(null));
+      gPolygonsMapRef.current.clear();
+    };
+  }, []);
 
   const handleDeleteBuilding = (buildingId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!buildingData) return;
 
+    const remaining = buildingData.buildings.filter(b => b.id !== buildingId);
     setBuildingData(prev => {
         if (!prev) return prev;
         return {
             ...prev,
-            buildings: prev.buildings.filter(b => b.id !== buildingId)
+            buildings: remaining
         };
     });
+
+    if (focusedBuildingId === buildingId) {
+      setFocusedBuildingId(remaining[0]?.id || null);
+    }
 
     onSurveyChange(prev => ({
         ...prev,
@@ -150,12 +191,14 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
 
     // Redraw markers
     buildingData.buildings.forEach((building, idx) => {
-      const lat = building.lat ?? place.latitude;
-      const lng = building.lng ?? place.longitude;
       const isIncluded = surveyState.includedBuildingIds.includes(building.id);
+      const isFocused = building.id === focusedBuildingId;
+      
+      // Compute center of polygon for marker position
+      const center = getPolygonCenter(building.polygonVertices || [], building.lat ?? place.latitude, building.lng ?? place.longitude);
 
       const marker = new window.google.maps.Marker({
-        position: { lat, lng },
+        position: center,
         map: map,
         label: {
           text: (idx + 1).toString(),
@@ -165,23 +208,176 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
         },
         icon: {
           path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z',
-          fillColor: isIncluded ? '#ec028b' : '#4b5563', // pink if included, gray if excluded
+          fillColor: isFocused ? '#ec028b' : (isIncluded ? '#ec028b99' : '#4b5563'), // bright pink if focused, slightly translucent pink if included, gray if excluded
           fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 1.5,
-          scale: 1.2,
+          strokeColor: isFocused ? '#ffffff' : '#cbd5e1',
+          strokeWeight: isFocused ? 2.5 : 1.5,
+          scale: isFocused ? 1.3 : 1.1,
           labelOrigin: new window.google.maps.Point(0, -30)
         },
         title: `BLD ${idx + 1}`
       });
 
       marker.addListener('click', () => {
-        handleBuildingToggle(building.id);
+        setFocusedBuildingId(building.id);
       });
 
       markersRef.current.push(marker);
     });
-  }, [map, buildingData, surveyState.includedBuildingIds, place.latitude, place.longitude]);
+  }, [map, buildingData, surveyState.includedBuildingIds, focusedBuildingId, place.latitude, place.longitude]);
+
+  // 4.5 Manage Google Maps Polygons (Editable/Editable path changes)
+  useEffect(() => {
+    if (!map || !buildingData || !window.google) return;
+
+    // Remove polygons for buildings that are no longer present
+    const currentIds = new Set(buildingData.buildings.map(b => b.id));
+    for (const [id, poly] of gPolygonsMapRef.current.entries()) {
+      if (!currentIds.has(id)) {
+        poly.setMap(null);
+        gPolygonsMapRef.current.delete(id);
+      }
+    }
+
+    // Draw/Update polygons
+    buildingData.buildings.forEach((building) => {
+      const isFocused = building.id === focusedBuildingId;
+      
+      let poly = gPolygonsMapRef.current.get(building.id);
+      const vertices = building.polygonVertices || [];
+      const pathCoords = vertices.map(v => new window.google.maps.LatLng(v.lat, v.lng));
+
+      if (!poly) {
+        poly = new window.google.maps.Polygon({
+          paths: pathCoords,
+          strokeColor: '#ec028b',
+          strokeOpacity: isFocused ? 0.9 : 0.5,
+          strokeWeight: isFocused ? 3.5 : 2,
+          fillColor: '#ec028b',
+          fillOpacity: isFocused ? 0.25 : 0.08,
+          editable: isFocused && view === 'satellite',
+          draggable: false,
+          map: map,
+        });
+
+        // Set path change listener
+        const registerPathListener = (polygonInstance: any) => {
+          const path = polygonInstance.getPath();
+          
+          const onPathChange = () => {
+            const newVertices: { lat: number; lng: number }[] = [];
+            for (let i = 0; i < path.getLength(); i++) {
+              const xy = path.getAt(i);
+              newVertices.push({ lat: xy.lat(), lng: xy.lng() });
+            }
+            
+            const newAreaMeters = window.google.maps.geometry.spherical.computeArea(path);
+            
+            setBuildingData(prev => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                buildings: prev.buildings.map(b => {
+                  if (b.id === building.id) {
+                    const avgPitchDeg = b.facets.reduce((sum, f) => sum + f.pitchDegrees, 0) / b.facets.length || 22.6;
+                    const newFacets = b.facets.map(f => ({
+                      ...f,
+                      areaMeters: newAreaMeters / b.facets.length,
+                      pitchDegrees: avgPitchDeg
+                    }));
+                    
+                    return {
+                      ...b,
+                      totalAreaMeters: newAreaMeters,
+                      polygonVertices: newVertices,
+                      facets: newFacets
+                    };
+                  }
+                  return b;
+                })
+              };
+            });
+          };
+
+          path.addListener('set_at', onPathChange);
+          path.addListener('insert_at', onPathChange);
+          path.addListener('remove_at', onPathChange);
+        };
+
+        registerPathListener(poly);
+        gPolygonsMapRef.current.set(building.id, poly);
+      } else {
+        // Update styling and editable state
+        poly.setOptions({
+          strokeOpacity: isFocused ? 0.9 : 0.5,
+          strokeWeight: isFocused ? 3.5 : 2,
+          fillOpacity: isFocused ? 0.25 : 0.08,
+          editable: isFocused && view === 'satellite',
+        });
+
+        // Verify if path coordinates match the state
+        const polyPath = poly.getPath();
+        let needsUpdate = polyPath.getLength() !== vertices.length;
+        if (!needsUpdate) {
+          for (let i = 0; i < vertices.length; i++) {
+            const pt = polyPath.getAt(i);
+            const v = vertices[i];
+            if (Math.abs(pt.lat() - v.lat) > 0.000001 || Math.abs(pt.lng() - v.lng) > 0.000001) {
+              needsUpdate = true;
+              break;
+            }
+          }
+        }
+
+        if (needsUpdate) {
+          // Temporarily disable listeners to avoid cycles
+          window.google.maps.event.clearListeners(polyPath, 'set_at');
+          window.google.maps.event.clearListeners(polyPath, 'insert_at');
+          window.google.maps.event.clearListeners(polyPath, 'remove_at');
+
+          poly.setPath(pathCoords);
+
+          // Re-register listeners on new path
+          const newPath = poly.getPath();
+          const onPathChangeNew = () => {
+            const newVertices: { lat: number; lng: number }[] = [];
+            for (let i = 0; i < newPath.getLength(); i++) {
+              const xy = newPath.getAt(i);
+              newVertices.push({ lat: xy.lat(), lng: xy.lng() });
+            }
+            const newAreaMeters = window.google.maps.geometry.spherical.computeArea(newPath);
+            setBuildingData(prev => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                buildings: prev.buildings.map(b => {
+                  if (b.id === building.id) {
+                    const avgPitchDeg = b.facets.reduce((sum, f) => sum + f.pitchDegrees, 0) / b.facets.length || 22.6;
+                    const newFacets = b.facets.map(f => ({
+                      ...f,
+                      areaMeters: newAreaMeters / b.facets.length,
+                      pitchDegrees: avgPitchDeg
+                    }));
+                    return {
+                      ...b,
+                      totalAreaMeters: newAreaMeters,
+                      polygonVertices: newVertices,
+                      facets: newFacets
+                    };
+                  }
+                  return b;
+                })
+              };
+            });
+          };
+
+          newPath.addListener('set_at', onPathChangeNew);
+          newPath.addListener('insert_at', onPathChangeNew);
+          newPath.addListener('remove_at', onPathChangeNew);
+        }
+      }
+    });
+  }, [map, buildingData, focusedBuildingId, view, setBuildingData]);
 
   // 5. Initialize Street View Panorama
   useEffect(() => {
@@ -308,37 +504,57 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                         </div>
 
                         {/* List of buildings */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {buildingData?.buildings.map((building, idx) => {
                                 const isIncluded = surveyState.includedBuildingIds.includes(building.id);
                                 const sqValue = (building.totalAreaMeters * 10.7639 / 100).toFixed(2);
-                                const isCustom = building.id.startsWith('BLD_') && building.id !== 'BLD_1'; // allow deleting added ones
+                                const isCustom = building.id.startsWith('BLD_') && building.id !== 'BLD_1';
+                                const isFocused = building.id === focusedBuildingId;
+                                
                                 return (
                                     <div
                                         key={building.id}
-                                        onClick={() => handleBuildingToggle(building.id)}
+                                        onClick={() => setFocusedBuildingId(building.id)}
                                         className={cn(
-                                            "relative flex items-center justify-between p-3 rounded-lg bg-black/40 border cursor-pointer transition-all select-none",
-                                            isIncluded
-                                                ? "border-pink-500/60 bg-pink-900/10 shadow-[0_0_10px_rgba(236,2,139,0.15)]"
+                                            "relative flex flex-col justify-between p-4 rounded-xl bg-black/50 border transition-all select-none cursor-pointer",
+                                            isFocused
+                                                ? "border-pink-500 bg-pink-500/5 shadow-[0_0_15px_rgba(236,2,139,0.25)]"
                                                 : "border-gray-800 hover:border-gray-700 hover:bg-gray-900/30"
                                         )}
                                     >
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-sm font-semibold text-white truncate">
-                                                BLD {idx + 1} {idx === 0 && <span className="text-[10px] text-pink-400 font-normal ml-1">(Primary)</span>}
-                                            </span>
-                                            <span className="text-xs text-gray-400 font-mono">{sqValue} SQ</span>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-base font-bold text-white truncate flex items-center">
+                                                    BLD {idx + 1}
+                                                    {idx === 0 && <span className="text-[10px] text-pink-400 font-normal ml-2 bg-pink-400/10 px-1.5 py-0.5 rounded border border-pink-400/20">Primary</span>}
+                                                </span>
+                                                <span className="text-sm font-semibold text-pink-400/90 font-mono mt-1">{sqValue} SQ</span>
+                                            </div>
+                                            <div className="flex items-center space-x-2" onClick={e => e.stopPropagation()}>
+                                                <Switch 
+                                                    checked={isIncluded} 
+                                                    onCheckedChange={() => handleBuildingToggle(building.id)} 
+                                                />
+                                            </div>
                                         </div>
-                                        {isCustom && (
-                                            <button
-                                                onClick={(e) => handleDeleteBuilding(building.id, e)}
-                                                className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors ml-2"
-                                                aria-label="Delete building"
-                                            >
-                                                <TrashIcon className="h-4 w-4" />
-                                            </button>
-                                        )}
+                                        
+                                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-900 text-xs">
+                                            <span className={cn(
+                                                "font-semibold uppercase tracking-wider",
+                                                isFocused ? "text-pink-400 animate-pulse" : "text-gray-500"
+                                            )}>
+                                                {isFocused ? "Editing Outline" : "Click to Edit Outline"}
+                                            </span>
+                                            {isCustom && (
+                                                <button
+                                                    onClick={(e) => handleDeleteBuilding(building.id, e)}
+                                                    className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                                    aria-label="Delete building"
+                                                >
+                                                    <TrashIcon className="h-4 w-4" />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })}
