@@ -119,6 +119,17 @@ export interface CalculationResult {
   flatRoofingUpgrades: Record<FlatRoofingType, number>;
   flatRoofColorAddonCost: number;
   liveTotal: number;
+  linearMeasurements: {
+    ridges: number;
+    hips: number;
+    valleys: number;
+    eaves: number;
+    rakes: number;
+    wallFlashing?: number;
+    stepFlashing?: number;
+    unspecified?: number;
+    transitions?: number;
+  };
 }
 
 export interface Pricing {

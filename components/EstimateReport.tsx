@@ -1,10 +1,21 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import type { Place, BuildingData, SurveyState, CalculationResult } from '../types';
 import { Button } from './ui/button';
 import { formatCurrency } from '../lib/utils';
 import { WeatherReport } from './WeatherReport';
 import { RhiveLogoBlack } from './icons';
+import { RoofDrawing } from './RoofDrawing';
+import { getMapsApiKey } from '../lib/mapsConfig';
+
+function formatLength(feet: number): string {
+    const wholeFeet = Math.floor(feet);
+    const inches = Math.round((feet - wholeFeet) * 12);
+    if (inches === 12) {
+        return `${wholeFeet + 1}ft 0in`;
+    }
+    return `${wholeFeet}ft ${inches}in`;
+}
 
 declare global {
   interface Window {
@@ -48,7 +59,7 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 );
 
 const DetailItem: React.FC<{ label: string, value: React.ReactNode, isTotal?: boolean, isSubtotal?: boolean }> = ({ label, value, isTotal, isSubtotal }) => (
-     <div className={`flex justify-between py-2 border-b border-gray-200 ${isSubtotal ? 'font-sans font-bold text-black' : ''} ${isTotal ? 'font-sans text-lg font-extrabold' : 'text-base'}`}>
+     <div className={`flex justify-between py-2 border-b border-gray-200 ${isSubtotal ? 'font-serif font-bold text-black' : ''} ${isTotal ? 'font-serif text-lg font-extrabold' : 'text-base'}`}>
         <span>{label}</span>
         <strong className={isTotal ? 'text-[#ec028b]' : ''}>{value}</strong>
     </div>
@@ -57,6 +68,15 @@ const DetailItem: React.FC<{ label: string, value: React.ReactNode, isTotal?: bo
 
 export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingData, surveyState, calcResult }) => {
   const reportContentRef = useRef<HTMLDivElement>(null);
+  const [mapsKey, setMapsKey] = useState<string>('');
+
+  useEffect(() => {
+    getMapsApiKey().then(setMapsKey);
+  }, []);
+
+  const satelliteUrl = mapsKey 
+    ? `https://maps.googleapis.com/maps/api/staticmap?center=${place.latitude},${place.longitude}&zoom=20&size=640x640&maptype=satellite&markers=color:0xec028b%7C${place.latitude},${place.longitude}&key=${mapsKey}`
+    : '';
 
   const handleDownloadPdf = async () => {
     const { jsPDF } = window.jspdf;
@@ -114,7 +134,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
       <div className="max-h-[70vh] overflow-y-auto">
         <div ref={reportContentRef} className="font-serif">
             {/* PAGE 1 */}
-            <ReportPage pageNumber={1} totalPages={3}>
+            <ReportPage pageNumber={1} totalPages={4}>
                 <ReportHeader place={place} title="Instant Proposal" subtitle="Slogan: Finish On Top! 🐝" />
                 <div className="grid grid-cols-2 gap-8 mt-6">
                     <div>
@@ -163,7 +183,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
             </ReportPage>
             
             {/* PAGE 2 */}
-            <ReportPage pageNumber={2} totalPages={3}>
+            <ReportPage pageNumber={2} totalPages={4}>
                 <ReportHeader place={place} title="The RHIVE Quality System" subtitle={isGaf ? "GAF Lifetime Roofing System" : "Total Protection Roofing System®"} />
                 <p className="font-sans font-medium text-black p-4 border-l-4 border-[#ec028b] bg-gray-50 my-6">
                     **We build trust, not just roofs.** You've selected a premium {isGaf ? 'GAF' : 'Owens Corning'} product, part of an integrated system ensuring unmatched quality, integrity, and clear pricing.
@@ -197,7 +217,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
             </ReportPage>
             
             {/* PAGE 3 */}
-            <ReportPage pageNumber={3} totalPages={3}>
+            <ReportPage pageNumber={3} totalPages={4}>
                 <ReportHeader place={place} title="The Quantum Leap to Quality" subtitle="Your path to a firm price and maximized savings." />
                 
                 <SectionTitle>RHIVE Project Savings Promotion</SectionTitle>
@@ -220,6 +240,47 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                 <div className="text-center mt-8">
                      <button className="inline-block font-sans px-8 py-3 rounded-lg font-bold text-white bg-[#ec028b] mx-2 transition hover:bg-pink-700 shadow-lg hover:scale-105">Request My Certified Quote & Save Now!</button>
                     <p className="text-base text-gray-500 mt-2 font-sans">Quote expires soon. Don't miss your chance to **Finish On Top!**</p>
+                </div>
+            </ReportPage>
+
+            {/* PAGE 4: DETAILED GEOMETRY (EAGLEVIEW-STYLE) */}
+            <ReportPage pageNumber={4} totalPages={4}>
+                <ReportHeader place={place} title="Report Summary" subtitle="Detailed Roof Measurements & Satellite Imagery" />
+                <div className="grid grid-cols-12 gap-8 items-start mt-6">
+                    <div className="col-span-5 bg-gray-50/50 p-4 border border-gray-200 rounded-lg">
+                        <h3 className="font-sans font-bold text-lg text-pink-600 mb-4 pb-1 border-b border-gray-200">Measurements</h3>
+                        <div className="space-y-0.5 text-base">
+                            <DetailItem label="Total roof area" value={`${Math.round(calcResult.finalSq * 100)} sqft`} />
+                            <DetailItem label="Total pitched area" value={`${Math.round(calcResult.asphaltSq * 100)} sqft`} />
+                            <DetailItem label="Total flat area" value={`${Math.round(calcResult.flatRoofSq * 100)} sqft`} />
+                            <DetailItem label="Total roof facets" value={`${calcResult.roofEstimate.totalFacets} facets`} />
+                            <DetailItem label="Predominant pitch" value={`${calcResult.dominantPitch}/12`} />
+                            <DetailItem label="Total eaves" value={formatLength(calcResult.linearMeasurements.eaves)} />
+                            <DetailItem label="Total valleys" value={formatLength(calcResult.linearMeasurements.valleys)} />
+                            <DetailItem label="Total hips" value={formatLength(calcResult.linearMeasurements.hips)} />
+                            <DetailItem label="Total ridges" value={formatLength(calcResult.linearMeasurements.ridges)} />
+                            <DetailItem label="Total rakes" value={formatLength(calcResult.linearMeasurements.rakes)} />
+                            <DetailItem label="Total wall flashing" value={calcResult.linearMeasurements.wallFlashing ? formatLength(calcResult.linearMeasurements.wallFlashing) : '0ft 0in'} />
+                            <DetailItem label="Total step flashing" value={calcResult.linearMeasurements.stepFlashing ? formatLength(calcResult.linearMeasurements.stepFlashing) : '0ft 0in'} />
+                            <DetailItem label="Total transitions" value={calcResult.linearMeasurements.transitions ? formatLength(calcResult.linearMeasurements.transitions) : '0ft 0in'} />
+                            <DetailItem label="Total parapet wall" value="0ft 0in" />
+                            <DetailItem label="Total unspecified" value={calcResult.linearMeasurements.unspecified ? formatLength(calcResult.linearMeasurements.unspecified) : '0ft 0in'} />
+                            <div className="pt-2 mt-2 border-t border-gray-300">
+                                <DetailItem label="Hips + ridges" value={formatLength(calcResult.linearMeasurements.hips + calcResult.linearMeasurements.ridges)} isSubtotal />
+                                <DetailItem label="Eaves + rakes" value={formatLength(calcResult.linearMeasurements.eaves + calcResult.linearMeasurements.rakes)} isTotal />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-span-7 flex flex-col items-center">
+                        <h3 className="font-sans font-bold text-lg text-black mb-4 self-start">Satellite Roof View</h3>
+                        {satelliteUrl ? (
+                            <img src={satelliteUrl} alt="Satellite Roof View" className="w-full h-auto max-w-[360px] rounded-lg shadow-md border-2 border-gray-200" />
+                        ) : (
+                            <div className="w-full h-[360px] max-w-[360px] bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 font-sans text-sm">
+                                Loading satellite imagery...
+                            </div>
+                        )}
+                    </div>
                 </div>
             </ReportPage>
         </div>
