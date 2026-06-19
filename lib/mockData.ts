@@ -1,5 +1,5 @@
 
-import type { Place, BuildingData, RoofFacet } from '../types';
+import type { Place, BuildingData, RoofFacet, Building } from '../types';
 
 // Simple pseudo-random generator based on coordinates
 const pseudoRandom = (seed1: number, seed2: number) => {
@@ -90,5 +90,32 @@ export function generateMockBuildingData(place: Place): BuildingData {
         facets: facets
     }], 
     yearConstructed 
+  };
+}
+
+export function createTaggedBuilding(index: number, areaSq: number, pitchIn12: number): Building {
+  const id = `BLD_${index}`;
+  const totalAreaMeters = areaSq * 9.290304; // 1 SQ = 100 sq ft = 9.290304 sq meters
+  
+  // Convert pitch in x/12 to degrees
+  const pitchDegrees = Math.atan(pitchIn12 / 12) * 180 / Math.PI;
+
+  const facets: RoofFacet[] = [
+    {
+      id: `${id}_f1`,
+      areaMeters: totalAreaMeters / 2,
+      pitchDegrees: pitchDegrees
+    },
+    {
+      id: `${id}_f2`,
+      areaMeters: totalAreaMeters / 2,
+      pitchDegrees: pitchDegrees
+    }
+  ];
+
+  return {
+    id,
+    totalAreaMeters,
+    facets
   };
 }

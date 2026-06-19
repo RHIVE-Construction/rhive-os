@@ -1,12 +1,15 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import type { Place, BuildingData, SurveyState, CalculationResult } from '../types';
+import type { Place, BuildingData, SurveyState, CalculationResult, Building, RoofFacet } from '../types';
 import { Button } from './ui/button';
 import { formatCurrency } from '../lib/utils';
 import { WeatherReport } from './WeatherReport';
 import { RhiveLogoBlack } from './icons';
 import { RoofDrawing } from './RoofDrawing';
 import { getMapsApiKey } from '../lib/mapsConfig';
+import { calculateEstimate } from '../lib/calculations';
+import { usePricing } from '../contexts/PricingContext';
+import { SQ_FEET_PER_SQUARE, SQ_METERS_TO_SQ_FEET } from '../lib/constants';
 
 function formatLength(feet: number): string {
     const wholeFeet = Math.floor(feet);
@@ -65,6 +68,72 @@ const DetailItem: React.FC<{ label: string, value: React.ReactNode, isTotal?: bo
     </div>
 );
 
+
+const BuildingDrawing: React.FC<{ building: Building }> = ({ building }) => {
+    const numFacets = building.facets.length;
+    
+    if (numFacets === 1) {
+        // Simple shed roof: single rectangle
+        const facet = building.facets[0];
+        const areaSqFt = Math.round(facet.areaMeters * SQ_METERS_TO_SQ_FEET);
+        return (
+            <div className="flex flex-col items-center justify-center w-full h-full p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <svg viewBox="0 0 200 200" className="w-full h-auto max-w-[200px]">
+                    <rect x="30" y="30" width="140" height="140" fill="rgba(14, 165, 233, 0.08)" stroke="#0284c7" strokeWidth="2.5" strokeLinejoin="round" />
+                    <text x="100" y="100" className="font-sans font-bold text-lg fill-slate-800" textAnchor="middle" dominantBaseline="middle">{areaSqFt}</text>
+                </svg>
+                <p className="text-slate-500 text-sm mt-3 text-center">1 Facet Diagram (Shed)</p>
+            </div>
+        );
+    } else if (numFacets === 2) {
+        // Dual-slope roof: two rectangles side-by-side
+        const f1 = building.facets[0];
+        const f2 = building.facets[1];
+        const a1 = Math.round(f1.areaMeters * SQ_METERS_TO_SQ_FEET);
+        const a2 = Math.round(f2.areaMeters * SQ_METERS_TO_SQ_FEET);
+        return (
+            <div className="flex flex-col items-center justify-center w-full h-full p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <svg viewBox="0 0 200 200" className="w-full h-auto max-w-[200px]">
+                    {/* Left slope */}
+                    <rect x="20" y="30" width="80" height="140" fill="rgba(14, 165, 233, 0.08)" stroke="#0284c7" strokeWidth="2.5" strokeLinejoin="round" />
+                    <text x="60" y="100" className="font-sans font-bold text-sm fill-slate-800" textAnchor="middle" dominantBaseline="middle">{a1}</text>
+                    {/* Right slope */}
+                    <rect x="100" y="30" width="80" height="140" fill="rgba(14, 165, 233, 0.08)" stroke="#0284c7" strokeWidth="2.5" strokeLinejoin="round" />
+                    <text x="140" y="100" className="font-sans font-bold text-sm fill-slate-800" textAnchor="middle" dominantBaseline="middle">{a2}</text>
+                    {/* Ridge line */}
+                    <line x1="100" y1="30" x2="100" y2="170" stroke="#ec028b" strokeWidth="3" />
+                </svg>
+                <p className="text-slate-500 text-sm mt-3 text-center">2 Facets Diagram (Gable)</p>
+            </div>
+        );
+    } else {
+        // 4 or more facets: draw a main house shape with hips and ridge
+        const totalAreaSqFt = Math.round(building.totalAreaMeters * SQ_METERS_TO_SQ_FEET);
+        const avgFacetArea = Math.round(totalAreaSqFt / numFacets);
+        return (
+            <div className="flex flex-col items-center justify-center w-full h-full p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <svg viewBox="0 0 200 200" className="w-full h-auto max-w-[200px]">
+                    {/* Main perimeter */}
+                    <polygon points="20,40 180,40 180,160 20,160" fill="rgba(14, 165, 233, 0.05)" stroke="#0284c7" strokeWidth="2.5" strokeLinejoin="round" />
+                    
+                    {/* Hips and Ridges */}
+                    <line x1="20" y1="40" x2="60" y2="100" stroke="#0284c7" strokeWidth="2" />
+                    <line x1="20" y1="160" x2="60" y2="100" stroke="#0284c7" strokeWidth="2" />
+                    <line x1="180" y1="40" x2="140" y2="100" stroke="#0284c7" strokeWidth="2" />
+                    <line x1="180" y1="160" x2="140" y2="100" stroke="#0284c7" strokeWidth="2" />
+                    <line x1="60" y1="100" x2="140" y2="100" stroke="#ec028b" strokeWidth="3" />
+
+                    {/* Annotations */}
+                    <text x="100" y="70" className="font-sans font-bold text-xs fill-slate-800" textAnchor="middle" dominantBaseline="middle">{avgFacetArea}</text>
+                    <text x="100" y="130" className="font-sans font-bold text-xs fill-slate-800" textAnchor="middle" dominantBaseline="middle">{avgFacetArea}</text>
+                    <text x="45" y="100" className="font-sans font-bold text-xs fill-slate-800" textAnchor="middle" dominantBaseline="middle">{avgFacetArea}</text>
+                    <text x="155" y="100" className="font-sans font-bold text-xs fill-slate-800" textAnchor="middle" dominantBaseline="middle">{avgFacetArea}</text>
+                </svg>
+                <p className="text-slate-500 text-sm mt-3 text-center">{numFacets} Facets Diagram (Hip/Gable)</p>
+            </div>
+        );
+    }
+};
 
 export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingData, surveyState, calcResult }) => {
   const reportContentRef = useRef<HTMLDivElement>(null);
@@ -125,16 +194,35 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
     pdf.save(`RHIVE_Estimate_${place.address.split(',')[0]}.pdf`);
   };
 
+  const { pricing } = usePricing();
   const isGaf = surveyState.roofUpgrade.includes('GAF');
   const upgradeCost = calcResult.roofEstimate.upgrades[surveyState.roofUpgrade as keyof typeof calcResult.roofEstimate.upgrades] || 0;
 
+  const includedBuildings = buildingData.buildings.filter(b => surveyState.includedBuildingIds.includes(b.id));
+  const buildingCalcs = includedBuildings.map(building => {
+      const singleBldgData: BuildingData = {
+          buildings: [building],
+          yearConstructed: buildingData.yearConstructed
+      };
+      const singleSurveyState: SurveyState = {
+          ...surveyState,
+          includedBuildingIds: [building.id],
+          totalSq: 0 // force raw API measurements
+      };
+      const res = calculateEstimate({ buildingData: singleBldgData, surveyState: singleSurveyState }, pricing);
+      return {
+          building,
+          res
+      };
+  });
 
-  return (
+  const totalPagesCount = 4 + includedBuildings.length;
+  return (
     <div className="text-black bg-gray-300">
       <div className="max-h-[70vh] overflow-y-auto">
         <div ref={reportContentRef} className="font-serif">
             {/* PAGE 1 */}
-            <ReportPage pageNumber={1} totalPages={4}>
+            <ReportPage pageNumber={1} totalPages={totalPagesCount}>
                 <ReportHeader place={place} title="Instant Proposal" subtitle="Slogan: Finish On Top! 🐝" />
                 <div className="grid grid-cols-2 gap-8 mt-6">
                     <div>
@@ -168,7 +256,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                         <DetailItem label="Gutter System Estimate" value={formatCurrency(calcResult.gutterEstimate.total)} />
                         <DetailItem label="Heat Trace System" value={formatCurrency(calcResult.heatTraceEstimate.total)} />
                         <div className="mt-4 pt-4 border-t-2 border-pink-500/80">
-                          <DetailItem label="Your Estimated Total" value={formatCurrency(calcResult.liveTotal)} isTotal/>
+                           <DetailItem label="Your Estimated Total" value={formatCurrency(calcResult.liveTotal)} isTotal/>
                         </div>
                     </div>
                 </div>
@@ -183,7 +271,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
             </ReportPage>
             
             {/* PAGE 2 */}
-            <ReportPage pageNumber={2} totalPages={4}>
+            <ReportPage pageNumber={2} totalPages={totalPagesCount}>
                 <ReportHeader place={place} title="The RHIVE Quality System" subtitle={isGaf ? "GAF Lifetime Roofing System" : "Total Protection Roofing System®"} />
                 <p className="font-sans font-medium text-black p-4 border-l-4 border-[#ec028b] bg-gray-50 my-6">
                     **We build trust, not just roofs.** You've selected a premium {isGaf ? 'GAF' : 'Owens Corning'} product, part of an integrated system ensuring unmatched quality, integrity, and clear pricing.
@@ -217,7 +305,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
             </ReportPage>
             
             {/* PAGE 3 */}
-            <ReportPage pageNumber={3} totalPages={4}>
+            <ReportPage pageNumber={3} totalPages={totalPagesCount}>
                 <ReportHeader place={place} title="The Quantum Leap to Quality" subtitle="Your path to a firm price and maximized savings." />
                 
                 <SectionTitle>RHIVE Project Savings Promotion</SectionTitle>
@@ -244,11 +332,11 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
             </ReportPage>
 
             {/* PAGE 4: DETAILED GEOMETRY (EAGLEVIEW-STYLE) */}
-            <ReportPage pageNumber={4} totalPages={4}>
-                <ReportHeader place={place} title="Report Summary" subtitle="Detailed Roof Measurements & Satellite Imagery" />
+            <ReportPage pageNumber={4} totalPages={totalPagesCount}>
+                <ReportHeader place={place} title="Property Summary" subtitle="Combined Roof Measurements & Satellite Imagery" />
                 <div className="grid grid-cols-12 gap-8 items-start mt-6">
                     <div className="col-span-5 bg-gray-50/50 p-4 border border-gray-200 rounded-lg">
-                        <h3 className="font-sans font-bold text-lg text-pink-600 mb-4 pb-1 border-b border-gray-200">Measurements</h3>
+                        <h3 className="font-sans font-bold text-lg text-pink-600 mb-4 pb-1 border-b border-gray-200">Combined Measurements</h3>
                         <div className="space-y-0.5 text-base">
                             <DetailItem label="Total roof area" value={`${Math.round(calcResult.finalSq * 100)} sqft`} />
                             <DetailItem label="Total pitched area" value={`${Math.round(calcResult.asphaltSq * 100)} sqft`} />
@@ -283,6 +371,52 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                     </div>
                 </div>
             </ReportPage>
+
+            {/* SEPARATE STRUCTURE PAGES */}
+            {buildingCalcs.map(({ building, res }, idx) => {
+                const pageNum = 5 + idx;
+                const bldgName = `BLD ${idx + 1}`;
+                const isPrimary = idx === 0;
+
+                return (
+                    <ReportPage key={building.id} pageNumber={pageNum} totalPages={totalPagesCount}>
+                        <ReportHeader place={place} title={`Structure #${idx + 1} summary`} subtitle={`${bldgName} Measurements ${isPrimary ? '(Primary Structure)' : '(Manually Tagged)'}`} />
+                        <div className="grid grid-cols-12 gap-8 items-start mt-6">
+                            <div className="col-span-6 flex flex-col items-center">
+                                <h3 className="font-sans font-bold text-lg text-black mb-4 self-start">Structure Diagram</h3>
+                                {isPrimary && !building.id.startsWith('BLD_') ? (
+                                    <RoofDrawing address={place.address} />
+                                ) : (
+                                    <BuildingDrawing building={building} />
+                                )}
+                            </div>
+                            <div className="col-span-6 bg-gray-50/50 p-4 border border-gray-200 rounded-lg">
+                                <h3 className="font-sans font-bold text-lg text-pink-600 mb-4 pb-1 border-b border-gray-200">Measurements</h3>
+                                <div className="space-y-0.5 text-base">
+                                    <DetailItem label="Total roof area" value={`${Math.round(res.finalSq * 100)} sqft`} />
+                                    <DetailItem label="Total pitched area" value={`${Math.round(res.asphaltSq * 100)} sqft`} />
+                                    <DetailItem label="Total flat area" value={`${Math.round(res.flatRoofSq * 100)} sqft`} />
+                                    <DetailItem label="Total roof facets" value={`${res.roofEstimate.totalFacets} facets`} />
+                                    <DetailItem label="Predominant pitch" value={`${res.dominantPitch}/12`} />
+                                    <DetailItem label="Total eaves" value={formatLength(res.linearMeasurements.eaves)} />
+                                    <DetailItem label="Total valleys" value={formatLength(res.linearMeasurements.valleys)} />
+                                    <DetailItem label="Total hips" value={formatLength(res.linearMeasurements.hips)} />
+                                    <DetailItem label="Total ridges" value={formatLength(res.linearMeasurements.ridges)} />
+                                    <DetailItem label="Total rakes" value={formatLength(res.linearMeasurements.rakes)} />
+                                    <DetailItem label="Total wall flashing" value={res.linearMeasurements.wallFlashing ? formatLength(res.linearMeasurements.wallFlashing) : '0ft 0in'} />
+                                    <DetailItem label="Total step flashing" value={res.linearMeasurements.stepFlashing ? formatLength(res.linearMeasurements.stepFlashing) : '0ft 0in'} />
+                                    <DetailItem label="Total transitions" value={res.linearMeasurements.transitions ? formatLength(res.linearMeasurements.transitions) : '0ft 0in'} />
+                                    <DetailItem label="Total unspecified" value={res.linearMeasurements.unspecified ? formatLength(res.linearMeasurements.unspecified) : '0ft 0in'} />
+                                    <div className="pt-2 mt-2 border-t border-gray-300">
+                                        <DetailItem label="Hips + ridges" value={formatLength(res.linearMeasurements.hips + res.linearMeasurements.ridges)} isSubtotal />
+                                        <DetailItem label="Eaves + rakes" value={formatLength(res.linearMeasurements.eaves + res.linearMeasurements.rakes)} isTotal />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ReportPage>
+                );
+            })}
         </div>
       </div>
        <div className="p-4 bg-gray-100 border-t flex flex-col sm:flex-row justify-end gap-4">

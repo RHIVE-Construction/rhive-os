@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import type { BuildingData, SurveyState, RoofLayers } from '../types';
 import { CircuitryBackground } from './CircuitryBackground';
 import { Button } from './ui/button';
-import { RhiveLogo, RoofIcon, Info, Check } from './icons';
+import { RhiveLogo, RoofIcon, Info, Check, PlusIcon, TrashIcon } from './icons';
 import { SQ_FEET_PER_SQUARE, SQ_METERS_TO_SQ_FEET } from '../lib/constants';
 import { cn } from '../lib/utils';
 import { Modal } from './ui/modal';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from './ui/tooltip';
+import { createTaggedBuilding } from '../lib/mockData';
 
 
 interface RoofOptionsProps {
     buildingData: BuildingData;
+    setBuildingData: React.Dispatch<React.SetStateAction<BuildingData | null>>;
     surveyState: SurveyState;
     onSurveyChange: React.Dispatch<React.SetStateAction<SurveyState>>;
     onContinue: () => void;
@@ -90,12 +92,63 @@ const LayerSelector: React.FC<{ value: RoofLayers; onChange: (newValue: RoofLaye
 
 export const RoofOptions: React.FC<RoofOptionsProps> = ({
     buildingData,
+    setBuildingData,
     surveyState,
     onSurveyChange,
     onContinue,
     onStartOver
 }) => {
     const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [newAreaSq, setNewAreaSq] = useState('5.00');
+    const [newPitch, setNewPitch] = useState('4');
+
+    const handleAddBuildingSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!buildingData) return;
+
+        const area = parseFloat(newAreaSq);
+        const pitch = parseInt(newPitch, 10);
+        if (isNaN(area) || area <= 0 || isNaN(pitch) || pitch < 0) return;
+
+        const nextIndex = buildingData.buildings.length + 1;
+        const newBuilding = createTaggedBuilding(nextIndex, area, pitch);
+
+        setBuildingData(prev => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                buildings: [...prev.buildings, newBuilding]
+            };
+        });
+
+        onSurveyChange(prev => ({
+            ...prev,
+            includedBuildingIds: [...prev.includedBuildingIds, newBuilding.id]
+        }));
+
+        setShowAddForm(false);
+        setNewAreaSq('5.00');
+        setNewPitch('4');
+    };
+
+    const handleDeleteBuilding = (buildingId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!buildingData) return;
+
+        setBuildingData(prev => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                buildings: prev.buildings.filter(b => b.id !== buildingId)
+            };
+        });
+
+        onSurveyChange(prev => ({
+            ...prev,
+            includedBuildingIds: prev.includedBuildingIds.filter(id => id !== buildingId)
+        }));
+    };
 
     const handleBuildingToggle = (buildingId: string) => {
         onSurveyChange(prev => {
@@ -132,12 +185,22 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                     <div className="w-full max-w-xl text-white">
                         <div className="space-y-8">
                             <div>
-                                <h2 className="text-lg font-medium text-gray-300 mb-3">Select buildings to include in estimate:</h2>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h2 className="text-lg font-medium text-gray-300">Select buildings to include in estimate:</h2>
+                                    <button
+                                        onClick={() => setShowAddForm(true)}
+                                        className="inline-flex items-center text-sm font-semibold text-pink-400 hover:text-pink-300 transition-colors gap-1 px-3 py-1.5 rounded bg-pink-500/10 border border-pink-500/20 hover:bg-pink-500/20"
+                                    >
+                                        <PlusIcon className="h-4 w-4" />
+                                        <span>Tag Another Building</span>
+                                    </button>
+                                </div>
                                 <div className="flex flex-wrap gap-4">
-                                    {buildingData.buildings.map(building => {
+                                    {buildingData.buildings.map((building, idx) => {
                                         const sqValue = (building.totalAreaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE).toFixed(2);
                                         const areaSqFt = (building.totalAreaMeters * SQ_METERS_TO_SQ_FEET).toFixed(0);
                                         const isSelected = surveyState.includedBuildingIds.includes(building.id);
+                                        const isCustom = building.id.startsWith('BLD_') && building.id !== 'BLD_1'; // allow deleting added ones
                                         return (
                                             <Tooltip key={building.id}>
                                                 <TooltipTrigger asChild>
@@ -148,17 +211,29 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                                                         tabIndex={0}
                                                         onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && handleBuildingToggle(building.id)}
                                                         className={cn(
-                                                            "flex items-center justify-between p-3 rounded-xl bg-black/50 border cursor-pointer transition-all focus:outline-none min-w-[180px]",
+                                                            "flex items-center justify-between p-3 rounded-xl bg-black/50 border cursor-pointer transition-all focus:outline-none min-w-[200px] select-none",
                                                             isSelected
-                                                                ? 'border-pink-500/70 bg-pink-900/20'
+                                                                ? 'border-pink-500/70 bg-pink-900/20 shadow-[0_0_10px_rgba(236,2,139,0.15)]'
                                                                 : 'border-gray-700 hover:bg-gray-500/10'
                                                         )}
                                                     >
-                                                        <span className="capitalize font-medium text-white whitespace-nowrap">{building.id.replace(/_/g, ' ')}</span>
-                                                        <span className="font-mono whitespace-nowrap">
-                                                            <span className="text-white">{sqValue}</span>
-                                                            <span className="text-white/70 ml-1">SQ</span>
-                                                        </span>
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className="font-semibold text-white whitespace-nowrap truncate">
+                                                                BLD {idx + 1} {idx === 0 && <span className="text-[10px] text-pink-400 font-normal ml-1">(Primary)</span>}
+                                                            </span>
+                                                            <span className="font-mono text-xs text-white/70">
+                                                                <span className="text-white">{sqValue}</span> SQ
+                                                            </span>
+                                                        </div>
+                                                        {isCustom && (
+                                                            <button
+                                                                onClick={(e) => handleDeleteBuilding(building.id, e)}
+                                                                className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors ml-2"
+                                                                aria-label="Delete building"
+                                                            >
+                                                                <TrashIcon className="h-4 w-4" />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
@@ -169,6 +244,60 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                                         )
                                     })}
                                 </div>
+
+                                {/* Inline Add Form */}
+                                {showAddForm && (
+                                    <form onSubmit={handleAddBuildingSubmit} className="mt-4 p-4 rounded-xl border border-pink-500/30 bg-[#121212]/90 space-y-4 animate-fade-in max-w-md">
+                                        <h4 className="text-base font-bold text-white">Tag New Building (BLD {buildingData ? buildingData.buildings.length + 1 : 1})</h4>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-400 uppercase mb-1">Estimated Area (SQ)</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0.1"
+                                                    value={newAreaSq}
+                                                    onChange={(e) => setNewAreaSq(e.target.value)}
+                                                    className="w-full bg-[#1a1a1a] border border-gray-800 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500 font-mono"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-gray-400 uppercase mb-1">Roof Pitch</label>
+                                                <select
+                                                    value={newPitch}
+                                                    onChange={(e) => setNewPitch(e.target.value)}
+                                                    className="w-full bg-[#1a1a1a] border border-gray-800 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-pink-500"
+                                                >
+                                                    <option value="3">3/12</option>
+                                                    <option value="4">4/12</option>
+                                                    <option value="5">5/12</option>
+                                                    <option value="6">6/12</option>
+                                                    <option value="7">7/12</option>
+                                                    <option value="8">8/12</option>
+                                                    <option value="9">9/12</option>
+                                                    <option value="10">10/12</option>
+                                                    <option value="12">12/12</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end space-x-2 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowAddForm(false)}
+                                                className="px-4 py-2 rounded text-sm font-semibold text-gray-400 hover:text-white transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="px-4 py-2 rounded text-sm font-bold text-white bg-[#ec028b] hover:bg-pink-700 transition-colors shadow-md shadow-pink-500/20"
+                                            >
+                                                Add Building
+                                            </button>
+                                        </div>
+                                    </form>
+                                )}
                             </div>
 
                             <div className="p-6 rounded-lg bg-black/50 border border-gray-800">

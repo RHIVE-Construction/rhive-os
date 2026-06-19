@@ -59,27 +59,6 @@ export function calculateEstimate(inputs: CalculationInputs, pricing: Pricing): 
     let initialAsphaltLaborCost = 0;
     let initialAsphaltOverheadCost = 0;
 
-    includedBuildings.forEach(building => {
-        building.facets.forEach(facet => {
-            const pitchIn12 = Math.round(12 * Math.tan(facet.pitchDegrees * Math.PI / 180));
-            const facetSq = facet.areaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
-
-            if (pitchIn12 < 3) {
-                initialFlatSq += facetSq;
-            } else {
-                initialAsphaltSq += facetSq;
-                const pitchKey = Math.min(18, Math.max(3, pitchIn12)).toString();
-                const pitchPrice = pricing.costPerSqByPitch[pitchKey] || pricing.costPerSqByPitch['6'];
-                
-                if (pitchPrice) {
-                    initialAsphaltMaterialCost += facetSq * pitchPrice.materials;
-                    initialAsphaltLaborCost += facetSq * pitchPrice.labor;
-                    initialAsphaltOverheadCost += facetSq * pitchPrice.overhead;
-                }
-            }
-        });
-    });
-    
     const lat = surveyState.latitude;
     const lng = surveyState.longitude;
     const isMemorial = lat && lng && Math.abs(lat - 40.571939) < 0.001 && Math.abs(lng - -111.964403) < 0.001;
@@ -87,19 +66,76 @@ export function calculateEstimate(inputs: CalculationInputs, pricing: Pricing): 
     const isNephi = lat && lng && Math.abs(lat - 39.7270586) < 0.005 && Math.abs(lng - -111.8345244) < 0.005;
     const isEmerson = lat && lng && Math.abs(lat - 40.7376366) < 0.005 && Math.abs(lng - -111.8785726) < 0.005;
 
-    if (isMemorial) {
-        initialAsphaltSq = 24.57;
-        initialFlatSq = 0;
-    } else if (isSouth500) {
-        initialAsphaltSq = 11.04;
-        initialFlatSq = 0;
-    } else if (isNephi) {
-        initialAsphaltSq = 29.91;
-        initialFlatSq = 0;
-    } else if (isEmerson) {
-        initialAsphaltSq = 23.96;
-        initialFlatSq = 0;
-    }
+    includedBuildings.forEach(building => {
+        let bldgAsphaltSq = 0;
+        let bldgFlatSq = 0;
+        let bldgAsphaltMaterialCost = 0;
+        let bldgAsphaltLaborCost = 0;
+        let bldgAsphaltOverheadCost = 0;
+
+        building.facets.forEach(facet => {
+            const pitchIn12 = Math.round(12 * Math.tan(facet.pitchDegrees * Math.PI / 180));
+            const facetSq = facet.areaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
+
+            if (pitchIn12 < 3) {
+                bldgFlatSq += facetSq;
+            } else {
+                bldgAsphaltSq += facetSq;
+                const pitchKey = Math.min(18, Math.max(3, pitchIn12)).toString();
+                const pitchPrice = pricing.costPerSqByPitch[pitchKey] || pricing.costPerSqByPitch['6'];
+                
+                if (pitchPrice) {
+                    bldgAsphaltMaterialCost += facetSq * pitchPrice.materials;
+                    bldgAsphaltLaborCost += facetSq * pitchPrice.labor;
+                    bldgAsphaltOverheadCost += facetSq * pitchPrice.overhead;
+                }
+            }
+        });
+
+        // Apply special override to primary buildings only (non-custom buildings)
+        const isCustomBuilding = building.id.startsWith('BLD');
+        if (!isCustomBuilding) {
+            if (isMemorial) {
+                const overrideSq = 24.57;
+                const ratio = bldgAsphaltSq > 0 ? overrideSq / bldgAsphaltSq : 1;
+                bldgAsphaltSq = overrideSq;
+                bldgFlatSq = 0;
+                bldgAsphaltMaterialCost *= ratio;
+                bldgAsphaltLaborCost *= ratio;
+                bldgAsphaltOverheadCost *= ratio;
+            } else if (isSouth500) {
+                const overrideSq = 11.04;
+                const ratio = bldgAsphaltSq > 0 ? overrideSq / bldgAsphaltSq : 1;
+                bldgAsphaltSq = overrideSq;
+                bldgFlatSq = 0;
+                bldgAsphaltMaterialCost *= ratio;
+                bldgAsphaltLaborCost *= ratio;
+                bldgAsphaltOverheadCost *= ratio;
+            } else if (isNephi) {
+                const overrideSq = 29.91;
+                const ratio = bldgAsphaltSq > 0 ? overrideSq / bldgAsphaltSq : 1;
+                bldgAsphaltSq = overrideSq;
+                bldgFlatSq = 0;
+                bldgAsphaltMaterialCost *= ratio;
+                bldgAsphaltLaborCost *= ratio;
+                bldgAsphaltOverheadCost *= ratio;
+            } else if (isEmerson) {
+                const overrideSq = 23.96;
+                const ratio = bldgAsphaltSq > 0 ? overrideSq / bldgAsphaltSq : 1;
+                bldgAsphaltSq = overrideSq;
+                bldgFlatSq = 0;
+                bldgAsphaltMaterialCost *= ratio;
+                bldgAsphaltLaborCost *= ratio;
+                bldgAsphaltOverheadCost *= ratio;
+            }
+        }
+
+        initialAsphaltSq += bldgAsphaltSq;
+        initialFlatSq += bldgFlatSq;
+        initialAsphaltMaterialCost += bldgAsphaltMaterialCost;
+        initialAsphaltLaborCost += bldgAsphaltLaborCost;
+        initialAsphaltOverheadCost += bldgAsphaltOverheadCost;
+    });
 
     const apiTotalSq = initialAsphaltSq + initialFlatSq;
     const finalSq = surveyState.totalSq > 0 ? surveyState.totalSq : apiTotalSq;
@@ -212,112 +248,134 @@ export function calculateEstimate(inputs: CalculationInputs, pricing: Pricing): 
     const liveTotal = asphaltTotalRetail + asphaltUpgradeCost + liveFlatRoofTotal + liveGutterTotal + liveHeatTraceTotal + flatRoofColorAddonCost;
     
     // 7. Pitch breakdown from included buildings
-    let pitchBreakdown = includedBuildings
-        .flatMap(b => b.facets)
-        .reduce((acc, facet) => {
-            const pitchIn12 = Math.round(12 * Math.tan(facet.pitchDegrees * Math.PI / 180));
-            const sq = facet.areaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
-            const existing = acc.find(p => p.pitch === pitchIn12);
-            if (existing) {
-                existing.sq += sq;
-            } else {
-                acc.push({ pitch: pitchIn12, sq });
-            }
-            return acc;
-        }, [] as { pitch: number, sq: number }[]).sort((a,b) => a.pitch - b.pitch);
+    let pitchBreakdown: { pitch: number, sq: number }[] = [];
+
+    includedBuildings.forEach(building => {
+        const isCustomBuilding = building.id.startsWith('BLD');
+        if (!isCustomBuilding && isMemorial) {
+            pitchBreakdown.push({ pitch: 6, sq: 22.16 });
+            pitchBreakdown.push({ pitch: 7, sq: 2.41 });
+        } else if (!isCustomBuilding && isSouth500) {
+            pitchBreakdown.push({ pitch: 9, sq: 11.04 });
+        } else if (!isCustomBuilding && isNephi) {
+            pitchBreakdown.push({ pitch: 6, sq: 29.91 });
+        } else if (!isCustomBuilding && isEmerson) {
+            pitchBreakdown.push({ pitch: 6, sq: 23.96 });
+        } else {
+            building.facets.forEach(facet => {
+                const pitchIn12 = Math.round(12 * Math.tan(facet.pitchDegrees * Math.PI / 180));
+                const sq = facet.areaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
+                const existing = pitchBreakdown.find(p => p.pitch === pitchIn12);
+                if (existing) {
+                    existing.sq += sq;
+                } else {
+                    pitchBreakdown.push({ pitch: pitchIn12, sq });
+                }
+            });
+        }
+    });
+
+    pitchBreakdown = pitchBreakdown.reduce((acc, current) => {
+        const existing = acc.find(p => p.pitch === current.pitch);
+        if (existing) {
+            existing.sq += current.sq;
+        } else {
+            acc.push({ ...current });
+        }
+        return acc;
+    }, [] as { pitch: number, sq: number }[]).sort((a,b) => a.pitch - b.pitch);
     
     let dominantPitch = pitchBreakdown.length > 0
         ? pitchBreakdown.reduce((max, current) => (current.sq > max.sq ? current : max), pitchBreakdown[0]).pitch
         : 0;
 
-    if (isMemorial) {
-        dominantPitch = 6;
-        pitchBreakdown = [
-            { pitch: 6, sq: 22.16 },
-            { pitch: 7, sq: 2.41 }
-        ];
-    } else if (isSouth500) {
-        dominantPitch = 9;
-        pitchBreakdown = [
-            { pitch: 9, sq: 11.04 }
-        ];
-    } else if (isNephi) {
-        dominantPitch = 6;
-        pitchBreakdown = [
-            { pitch: 6, sq: 29.91 }
-        ];
-    } else if (isEmerson) {
-        dominantPitch = 6;
-        pitchBreakdown = [
-            { pitch: 6, sq: 23.96 }
-        ];
-    }
-
     const estimatedLayers = Math.max(1, Math.floor((new Date().getFullYear() - buildingData.yearConstructed) / 35));
 
     // Calculate linear measurements (Exact for demo properties, simulated for others)
-    let linearMeasurements: any = { ridges: 0, hips: 0, valleys: 0, eaves: 0, rakes: 0 };
+    let linearMeasurements: any = { ridges: 0, hips: 0, valleys: 0, eaves: 0, rakes: 0, wallFlashing: 0, stepFlashing: 0, unspecified: 0, transitions: 0 };
 
     if (lat && lng) {
-        if (isMemorial) {
-            linearMeasurements = {
-                ridges: 59.1,
-                hips: 11.7,
-                valleys: 24.7,
-                eaves: 147.4,
-                rakes: 147.9,
-                wallFlashing: 46.4,
-                stepFlashing: 47.1,
-                unspecified: 61.0
-            };
-        } else if (isSouth500) {
-            linearMeasurements = {
-                ridges: 36.2,
-                hips: 0.0,
-                valleys: 0.0,
-                eaves: 72.3,
-                rakes: 132.8,
-                wallFlashing: 0.0,
-                stepFlashing: 0.0,
-                unspecified: 0.0
-            };
-        } else if (isNephi) {
-            linearMeasurements = {
-                ridges: 103.58,
-                hips: 0.0,
-                valleys: 39.42,
-                eaves: 109.42,
-                rakes: 102.33,
-                wallFlashing: 18.08,
-                stepFlashing: 0.0,
-                unspecified: 62.42
-            };
-        } else if (isEmerson) {
-            linearMeasurements = {
-                ridges: 26.33,
-                hips: 116.92,
-                valleys: 15.83,
-                eaves: 205.58,
-                rakes: 34.83,
-                wallFlashing: 31.33,
-                stepFlashing: 20.67,
-                transitions: 28.75,
-                unspecified: 15.00
-            };
-        } else {
-            // General dynamic estimation based on roof size (finalSq) and dominant pitch
-            const sq = finalSq;
-            linearMeasurements = {
-                ridges: sq * 2.8,
-                hips: sq * 0.8,
-                valleys: sq * 1.1,
-                eaves: sq * 7.2,
-                rakes: sq * 6.5,
-                wallFlashing: sq * 1.5,
-                stepFlashing: sq * 1.8,
-                unspecified: 0.0
-            };
-        }
+        includedBuildings.forEach(building => {
+            let bldgLinear: any = { ridges: 0, hips: 0, valleys: 0, eaves: 0, rakes: 0, wallFlashing: 0, stepFlashing: 0, unspecified: 0, transitions: 0 };
+            const isCustomBuilding = building.id.startsWith('BLD');
+
+            if (!isCustomBuilding) {
+                if (isMemorial) {
+                    bldgLinear = {
+                        ridges: 59.1,
+                        hips: 11.7,
+                        valleys: 24.7,
+                        eaves: 147.4,
+                        rakes: 147.9,
+                        wallFlashing: 46.4,
+                        stepFlashing: 47.1,
+                        unspecified: 61.0
+                    };
+                } else if (isSouth500) {
+                    bldgLinear = {
+                        ridges: 36.2,
+                        hips: 0.0,
+                        valleys: 0.0,
+                        eaves: 72.3,
+                        rakes: 132.8,
+                        wallFlashing: 0.0,
+                        stepFlashing: 0.0,
+                        unspecified: 0.0
+                    };
+                } else if (isNephi) {
+                    bldgLinear = {
+                        ridges: 103.58,
+                        hips: 0.0,
+                        valleys: 39.42,
+                        eaves: 109.42,
+                        rakes: 102.33,
+                        wallFlashing: 18.08,
+                        stepFlashing: 0.0,
+                        unspecified: 62.42
+                    };
+                } else if (isEmerson) {
+                    bldgLinear = {
+                        ridges: 26.33,
+                        hips: 116.92,
+                        valleys: 15.83,
+                        eaves: 205.58,
+                        rakes: 34.83,
+                        wallFlashing: 31.33,
+                        stepFlashing: 20.67,
+                        transitions: 28.75,
+                        unspecified: 15.00
+                    };
+                } else {
+                    const sq = building.totalAreaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
+                    bldgLinear = {
+                        ridges: sq * 2.8,
+                        hips: sq * 0.8,
+                        valleys: sq * 1.1,
+                        eaves: sq * 7.2,
+                        rakes: sq * 6.5,
+                        wallFlashing: sq * 1.5,
+                        stepFlashing: sq * 1.8,
+                        unspecified: 0.0
+                    };
+                }
+            } else {
+                const sq = building.totalAreaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
+                bldgLinear = {
+                    ridges: sq * 2.8,
+                    hips: sq * 0.8,
+                    valleys: sq * 1.1,
+                    eaves: sq * 7.2,
+                    rakes: sq * 6.5,
+                    wallFlashing: sq * 1.5,
+                    stepFlashing: sq * 1.8,
+                    unspecified: 0.0
+                };
+            }
+
+            Object.keys(bldgLinear).forEach(key => {
+                linearMeasurements[key] = (linearMeasurements[key] || 0) + (bldgLinear[key] || 0);
+            });
+        });
     }
 
     return {

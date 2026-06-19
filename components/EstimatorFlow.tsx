@@ -113,6 +113,10 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
                     onStartOver={handleStartNew}
                     streetViewUrl={streetViewUrl}
                     satelliteViewUrl={satelliteViewUrl}
+                    buildingData={buildingData}
+                    setBuildingData={setBuildingData}
+                    surveyState={surveyState}
+                    onSurveyChange={setSurveyState}
                 />
             )
         }
@@ -124,6 +128,7 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
             return (
                 <RoofOptions 
                     buildingData={buildingData}
+                    setBuildingData={setBuildingData}
                     surveyState={surveyState}
                     onSurveyChange={setSurveyState}
                     onContinue={handleRoofOptionsContinue}
