@@ -215,7 +215,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
           scale: isFocused ? 1.3 : 1.1,
           labelOrigin: new window.google.maps.Point(0, -30)
         },
-        title: `BLD ${idx + 1}`
+        title: `BLDG ${idx + 1}`
       });
 
       marker.addListener('click', () => {
@@ -462,7 +462,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                     {isAddingPin && (
                         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-black/90 border border-pink-500 text-white px-4 py-2 rounded-md shadow-lg flex items-center space-x-3 backdrop-blur-md">
                             <span className="text-sm font-semibold text-pink-400 font-sans">
-                                Click on the satellite map to place BLD {buildingData ? buildingData.buildings.length + 1 : 2}
+                                Click on the satellite map to place BLDG {buildingData ? buildingData.buildings.length + 1 : 2}
                             </span>
                             <button
                                 type="button"
@@ -525,7 +525,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="flex flex-col min-w-0">
                                                 <span className="text-base font-bold text-white truncate flex items-center">
-                                                    BLD {idx + 1}
+                                                    BLDG {idx + 1}
                                                     {idx === 0 && <span className="text-[10px] text-pink-400 font-normal ml-2 bg-pink-400/10 px-1.5 py-0.5 rounded border border-pink-400/20">Primary</span>}
                                                 </span>
                                                 <span className="text-sm font-semibold text-pink-400/90 font-mono mt-1">{sqValue} SQ</span>

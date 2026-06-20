@@ -182,7 +182,7 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                                                     >
                                                         <div className="flex flex-col min-w-0">
                                                             <span className="font-semibold text-white whitespace-nowrap truncate">
-                                                                BLD {idx + 1} {idx === 0 && <span className="text-[10px] text-pink-400 font-normal ml-1">(Primary)</span>}
+                                                                BLDG {idx + 1} {idx === 0 && <span className="text-[10px] text-pink-400 font-normal ml-1">(Primary)</span>}
                                                             </span>
                                                             <span className="font-mono text-xs text-white/70">
                                                                 <span className="text-white">{sqValue}</span> SQ

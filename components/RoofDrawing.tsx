@@ -1,12 +1,14 @@
 import React from 'react';
+import type { Building } from '../types';
 
 interface RoofDrawingProps {
   address: string;
+  building?: Building;
   width?: number;
   height?: number;
 }
 
-export const RoofDrawing: React.FC<RoofDrawingProps> = ({ address, width = 400, height = 500 }) => {
+export const RoofDrawing: React.FC<RoofDrawingProps> = ({ address, building, width = 400, height = 500 }) => {
   const isMemorial = address.toLowerCase().includes('memorial');
   const isNephi = address.toLowerCase().includes('nephi');
 
@@ -45,6 +47,47 @@ export const RoofDrawing: React.FC<RoofDrawingProps> = ({ address, width = 400, 
   }
 
   if (!isMemorial) {
+    if (building?.polygonVertices && building.polygonVertices.length >= 3) {
+      const vertices = building.polygonVertices;
+      let minLat = Infinity, maxLat = -Infinity;
+      let minLng = Infinity, maxLng = -Infinity;
+      
+      vertices.forEach(v => {
+        if (v.lat < minLat) minLat = v.lat;
+        if (v.lat > maxLat) maxLat = v.lat;
+        if (v.lng < minLng) minLng = v.lng;
+        if (v.lng > maxLng) maxLng = v.lng;
+      });
+
+      const latRange = maxLat - minLat;
+      const lngRange = maxLng - minLng;
+      const maxRange = Math.max(latRange, lngRange) || 0.0001;
+
+      const size = 200;
+      const padding = 30;
+      const drawSize = size - 2 * padding;
+
+      const centerLat = (minLat + maxLat) / 2;
+      const centerLng = (minLng + maxLng) / 2;
+      const cosLat = Math.cos(centerLat * Math.PI / 180);
+
+      const points = vertices.map(v => {
+        const x = padding + drawSize / 2 + ((v.lng - centerLng) * cosLat / maxRange) * drawSize / 2;
+        const y = padding + drawSize / 2 - ((v.lat - centerLat) / maxRange) * drawSize / 2;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+
+      return (
+        <div className="flex flex-col items-center justify-center h-full font-sans">
+          <svg viewBox="0 0 200 200" className="w-full h-auto max-w-[200px] stroke-cyan-500 fill-cyan-500/10 stroke-[2.5] stroke-linejoin-round">
+            <polygon points={points} />
+            <line x1="100" y1="30" x2="100" y2="170" strokeDasharray="3" />
+          </svg>
+          <p className="text-slate-600 text-sm mt-3 text-center">Interactive 3D Geometry Preview</p>
+        </div>
+      );
+    }
+
     // Return a generic fallback drawing for other addresses (transparent background)
     return (
       <div className="flex flex-col items-center justify-center h-full font-sans">

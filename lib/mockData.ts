@@ -123,23 +123,90 @@ export function generateMockBuildingData(place: Place): BuildingData {
   }
   
   // Default Generator for any other address
-  const random = pseudoRandom(place.latitude, place.longitude);
+  const isMemorial = lowerCaseAddress.includes('memorial') || (Math.abs(lat - 40.571939) < 0.001 && Math.abs(lng - -111.964403) < 0.001);
+  const isNephi = lowerCaseAddress.includes('nephi') || (Math.abs(lat - 39.7270586) < 0.005 && Math.abs(lng - -111.8345244) < 0.005);
+  const isEmerson = lowerCaseAddress.includes('emerson') || (Math.abs(lat - 40.7376366) < 0.005 && Math.abs(lng - -111.8785726) < 0.005);
+
+  if (isMemorial) {
+    const baseArea = 245.7; // ~24.57 SQ total
+    const facets = [];
+    for (let j = 0; j < 8; j++) {
+      facets.push({
+        id: `gen_f${j}`,
+        areaMeters: baseArea / 8,
+        pitchDegrees: 26.57, // 6/12 pitch
+      });
+    }
+    return {
+      buildings: [{
+        id: 'Main Structure',
+        totalAreaMeters: baseArea,
+        facets: facets,
+        lat,
+        lng,
+        polygonVertices: getInitialPolygonVertices(lat, lng, place.address, 1)
+      }],
+      yearConstructed: 1995,
+    };
+  }
+
+  if (isNephi) {
+    const baseArea = 299.1; // ~29.91 SQ
+    const facets = [];
+    for (let j = 0; j < 6; j++) {
+      facets.push({
+        id: `gen_f${j}`,
+        areaMeters: baseArea / 6,
+        pitchDegrees: 26.57, // 6/12 pitch
+      });
+    }
+    return {
+      buildings: [{
+        id: 'Main Structure',
+        totalAreaMeters: baseArea,
+        facets: facets,
+        lat,
+        lng,
+        polygonVertices: getInitialPolygonVertices(lat, lng, place.address, 1)
+      }],
+      yearConstructed: 1982,
+    };
+  }
+
+  if (isEmerson) {
+    const baseArea = 239.6; // ~23.96 SQ
+    const facets = [];
+    for (let j = 0; j < 9; j++) {
+      facets.push({
+        id: `gen_f${j}`,
+        areaMeters: baseArea / 9,
+        pitchDegrees: 26.57, // 6/12 pitch
+      });
+    }
+    return {
+      buildings: [{
+        id: 'Main Structure',
+        totalAreaMeters: baseArea,
+        facets: facets,
+        lat,
+        lng,
+        polygonVertices: getInitialPolygonVertices(lat, lng, place.address, 1)
+      }],
+      yearConstructed: 1965,
+    };
+  }
+
+  const random = pseudoRandom(lat, lng);
   const yearConstructed = 1970 + Math.floor(random * 50);
-  
-  // Default 192 sqm (16mx12m) to match initial polygon bounds exactly
-  const baseArea = 192;
-  const numFacets = 6 + Math.floor(random * 6); // 6 to 12 facets
+  const baseArea = 192; // Default 192 sqm (16mx12m)
+  const numFacets = 2; // Gable roof matches fallback diagram exactly!
   const facets = [];
   
   for (let j = 0; j < numFacets; j++) {
-    const facetArea = baseArea / numFacets;
-    const isSteep = Math.random() > 0.5;
-    const pitchDegrees = isSteep ? 30 + (Math.random() * 10) : 15 + (Math.random() * 10); 
-    
     facets.push({
       id: `gen_f${j}`,
-      areaMeters: facetArea,
-      pitchDegrees: pitchDegrees,
+      areaMeters: baseArea / numFacets,
+      pitchDegrees: 26.57, // 6/12 pitch (26.57 degrees)
     });
   }
 
@@ -148,9 +215,9 @@ export function generateMockBuildingData(place: Place): BuildingData {
         id: 'Main Structure',
         totalAreaMeters: baseArea,
         facets: facets,
-        lat: place.latitude,
-        lng: place.longitude,
-        polygonVertices: getInitialPolygonVertices(place.latitude, place.longitude, place.address, 1)
+        lat,
+        lng,
+        polygonVertices: getInitialPolygonVertices(lat, lng, place.address, 1)
     }], 
     yearConstructed 
   };
@@ -182,19 +249,15 @@ export function createTaggedBuilding(index: number, areaSq: number, pitchIn12: n
 }
 
 export function generateBuildingFromLatLng(lat: number, lng: number, index: number): Building {
-  const random = pseudoRandom(lat, lng);
   const baseArea = 63; // 9m x 7m = 63 sqm
-  const numFacets = 2 + Math.floor(random * 4); // 2 to 6 facets
+  const numFacets = 2; // Outbuildings/garages are simple gables with 2 facets
   const facets: RoofFacet[] = [];
+  const pitchDegrees = 18.43; // 4/12 pitch (18.43 degrees)
 
   for (let j = 0; j < numFacets; j++) {
-    const facetArea = baseArea / numFacets;
-    const isSteep = random > 0.5;
-    const pitchDegrees = isSteep ? 22.6 + (j % 2) * 4 : 18.4 + (j % 2) * 4;
-    
     facets.push({
       id: `BLD_${index}_f${j}`,
-      areaMeters: facetArea,
+      areaMeters: baseArea / numFacets,
       pitchDegrees: pitchDegrees,
     });
   }

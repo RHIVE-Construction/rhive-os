@@ -72,6 +72,47 @@ const DetailItem: React.FC<{ label: string, value: React.ReactNode, isTotal?: bo
 const BuildingDrawing: React.FC<{ building: Building }> = ({ building }) => {
     const numFacets = building.facets.length;
     
+    if (building.polygonVertices && building.polygonVertices.length >= 3) {
+        const vertices = building.polygonVertices;
+        let minLat = Infinity, maxLat = -Infinity;
+        let minLng = Infinity, maxLng = -Infinity;
+        
+        vertices.forEach(v => {
+            if (v.lat < minLat) minLat = v.lat;
+            if (v.lat > maxLat) maxLat = v.lat;
+            if (v.lng < minLng) minLng = v.lng;
+            if (v.lng > maxLng) maxLng = v.lng;
+        });
+
+        const latRange = maxLat - minLat;
+        const lngRange = maxLng - minLng;
+        const maxRange = Math.max(latRange, lngRange) || 0.0001;
+
+        const size = 200;
+        const padding = 30;
+        const drawSize = size - 2 * padding;
+
+        const centerLat = (minLat + maxLat) / 2;
+        const centerLng = (minLng + maxLng) / 2;
+        const cosLat = Math.cos(centerLat * Math.PI / 180);
+
+        const points = vertices.map(v => {
+            const x = padding + drawSize / 2 + ((v.lng - centerLng) * cosLat / maxRange) * drawSize / 2;
+            const y = padding + drawSize / 2 - ((v.lat - centerLat) / maxRange) * drawSize / 2;
+            return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(' ');
+
+        return (
+            <div className="flex flex-col items-center justify-center w-full h-full p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <svg viewBox="0 0 200 200" className="w-full h-auto max-w-[200px] stroke-[#0284c7] fill-[rgba(14,165,233,0.08)] stroke-[2.5] stroke-linejoin-round">
+                    <polygon points={points} />
+                    <line x1="100" y1="30" x2="100" y2="170" stroke="#ec028b" strokeWidth="2.5" strokeDasharray="3" />
+                </svg>
+                <p className="text-slate-500 text-sm mt-3 text-center">{numFacets} Facets Diagram</p>
+            </div>
+        );
+    }
+    
     if (numFacets === 1) {
         // Simple shed roof: single rectangle
         const facet = building.facets[0];
@@ -135,6 +176,97 @@ const BuildingDrawing: React.FC<{ building: Building }> = ({ building }) => {
     }
 };
 
+function getPolygonCenter(vertices: { lat: number; lng: number }[], defaultLat: number, defaultLng: number) {
+  if (!vertices || vertices.length === 0) return { lat: defaultLat, lng: defaultLng };
+  let sumLat = 0;
+  let sumLng = 0;
+  vertices.forEach(v => {
+    sumLat += v.lat;
+    sumLng += v.lng;
+  });
+  return {
+    lat: sumLat / vertices.length,
+    lng: sumLng / vertices.length
+  };
+}
+
+const getStaticMapUrl = (
+  building: Building,
+  allBuildings: Building[],
+  includedBuildingIds: string[],
+  place: Place,
+  mapsKey: string
+) => {
+  if (!mapsKey) return '';
+  
+  const paths: string[] = [];
+  const markers: string[] = [];
+  
+  allBuildings.forEach((b, idx) => {
+    // Render all buildings on the property for context, highlight the current one in pink, others in gray
+    const isCurrent = b.id === building.id;
+    const vertices = b.polygonVertices || [];
+    
+    if (vertices.length >= 3) {
+      const closedVertices = [...vertices, vertices[0]];
+      const pathCoords = closedVertices.map(v => `${v.lat.toFixed(6)},${v.lng.toFixed(6)}`).join('|');
+      const pathColor = isCurrent ? '0xec028b' : '0x6b7280';
+      const pathFill = isCurrent ? '0xec028b25' : '0x6b728015';
+      const pathWeight = isCurrent ? '3' : '2';
+      paths.push(`path=color:${pathColor}|weight:${pathWeight}|fillcolor:${pathFill}|${pathCoords}`);
+    }
+    
+    const bldgCenter = getPolygonCenter(vertices, b.lat ?? place.latitude, b.lng ?? place.longitude);
+    const markerColor = isCurrent ? '0xec028b' : '0x6b7280';
+    markers.push(`markers=color:${markerColor}|label:${idx + 1}|${bldgCenter.lat.toFixed(6)},${bldgCenter.lng.toFixed(6)}`);
+  });
+
+  const pathsQuery = paths.join('&');
+  const markersQuery = markers.join('&');
+  
+  // Calculate bounding box of all valid buildings (those with vertices.length >= 3)
+  const validBuildings = allBuildings.filter(b => b.polygonVertices && b.polygonVertices.length >= 3);
+  
+  let minLat = Infinity, maxLat = -Infinity;
+  let minLng = Infinity, maxLng = -Infinity;
+  
+  if (validBuildings.length > 0) {
+    validBuildings.forEach(b => {
+      (b.polygonVertices || []).forEach(v => {
+        minLat = Math.min(minLat, v.lat);
+        maxLat = Math.max(maxLat, v.lat);
+        minLng = Math.min(minLng, v.lng);
+        maxLng = Math.max(maxLng, v.lng);
+      });
+    });
+  } else {
+    // Fallback to place coordinates if no valid polygon vertices exist
+    minLat = place.latitude;
+    maxLat = place.latitude;
+    minLng = place.longitude;
+    maxLng = place.longitude;
+  }
+  
+  // Center of the bounding box
+  const mapCenterLat = (minLat + maxLat) / 2;
+  const mapCenterLng = (minLng + maxLng) / 2;
+  
+  // Span in degrees
+  const latDiff = maxLat - minLat;
+  const lngDiff = maxLng - minLng;
+  const maxDiff = Math.max(latDiff, lngDiff);
+  
+  // Dynamically calculate zoom based on span (capping max zoom at 19)
+  let zoom = 19;
+  if (maxDiff > 0.0050) zoom = 15;
+  else if (maxDiff > 0.0025) zoom = 16;
+  else if (maxDiff > 0.0012) zoom = 17;
+  else if (maxDiff > 0.0005) zoom = 18;
+  else zoom = 19; // Cap max zoom at 19 to keep detail high but prevent clipping
+  
+  return `https://maps.googleapis.com/maps/api/staticmap?center=${mapCenterLat.toFixed(6)},${mapCenterLng.toFixed(6)}&zoom=${zoom}&size=400x400&maptype=satellite&${pathsQuery}&${markersQuery}&key=${mapsKey}`;
+};
+
 export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingData, surveyState, calcResult }) => {
   const reportContentRef = useRef<HTMLDivElement>(null);
   const [mapsKey, setMapsKey] = useState<string>('');
@@ -143,8 +275,9 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
     getMapsApiKey().then(setMapsKey);
   }, []);
 
-  const satelliteUrl = mapsKey 
-    ? `https://maps.googleapis.com/maps/api/staticmap?center=${place.latitude},${place.longitude}&zoom=20&size=640x640&maptype=satellite&markers=color:0xec028b%7C${place.latitude},${place.longitude}&key=${mapsKey}`
+  const primaryBuilding = buildingData.buildings.find(b => surveyState.includedBuildingIds.includes(b.id));
+  const satelliteUrl = mapsKey && primaryBuilding
+    ? getStaticMapUrl(primaryBuilding, buildingData.buildings, surveyState.includedBuildingIds, place, mapsKey)
     : '';
 
   const handleDownloadPdf = async () => {
@@ -216,7 +349,8 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
       };
   });
 
-  const totalPagesCount = 4 + includedBuildings.length;
+  const hasMultipleBuildings = includedBuildings.length > 1;
+  const totalPagesCount = hasMultipleBuildings ? (4 + includedBuildings.length) : 4;
   return (
     <div className="text-black bg-gray-300">
       <div className="max-h-[70vh] overflow-y-auto">
@@ -332,62 +466,75 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
             </ReportPage>
 
             {/* PAGE 4: DETAILED GEOMETRY (EAGLEVIEW-STYLE) */}
-            <ReportPage pageNumber={4} totalPages={totalPagesCount}>
-                <ReportHeader place={place} title="Property Summary" subtitle="Combined Roof Measurements & Satellite Imagery" />
-                <div className="grid grid-cols-12 gap-8 items-start mt-6">
-                    <div className="col-span-5 bg-gray-50/50 p-4 border border-gray-200 rounded-lg">
-                        <h3 className="font-sans font-bold text-lg text-pink-600 mb-4 pb-1 border-b border-gray-200">Combined Measurements</h3>
-                        <div className="space-y-0.5 text-base">
-                            <DetailItem label="Total roof area" value={`${Math.round(calcResult.finalSq * 100)} sqft`} />
-                            <DetailItem label="Total pitched area" value={`${Math.round(calcResult.asphaltSq * 100)} sqft`} />
-                            <DetailItem label="Total flat area" value={`${Math.round(calcResult.flatRoofSq * 100)} sqft`} />
-                            <DetailItem label="Total roof facets" value={`${calcResult.roofEstimate.totalFacets} facets`} />
-                            <DetailItem label="Predominant pitch" value={`${calcResult.dominantPitch}/12`} />
-                            <DetailItem label="Total eaves" value={formatLength(calcResult.linearMeasurements.eaves)} />
-                            <DetailItem label="Total valleys" value={formatLength(calcResult.linearMeasurements.valleys)} />
-                            <DetailItem label="Total hips" value={formatLength(calcResult.linearMeasurements.hips)} />
-                            <DetailItem label="Total ridges" value={formatLength(calcResult.linearMeasurements.ridges)} />
-                            <DetailItem label="Total rakes" value={formatLength(calcResult.linearMeasurements.rakes)} />
-                            <DetailItem label="Total wall flashing" value={calcResult.linearMeasurements.wallFlashing ? formatLength(calcResult.linearMeasurements.wallFlashing) : '0ft 0in'} />
-                            <DetailItem label="Total step flashing" value={calcResult.linearMeasurements.stepFlashing ? formatLength(calcResult.linearMeasurements.stepFlashing) : '0ft 0in'} />
-                            <DetailItem label="Total transitions" value={calcResult.linearMeasurements.transitions ? formatLength(calcResult.linearMeasurements.transitions) : '0ft 0in'} />
-                            <DetailItem label="Total parapet wall" value="0ft 0in" />
-                            <DetailItem label="Total unspecified" value={calcResult.linearMeasurements.unspecified ? formatLength(calcResult.linearMeasurements.unspecified) : '0ft 0in'} />
-                            <div className="pt-2 mt-2 border-t border-gray-300">
-                                <DetailItem label="Hips + ridges" value={formatLength(calcResult.linearMeasurements.hips + calcResult.linearMeasurements.ridges)} isSubtotal />
-                                <DetailItem label="Eaves + rakes" value={formatLength(calcResult.linearMeasurements.eaves + calcResult.linearMeasurements.rakes)} isTotal />
+            {hasMultipleBuildings && (
+                <ReportPage pageNumber={4} totalPages={totalPagesCount}>
+                    <ReportHeader place={place} title="Property Summary" subtitle="Combined Roof Measurements & Satellite Imagery" />
+                    <div className="grid grid-cols-12 gap-8 items-start mt-6">
+                        <div className="col-span-5 bg-gray-50/50 p-4 border border-gray-200 rounded-lg">
+                            <h3 className="font-sans font-bold text-lg text-pink-600 mb-4 pb-1 border-b border-gray-200">Combined Measurements</h3>
+                            <div className="space-y-0.5 text-base">
+                                <DetailItem label="Total roof area" value={`${Math.round(calcResult.finalSq * 100)} sqft`} />
+                                <DetailItem label="Total pitched area" value={`${Math.round(calcResult.asphaltSq * 100)} sqft`} />
+                                <DetailItem label="Total flat area" value={`${Math.round(calcResult.flatRoofSq * 100)} sqft`} />
+                                <DetailItem label="Total roof facets" value={`${calcResult.roofEstimate.totalFacets} facets`} />
+                                <DetailItem label="Predominant pitch" value={`${calcResult.dominantPitch}/12`} />
+                                <DetailItem label="Total eaves" value={formatLength(calcResult.linearMeasurements.eaves)} />
+                                <DetailItem label="Total valleys" value={formatLength(calcResult.linearMeasurements.valleys)} />
+                                <DetailItem label="Total hips" value={formatLength(calcResult.linearMeasurements.hips)} />
+                                <DetailItem label="Total ridges" value={formatLength(calcResult.linearMeasurements.ridges)} />
+                                <DetailItem label="Total rakes" value={formatLength(calcResult.linearMeasurements.rakes)} />
+                                <DetailItem label="Total wall flashing" value={calcResult.linearMeasurements.wallFlashing ? formatLength(calcResult.linearMeasurements.wallFlashing) : '0ft 0in'} />
+                                <DetailItem label="Total step flashing" value={calcResult.linearMeasurements.stepFlashing ? formatLength(calcResult.linearMeasurements.stepFlashing) : '0ft 0in'} />
+                                <DetailItem label="Total transitions" value={calcResult.linearMeasurements.transitions ? formatLength(calcResult.linearMeasurements.transitions) : '0ft 0in'} />
+                                <DetailItem label="Total parapet wall" value="0ft 0in" />
+                                <DetailItem label="Total unspecified" value={calcResult.linearMeasurements.unspecified ? formatLength(calcResult.linearMeasurements.unspecified) : '0ft 0in'} />
+                                <div className="pt-2 mt-2 border-t border-gray-300">
+                                    <DetailItem label="Hips + ridges" value={formatLength(calcResult.linearMeasurements.hips + calcResult.linearMeasurements.ridges)} isSubtotal />
+                                    <DetailItem label="Eaves + rakes" value={formatLength(calcResult.linearMeasurements.eaves + calcResult.linearMeasurements.rakes)} isTotal />
+                                </div>
                             </div>
                         </div>
+                        <div className="col-span-7 flex flex-col items-center">
+                            <h3 className="font-sans font-bold text-lg text-black mb-4 self-start">Satellite Roof View</h3>
+                            {satelliteUrl ? (
+                                <img src={satelliteUrl} alt="Satellite Roof View" className="w-full h-auto max-w-[360px] rounded-lg shadow-md border-2 border-gray-200" />
+                            ) : (
+                                <div className="w-full h-[360px] max-w-[360px] bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 font-sans text-sm">
+                                    Loading satellite imagery...
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <div className="col-span-7 flex flex-col items-center">
-                        <h3 className="font-sans font-bold text-lg text-black mb-4 self-start">Satellite Roof View</h3>
-                        {satelliteUrl ? (
-                            <img src={satelliteUrl} alt="Satellite Roof View" className="w-full h-auto max-w-[360px] rounded-lg shadow-md border-2 border-gray-200" />
-                        ) : (
-                            <div className="w-full h-[360px] max-w-[360px] bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 font-sans text-sm">
-                                Loading satellite imagery...
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </ReportPage>
+                </ReportPage>
+            )}
 
             {/* SEPARATE STRUCTURE PAGES */}
             {buildingCalcs.map(({ building, res }, idx) => {
-                const pageNum = 5 + idx;
-                const bldgName = `BLD ${idx + 1}`;
+                const pageNum = (hasMultipleBuildings ? 5 : 4) + idx;
+                const bldgName = `BLDG ${idx + 1}`;
                 const isPrimary = idx === 0;
 
                 return (
                     <ReportPage key={building.id} pageNumber={pageNum} totalPages={totalPagesCount}>
-                        <ReportHeader place={place} title={`Structure #${idx + 1} summary`} subtitle={`${bldgName} Measurements ${isPrimary ? '(Primary Structure)' : '(Manually Tagged)'}`} />
+                        <ReportHeader place={place} title={`BLDG ${idx + 1} Summary`} subtitle={`${bldgName} Measurements ${isPrimary ? '(Primary Structure)' : '(Manually Tagged)'}`} />
                         <div className="grid grid-cols-12 gap-8 items-start mt-6">
                             <div className="col-span-6 flex flex-col items-center">
                                 <h3 className="font-sans font-bold text-lg text-black mb-4 self-start">Structure Diagram</h3>
-                                {isPrimary && !building.id.startsWith('BLD_') ? (
-                                    <RoofDrawing address={place.address} />
+                                {mapsKey ? (
+                                    <div className="w-full flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                                        <img 
+                                            src={getStaticMapUrl(building, buildingData.buildings, surveyState.includedBuildingIds, place, mapsKey)} 
+                                            alt={`${bldgName} Diagram`} 
+                                            className="w-full h-auto max-w-[280px] rounded-lg shadow-md border border-gray-200" 
+                                        />
+                                        <p className="text-slate-500 text-sm mt-3 text-center">Interactive 3D Geometry Preview</p>
+                                    </div>
                                 ) : (
-                                    <BuildingDrawing building={building} />
+                                    isPrimary && !building.id.startsWith('BLD_') ? (
+                                        <RoofDrawing address={place.address} building={building} />
+                                    ) : (
+                                        <BuildingDrawing building={building} />
+                                    )
                                 )}
                             </div>
                             <div className="col-span-6 bg-gray-50/50 p-4 border border-gray-200 rounded-lg">
