@@ -16,6 +16,44 @@ export function getInitialPolygonVertices(lat: number, lng: number, address: str
   const isEmerson = lower.includes('emerson') || (Math.abs(lat - 40.7376366) < 0.005 && Math.abs(lng - -111.8785726) < 0.005);
   const isCoachman = lower.includes('coachman') || (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
   
+  if (isCoachman && index > 1) {
+    const widthMeters = 7.8;
+    const heightMeters = 6.8;
+    const angleDeg = -41; // Rotation angle in degrees (counter-clockwise)
+    const theta = angleDeg * Math.PI / 180;
+    
+    const latConv = 111111;
+    const lngConv = 111111 * Math.cos(lat * Math.PI / 180);
+    
+    const dx1 = -widthMeters / 2;
+    const dy1 = heightMeters / 2;
+    
+    const dx2 = widthMeters / 2;
+    const dy2 = heightMeters / 2;
+    
+    const dx3 = widthMeters / 2;
+    const dy3 = -heightMeters / 2;
+    
+    const dx4 = -widthMeters / 2;
+    const dy4 = -heightMeters / 2;
+    
+    const rotate = (dx: number, dy: number) => {
+      const rx = dx * Math.cos(theta) - dy * Math.sin(theta);
+      const ry = dx * Math.sin(theta) + dy * Math.cos(theta);
+      return {
+        lat: lat + ry / latConv,
+        lng: lng + rx / lngConv
+      };
+    };
+    
+    return [
+      rotate(dx1, dy1), // Top-Left
+      rotate(dx2, dy2), // Top-Right
+      rotate(dx3, dy3), // Bottom-Right
+      rotate(dx4, dy4)  // Bottom-Left
+    ];
+  }
+
   if (index === 1) { // Primary building
     if (isCoachman) {
       return [
@@ -290,7 +328,8 @@ export function createTaggedBuilding(index: number, areaSq: number, pitchIn12: n
 }
 
 export function generateBuildingFromLatLng(lat: number, lng: number, index: number): Building {
-  const baseArea = 63; // 9m x 7m = 63 sqm
+  const isCoachman = (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
+  const baseArea = isCoachman ? 53 : 63; // 7.8m x 6.8m = 53 sqm for Coachman outbuilding
   const numFacets = 2; // Outbuildings/garages are simple gables with 2 facets
   const facets: RoofFacet[] = [];
   const pitchDegrees = 18.43; // 4/12 pitch (18.43 degrees)
