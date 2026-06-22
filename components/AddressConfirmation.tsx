@@ -51,6 +51,8 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
   
   const [isAddingPin, setIsAddingPin] = useState(false);
   const [focusedBuildingId, setFocusedBuildingId] = useState<string | null>(null);
+  const hasAnimatedRef = useRef<boolean>(false);
+  const isAnimatingRef = useRef<boolean>(false);
 
   // Centroid calculator helper
   const getPolygonCenter = (vertices: { lat: number; lng: number }[], fallbackLat: number, fallbackLng: number) => {
@@ -121,16 +123,24 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
   useEffect(() => {
     if (!isApiReady || !mapRef.current || map) return;
 
+    const initialMapType = hasAnimatedRef.current ? 'satellite' : 'roadmap';
     const mapInstance = new window.google.maps.Map(mapRef.current, {
       center: { lat: place.latitude, lng: place.longitude },
       zoom: 20,
-      mapTypeId: 'satellite',
+      mapTypeId: initialMapType,
       disableDefaultUI: true,
       zoomControl: true,
       tilt: 0,
     });
 
     setMap(mapInstance);
+
+    if (!hasAnimatedRef.current) {
+      const timer = setTimeout(() => {
+        mapInstance.setMapTypeId('satellite');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
   }, [isApiReady, place.latitude, place.longitude, map]);
 
   // 2. Set Map Cursor Style in Pin Dropping Mode
@@ -247,20 +257,14 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
       const vertices = building.polygonVertices || [];
       const pathCoords = vertices.map(v => new window.google.maps.LatLng(v.lat, v.lng));
 
-      if (!poly) {
-        poly = new window.google.maps.Polygon({
-          paths: pathCoords,
-          strokeColor: '#ec028b',
-          strokeOpacity: isFocused ? 0.9 : 0.5,
-          strokeWeight: isFocused ? 3.5 : 2,
-          fillColor: '#ec028b',
-          fillOpacity: isFocused ? 0.25 : 0.08,
-          editable: isFocused && view === 'satellite',
-          draggable: false,
-          map: map,
-        });
+      // Skip updating if this building is currently animating
+      const isPrimary = building.id === buildingData.buildings[0]?.id;
+      if (poly && isAnimatingRef.current && isPrimary) {
+        return;
+      }
 
-        // Set path change listener
+      if (!poly) {
+        // Set path change listener helper
         const registerPathListener = (polygonInstance: any) => {
           const path = polygonInstance.getPath();
           
@@ -304,8 +308,75 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
           path.addListener('remove_at', onPathChange);
         };
 
-        registerPathListener(poly);
-        gPolygonsMapRef.current.set(building.id, poly);
+        if (isPrimary && !hasAnimatedRef.current) {
+          isAnimatingRef.current = true;
+          const pinCenter = new window.google.maps.LatLng(place.latitude, place.longitude);
+          const startCoords = vertices.map(() => pinCenter);
+          
+          poly = new window.google.maps.Polygon({
+            paths: startCoords,
+            strokeColor: '#ec028b',
+            strokeOpacity: 0,
+            strokeWeight: isFocused ? 3.5 : 2,
+            fillColor: '#ec028b',
+            fillOpacity: 0,
+            editable: false,
+            draggable: false,
+            map: map,
+          });
+
+          gPolygonsMapRef.current.set(building.id, poly);
+
+          const duration = 1200;
+          const startTime = performance.now();
+
+          const animateSnap = (time: number) => {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+
+            const currentCoords = vertices.map(v => {
+              const lat = place.latitude + ease * (v.lat - place.latitude);
+              const lng = place.longitude + ease * (v.lng - place.longitude);
+              return new window.google.maps.LatLng(lat, lng);
+            });
+
+            poly.setPath(currentCoords);
+            poly.setOptions({
+              strokeOpacity: ease * (isFocused ? 0.9 : 0.5),
+              fillOpacity: ease * (isFocused ? 0.25 : 0.08),
+            });
+
+            if (progress < 1) {
+              requestAnimationFrame(animateSnap);
+            } else {
+              hasAnimatedRef.current = true;
+              isAnimatingRef.current = false;
+              poly.setPath(pathCoords);
+              poly.setOptions({
+                editable: isFocused && view === 'satellite',
+              });
+              registerPathListener(poly);
+            }
+          };
+
+          requestAnimationFrame(animateSnap);
+        } else {
+          poly = new window.google.maps.Polygon({
+            paths: pathCoords,
+            strokeColor: '#ec028b',
+            strokeOpacity: isFocused ? 0.9 : 0.5,
+            strokeWeight: isFocused ? 3.5 : 2,
+            fillColor: '#ec028b',
+            fillOpacity: isFocused ? 0.25 : 0.08,
+            editable: isFocused && view === 'satellite',
+            draggable: false,
+            map: map,
+          });
+
+          registerPathListener(poly);
+          gPolygonsMapRef.current.set(building.id, poly);
+        }
       } else {
         // Update styling and editable state
         poly.setOptions({
