@@ -33,8 +33,6 @@ const PasswordResetPage: React.FC = () => {
     // Request State (State A)
     const [requestEmail, setRequestEmail] = useState('');
     const [isRequested, setIsRequested] = useState(false);
-    const [generatedToken, setGeneratedToken] = useState('');
-    const [generatedLink, setGeneratedLink] = useState('');
     const [loadingRequest, setLoadingRequest] = useState(false);
 
     // Override State (State B)
@@ -85,10 +83,9 @@ const PasswordResetPage: React.FC = () => {
         const res = await passwordResetService.createResetToken(requestEmail);
         setLoadingRequest(false);
 
-        if (res.success && res.token) {
-            setGeneratedToken(res.token);
-            const link = `${window.location.origin}/?page=P-07&token=${res.token}`;
-            setGeneratedLink(link);
+        if (res.success) {
+            // Email has been queued via Firestore `mail` collection.
+            // The "Trigger Email from Firestore" extension delivers it.
             setIsRequested(true);
         } else {
             setErrorMessage(res.error || 'Failed to dispatch secure link. Verify registered status.');
@@ -377,16 +374,25 @@ const PasswordResetPage: React.FC = () => {
                                     <div className="w-12 h-12 bg-green-950/20 border border-green-500/30 rounded-xl flex items-center justify-center mx-auto mb-2 text-green-400 shadow-[0_0_12px_rgba(34,197,94,0.2)]">
                                         <ShieldCheckIcon className="w-6 h-6" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-white uppercase tracking-widest">Protocol Initialized</h3>
-                                    <p className="text-gray-400 text-xs leading-relaxed max-w-sm mx-auto">
-                                        A secure recovery link has been dispatched to your email address. Please check your inbox and follow the instructions to reset your password.
-                                    </p>
+                                    <h3 className="text-lg font-bold text-white uppercase tracking-widest">Email Sent</h3>
+                                    <div className="space-y-3">
+                                        <p className="text-gray-400 text-xs leading-relaxed max-w-sm mx-auto">
+                                            A password reset link has been sent to:
+                                        </p>
+                                        <p className="text-[#ec028b] text-sm font-bold font-mono break-all">
+                                            {requestEmail}
+                                        </p>
+                                        <p className="text-gray-500 text-[11px] leading-relaxed max-w-sm mx-auto">
+                                            Check your inbox and follow the link to set a new password.
+                                            The link expires in <strong className="text-gray-400">1 hour</strong>.
+                                        </p>
+                                    </div>
                                     <Button
                                         variant="secondary"
-                                        onClick={() => setIsRequested(false)}
+                                        onClick={() => { setIsRequested(false); setRequestEmail(''); }}
                                         className="w-full text-xs font-black tracking-widest"
                                     >
-                                        Request Another Link
+                                        Send to a Different Email
                                     </Button>
                                 </div>
                             )}

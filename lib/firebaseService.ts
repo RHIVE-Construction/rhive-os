@@ -542,11 +542,13 @@ export const userService = {
 
 export const passwordResetService = {
     /**
-     * Generates a reset token and stores it directly on the user document
-     * in the `users` collection. No separate password_resets collection needed.
+     * Generates a reset token, stores it on the user document,
+     * then queues a password-reset email via the Firestore `mail` collection.
+     * The "Trigger Email from Firestore" Firebase extension handles delivery.
      */
     createResetToken: async (email: string) => {
         try {
+            const { emailService } = await import('./emailService');
             const normalizedEmail = email.toLowerCase().trim();
 
             // 1. Verify user exists
@@ -573,7 +575,15 @@ export const passwordResetService = {
                 return { success: false, error: updateResult.error || 'Failed to generate reset token.' };
             }
 
-            return { success: true, token, email: normalizedEmail };
+            // 4. Queue password reset email via Firestore `mail` collection
+            const emailResult = await emailService.sendPasswordReset(normalizedEmail, token);
+            if (!emailResult.success) {
+                // Email queuing failed — still return success so user isn't locked out,
+                // but log the failure for investigation.
+                console.error('[passwordResetService] Email queuing failed:', emailResult.error);
+            }
+
+            return { success: true, token, email: normalizedEmail, emailQueued: emailResult.success };
         } catch (error: any) {
             console.error('Error in createResetToken:', error);
             return { success: false, error: error.message };
