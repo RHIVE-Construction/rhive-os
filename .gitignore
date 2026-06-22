@@ -36,6 +36,9 @@ REFERENCES/
 firebase-service-account.json
 serviceAccountKey.json
 
+# Firebase CLI local cache
+.firebase/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

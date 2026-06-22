@@ -13,6 +13,12 @@ const JUSTCALL_API_KEY = process.env.JUSTCALL_API_KEY;
 const JUSTCALL_API_SECRET = process.env.JUSTCALL_API_SECRET;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
+// Mailgun Configuration (set via: firebase functions:secrets:set MAILGUN_API_KEY + MAILGUN_DOMAIN)
+const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
+// Always send from the official RHIVE support address
+const MAILGUN_FROM_EMAIL = 'RHIVE Support <support@rhiveconstruction.com>';
+
 let genAI = null;
 if (GEMINI_API_KEY) {
     try {
@@ -298,7 +304,7 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
                 return res.status(401).json({ error: 'Invalid webhook signature.' });
             }
         } else {
-            // Log but do not reject — older webhooks may not include signature headers
+            // Log but do not reject â€” older webhooks may not include signature headers
             console.warn('No x-justcall-signature-version header. Proceeding without verification.');
         }
 
@@ -370,4 +376,193 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
         }
     });
 });
+
+
+
+// -----------------------------------------------------------------------------
+// MAILGUN — OTP-BASED PASSWORD RESET
+// -----------------------------------------------------------------------------
+
+/**
+ * Helper: sends an email via Mailgun REST API using axios.
+ * No extra npm package needed — axios is already a dependency.
+ */
+async function sendMailgunEmail({ to, subject, html, text }) {
+    if (!MAILGUN_API_KEY || !MAILGUN_DOMAIN) {
+        throw new Error('Mailgun is not configured. Set MAILGUN_API_KEY and MAILGUN_DOMAIN secrets.');
+    }
+
+    const FormData = require('form-data');
+    const form = new FormData();
+    form.append('from', MAILGUN_FROM_EMAIL);
+    form.append('to', to);
+    form.append('subject', subject);
+    form.append('html', html);
+    if (text) form.append('text', text);
+
+    const response = await axios.post(
+        `https://api.mailgun.net/v3/${MAILGUN_DOMAIN}/messages`,
+        form,
+        {
+            auth: { username: 'api', password: MAILGUN_API_KEY },
+            headers: form.getHeaders(),
+        }
+    );
+    return response.data;
+}
+
+/**
+ * Builds the RHIVE-branded password reset link email HTML.
+ */
+function buildResetLinkEmailHtml(resetLink, expiryMinutes = 60) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset Your RHIVE Password</title>
+  <style>
+    body { margin: 0; padding: 0; background: #0a0a0a; font-family: Arial, sans-serif; }
+    .wrapper { max-width: 560px; margin: 40px auto; background: #0a0a0a; border: 1px solid #374151; }
+    .accent-bar { height: 3px; background: linear-gradient(90deg, #ec028b, #08137C); }
+    .header { padding: 32px 40px 24px; border-bottom: 1px solid #1f2937; }
+    .logo { font-size: 22px; font-weight: 900; letter-spacing: 0.3em; color: #fff; text-transform: uppercase; font-family: 'Courier New', monospace; }
+    .logo span { color: #ec028b; }
+    .tagline { font-size: 10px; letter-spacing: 0.4em; color: #4b5563; text-transform: uppercase; margin-top: 4px; }
+    .body { padding: 40px; }
+    .label { font-size: 10px; letter-spacing: 0.4em; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; }
+    .title { font-size: 22px; font-weight: 900; color: #fff; margin: 0 0 16px; }
+    .intro { font-size: 14px; color: #9ca3af; line-height: 1.7; margin-bottom: 32px; }
+    .btn-wrap { text-align: center; margin-bottom: 32px; }
+    .btn { display: inline-block; background: #ec028b; color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 16px 40px; letter-spacing: 0.05em; }
+    .link-fallback { background: #111; border: 1px solid #1f2937; padding: 16px 20px; margin-bottom: 28px; }
+    .link-fallback p { font-size: 11px; color: #6b7280; margin: 0 0 8px; }
+    .link-fallback a { font-size: 11px; color: #ec028b; word-break: break-all; }
+    .expiry { font-size: 12px; color: #6b7280; text-align: center; margin-bottom: 28px; }
+    .expiry strong { color: #ec028b; }
+    .warning { background: #111; border-left: 2px solid #374151; padding: 14px 18px; font-size: 12px; color: #6b7280; line-height: 1.6; }
+    .footer { padding: 24px 40px; border-top: 1px solid #1f2937; text-align: center; }
+    .footer p { font-size: 11px; color: #374151; margin: 4px 0; }
+    .footer a { color: #ec028b; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="accent-bar"></div>
+    <div class="header">
+      <div class="logo">R<span>H</span>IVE</div>
+      <div class="tagline">Construction Management Platform</div>
+    </div>
+    <div class="body">
+      <div class="label">Password Reset</div>
+      <h1 class="title">Reset Your Password</h1>
+      <p class="intro">
+        We received a request to reset the password for your RHIVE account.
+        Click the button below to create a new password. This link is valid for
+        <strong style="color:#fff">${expiryMinutes} minutes</strong>.
+      </p>
+      <div class="btn-wrap">
+        <a href="${resetLink}" class="btn">Reset My Password</a>
+      </div>
+      <div class="link-fallback">
+        <p>If the button doesn't work, copy and paste this link into your browser:</p>
+        <a href="${resetLink}">${resetLink}</a>
+      </div>
+      <div class="expiry">Link expires in <strong>${expiryMinutes} minutes</strong></div>
+      <div class="warning">
+        If you didn't request a password reset, you can safely ignore this email.
+        Your account password has not been changed.
+      </div>
+    </div>
+    <div class="footer">
+      <p>RHIVE Construction &mdash; <a href="mailto:support@rhiveconstruction.com">support@rhiveconstruction.com</a></p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * 4. Send Password Reset Link via Mailgun
+ * Called from the frontend when user submits their email on the forgot-password page.
+ * Generates a secure token, stores it in Firestore, and emails the user a clickable
+ * reset link. Returns only { success: true } — the token is never sent to the browser.
+ */
+exports.sendPasswordResetLink = functions
+    .runWith({ secrets: ['MAILGUN_API_KEY', 'MAILGUN_DOMAIN'] })
+    .https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+        const { email } = req.body;
+        if (!email || typeof email !== 'string') {
+            return res.status(400).json({ success: false, error: 'Email is required.' });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const db = admin.firestore();
+
+        try {
+            // 1. Verify the user exists in Firestore
+            const snapshot = await db.collection('users')
+                .where('email', '==', normalizedEmail)
+                .limit(1)
+                .get();
+
+            if (snapshot.empty) {
+                // Return success regardless (prevents email enumeration attacks)
+                console.log(`OTP request for non-existent user: ${normalizedEmail}`);
+                return res.status(200).json({ success: true });
+            }
+
+            const userDoc = snapshot.docs[0];
+            const userId = userDoc.id;
+
+            // 2. Rate-limit: block if a reset email was sent less than 60 seconds ago
+            const userData = userDoc.data();
+            if (userData.reset_sent_at) {
+                const sentAt = new Date(userData.reset_sent_at).getTime();
+                const secondsAgo = (Date.now() - sentAt) / 1000;
+                if (secondsAgo < 60) {
+                    return res.status(429).json({
+                        success: false,
+                        error: `Please wait ${Math.ceil(60 - secondsAgo)}s before requesting another link.`
+                    });
+                }
+            }
+
+            // 3. Generate a secure reset token (60-min expiry)
+            const resetToken = crypto.randomBytes(32).toString('hex') + Date.now().toString(36);
+            const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+            // 4. Store token on the user document
+            await db.collection('users').doc(userId).update({
+                reset_token: resetToken,
+                reset_token_expiry: tokenExpiry,
+                reset_sent_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            });
+
+            // 5. Build the reset link — points to the deployed app
+            const appBaseUrl = 'https://rhive-os.web.app';
+            const resetLink = `${appBaseUrl}/?page=P-07&token=${resetToken}`;
+
+            // 6. Send the link email via Mailgun
+            await sendMailgunEmail({
+                to: normalizedEmail,
+                subject: 'Reset Your RHIVE Password',
+                html: buildResetLinkEmailHtml(resetLink, 60),
+                text: `Reset your RHIVE password by visiting this link:\n\n${resetLink}\n\nThis link expires in 60 minutes.\n\nIf you did not request this, you can safely ignore this email.\n\nRHIVE Support — support@rhiveconstruction.com`,
+            });
+
+            console.log(`Password reset link sent to ${normalizedEmail}`);
+            return res.status(200).json({ success: true });
+
+        } catch (error) {
+            console.error('sendPasswordResetLink error:', error.message);
+            return res.status(500).json({ success: false, error: 'Failed to send reset link. Please try again.' });
+        }
+    });
+});
+
 

@@ -640,6 +640,37 @@ export const passwordResetService = {
             console.error('Error in completePasswordReset:', error);
             return { success: false, error: error.message };
         }
+    },
+
+    // ── MAILGUN EMAIL RESET LINK ─────────────────────────────────────────────
+
+    /**
+     * Calls the `sendPasswordResetLink` Cloud Function which generates a reset token,
+     * stores it in Firestore, and emails the user a password reset link via Mailgun.
+     * Always targets the deployed production Cloud Function (never localhost).
+     */
+    sendResetLink: async (email: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const projectId = (import.meta as any).env?.VITE_FIREBASE_PROJECT_ID || 'rhive-os';
+            // Always use the deployed production Cloud Function URL.
+            // The emulator is not required — Mailgun only works with deployed functions anyway.
+            const url = `https://us-central1-${projectId}.cloudfunctions.net/sendPasswordResetLink`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email.toLowerCase().trim() }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                return { success: false, error: data.error || 'Failed to send reset link.' };
+            }
+            return { success: true };
+        } catch (error: any) {
+            console.error('Error in sendResetLink:', error);
+            return { success: false, error: 'Could not reach the mail server. Please try again.' };
+        }
     }
 };
 
