@@ -18,17 +18,19 @@ export function getInitialPolygonVertices(lat: number, lng: number, address: str
   
   if (index === 1) { // Primary building
     if (isCoachman) {
-      const widthMeters = 9.8;
-      const heightMeters = 10.2;
-      const centerLat = lat + 0.000015;
-      const centerLng = lng;
+      const widthMeters = 10.4;
+      const heightMeters = 10.8;
+      const centerLat = lat + 0.00002;
+      const centerLng = lng + 0.000008;
       const latOffset = (heightMeters / 2) / 111111;
       const lngOffset = (widthMeters / 2) / (111111 * Math.cos(centerLat * Math.PI / 180));
       return [
-        { lat: centerLat + latOffset, lng: centerLng - lngOffset },
-        { lat: centerLat + latOffset, lng: centerLng + lngOffset },
-        { lat: centerLat - latOffset, lng: centerLng + lngOffset },
-        { lat: centerLat - latOffset, lng: centerLng - lngOffset },
+        { lat: centerLat + latOffset, lng: centerLng - lngOffset }, // Top-Left
+        { lat: centerLat + latOffset, lng: centerLng + 0.1 * lngOffset }, // Top-Notch-Start
+        { lat: centerLat + 0.4 * latOffset, lng: centerLng + 0.1 * lngOffset }, // Notch-Depth-South
+        { lat: centerLat + 0.4 * latOffset, lng: centerLng + lngOffset }, // Top-Right
+        { lat: centerLat - latOffset, lng: centerLng + lngOffset }, // Bottom-Right
+        { lat: centerLat - latOffset, lng: centerLng - lngOffset }, // Bottom-Left
       ];
     }
     if (isMemorial) {
@@ -144,7 +146,7 @@ export function generateMockBuildingData(place: Place): BuildingData {
   const isCoachman = lowerCaseAddress.includes('coachman') || (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
 
   if (isCoachman) {
-    const baseArea = 100; // ~10.76 SQ ground area
+    const baseArea = 97; // ~10.44 SQ ground area
     const facets = [];
     const numFacets = 2;
     for (let j = 0; j < numFacets; j++) {
