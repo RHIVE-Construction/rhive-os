@@ -18,32 +18,17 @@ export function getInitialPolygonVertices(lat: number, lng: number, address: str
   
   if (index === 1) { // Primary building
     if (isCoachman) {
-      const latConv = 111111;
-      const lngConv = 111111 * Math.cos(lat * Math.PI / 180);
-
-      const W_high = 4.0 / lngConv;
-      const W_right = 6.2 / lngConv;
-      const W_left = 12.5 / lngConv;
-      const W_proj_left = 11.0 / lngConv;
-      const W_proj_right = 8.0 / lngConv;
-
-      const H_high = 4.8 / latConv;
-      const H_bottom = 6.0 / latConv;
-      const H_proj = 2.2 / latConv;
-
       return [
-        { lat: lat + H_high, lng: lng - W_high }, // 1. Top-Left of high section
-        { lat: lat + H_high, lng: lng },          // 2. Top-Right of high section
-        { lat: lat, lng: lng },                   // 3. Inner Notch Corner
-        { lat: lat, lng: lng + W_right },         // 4. Top-Right of lower section
-        { lat: lat - H_bottom, lng: lng + W_right }, // 5. Bottom-Right Corner
-        { lat: lat - H_bottom, lng: lng - W_proj_right }, // 6. Start of bottom-left projection
-        { lat: lat - H_bottom - H_proj, lng: lng - W_proj_right }, // 7. Top-right of projection
-        { lat: lat - H_bottom - H_proj, lng: lng - W_proj_left },  // 8. Bottom-right of projection
-        { lat: lat - H_bottom, lng: lng - W_proj_left },  // 9. Bottom-left of projection
-        { lat: lat - H_bottom, lng: lng - W_left },       // 10. Bottom-Left Corner of main building
-        { lat: lat, lng: lng - W_left },                  // 11. Top-Left Corner of main building
-        { lat: lat, lng: lng - W_high }                   // 12. Start of high section
+        { lat: 40.612632, lng: -111.822195 }, // 1. Top-Left
+        { lat: 40.612632, lng: -111.822017 }, // 2. Top-Notch-Start
+        { lat: 40.612585, lng: -111.822017 }, // 3. Notch-Depth-South
+        { lat: 40.612585, lng: -111.821940 }, // 4. Top-Right
+        { lat: 40.612530, lng: -111.821940 }, // 5. Bottom-Right
+        { lat: 40.612530, lng: -111.822135 }, // 6. Proj-Start
+        { lat: 40.612508, lng: -111.822135 }, // 7. Proj-Bottom-Right
+        { lat: 40.612508, lng: -111.822175 }, // 8. Proj-Bottom-Left
+        { lat: 40.612530, lng: -111.822175 }, // 9. Proj-Top-Left
+        { lat: 40.612530, lng: -111.822195 }  // 10. Bottom-Left
       ];
     }
     if (isMemorial) {
@@ -159,14 +144,15 @@ export function generateMockBuildingData(place: Place): BuildingData {
   const isCoachman = lowerCaseAddress.includes('coachman') || (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
 
   if (isCoachman) {
-    const baseArea = 138; // ~14.85 SQ ground area
+    const baseArea = 180.8; // Ground area from Google Solar API
     const facets = [];
-    const numFacets = 4;
+    const numFacets = 6; // 6 segments in the Solar API
+    const pitchDegrees = 19.69; // Principal segment pitch from Solar API
     for (let j = 0; j < numFacets; j++) {
       facets.push({
         id: `gen_f${j}`,
         areaMeters: baseArea / numFacets,
-        pitchDegrees: 26.57, // 6/12 pitch
+        pitchDegrees: pitchDegrees,
       });
     }
     return {
