@@ -194,11 +194,20 @@ const LoginBridge: React.FC = () => {
         }
     }, [currentUser, activePageId, setActivePageId]);
 
-    // Sync browser URL bar with activePageId for unauthenticated users
+    // Sync browser URL bar with activePageId for unauthenticated users.
+    // The default homepage (P-00-V3) shows at the clean root URL "/" — no ?page= param needed.
     useEffect(() => {
         if (!currentUser && activePageId) {
+            const isDefaultHome = activePageId === 'P-00-V3';
             const params = new URLSearchParams(window.location.search);
-            if (params.get('page') !== activePageId) {
+            const currentPageParam = params.get('page');
+
+            if (isDefaultHome) {
+                // Clean root URL — remove any ?page= param if present
+                if (currentPageParam) {
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+            } else if (currentPageParam !== activePageId) {
                 const newUrl = `${window.location.pathname}?page=${activePageId}`;
                 window.history.pushState({ path: newUrl }, '', newUrl);
             }

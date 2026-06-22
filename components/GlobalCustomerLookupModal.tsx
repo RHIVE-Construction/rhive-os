@@ -39,17 +39,23 @@ const isAddressLike = (q: string) => {
     // Contains digits and letters
     if (/\d+/.test(normalized) && /[a-z]+/i.test(normalized)) return true;
     
-    // Common street suffixes
+    // Common street suffixes (AU + US)
     const suffixes = [
         'st', 'street', 'ave', 'avenue', 'rd', 'road', 'ln', 'lane', 'way', 'blvd', 'boulevard', 
         'dr', 'drive', 'ct', 'court', 'pl', 'place', 'hwy', 'highway', 'pkwy', 'parkway', 'loop', 'ter', 'terrace',
-        'suite', 'ste', 'apt', 'apartment', 'unit'
+        'suite', 'ste', 'apt', 'apartment', 'unit', 'cres', 'crescent', 'cl', 'close', 'pde', 'parade'
     ];
     const words = normalized.split(/[\s,]+/);
     if (words.some(w => suffixes.includes(w))) return true;
 
-    // Check for state codes or common cities/states
-    const stateCodes = ['ut', 'id', 'wy', 'co', 'nv', 'or', 'wa', 'ca', 'mt', 'az', 'nm', 'utah', 'idaho', 'boise', 'salt lake'];
+    // Check for Australian state codes / common cities, and US state codes
+    const stateCodes = [
+        // Australian states
+        'qld', 'nsw', 'vic', 'sa', 'wa', 'tas', 'act', 'nt',
+        'queensland', 'victoria', 'brisbane', 'sydney', 'melbourne', 'perth', 'adelaide', 'darwin', 'hobart', 'cairns', 'townsville',
+        // US states
+        'ut', 'id', 'wy', 'co', 'nv', 'or', 'ca', 'mt', 'az', 'nm', 'utah', 'idaho'
+    ];
     if (words.some(w => stateCodes.includes(w))) return true;
     
     return false;
@@ -209,7 +215,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
         autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
             types: ['address'],
             fields: ['formatted_address', 'geometry', 'address_components'],
-            componentRestrictions: { country: 'us' }
+            componentRestrictions: { country: 'au' }   // RHIVE serves Australia
         });
 
         autocompleteRef.current.addListener('place_changed', () => {

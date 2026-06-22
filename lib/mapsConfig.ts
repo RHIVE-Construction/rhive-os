@@ -36,3 +36,51 @@ export async function getMapsApiKey(): Promise<string> {
         return '';
     }
 }
+
+/**
+ * ensureGoogleMapsLoaded — dynamically loads the Google Maps JS API if not already present.
+ *
+ * Called once from useGoogleMapsApi hook so all map components benefit automatically.
+ * Safe to call multiple times — idempotent via the _loadPromise singleton.
+ */
+let _loadPromise: Promise<void> | null = null;
+
+export function ensureGoogleMapsLoaded(): Promise<void> {
+    // Already loaded
+    if (window.googleMapsApiLoaded) return Promise.resolve();
+
+    // Deduplicate concurrent calls
+    if (_loadPromise) return _loadPromise;
+
+    _loadPromise = (async () => {
+        const key = await getMapsApiKey();
+        if (!key) {
+            console.warn('[RHIVE] No Maps API key — skipping script load.');
+            return;
+        }
+
+        // Check if script tag already exists (loaded via index.html)
+        const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+        if (existing) {
+            // Script exists but callback may not have fired yet — just wait for the event
+            return;
+        }
+
+        // Define the callback before creating the script
+        (window as any).onGoogleMapsApiReady = () => {
+            window.googleMapsApiLoaded = true;
+            window.dispatchEvent(new Event('google-maps-api-ready'));
+        };
+
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady`;
+        script.onerror = () => {
+            console.error('[RHIVE] Failed to load Google Maps API — check API key & referrer restrictions.');
+            _loadPromise = null; // Allow retry
+        };
+        document.head.appendChild(script);
+    })();
+
+    return _loadPromise;
+}

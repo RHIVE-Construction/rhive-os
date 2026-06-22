@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ensureGoogleMapsLoaded } from '../lib/mapsConfig';
 
 declare global {
   interface Window {
@@ -11,6 +12,10 @@ export function useGoogleMapsApi() {
   const [isApiReady, setIsApiReady] = useState(!!window.googleMapsApiLoaded);
 
   useEffect(() => {
+    // Proactively load Maps API if not already loaded (handles cases where
+    // index.html %VITE_*% substitution didn't inject the key)
+    ensureGoogleMapsLoaded();
+
     if (isApiReady) return;
 
     const onReady = () => setIsApiReady(true);

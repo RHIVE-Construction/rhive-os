@@ -173,7 +173,7 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
         if (!isApiReady || !mapRef.current || map) return;
 
         const initMap = async () => {
-            const defaultCenter = { lat: 40.7608, lng: -111.8910 }; // Salt Lake City
+            const defaultCenter = { lat: -27.4698, lng: 153.0251 }; // Brisbane, QLD
             
             const mapInstance = new window.google.maps.Map(mapRef.current, {
                 center: defaultCenter,
@@ -263,14 +263,11 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
 };
 
 const checkAddressOutOfBounds = (data: AddressData) => {
-    const allowedState = (typeof window !== 'undefined' ? localStorage.getItem('service_boundary_state') : null) || 'UT';
+    // Service boundary is configurable — defaults to QLD for Australia
+    const allowedState = (typeof window !== 'undefined' ? localStorage.getItem('service_boundary_state') : null) || 'QLD';
     const state = (data.state || '').toUpperCase().trim();
-    if (state && state !== allowedState.toUpperCase().trim()) {
-        return true;
-    }
-    const addr = (data.address || '').toLowerCase();
-    const city = (data.city || '').toLowerCase();
-    if (addr.includes('boise') || addr.includes(', id') || city === 'boise' || (data.state || '').toLowerCase() === 'id') {
+    // Only block if state is explicitly known AND doesn't match (skip if state is empty/unknown)
+    if (state && allowedState && state !== allowedState.toUpperCase().trim()) {
         return true;
     }
     return false;
@@ -321,24 +318,36 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass 
         return [{
             id: `BLDG-1-${Date.now()}`,
             name: 'BLD-1',
-            lat: data.latitude || 40.7608,
-            lng: data.longitude || -111.8910
+            lat: data.latitude || -27.4698,
+            lng: data.longitude || 153.0251
         }];
     });
     const [editableAddress, setEditableAddress] = useState(() => {
         return `${data.address || ''}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''}${data.zip ? ` ${data.zip}` : ''}`;
     });
-    
+    // Update editable address when data changes (e.g. after background geocoding)
+    useEffect(() => {
+        const formatted = `${data.address || ''}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''}${data.zip ? ` ${data.zip}` : ''}`;
+        if (formatted.trim()) setEditableAddress(formatted);
+    }, [data.address, data.city, data.state, data.zip]);
+
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const streetViewRef = useRef<HTMLDivElement>(null);
     const [map, setMap] = useState<any>(null);
     const markersRef = useRef<Record<string, any>>({});
+    // Show error overlay only after a grace period — avoids false-positive flash during normal API loading
+    const [mapLoadTimedOut, setMapLoadTimedOut] = useState(false);
+    useEffect(() => {
+        if (!isApiReady || map) { setMapLoadTimedOut(false); return; }
+        const t = setTimeout(() => setMapLoadTimedOut(true), 4000);
+        return () => clearTimeout(t);
+    }, [isApiReady, map]);
 
     // Initialize Map
     useEffect(() => {
         if (!isApiReady || !mapContainerRef.current || map || !window.google) return;
 
-        const center = { lat: data.latitude || 40.7608, lng: data.longitude || -111.8910 };
+        const center = { lat: data.latitude || -27.4698, lng: data.longitude || 153.0251 };
         const mapInstance = new window.google.maps.Map(mapContainerRef.current, {
             center: center,
             zoom: 20,
@@ -447,6 +456,19 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass 
         };
     }, []);
 
+    // Re-center map if coordinates updated after initialization (e.g. background geocoding)
+    useEffect(() => {
+        if (!map || !data.latitude || !data.longitude) return;
+        const newCenter = { lat: data.latitude, lng: data.longitude };
+        map.setCenter(newCenter);
+        map.setZoom(20);
+        // Also reposition the first building pin to the new center
+        setBuildings(prev => prev.length === 1
+            ? [{ ...prev[0], lat: data.latitude, lng: data.longitude }]
+            : prev
+        );
+    }, [map, data.latitude, data.longitude]);
+
     const handleDeleteBuilding = (id: string) => {
         setBuildings(prev => {
             const filtered = prev.filter(b => b.id !== id);
@@ -503,6 +525,38 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass 
                             ref={streetViewRef} 
                             className={cn("absolute inset-0 w-full h-full", view !== 'street' && 'pointer-events-none opacity-0')} 
                         />
+                        {/* Loading state: API not yet ready */}
+                        {!isApiReady && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black z-20 pointer-events-none">
+                                <div className="w-8 h-8 border-2 border-[#ec028b] border-t-transparent rounded-full animate-spin" />
+                                <p className="text-gray-400 text-xs font-bold tracking-wider uppercase">Loading Google Maps...</p>
+                            </div>
+                        )}
+                        {/* Error state: API loaded but map failed to init */}
+                        {isApiReady && !map && mapLoadTimedOut && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/95 z-20 p-6">
+                                <div className="text-[#ec028b] text-3xl">⚠</div>
+                                <div className="text-center max-w-xs">
+                                    <p className="text-white text-sm font-bold mb-2">Google Maps Not Loading</p>
+                                    <p className="text-gray-400 text-xs leading-relaxed mb-4">
+                                        The following APIs need to be enabled on your Google Cloud project:
+                                    </p>
+                                    <div className="text-left space-y-1.5 bg-gray-900 rounded p-3 text-[11px] font-mono text-gray-300">
+                                        <div>• Maps JavaScript API</div>
+                                        <div>• Places API</div>
+                                        <div>• Geocoding API</div>
+                                    </div>
+                                    <a 
+                                        href="https://console.cloud.google.com/apis/library?filter=category:maps" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="mt-4 inline-block px-4 py-2 bg-[#ec028b] text-white text-xs font-bold rounded hover:bg-pink-600 transition-colors"
+                                    >
+                                        Open Google Cloud Console →
+                                    </a>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column: Sidebar */}
@@ -1095,10 +1149,11 @@ const AddressSection: React.FC<{
     id?: string,
     pinnedBuildings?: any[],
     onChangeBuildings?: (bldgs: any[]) => void,
-    onDelete?: () => void
+    onDelete?: () => void,
+    autoFocusAddress?: boolean
 }> = ({ 
     label, data, onChange, isCollapsed, setIsCollapsed, showMaps = false, placeholder = "Start typing address...", readOnly = false, id,
-    pinnedBuildings = [], onChangeBuildings, onDelete
+    pinnedBuildings = [], onChangeBuildings, onDelete, autoFocusAddress = false
 }) => {
     const isApiReady = useGoogleMapsApi();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -1112,7 +1167,7 @@ const AddressSection: React.FC<{
         
         autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
             fields: ['address_components', 'geometry', 'formatted_address', 'name'],
-            componentRestrictions: { country: 'us' }
+            componentRestrictions: { country: 'au' }   // RHIVE serves Australia
         });
 
         autocompleteRef.current.addListener('place_changed', () => {
@@ -1171,11 +1226,11 @@ const AddressSection: React.FC<{
             onChange({
                 ...data,
                 address: typedAddress,
-                latitude: 40.7608,
-                longitude: -111.8910,
-                city: data.city || 'Salt Lake City',
-                state: data.state || 'UT',
-                zip: data.zip || '84101'
+                latitude: -27.4698,
+                longitude: 153.0251,
+                city: data.city || 'Brisbane',
+                state: data.state || 'QLD',
+                zip: data.zip || '4000'
             });
             setIsCollapsed(true);
             return;
@@ -1186,15 +1241,15 @@ const AddressSection: React.FC<{
         const geocodeTimeout = setTimeout(() => {
             if (!geocodeCompleted) {
                 geocodeCompleted = true;
-                console.warn("Geocoding timed out. Using fallback SLC coords.");
+                console.warn("Geocoding timed out. Using Brisbane fallback.");
                 onChange({
                     ...data,
                     address: typedAddress,
-                    latitude: 40.7608,
-                    longitude: -111.8910,
-                    city: data.city || 'Salt Lake City',
-                    state: data.state || 'UT',
-                    zip: data.zip || '84101'
+                    latitude: -27.4698,
+                    longitude: 153.0251,
+                    city: data.city || 'Brisbane',
+                    state: data.state || 'QLD',
+                    zip: data.zip || '4000'
                 });
                 setIsCollapsed(true);
             }
@@ -1235,11 +1290,11 @@ const AddressSection: React.FC<{
                 onChange({
                     ...data,
                     address: typedAddress,
-                    latitude: 40.7608,
-                    longitude: -111.8910,
-                    city: data.city || 'Salt Lake City',
-                    state: data.state || 'UT',
-                    zip: data.zip || '84101'
+                    latitude: -27.4698,
+                    longitude: 153.0251,
+                    city: data.city || 'Brisbane',
+                    state: data.state || 'QLD',
+                    zip: data.zip || '4000'
                 });
                 setIsCollapsed(true);
             }
@@ -1324,25 +1379,20 @@ const AddressSection: React.FC<{
                                     placeholder={placeholder} 
                                     value={data.address} 
                                     onChange={handleFieldChange} 
-                                    autoFocus 
+                                    autoFocus={autoFocusAddress}
                                     disabled={readOnly} 
                                     className="pr-12" 
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             e.preventDefault();
                                             if ((!window.google || !window.google.maps) && data.address) {
-                                                let finalAddr = data.address;
-                                                if (finalAddr.toLowerCase().includes('pine st')) {
-                                                    finalAddr = 'Pine St';
-                                                }
                                                 onChange({
                                                     ...data,
-                                                    address: finalAddr,
-                                                    latitude: 40.7608,
-                                                    longitude: -111.8910,
-                                                    city: data.city || 'Salt Lake City',
-                                                    state: data.state || 'UT',
-                                                    zip: data.zip || '84101'
+                                                    latitude: -27.4698,
+                                                    longitude: 153.0251,
+                                                    city: data.city || 'Brisbane',
+                                                    state: data.state || 'QLD',
+                                                    zip: data.zip || '4000'
                                                 });
                                                 setIsCollapsed(true);
                                             } else if (window.google && window.google.maps && data.address) {
@@ -1555,122 +1605,92 @@ const CustomerInputPage: React.FC = () => {
         const qType = sessionStorage.getItem('globalSearchQueryType');
         const cachedAddressDataStr = sessionStorage.getItem('globalSearchAddressData');
         
-        if (qType === 'Address' && cachedAddressDataStr) {
-            sessionStorage.removeItem('globalSearchQuery');
-            sessionStorage.removeItem('globalSearchQueryType');
-            sessionStorage.removeItem('globalSearchAddressData');
+        // Nothing in session storage — nothing to do
+        if (!query && !cachedAddressDataStr) return;
+
+        // Clear all session keys upfront (consume once)
+        sessionStorage.removeItem('globalSearchQuery');
+        sessionStorage.removeItem('globalSearchQueryType');
+        sessionStorage.removeItem('globalSearchAddressData');
+
+        if (qType === 'Name' && query) {
+            const parts = query.trim().split(/\s+/);
+            setAutofilledContactData({
+                firstName: parts[0] || '',
+                lastName: parts.slice(1).join(' ') || '',
+                phone: '',
+                email: ''
+            });
+            return;
+        }
+
+        if (qType === 'Phone Number' && query) {
+            setAutofilledContactData({
+                firstName: '',
+                lastName: '',
+                phone: formatPhoneNumber(query),
+                email: ''
+            });
+            return;
+        }
+
+        // Address type (or unspecified) — always open the map modal
+        if (cachedAddressDataStr) {
+            // Best case: we have precise coords from Google Autocomplete
             try {
                 const cachedData = JSON.parse(cachedAddressDataStr);
                 setPropertyData(cachedData);
                 setIsVerificationOpen(true);
+                return;
             } catch (e) {
-                console.error("Failed to parse cached address data:", e);
+                console.error('Failed to parse cached address data:', e);
             }
-            return;
         }
 
-        if (query) {
-            if ((qType === 'Address' || !qType) && (!isApiReady || !window.google)) {
-                return; // Wait for Google Maps API to be ready before consuming Address query
-            }
-            
-            sessionStorage.removeItem('globalSearchQuery');
-            sessionStorage.removeItem('globalSearchQueryType');
-            
-            if (qType === 'Name') {
-                const parts = query.trim().split(/\s+/);
-                const first = parts[0] || '';
-                const last = parts.slice(1).join(' ') || '';
-                setAutofilledContactData({
-                    firstName: first,
-                    lastName: last,
-                    phone: '',
-                    email: ''
-                });
-            } else if (qType === 'Phone Number') {
-                setAutofilledContactData({
-                    firstName: '',
-                    lastName: '',
-                    phone: formatPhoneNumber(query),
-                    email: ''
-                });
-            } else if (qType === 'Address' || !qType) {
-                if (!window.google || !window.google.maps) {
-                    setPropertyData(prev => ({
-                        ...prev,
-                        address: query,
-                        latitude: 40.7608,
-                        longitude: -111.8910,
-                        city: 'Salt Lake City',
-                        state: 'UT',
-                        zip: '84101'
-                    }));
-                    return;
-                }
-                const geocoder = new window.google.maps.Geocoder();
-                let geocodeCompleted = false;
+        // Open modal immediately with Brisbane fallback; geocode in background for precise coords
+        const brisbaneDefault: AddressData = {
+            address: query || '',
+            latitude: -27.4698,
+            longitude: 153.0251,
+            city: 'Brisbane',
+            state: 'QLD',
+            zip: '4000'
+        };
+        setPropertyData(brisbaneDefault);
+        setIsVerificationOpen(true);
 
-                const mountGeocodeTimeout = setTimeout(() => {
-                    if (!geocodeCompleted) {
-                        geocodeCompleted = true;
-                        setPropertyData(prev => ({
-                            ...prev,
-                            address: query,
-                            latitude: 40.7608,
-                            longitude: -111.8910,
-                            city: 'Salt Lake City',
-                            state: 'UT',
-                            zip: '84101'
-                        }));
-                    }
-                }, 3000);
-
-                geocoder.geocode({ address: query }, (results: any, status: string) => {
-                    if (geocodeCompleted) return;
-                    geocodeCompleted = true;
-                    clearTimeout(mountGeocodeTimeout);
-
-                    if (status === 'OK' && results && results[0]) {
+        // If Google Maps is available, geocode for better coordinates
+        if (query && window.google?.maps) {
+            new window.google.maps.Geocoder().geocode(
+                { address: query },
+                (results: any, status: string) => {
+                    if (status === 'OK' && results?.[0]) {
                         const place = results[0];
-                        const addressComponents = place.address_components;
+                        const ac = place.address_components || [];
                         let streetNumber = '', route = '', city = '', state = '', zip = '';
-                        if (addressComponents) {
-                            for (const component of addressComponents) {
-                                const componentType = component.types[0];
-                                switch (componentType) {
-                                    case 'street_number': streetNumber = component.long_name; break;
-                                    case 'route': route = component.short_name; break;
-                                    case 'locality': city = component.long_name; break;
-                                    case 'administrative_area_level_1': state = component.short_name; break;
-                                    case 'postal_code': zip = component.short_name; break;
-                                }
+                        for (const c of ac) {
+                            switch (c.types[0]) {
+                                case 'street_number': streetNumber = c.long_name; break;
+                                case 'route': route = c.short_name; break;
+                                case 'locality': city = c.long_name; break;
+                                case 'administrative_area_level_1': state = c.short_name; break;
+                                case 'postal_code': zip = c.short_name; break;
                             }
                         }
                         setPropertyData({
-                            address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
-                            city,
-                            state,
-                            zip,
+                            address: streetNumber && route
+                                ? `${streetNumber} ${route}`
+                                : place.formatted_address.split(',')[0],
+                            city, state, zip,
                             latitude: place.geometry.location.lat(),
                             longitude: place.geometry.location.lng(),
                             streetViewHeading: 0
                         });
-                        setIsVerificationOpen(true);
-                    } else {
-                        setPropertyData(prev => ({
-                            ...prev,
-                            address: query,
-                            latitude: 40.7608,
-                            longitude: -111.8910,
-                            city: 'Salt Lake City',
-                            state: 'UT',
-                            zip: '84101'
-                        }));
                     }
-                });
-            }
+                }
+            );
         }
-    }, [isApiReady]);
+    }, []); // Run ONCE on mount — session data is consumed and cleared immediately
 
     const [propertyData, setPropertyData] = useState<AddressData>({ address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 });
     const [pinnedBuildings, setPinnedBuildings] = useState<any[]>([]);
@@ -2318,6 +2338,7 @@ const CustomerInputPage: React.FC = () => {
                         <AddressSection 
                             label="Property 1" 
                             data={propertyData} 
+                            autoFocusAddress={!isPropertyCollapsed}
                             onChange={(newData) => {
                                 setPropertyData(newData);
                                 if (newData.latitude !== 0 && newData.longitude !== 0) {
