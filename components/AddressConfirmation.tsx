@@ -306,6 +306,9 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
           path.addListener('set_at', onPathChange);
           path.addListener('insert_at', onPathChange);
           path.addListener('remove_at', onPathChange);
+
+          // Listen to dragend on the polygon itself to update React state
+          polygonInstance.addListener('dragend', onPathChange);
         };
 
         if (isPrimary && !hasAnimatedRef.current) {
@@ -355,6 +358,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
               poly.setPath(pathCoords);
               poly.setOptions({
                 editable: isFocused && view === 'satellite',
+                draggable: isFocused && view === 'satellite',
               });
               registerPathListener(poly);
             }
@@ -370,7 +374,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
             fillColor: '#ec028b',
             fillOpacity: isFocused ? 0.25 : 0.08,
             editable: isFocused && view === 'satellite',
-            draggable: false,
+            draggable: isFocused && view === 'satellite',
             map: map,
           });
 
@@ -378,12 +382,13 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
           gPolygonsMapRef.current.set(building.id, poly);
         }
       } else {
-        // Update styling and editable state
+        // Update styling, editable, and draggable state
         poly.setOptions({
           strokeOpacity: isFocused ? 0.9 : 0.5,
           strokeWeight: isFocused ? 3.5 : 2,
           fillOpacity: isFocused ? 0.25 : 0.08,
           editable: isFocused && view === 'satellite',
+          draggable: isFocused && view === 'satellite',
         });
 
         // Verify if path coordinates match the state
