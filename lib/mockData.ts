@@ -14,8 +14,23 @@ export function getInitialPolygonVertices(lat: number, lng: number, address: str
   const isMemorial = lower.includes('memorial') || (Math.abs(lat - 40.571939) < 0.001 && Math.abs(lng - -111.964403) < 0.001);
   const isNephi = lower.includes('nephi') || (Math.abs(lat - 39.7270586) < 0.005 && Math.abs(lng - -111.8345244) < 0.005);
   const isEmerson = lower.includes('emerson') || (Math.abs(lat - 40.7376366) < 0.005 && Math.abs(lng - -111.8785726) < 0.005);
+  const isCoachman = lower.includes('coachman') || (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
   
   if (index === 1) { // Primary building
+    if (isCoachman) {
+      const widthMeters = 9.8;
+      const heightMeters = 10.2;
+      const centerLat = lat + 0.000015;
+      const centerLng = lng;
+      const latOffset = (heightMeters / 2) / 111111;
+      const lngOffset = (widthMeters / 2) / (111111 * Math.cos(centerLat * Math.PI / 180));
+      return [
+        { lat: centerLat + latOffset, lng: centerLng - lngOffset },
+        { lat: centerLat + latOffset, lng: centerLng + lngOffset },
+        { lat: centerLat - latOffset, lng: centerLng + lngOffset },
+        { lat: centerLat - latOffset, lng: centerLng - lngOffset },
+      ];
+    }
     if (isMemorial) {
       return [
         { lat: lat + 0.00008, lng: lng - 0.00014 },
@@ -126,6 +141,31 @@ export function generateMockBuildingData(place: Place): BuildingData {
   const isMemorial = lowerCaseAddress.includes('memorial') || (Math.abs(lat - 40.571939) < 0.001 && Math.abs(lng - -111.964403) < 0.001);
   const isNephi = lowerCaseAddress.includes('nephi') || (Math.abs(lat - 39.7270586) < 0.005 && Math.abs(lng - -111.8345244) < 0.005);
   const isEmerson = lowerCaseAddress.includes('emerson') || (Math.abs(lat - 40.7376366) < 0.005 && Math.abs(lng - -111.8785726) < 0.005);
+  const isCoachman = lowerCaseAddress.includes('coachman') || (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
+
+  if (isCoachman) {
+    const baseArea = 100; // ~10.76 SQ ground area
+    const facets = [];
+    const numFacets = 2;
+    for (let j = 0; j < numFacets; j++) {
+      facets.push({
+        id: `gen_f${j}`,
+        areaMeters: baseArea / numFacets,
+        pitchDegrees: 26.57, // 6/12 pitch
+      });
+    }
+    return {
+      buildings: [{
+        id: 'Main Structure',
+        totalAreaMeters: baseArea,
+        facets: facets,
+        lat,
+        lng,
+        polygonVertices: getInitialPolygonVertices(lat, lng, place.address, 1)
+      }],
+      yearConstructed: 1992,
+    };
+  }
 
   if (isMemorial) {
     const baseArea = 245.7; // ~24.57 SQ total
