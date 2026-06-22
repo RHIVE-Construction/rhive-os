@@ -17,13 +17,15 @@ export function getInitialPolygonVertices(lat: number, lng: number, address: str
   const isCoachman = lower.includes('coachman') || (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
   
   if (isCoachman && index > 1) {
-    const widthMeters = 7.8;
-    const heightMeters = 6.8;
+    const garageLat = 40.612608;
+    const garageLng = -111.822295;
+    const widthMeters = 6.2;
+    const heightMeters = 6.2;
     const angleDeg = -41; // Rotation angle in degrees (counter-clockwise)
     const theta = angleDeg * Math.PI / 180;
     
     const latConv = 111111;
-    const lngConv = 111111 * Math.cos(lat * Math.PI / 180);
+    const lngConv = 111111 * Math.cos(garageLat * Math.PI / 180);
     
     const dx1 = -widthMeters / 2;
     const dy1 = heightMeters / 2;
@@ -41,8 +43,8 @@ export function getInitialPolygonVertices(lat: number, lng: number, address: str
       const rx = dx * Math.cos(theta) - dy * Math.sin(theta);
       const ry = dx * Math.sin(theta) + dy * Math.cos(theta);
       return {
-        lat: lat + ry / latConv,
-        lng: lng + rx / lngConv
+        lat: garageLat + ry / latConv,
+        lng: garageLng + rx / lngConv
       };
     };
     
@@ -342,12 +344,15 @@ export function generateBuildingFromLatLng(lat: number, lng: number, index: numb
     });
   }
 
+  const finalLat = (isCoachman && index > 1) ? 40.612608 : lat;
+  const finalLng = (isCoachman && index > 1) ? -111.822295 : lng;
+
   return {
     id: `BLD_${index}`,
     totalAreaMeters: baseArea,
     facets: facets,
-    lat,
-    lng,
-    polygonVertices: getInitialPolygonVertices(lat, lng, '', index)
+    lat: finalLat,
+    lng: finalLng,
+    polygonVertices: getInitialPolygonVertices(finalLat, finalLng, '', index)
   };
 }
