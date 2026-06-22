@@ -19,16 +19,18 @@ export function getInitialPolygonVertices(lat: number, lng: number, address: str
   if (index === 1) { // Primary building
     if (isCoachman) {
       return [
-        { lat: 40.612632, lng: -111.822195 }, // 1. Top-Left
-        { lat: 40.612632, lng: -111.822017 }, // 2. Top-Notch-Start
-        { lat: 40.612585, lng: -111.822017 }, // 3. Notch-Depth-South
-        { lat: 40.612585, lng: -111.821940 }, // 4. Top-Right
-        { lat: 40.612530, lng: -111.821940 }, // 5. Bottom-Right
-        { lat: 40.612530, lng: -111.822135 }, // 6. Proj-Start
-        { lat: 40.612508, lng: -111.822135 }, // 7. Proj-Bottom-Right
-        { lat: 40.612508, lng: -111.822175 }, // 8. Proj-Bottom-Left
-        { lat: 40.612530, lng: -111.822175 }, // 9. Proj-Top-Left
-        { lat: 40.612530, lng: -111.822195 }  // 10. Bottom-Left
+        { lat: 40.612608, lng: -111.822195 }, // 1. Top-Left
+        { lat: 40.612608, lng: -111.822070 }, // 2. Step-Up-Start
+        { lat: 40.612632, lng: -111.822070 }, // 3. Step-Up-End (high section top-left)
+        { lat: 40.612632, lng: -111.822017 }, // 4. Top-Right of high section
+        { lat: 40.612585, lng: -111.822017 }, // 5. Step-Down-End (lower section top-left)
+        { lat: 40.612585, lng: -111.821940 }, // 6. Top-Right
+        { lat: 40.612530, lng: -111.821940 }, // 7. Bottom-Right
+        { lat: 40.612530, lng: -111.822135 }, // 8. Proj-Start
+        { lat: 40.612508, lng: -111.822135 }, // 9. Proj-Bottom-Right
+        { lat: 40.612508, lng: -111.822175 }, // 10. Proj-Bottom-Left
+        { lat: 40.612530, lng: -111.822175 }, // 11. Proj-Top-Left
+        { lat: 40.612530, lng: -111.822195 }  // 12. Bottom-Left
       ];
     }
     if (isMemorial) {
