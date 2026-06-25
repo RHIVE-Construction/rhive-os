@@ -212,7 +212,7 @@ const LoginBridge: React.FC = () => {
         const targetPageId = isPagePublic ? activePageId : 'P-00';
         const CurrentPage = pageComponentMap[targetPageId] || pageComponentMap['P-00'];
 
-        if (isPublicPage && CurrentPublicPage) {
+        if (isPagePublic && CurrentPage) {
             return (
                 <div className={cn(
                     "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
@@ -224,7 +224,7 @@ const LoginBridge: React.FC = () => {
                         lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
                     />
                     <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto relative">
-                        <CurrentPublicPage />
+                        <CurrentPage />
                     </main>
                     <FloatingEstimator />
                     {window.location.hostname === 'localhost' && <DevNavigator />}

@@ -258,9 +258,6 @@ const RhiveHeader: React.FC = () => {
                 </motion.a>
             </div>
         </header>
-
-
-        </>
     );
 };
 
