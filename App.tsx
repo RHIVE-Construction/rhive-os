@@ -184,10 +184,18 @@ const LoginBridge: React.FC = () => {
     // Sync browser URL bar with activePageId for unauthenticated users
     useEffect(() => {
         if (!currentUser && activePageId) {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('page') !== activePageId) {
-                const newUrl = `${window.location.pathname}?page=${activePageId}`;
-                window.history.pushState({ path: newUrl }, '', newUrl);
+            const isHomePage = activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3';
+            if (isHomePage) {
+                // Clean URL for the home page — no ?page= param
+                if (window.location.search) {
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+            } else {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('page') !== activePageId) {
+                    const newUrl = `${window.location.pathname}?page=${activePageId}`;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+                }
             }
         }
     }, [activePageId, currentUser]);
