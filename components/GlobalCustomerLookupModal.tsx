@@ -104,11 +104,12 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
 
     useEffect(() => {
-        const handleOpen = () => {
+        const handleOpen = (e?: Event) => {
             if (!currentUser || (currentUser.role !== 'Employee' && currentUser.role !== 'Admin' && currentUser.role !== 'Super Admin')) {
                 return;
             }
-            setSearchQuery('');
+            const prefill = (e as CustomEvent)?.detail?.prefill ?? '';
+            setSearchQuery(prefill);
             setIsOpen(true);
         };
         window.addEventListener('open-customer-lookup', handleOpen);

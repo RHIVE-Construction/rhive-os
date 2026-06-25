@@ -1121,6 +1121,14 @@ const AddressSection: React.FC<{
         });
     }, [isApiReady, isCollapsed, readOnly]);
 
+    // Auto-focus the street input whenever the section expands
+    useEffect(() => {
+        if (!isCollapsed && !readOnly && inputRef.current) {
+            const timer = setTimeout(() => inputRef.current?.focus(), 50);
+            return () => clearTimeout(timer);
+        }
+    }, [isCollapsed, readOnly]);
+
     const handlePlaceSelected = (place: any) => {
         if (!place || !place.geometry) return;
         const addressComponents = place.address_components;
@@ -1153,16 +1161,30 @@ const AddressSection: React.FC<{
 
         // Attempt to calculate street view heading using StreetViewService
         const svService = new window.google.maps.StreetViewService();
-        svService.getPanorama({ location: place.geometry.location, radius: 50 }, (data: any, status: any) => {
-            if (status === 'OK' && data.location) {
+        svService.getPanorama({ location: place.geometry.location, radius: 50 }, (svData: any, status: any) => {
+            if (status === 'OK' && svData.location) {
                 const heading = window.google.maps.geometry.spherical.computeHeading(
-                    data.location.latLng,
+                    svData.location.latLng,
                     place.geometry.location
                 );
                 newAddressData.streetViewHeading = heading;
             }
             onChange(newAddressData);
             setIsCollapsed(true);
+
+            // Open the Customer Lookup Modal so the user can find or create
+            // the customer record linked to this address
+            const fullAddress = [
+                newAddressData.address,
+                newAddressData.city,
+                newAddressData.state,
+                newAddressData.zip
+            ].filter(Boolean).join(', ');
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('open-customer-lookup', {
+                    detail: { prefill: fullAddress }
+                }));
+            }, 200);
         });
     };
 
@@ -1324,7 +1346,6 @@ const AddressSection: React.FC<{
                                     placeholder={placeholder} 
                                     value={data.address} 
                                     onChange={handleFieldChange} 
-                                    autoFocus 
                                     disabled={readOnly} 
                                     className="pr-12" 
                                     onKeyDown={(e) => {
