@@ -220,7 +220,7 @@ const LoginBridge: React.FC = () => {
         const targetPageId = isPagePublic ? activePageId : 'P-00';
         const CurrentPage = pageComponentMap[targetPageId] || pageComponentMap['P-00'];
 
-        if (isPagePublic && CurrentPage) {
+        if (isPagePublic && !isLoginPage && CurrentPage) {
             return (
                 <div className={cn(
                     "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
