@@ -1,33 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Zap } from './icons';
 import { CheckCircle2 } from 'lucide-react';
-import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
-import type { Place } from '../types';
-import { EstimatorFlow } from './EstimatorFlow';
 
 interface AddressScanInputProps {
     id?: string;
     placeholder?: string;
     buttonText?: string;
     themeColor?: 'pink' | 'blue' | 'gold';
+    value?: string;
+    onChange?: (val: string) => void;
+    onScan?: (address: string) => void;
 }
 
 export const AddressScanInput = ({
     id,
-    placeholder = "ENTER PROJECT ADDRESS",
     buttonText = "Scan My Roof",
-    themeColor = "pink"
+    themeColor = "pink",
+    value,
+    onChange,
+    onScan,
 }: AddressScanInputProps) => {
     const chamferSize = "16px";
-    const clipPathValue = `polygon(
-        ${chamferSize} 0,
-        100% 0,
-        100% calc(100% - ${chamferSize}),
-        calc(100% - ${chamferSize}) 100%,
-        0 100%,
-        0 ${chamferSize}
-    )`;
+
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [selectedPlace, setSelectedPlace] = useState<string | null>(null);
 
     const fullText = "ENTER PROJECT ADDRESS";
     const [placeholder, setPlaceholder] = useState("");
@@ -192,20 +189,6 @@ export const AddressScanInput = ({
                     )}
                     <span className="relative z-10">{buttonText}</span>
                 </button>
-            </div>
-
-            {/* Premium Button Section */}
-            <button
-                onClick={handleScanClick}
-                className="relative h-full px-8 md:px-12 flex items-center justify-center gap-2 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white font-black uppercase text-[13px] tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(236,2,139,0.2)] shrink-0 z-20"
-                style={{
-                    clipPath: `polygon(0 0, 100% 0, 100% calc(100% - ${chamferSize}), calc(100% - ${chamferSize}) 100%, 0 100%)`
-                }}
-            >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                <Zap size={18} fill="currentColor" className="text-white" />
-                <span className="relative z-10">Scan My Roof</span>
-            </button>
         </div>
     );
 };

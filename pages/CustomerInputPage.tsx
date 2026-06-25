@@ -1095,10 +1095,11 @@ const AddressSection: React.FC<{
     id?: string,
     pinnedBuildings?: any[],
     onChangeBuildings?: (bldgs: any[]) => void,
-    onDelete?: () => void
+    onDelete?: () => void,
+    autoFocus?: boolean
 }> = ({ 
     label, data, onChange, isCollapsed, setIsCollapsed, showMaps = false, placeholder = "Start typing address...", readOnly = false, id,
-    pinnedBuildings = [], onChangeBuildings, onDelete
+    pinnedBuildings = [], onChangeBuildings, onDelete, autoFocus = false
 }) => {
     const isApiReady = useGoogleMapsApi();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -1324,30 +1325,27 @@ const AddressSection: React.FC<{
                                     placeholder={placeholder} 
                                     value={data.address} 
                                     onChange={handleFieldChange} 
-                                    autoFocus 
+                                    autoFocus={autoFocus} 
                                     disabled={readOnly} 
                                     className="pr-12" 
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             e.preventDefault();
-                                            if ((!window.google || !window.google.maps) && data.address) {
-                                                let finalAddr = data.address;
-                                                if (finalAddr.toLowerCase().includes('pine st')) {
-                                                    finalAddr = 'Pine St';
+                                            if (data.address) {
+                                                if (window.google && window.google.maps) {
+                                                    triggerGeocoding(data.address);
+                                                    inputRef.current?.blur();
+                                                } else {
+                                                    // Maps API unavailable — open verification modal with fallback coords
+                                                    onChange({
+                                                        ...data,
+                                                        latitude: 40.7608,
+                                                        longitude: -111.8910,
+                                                        city: data.city || 'Salt Lake City',
+                                                        state: data.state || 'UT',
+                                                        zip: data.zip || '84101'
+                                                    });
                                                 }
-                                                onChange({
-                                                    ...data,
-                                                    address: finalAddr,
-                                                    latitude: 40.7608,
-                                                    longitude: -111.8910,
-                                                    city: data.city || 'Salt Lake City',
-                                                    state: data.state || 'UT',
-                                                    zip: data.zip || '84101'
-                                                });
-                                                setIsCollapsed(true);
-                                            } else if (window.google && window.google.maps && data.address) {
-                                                triggerGeocoding(data.address);
-                                                inputRef.current?.blur();
                                             } else {
                                                 inputRef.current?.blur();
                                             }
@@ -1416,7 +1414,22 @@ const AddressSection: React.FC<{
                                             alert("Out of Service Boundary: Scheduling blocked.");
                                             return;
                                         }
-                                        setIsCollapsed(true);
+                                        if (data.latitude !== 0 && data.longitude !== 0) {
+                                            // Already has coords — just collapse
+                                            setIsCollapsed(true);
+                                        } else if (window.google && window.google.maps) {
+                                            triggerGeocoding(data.address);
+                                        } else {
+                                            // Maps API unavailable — open verification modal with fallback coords
+                                            onChange({
+                                                ...data,
+                                                latitude: 40.7608,
+                                                longitude: -111.8910,
+                                                city: data.city || 'Salt Lake City',
+                                                state: data.state || 'UT',
+                                                zip: data.zip || '84101'
+                                            });
+                                        }
                                     } else {
                                         alert("Please enter an address first.");
                                     }
@@ -1539,7 +1552,16 @@ const CustomerInputPage: React.FC = () => {
     const isApiReady = useGoogleMapsApi();
     
     useEffect(() => { 
-        window.scrollTo(0, 0); 
+        // Scroll to and focus the Property Address input on mount
+        setTimeout(() => {
+            const el = document.getElementById('property-address-input');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.focus();
+            } else {
+                window.scrollTo(0, 0);
+            }
+        }, 150);
     }, []);
 
     // --- State ---
@@ -2318,6 +2340,7 @@ const CustomerInputPage: React.FC = () => {
                         <AddressSection 
                             label="Property 1" 
                             data={propertyData} 
+                            autoFocus={true}
                             onChange={(newData) => {
                                 setPropertyData(newData);
                                 if (newData.latitude !== 0 && newData.longitude !== 0) {
