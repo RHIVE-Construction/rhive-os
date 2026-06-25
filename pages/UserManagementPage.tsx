@@ -16,7 +16,7 @@ import {
     PhoneIcon,
     LockIcon
 } from '../components/icons';
-import { userService } from '../lib/firebaseService';
+import { userService, userLogService } from '../lib/firebaseService';
 import { User, UserType } from '../types';
 import { cn, hashPassword } from '../lib/utils';
 
@@ -88,7 +88,13 @@ const UserManagementPage: React.FC = () => {
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            const targetUser = users.find(u => u.id === id);
             await userService.delete(id);
+            userLogService.logAction(
+                'USER_DELETED',
+                `User "${targetUser?.name ?? id}" (${targetUser?.role ?? 'Unknown'}) was deleted`,
+                { deletedUserId: id, deletedUserName: targetUser?.name, deletedUserRole: targetUser?.role, deletedUserEmail: targetUser?.email }
+            );
         }
     };
 
@@ -111,6 +117,11 @@ const UserManagementPage: React.FC = () => {
             console.log('[ChangePassword] Result:', result);
             if (result.success) {
                 setPwSuccess(true);
+                userLogService.logAction(
+                    'USER_PASSWORD_CHANGED',
+                    `Password changed for user "${pwUser.name}" (${pwUser.role})`,
+                    { targetUserId: pwUser.id, targetUserName: pwUser.name, targetUserRole: pwUser.role, targetUserEmail: pwUser.email }
+                );
             } else {
                 setPwError(result.error || 'Firestore update failed. Check console for details.');
             }
@@ -142,6 +153,15 @@ const UserManagementPage: React.FC = () => {
                     payload.password_hash = await hashPassword(formData.password);
                 }
                 await userService.update(editingUser.id, payload);
+                userLogService.logAction(
+                    'USER_UPDATED',
+                    `User "${formData.name}" (${formData.role}) profile was updated`,
+                    {
+                        targetUserId: editingUser.id,
+                        updatedFields: { name: formData.name, role: formData.role, phone: formData.phone },
+                        passwordChanged: !!formData.password
+                    }
+                );
             } else {
                 // ── CREATE: all roles stored in Firestore with password_hash ──
                 if (!formData.email || !formData.password) {
@@ -158,6 +178,11 @@ const UserManagementPage: React.FC = () => {
                     password_hash: passwordHash,
                     created_at: new Date().toISOString(),
                 });
+                userLogService.logAction(
+                    'USER_CREATED',
+                    `New user "${formData.name}" registered with role "${formData.role}"`,
+                    { newUserEmail: formData.email.toLowerCase().trim(), newUserRole: formData.role, newUserName: formData.name, newUserPhone: formData.phone }
+                );
             }
 
             setIsModalOpen(false);
@@ -262,12 +287,8 @@ const UserManagementPage: React.FC = () => {
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-[#ec028b] text-lg bg-gradient-to-br from-gray-800 to-black">
-                                    {user.avatarUrl ? (
-                                        <img src={user.avatarUrl} alt={user.name} className="w-full h-full rounded-xl object-cover" />
-                                    ) : (
-                                        user.name.charAt(0)
-                                    )}
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-800 to-black border border-gray-700 flex items-center justify-center font-black text-[#ec028b] text-lg uppercase select-none">
+                                    {user.name.charAt(0)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h4 className="text-white font-bold truncate leading-none mb-1">{user.name}</h4>

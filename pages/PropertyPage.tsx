@@ -84,7 +84,10 @@ const PropertyPage: React.FC = () => {
             );
         });
 
-    const handleSelectProperty = (id: string) => {
+    const handleSelectProperty = (property: any) => {
+        // Firestore subscriptions return `id`; MockDB may use `_id` — try both
+        const id = property.id || property._id;
+        if (!id) return;
         setSelectedPropertyId(id);
         setActivePageId('E-12');
     };
@@ -183,7 +186,7 @@ const PropertyPage: React.FC = () => {
                         return (
                             <div
                                 key={property.id}
-                                onClick={() => handleSelectProperty(property.id)}
+                                onClick={() => handleSelectProperty(property)}
                                 className="group relative bg-gray-900/40 border border-gray-800 rounded-2xl p-6 cursor-pointer hover:border-[#ec028b]/60 transition-all duration-300 hover:shadow-[0_0_30px_rgba(236,2,139,0.1)] overflow-hidden"
                             >
                                 {/* Hover accent line */}

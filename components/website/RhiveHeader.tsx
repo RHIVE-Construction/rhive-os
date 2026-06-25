@@ -9,6 +9,7 @@ import PlexusShape from '../PlexusShape';
 
 
 
+
 const RhiveHeader: React.FC = () => {
     const { setActivePageId, activePageId, lastPortalPageId } = useNavigation();
     const { setTheme, theme } = useTheme();
@@ -17,6 +18,7 @@ const RhiveHeader: React.FC = () => {
 
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+
 
     const handleExit = () => {
         if (lastPortalPageId) {
@@ -107,6 +109,7 @@ const RhiveHeader: React.FC = () => {
     };
 
     return (
+        <>
         <header className="fixed top-0 left-0 right-0 z-[500] h-12 flex items-center px-12 transition-all duration-300 select-none">
 
             {/* 1. Header Glass Chassis (Full Width, Ultra-Subtle Gradient) */}
@@ -206,6 +209,8 @@ const RhiveHeader: React.FC = () => {
                             </motion.div>
                         </div>
                     </button>
+
+
 
                     <motion.a
                         href="tel:8887448301"
@@ -403,6 +408,9 @@ const RhiveHeader: React.FC = () => {
 
 
         </header>
+
+
+        </>
     );
 };
 

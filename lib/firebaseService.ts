@@ -541,32 +541,37 @@ export const userService = {
 };
 
 export const passwordResetService = {
+    /**
+     * Generates a reset token and stores it directly on the user document
+     * in the `users` collection. No separate password_resets collection needed.
+     */
     createResetToken: async (email: string) => {
         try {
             const normalizedEmail = email.toLowerCase().trim();
+
             // 1. Verify user exists
             const userResult = await userService.getByEmail(normalizedEmail);
             if (!userResult.success || !userResult.data) {
                 return { success: false, error: 'No account found with this email address.' };
             }
 
+            const userDoc = userResult.data as any;
+
             // 2. Generate secure token: random hex + timestamp
             const randomBytes = Array.from({ length: 16 }, () => Math.floor(Math.random() * 256));
             const token = randomBytes.map(b => b.toString(16).padStart(2, '0')).join('') + Date.now().toString(36);
 
-            // 3. Store in firestore 'password_resets'
-            const expiry = new Date(Date.now() + 3600 * 1000).toISOString(); // 1 hour expiration
-            const resetDoc = {
-                email: normalizedEmail,
-                token,
-                expires_at: expiry,
-                used: false,
-                created_at: new Date().toISOString(),
+            // 3. Store token + expiry directly on the user document (1 hour window)
+            const expiry = new Date(Date.now() + 3600 * 1000).toISOString();
+            const updateResult = await userService.update(userDoc.id, {
+                reset_token: token,
+                reset_token_expiry: expiry,
                 updated_at: new Date().toISOString()
-            };
+            });
 
-            const result = await firestoreService.addDocument('password_resets', resetDoc);
-            if (!result.success) return { success: false, error: result.error };
+            if (!updateResult.success) {
+                return { success: false, error: updateResult.error || 'Failed to generate reset token.' };
+            }
 
             return { success: true, token, email: normalizedEmail };
         } catch (error: any) {
@@ -575,68 +580,60 @@ export const passwordResetService = {
         }
     },
 
+    /**
+     * Verifies a reset token by querying the users collection directly.
+     */
     verifyResetToken: async (token: string) => {
         try {
             const q = query(
-                collection(db, 'password_resets'),
-                where('token', '==', token),
-                where('used', '==', false)
+                collection(db, 'users'),
+                where('reset_token', '==', token)
             );
             const snapshot = await getDocs(q);
+
             if (snapshot.empty) {
                 return { success: false, error: 'This secure recovery link is invalid or has already been used.' };
             }
 
-            const docData = snapshot.docs.map(mapDoc)[0];
-            const expiresAt = new Date(docData.expires_at).getTime();
-            if (expiresAt < Date.now()) {
+            const userDoc = snapshot.docs.map(mapDoc)[0];
+
+            if (!userDoc.reset_token_expiry || new Date(userDoc.reset_token_expiry).getTime() < Date.now()) {
                 return { success: false, error: 'This secure recovery link has expired.' };
             }
 
-            return { success: true, email: docData.email, resetDocId: docData.id };
+            return { success: true, email: userDoc.email, userId: userDoc.id };
         } catch (error: any) {
             console.error('Error in verifyResetToken:', error);
             return { success: false, error: error.message };
         }
     },
 
+    /**
+     * Completes the password reset by updating password_hash on the user document
+     * and clearing the reset token fields — all within the `users` collection.
+     */
     completePasswordReset: async (token: string, newPassword: string) => {
         try {
-            // 1. Verify token
+            // 1. Verify token and get userId directly
             const verification = await passwordResetService.verifyResetToken(token);
-            if (!verification.success || !verification.email || !verification.resetDocId) {
+            if (!verification.success || !verification.userId) {
                 return { success: false, error: verification.error || 'Token verification failed.' };
             }
 
-            const email = verification.email;
-            const resetDocId = verification.resetDocId;
-
-            // 2. Fetch the user document to get its ID
-            const userResult = await userService.getByEmail(email);
-            if (!userResult.success || !userResult.data) {
-                return { success: false, error: 'Failed to locate user profile for update.' };
-            }
-
-            const userDoc = userResult.data as any;
-
-            // 3. Hash the new password
+            // 2. Hash the new password
             const passwordHash = await hashPassword(newPassword);
 
-            // 4. Update the user document
-            const updateResult = await userService.update(userDoc.id, {
+            // 3. Update password_hash and clear reset token fields on the user document
+            const updateResult = await userService.update(verification.userId, {
                 password_hash: passwordHash,
+                reset_token: null,
+                reset_token_expiry: null,
                 updated_at: new Date().toISOString()
             });
 
             if (!updateResult.success) {
-                return { success: false, error: updateResult.error || 'Failed to update password in profile.' };
+                return { success: false, error: updateResult.error || 'Failed to update password.' };
             }
-
-            // 5. Mark reset token as used
-            await firestoreService.updateDocument('password_resets', resetDocId, {
-                used: true,
-                updated_at: new Date().toISOString()
-            });
 
             return { success: true };
         } catch (error: any) {

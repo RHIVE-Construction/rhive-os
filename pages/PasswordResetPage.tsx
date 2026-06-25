@@ -3,7 +3,7 @@ import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useNavigation } from '../contexts/NavigationContext';
-import { passwordResetService } from '../lib/firebaseService';
+import { passwordResetService, userLogService } from '../lib/firebaseService';
 import {
     KeyIcon,
     ArrowRightIcon,
@@ -118,6 +118,11 @@ const PasswordResetPage: React.FC = () => {
 
         if (res.success) {
             setResetSuccess(true);
+            userLogService.logAction(
+                'USER_PASSWORD_RESET',
+                `Password successfully reset via recovery link`,
+                { email: verifiedEmail }
+            );
         } else {
             setErrorMessage(res.error || 'Secure override transaction failed. Token might be expired.');
         }

@@ -90,6 +90,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [shouldRender, setShouldRender] = useState(false);
     const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+    const [confirmedAddress, setConfirmedAddress] = useState<{ lat: number; lng: number; label: string } | null>(null);
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -97,6 +98,10 @@ export const GlobalCustomerLookupModal: React.FC = () => {
         }, 150);
         return () => clearTimeout(handler);
     }, [searchQuery]);
+
+    // --- AUTOCOMPLETE SUGGESTIONS STATE ---
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
 
     useEffect(() => {
         const handleOpen = () => {
@@ -130,12 +135,76 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<any>(null);
 
+    // Inject RHIVE-themed styles for Google pac-container
+    useEffect(() => {
+        const styleId = 'pac-container-rhive-theme';
+        if (!document.getElementById(styleId)) {
+            const styleEl = document.createElement('style');
+            styleEl.id = styleId;
+            styleEl.innerHTML = `
+                .pac-container {
+                    background: #050505 !important;
+                    border: 1px solid rgba(236, 2, 139, 0.35) !important;
+                    border-top: none !important;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 20px rgba(236,2,139,0.12) !important;
+                    border-radius: 0 !important;
+                    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%) !important;
+                    font-family: 'Rubik', sans-serif !important;
+                    z-index: 99999 !important;
+                    margin-top: 2px !important;
+                }
+                .pac-item {
+                    background: transparent !important;
+                    border-top: 1px solid rgba(255,255,255,0.04) !important;
+                    padding: 8px 12px !important;
+                    cursor: pointer !important;
+                    transition: background 0.1s ease !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 8px !important;
+                }
+                .pac-item:hover, .pac-item-selected {
+                    background: rgba(236, 2, 139, 0.08) !important;
+                }
+                .pac-item-query {
+                    color: #ffffff !important;
+                    font-size: 11px !important;
+                    font-weight: 700 !important;
+                    letter-spacing: 0.02em !important;
+                }
+                .pac-matched {
+                    color: #ec028b !important;
+                    font-weight: 900 !important;
+                }
+                .pac-item span:last-child {
+                    color: #6b7280 !important;
+                    font-size: 10px !important;
+                    font-family: monospace !important;
+                }
+                .pac-icon {
+                    filter: invert(1) sepia(1) saturate(5) hue-rotate(290deg) !important;
+                    width: 14px !important;
+                    height: 14px !important;
+                    margin-right: 4px !important;
+                    opacity: 0.7 !important;
+                }
+                .pac-logo:after {
+                    background-image: none !important;
+                    content: '' !important;
+                }
+            `;
+            document.head.appendChild(styleEl);
+        }
+        return () => {};
+    }, []);
+
     // Instantiate Google Autocomplete
     useEffect(() => {
         if (!isOpen || !isApiReady || !inputRef.current) return;
 
         autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
             types: ['address'],
+            fields: ['formatted_address', 'geometry', 'address_components'],
             componentRestrictions: { country: 'us' }
         });
 
@@ -144,6 +213,8 @@ export const GlobalCustomerLookupModal: React.FC = () => {
             if (place && place.formatted_address) {
                 setSearchQuery(place.formatted_address);
                 if (place.geometry) {
+                    const lat = place.geometry.location.lat();
+                    const lng = place.geometry.location.lng();
                     const addressComponents = place.address_components;
                     let streetNumber = '', route = '', city = '', state = '', zip = '';
                     if (addressComponents) {
@@ -158,26 +229,28 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                             }
                         }
                     }
-                    const addressData = {
-                        address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
-                        city,
-                        state,
-                        zip,
-                        latitude: place.geometry.location.lat(),
-                        longitude: place.geometry.location.lng()
-                    };
+                    const shortAddr = streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0];
+                    const addressData = { address: shortAddr, city, state, zip, latitude: lat, longitude: lng };
                     sessionStorage.setItem('globalSearchAddressData', JSON.stringify(addressData));
+                    setConfirmedAddress({ lat, lng, label: place.formatted_address });
                 }
             } else if (place && place.name) {
                 setSearchQuery(place.name);
             }
         });
+
+        return () => {
+            if (autocompleteRef.current) {
+                window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+                autocompleteRef.current = null;
+            }
+        };
     }, [isOpen, isApiReady]);
 
-    // Suppress Google Autocomplete pac-container dropdown if query is not address-like
+    // Suppress pac-container when query is not address-like
     useEffect(() => {
-        const styleId = 'pac-container-override';
-        let styleEl = document.getElementById(styleId);
+        const styleId = 'pac-container-visibility';
+        let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
         if (!styleEl) {
             styleEl = document.createElement('style');
             styleEl.id = styleId;
@@ -194,6 +267,56 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     }, [searchQuery]);
 
     if (!shouldRender) return null;
+
+    // --- AUTOCOMPLETE SUGGESTIONS (computed from raw searchQuery) ---
+    const suggestionsQuery = searchQuery.trim().toLowerCase();
+    const autocompleteSuggestions: { label: string; type: string; id?: string }[] = [];
+
+    if (suggestionsQuery.length >= 1) {
+        // Customer names
+        users.forEach(u => {
+            if (u.role !== 'Customer') return;
+            if (u.name.toLowerCase().includes(suggestionsQuery)) {
+                autocompleteSuggestions.push({ label: u.name, type: 'Contact', id: u.id });
+            }
+        });
+
+        // Property addresses
+        properties.forEach(p => {
+            if (p.address_full.toLowerCase().includes(suggestionsQuery)) {
+                autocompleteSuggestions.push({ label: p.address_full, type: 'Address', id: p._id });
+            }
+        });
+
+        // Project names
+        projects.forEach(pr => {
+            if (pr.name.toLowerCase().includes(suggestionsQuery)) {
+                autocompleteSuggestions.push({ label: pr.name, type: 'Project', id: pr._id });
+            }
+        });
+    }
+
+    // Deduplicate by label and limit to 5
+    const seenLabels = new Set<string>();
+    const uniqueSuggestions = autocompleteSuggestions.filter(s => {
+        if (seenLabels.has(s.label.toLowerCase())) return false;
+        seenLabels.add(s.label.toLowerCase());
+        return true;
+    }).slice(0, 5);
+
+    // Helper: wrap matched part of text with a highlight span
+    const highlightMatch = (text: string, query: string) => {
+        if (!query) return <>{text}</>;
+        const idx = text.toLowerCase().indexOf(query.toLowerCase());
+        if (idx === -1) return <>{text}</>;
+        return (
+            <>
+                {text.slice(0, idx)}
+                <span className="text-rhive-pink font-black">{text.slice(idx, idx + query.length)}</span>
+                {text.slice(idx + query.length)}
+            </>
+        );
+    };
 
     // --- DEEP SMART SEARCH LOGIC (Debounced) ---
     const searchLower = debouncedSearchQuery.toLowerCase().trim();
@@ -352,20 +475,139 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                             ref={inputRef}
                             id="search-lookup-input"
                             type="text" 
-                            placeholder="Type to search (e.g. Thompson, Logan, Quote, Michael)..." 
+                            placeholder="Search by name, address, phone, or project..." 
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={handleKeyDown}
+                            onChange={(e) => { setSearchQuery(e.target.value); setShowSuggestions(true); setHighlightedSuggestion(-1); setConfirmedAddress(null); }}
+                            onKeyDown={(e) => {
+                                // Arrow key navigation for autocomplete
+                                if (uniqueSuggestions.length > 0 && showSuggestions) {
+                                    if (e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        setHighlightedSuggestion(h => Math.min(h + 1, uniqueSuggestions.length - 1));
+                                        return;
+                                    }
+                                    if (e.key === 'ArrowUp') {
+                                        e.preventDefault();
+                                        setHighlightedSuggestion(h => Math.max(h - 1, -1));
+                                        return;
+                                    }
+                                    if (e.key === 'Enter' && highlightedSuggestion >= 0) {
+                                        e.preventDefault();
+                                        setSearchQuery(uniqueSuggestions[highlightedSuggestion].label);
+                                        setShowSuggestions(false);
+                                        setHighlightedSuggestion(-1);
+                                        return;
+                                    }
+                                    if (e.key === 'Escape') {
+                                        setShowSuggestions(false);
+                                        return;
+                                    }
+                                }
+                                handleKeyDown(e);
+                            }}
                             className="w-full bg-black/60 border border-gray-700 focus:border-[#ec028b] py-3.5 pl-12 pr-4 outline-none text-white text-xs font-semibold tracking-wide transition-all"
                             style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
                             autoFocus
                         />
-                        {searchQuery.trim() !== '' && searchResults.length === 0 && (
+                        {searchQuery.trim() !== '' && searchResults.length === 0 && uniqueSuggestions.length === 0 && (
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-rhive-pink font-bold uppercase tracking-widest font-mono pointer-events-none animate-pulse">
                                 No record found. Press Tab to register
                             </span>
                         )}
                     </div>
+
+                    {/* Autocomplete Suggestions Dropdown */}
+                    {showSuggestions && uniqueSuggestions.length > 0 && (
+                        <div 
+                            className="mt-2 border border-rhive-pink/20 bg-[#050505] shadow-[0_0_20px_rgba(236,2,139,0.08)] overflow-hidden"
+                            style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                        >
+                            <div className="px-3 py-1.5 border-b border-gray-900 flex items-center gap-2">
+                                <span className="text-[8px] font-black uppercase tracking-widest text-rhive-pink">Autocomplete</span>
+                                <span className="text-[8px] text-gray-600 font-mono">↑↓ navigate · Enter to select · Esc to close</span>
+                            </div>
+                            {uniqueSuggestions.map((s, i) => (
+                                <button
+                                    key={i}
+                                    onMouseDown={(e) => { e.preventDefault(); setSearchQuery(s.label); setShowSuggestions(false); setHighlightedSuggestion(-1); }}
+                                    onMouseEnter={() => setHighlightedSuggestion(i)}
+                                    className={cn(
+                                        'w-full flex items-center justify-between px-4 py-2.5 text-left text-xs transition-all duration-100 outline-none cursor-pointer border-b border-gray-900/60 last:border-0',
+                                        i === highlightedSuggestion
+                                            ? 'bg-rhive-pink/10 text-white'
+                                            : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                                    )}
+                                >
+                                    <span className="flex items-center gap-2 min-w-0">
+                                        <span className={cn('text-[7px] font-black uppercase tracking-widest shrink-0 px-1.5 py-0.5 rounded',
+                                            s.type === 'Contact' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                            s.type === 'Address' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                                            'bg-rhive-pink/10 text-rhive-pink border border-rhive-pink/20'
+                                        )}>{s.type}</span>
+                                        <span className="truncate font-medium">{highlightMatch(s.label, suggestionsQuery)}</span>
+                                    </span>
+                                    {i === highlightedSuggestion && (
+                                        <span className="shrink-0 text-[9px] text-rhive-pink/70 font-mono ml-2">↵</span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {/* Google Maps Confirmed Address Preview */}
+                    {confirmedAddress && (
+                        <div
+                            className="mt-2 border border-[#ec028b]/30 bg-[#050505] overflow-hidden shadow-[0_0_20px_rgba(236,2,139,0.1)]"
+                            style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                        >
+                            <div className="flex items-stretch">
+                                {/* Satellite thumbnail */}
+                                <div className="relative shrink-0 w-28 h-20 overflow-hidden">
+                                    <img
+                                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${confirmedAddress.lat},${confirmedAddress.lng}&zoom=18&size=224x160&maptype=satellite&markers=color:0xec028b%7C${confirmedAddress.lat},${confirmedAddress.lng}&key=AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA`}
+                                        alt="Map preview"
+                                        className="w-full h-full object-cover opacity-90"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#050505]/60" />
+                                    <div className="absolute bottom-1 left-1 w-2 h-2 rounded-full bg-[#ec028b] shadow-[0_0_6px_rgba(236,2,139,0.8)] animate-pulse" />
+                                </div>
+                                {/* Address info */}
+                                <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+                                    <div>
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-[#ec028b] block mb-1">Address Confirmed</span>
+                                        <p className="text-xs text-white font-semibold leading-snug truncate">{confirmedAddress.label}</p>
+                                        <p className="text-[9px] text-gray-500 font-mono mt-0.5">
+                                            {confirmedAddress.lat.toFixed(5)}, {confirmedAddress.lng.toFixed(5)}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <a
+                                            href={`https://www.google.com/maps/search/?api=1&query=${confirmedAddress.lat},${confirmedAddress.lng}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[9px] font-black uppercase tracking-widest text-[#ec028b] hover:text-white transition-colors flex items-center gap-1"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <GoogleMapsPinIcon />
+                                            View on Maps
+                                        </a>
+                                        <span className="text-gray-700">•</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsOpen(false);
+                                                sessionStorage.setItem('globalSearchQuery', searchQuery);
+                                                sessionStorage.setItem('globalSearchQueryType', 'Address');
+                                                setActivePageId('E-02a');
+                                            }}
+                                            className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors"
+                                        >
+                                            Register as New Lead →
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Hidden elements outside of dropdown for E2E click and query compatibility */}
