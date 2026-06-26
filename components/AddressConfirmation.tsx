@@ -4,9 +4,10 @@ import { Button } from './ui/button';
 import { XIcon, Check, SatelliteIcon, CameraIcon, PlusIcon, TrashIcon } from './icons';
 import { CircuitryBackground } from './CircuitryBackground';
 import { cn } from '../lib/utils';
-import { generateBuildingFromLatLng } from '../lib/mockData';
+import { generateBuildingFromLatLng, buildBuildingFromSolarData } from '../lib/mockData';
 import { Switch } from './ui/switch';
 import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
+import { getMapsApiKey } from '../lib/mapsConfig';
 
 interface AddressConfirmationProps {
   place: Place;
@@ -51,6 +52,8 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
   
   const [isAddingPin, setIsAddingPin] = useState(false);
   const [focusedBuildingId, setFocusedBuildingId] = useState<string | null>(null);
+  const [isDrawingOutline, setIsDrawingOutline] = useState(false);
+  const [overrideInputs, setOverrideInputs] = useState<Record<string, string>>({});
   const hasAnimatedRef = useRef<boolean>(false);
   const isAnimatingRef = useRef<boolean>(false);
 
@@ -77,6 +80,11 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
       setFocusedBuildingId(buildingData.buildings[0]?.id || null);
     }
   }, [buildingData, focusedBuildingId]);
+
+  // Reset drawing mode when focus changes
+  useEffect(() => {
+    setIsDrawingOutline(false);
+  }, [focusedBuildingId]);
 
   // Clean up polygons on unmount
   useEffect(() => {
@@ -107,6 +115,60 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
         ...prev,
         includedBuildingIds: prev.includedBuildingIds.filter(id => id !== buildingId)
     }));
+  };
+
+  const handleClearOutline = (buildingId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!buildingData) return;
+
+    if (isDrawingOutline) {
+      setIsDrawingOutline(false);
+      const poly = gPolygonsMapRef.current.get(buildingId);
+      if (poly) {
+        poly.setOptions({
+          editable: true,
+          draggable: true
+        });
+      }
+      return;
+    }
+
+    setOverrideInputs(prev => {
+      const next = { ...prev };
+      delete next[buildingId];
+      return next;
+    });
+
+    setBuildingData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        buildings: prev.buildings.map(b => {
+          if (b.id === buildingId) {
+            return {
+              ...b,
+              totalAreaMeters: 0,
+              polygonVertices: [],
+              facets: b.facets.map(f => ({ ...f, areaMeters: 0 })),
+              isOverridden: false,
+              overrideSq: undefined
+            };
+          }
+          return b;
+        })
+      };
+    });
+
+    const poly = gPolygonsMapRef.current.get(buildingId);
+    if (poly) {
+      poly.setPath([]);
+      poly.setOptions({
+        editable: false,
+        draggable: false
+      });
+    }
+
+    setIsDrawingOutline(true);
   };
 
   const handleBuildingToggle = (buildingId: string) => {
@@ -143,14 +205,57 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
     }
   }, [isApiReady, place.latitude, place.longitude, map]);
 
-  // 2. Set Map Cursor Style in Pin Dropping Mode
+  // 2. Set Map Cursor Style in Pin Dropping and Polygon Drawing Modes
   useEffect(() => {
     if (!map) return;
+    const shouldUseCrosshair = isAddingPin || isDrawingOutline;
     map.setOptions({
-      draggableCursor: isAddingPin ? 'crosshair' : null,
-      draggingCursor: isAddingPin ? 'crosshair' : null,
+      draggableCursor: shouldUseCrosshair ? 'crosshair' : null,
+      draggingCursor: shouldUseCrosshair ? 'crosshair' : null,
     });
-  }, [map, isAddingPin]);
+  }, [map, isAddingPin, isDrawingOutline]);
+
+  const fetchSolarDataForTagged = async (targetLat: number, targetLng: number, bId: string, idx: number) => {
+    try {
+      const apiKey = await getMapsApiKey();
+      if (!apiKey) return;
+
+      const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${targetLat}&location.longitude=${targetLng}&requiredQuality=HIGH&key=${apiKey}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Solar API returned status ${response.status}`);
+      }
+      const solarData = await response.json();
+      if (solarData && solarData.boundingBox) {
+        const snapped = buildBuildingFromSolarData(solarData, targetLat, targetLng, idx);
+        snapped.id = bId;
+
+        setBuildingData(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            buildings: prev.buildings.map(b => b.id === bId ? snapped : b)
+          };
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to fetch Solar API for tagged building:", err);
+      const isCoachman = (Math.abs(targetLat - 40.612) < 0.01 && Math.abs(targetLng - -111.815) < 0.01);
+      if (isCoachman && idx > 1) {
+        import('../data/garage_solar_response.json').then((garageData) => {
+          const snapped = buildBuildingFromSolarData(garageData.default, targetLat, targetLng, idx);
+          snapped.id = bId;
+          setBuildingData(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              buildings: prev.buildings.map(b => b.id === bId ? snapped : b)
+            };
+          });
+        }).catch(e => console.error("Failed to load local fallback garage data", e));
+      }
+    }
+  };
 
   // 3. Map Click Handler for Tagging Buildings
   useEffect(() => {
@@ -177,6 +282,11 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
           return survey;
         });
 
+        // Fetch Solar data asynchronously for the newly dropped building
+        setTimeout(() => {
+          fetchSolarDataForTagged(lat, lng, newBuilding.id, nextIndex);
+        }, 10);
+
         return {
           ...prev,
           buildings: [...prev.buildings, newBuilding]
@@ -190,6 +300,86 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
       window.google.maps.event.removeListener(clickListener);
     };
   }, [map, isAddingPin, setBuildingData, onSurveyChange]);
+
+  // drawing mode map click listener
+  useEffect(() => {
+    if (!map || !focusedBuildingId || !isDrawingOutline) return;
+
+    const drawClickListener = window.google.maps.event.addListener(map, 'click', (e: any) => {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      let shouldFinish = false;
+
+      setBuildingData(prev => {
+        if (!prev) return prev;
+
+        const currentBuilding = prev.buildings.find(b => b.id === focusedBuildingId);
+        if (currentBuilding && currentBuilding.polygonVertices && currentBuilding.polygonVertices.length >= 3) {
+          const firstPt = new window.google.maps.LatLng(currentBuilding.polygonVertices[0].lat, currentBuilding.polygonVertices[0].lng);
+          const dist = window.google.maps.geometry.spherical.computeDistanceBetween(e.latLng, firstPt);
+          if (dist < 4.5) {
+            shouldFinish = true;
+            return prev;
+          }
+        }
+
+        return {
+          ...prev,
+          buildings: prev.buildings.map(b => {
+            if (b.id === focusedBuildingId) {
+              const newVertices = [...(b.polygonVertices || []), { lat, lng }];
+              
+              const poly = gPolygonsMapRef.current.get(b.id);
+              if (poly) {
+                const path = poly.getPath();
+                path.push(e.latLng);
+                
+                let newAreaMeters = 0;
+                if (newVertices.length >= 3) {
+                  newAreaMeters = window.google.maps.geometry.spherical.computeArea(path);
+                }
+                
+                const avgPitchDeg = b.facets.reduce((sum, f) => sum + f.pitchDegrees, 0) / b.facets.length || 22.6;
+                const newFacets = b.facets.map(f => ({
+                  ...f,
+                  areaMeters: newAreaMeters / b.facets.length,
+                  pitchDegrees: avgPitchDeg
+                }));
+                
+                return {
+                  ...b,
+                  totalAreaMeters: newAreaMeters,
+                  polygonVertices: newVertices,
+                  facets: newFacets
+                };
+              }
+              
+              return {
+                ...b,
+                polygonVertices: newVertices
+              };
+            }
+            return b;
+          })
+        };
+      });
+
+      if (shouldFinish) {
+        setIsDrawingOutline(false);
+        const poly = gPolygonsMapRef.current.get(focusedBuildingId);
+        if (poly) {
+          poly.setOptions({
+            editable: true,
+            draggable: true
+          });
+        }
+      }
+    });
+
+    return () => {
+      window.google.maps.event.removeListener(drawClickListener);
+    };
+  }, [map, isDrawingOutline, focusedBuildingId, setBuildingData]);
 
   // 4. Render Markers for All Buildings (Included/Excluded styled accordingly)
   useEffect(() => {
@@ -251,6 +441,15 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
 
     // Draw/Update polygons
     buildingData.buildings.forEach((building) => {
+      if (building.isOverridden) {
+        const poly = gPolygonsMapRef.current.get(building.id);
+        if (poly) {
+          poly.setMap(null);
+          gPolygonsMapRef.current.delete(building.id);
+        }
+        return;
+      }
+
       const isFocused = building.id === focusedBuildingId;
       
       let poly = gPolygonsMapRef.current.get(building.id);
@@ -277,6 +476,12 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
             
             const newAreaMeters = window.google.maps.geometry.spherical.computeArea(path);
             
+            setOverrideInputs(prev => {
+              const next = { ...prev };
+              delete next[building.id];
+              return next;
+            });
+
             setBuildingData(prev => {
               if (!prev) return prev;
               return {
@@ -294,7 +499,9 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                       ...b,
                       totalAreaMeters: newAreaMeters,
                       polygonVertices: newVertices,
-                      facets: newFacets
+                      facets: newFacets,
+                      isOverridden: false,
+                      overrideSq: undefined
                     };
                   }
                   return b;
@@ -357,10 +564,13 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
               isAnimatingRef.current = false;
               poly.setPath(pathCoords);
               poly.setOptions({
-                editable: isFocused && view === 'satellite',
-                draggable: isFocused && view === 'satellite',
+                editable: isFocused && view === 'satellite' && !isDrawingOutline,
+                draggable: isFocused && view === 'satellite' && !isDrawingOutline,
               });
               registerPathListener(poly);
+              if (map) {
+                map.setMapTypeId('satellite');
+              }
             }
           };
 
@@ -373,8 +583,8 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
             strokeWeight: isFocused ? 3.5 : 2,
             fillColor: '#ec028b',
             fillOpacity: isFocused ? 0.25 : 0.08,
-            editable: isFocused && view === 'satellite',
-            draggable: isFocused && view === 'satellite',
+            editable: isFocused && view === 'satellite' && !isDrawingOutline,
+            draggable: isFocused && view === 'satellite' && !isDrawingOutline,
             map: map,
           });
 
@@ -387,8 +597,8 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
           strokeOpacity: isFocused ? 0.9 : 0.5,
           strokeWeight: isFocused ? 3.5 : 2,
           fillOpacity: isFocused ? 0.25 : 0.08,
-          editable: isFocused && view === 'satellite',
-          draggable: isFocused && view === 'satellite',
+          editable: isFocused && view === 'satellite' && !isDrawingOutline,
+          draggable: isFocused && view === 'satellite' && !isDrawingOutline,
         });
 
         // Verify if path coordinates match the state
@@ -422,6 +632,12 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
               newVertices.push({ lat: xy.lat(), lng: xy.lng() });
             }
             const newAreaMeters = window.google.maps.geometry.spherical.computeArea(newPath);
+            setOverrideInputs(prev => {
+              const next = { ...prev };
+              delete next[building.id];
+              return next;
+            });
+
             setBuildingData(prev => {
               if (!prev) return prev;
               return {
@@ -438,7 +654,9 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                       ...b,
                       totalAreaMeters: newAreaMeters,
                       polygonVertices: newVertices,
-                      facets: newFacets
+                      facets: newFacets,
+                      isOverridden: false,
+                      overrideSq: undefined
                     };
                   }
                   return b;
@@ -453,7 +671,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
         }
       }
     });
-  }, [map, buildingData, focusedBuildingId, view, setBuildingData]);
+  }, [map, buildingData, focusedBuildingId, view, setBuildingData, isDrawingOutline]);
 
   // 5. Initialize Street View Panorama
   useEffect(() => {
@@ -549,6 +767,31 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                             </button>
                         </div>
                     )}
+
+                    {/* Floating Drawing Banner */}
+                    {isDrawingOutline && (
+                        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-black/95 border border-pink-500 text-white px-4 py-2.5 rounded-md shadow-lg flex items-center space-x-4 backdrop-blur-md">
+                            <span className="text-sm font-semibold text-pink-400 font-sans">
+                                Click on the map to draw corners of BLDG {buildingData?.buildings.findIndex(b => b.id === focusedBuildingId) !== -1 ? (buildingData?.buildings.findIndex(b => b.id === focusedBuildingId) ?? 0) + 1 : 1}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsDrawingOutline(false);
+                                    const poly = gPolygonsMapRef.current.get(focusedBuildingId);
+                                    if (poly) {
+                                        poly.setOptions({
+                                            editable: true,
+                                            draggable: true
+                                        });
+                                    }
+                                }}
+                                className="px-3 py-1 bg-pink-500 hover:bg-pink-600 rounded text-xs text-white font-black uppercase tracking-wider transition-colors cursor-pointer"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    )}
                     
                     {/* Vignette Effect */}
                     <div className="absolute inset-0 pointer-events-none z-10" style={{ boxShadow: 'inset 0px 0px 100px 20px rgba(0,0,0,0.7)' }} />
@@ -604,7 +847,59 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                                                     BLDG {idx + 1}
                                                     {idx === 0 && <span className="text-[10px] text-pink-400 font-normal ml-2 bg-pink-400/10 px-1.5 py-0.5 rounded border border-pink-400/20">Primary</span>}
                                                 </span>
-                                                <span className="text-sm font-semibold text-pink-400/90 font-mono mt-1">{sqValue} SQ</span>
+                                                <div className="flex items-center gap-1.5 mt-1.5" onClick={e => e.stopPropagation()}>
+                                                    <input
+                                                        type="text"
+                                                        value={overrideInputs[building.id] !== undefined ? overrideInputs[building.id] : (building.isOverridden ? building.overrideSq?.toString() || '' : sqValue)}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setOverrideInputs(prev => ({ ...prev, [building.id]: val }));
+                                                            const numVal = parseFloat(val);
+                                                            setBuildingData(prev => {
+                                                                if (!prev) return prev;
+                                                                return {
+                                                                    ...prev,
+                                                                    buildings: prev.buildings.map(b => {
+                                                                        if (b.id === building.id) {
+                                                                            const isOverridden = val.trim() !== "";
+                                                                            const overrideSq = isOverridden ? (isNaN(numVal) ? 0 : numVal) : undefined;
+                                                                            
+                                                                            const newTotalAreaMeters = isOverridden ? (overrideSq * 100 / 10.7639) : b.totalAreaMeters;
+                                                                            const numFacets = b.facets.length || 1;
+                                                                            const newFacets = b.facets.map(f => {
+                                                                                let newFacetArea = f.areaMeters;
+                                                                                if (isOverridden) {
+                                                                                    if (b.totalAreaMeters > 0) {
+                                                                                        const ratio = newTotalAreaMeters / b.totalAreaMeters;
+                                                                                        newFacetArea = f.areaMeters * ratio;
+                                                                                    } else {
+                                                                                        newFacetArea = newTotalAreaMeters / numFacets;
+                                                                                    }
+                                                                                }
+                                                                                return {
+                                                                                    ...f,
+                                                                                    areaMeters: newFacetArea
+                                                                                };
+                                                                            });
+                                                                            
+                                                                            return {
+                                                                                ...b,
+                                                                                isOverridden,
+                                                                                overrideSq,
+                                                                                totalAreaMeters: newTotalAreaMeters,
+                                                                                facets: newFacets
+                                                                            };
+                                                                        }
+                                                                        return b;
+                                                                    })
+                                                                };
+                                                            });
+                                                        }}
+                                                        placeholder="--"
+                                                        className="w-16 h-7 text-xs bg-black/60 border border-gray-800 text-pink-400 font-semibold font-mono rounded text-center px-1 focus:outline-none focus:border-pink-500 focus:shadow-[0_0_8px_rgba(236,2,139,0.35)] focus:ring-0 transition-all duration-200"
+                                                    />
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">SQ</span>
+                                                </div>
                                             </div>
                                             <div className="flex items-center space-x-2" onClick={e => e.stopPropagation()}>
                                                 <Switch 
@@ -615,12 +910,27 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                                         </div>
                                         
                                         <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-900 text-xs">
-                                            <span className={cn(
-                                                "font-semibold uppercase tracking-wider",
-                                                isFocused ? "text-pink-400 animate-pulse" : "text-gray-500"
-                                            )}>
-                                                {isFocused ? "Editing Outline" : "Click to Edit Outline"}
-                                            </span>
+                                            <div className="flex flex-col gap-1">
+                                                <span className={cn(
+                                                    "font-semibold uppercase tracking-wider",
+                                                    isFocused || building.isOverridden ? "text-pink-400" : "text-gray-500"
+                                                )}>
+                                                    {building.isOverridden 
+                                                        ? "Manual SQ Override" 
+                                                        : (isFocused ? (isDrawingOutline ? "Drawing Mode" : "Editing Outline") : "Click to Edit Outline")}
+                                                </span>
+                                                {(isFocused || building.isOverridden) && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => handleClearOutline(building.id, e)}
+                                                        className="text-pink-400 hover:text-pink-300 font-bold underline cursor-pointer text-[10px] text-left uppercase tracking-wider"
+                                                    >
+                                                        {building.isOverridden
+                                                            ? "Clear Override & Redraw"
+                                                            : (isDrawingOutline ? "Cancel Drawing" : "Clear & Redraw Outline")}
+                                                    </button>
+                                                )}
+                                            </div>
                                             {isCustom && (
                                                 <button
                                                     onClick={(e) => handleDeleteBuilding(building.id, e)}

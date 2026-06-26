@@ -428,6 +428,58 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
                 return res.status(200).json({ success: true, message: 'SMS logged/updated.' });
             }
 
+            // --- Handle Contact Events ---
+            // Supported: contact.created, contact.updated, jc.contact_created, jc.contact_status_updated, etc.
+            const isContactEvent = eventType && (
+                eventType.startsWith('contact.') || 
+                eventType.startsWith('jc.contact') || 
+                eventType.includes('contact_')
+            );
+            if (isContactEvent) {
+                const d = body.data || {};
+                const rawPhone = d.contact_number || d.phone;
+                if (!rawPhone) {
+                    console.warn("Contact event received but missing contact_number or phone.");
+                    return res.status(200).json({ success: false, message: 'Missing phone number.' });
+                }
+
+                const cleanPhone = String(rawPhone).replace(/\D/g, '');
+                
+                // Fetch existing contacts to check duplicates
+                const contactsSnap = await db.collection('contacts').get();
+                const existingPhones = new Set();
+                contactsSnap.forEach(doc => {
+                    const c = doc.data();
+                    if (c.phone) existingPhones.add(String(c.phone).replace(/\D/g, ''));
+                    if (c.mobile) existingPhones.add(String(c.mobile).replace(/\D/g, ''));
+                    if (c.homePhone) existingPhones.add(String(c.homePhone).replace(/\D/g, ''));
+                    if (c.otherPhone) existingPhones.add(String(c.otherPhone).replace(/\D/g, ''));
+                });
+
+                if (!existingPhones.has(cleanPhone)) {
+                    const now = new Date().toISOString();
+                    const newContact = {
+                        first_name: d.first_name || '',
+                        last_name: d.last_name || '',
+                        full_name: `${d.first_name || ''} ${d.last_name || ''}`.trim() || d.name || 'Unknown Contact',
+                        phone: rawPhone,
+                        email: d.email || `${cleanPhone}@justcall.io`,
+                        address: d.address || '',
+                        created_at: now,
+                        updated_at: now,
+                        _source: 'justcall-webhook',
+                        recordStatus: 'Available',
+                        projectRole: 'Owner'
+                    };
+                    await db.collection('contacts').add(newContact);
+                    console.log(`Successfully created new contact via JustCall Webhook: ${newContact.full_name} (${rawPhone})`);
+                    return res.status(200).json({ success: true, message: 'Contact created successfully from webhook.' });
+                } else {
+                    console.log(`Contact with phone ${rawPhone} already exists. Skipping creation.`);
+                    return res.status(200).json({ success: true, message: 'Contact already exists.' });
+                }
+            }
+
             // --- Unknown event: acknowledge receipt ---
             console.log('Unhandled JustCall event type:', eventType);
             return res.status(200).json({ message: `Event '${eventType}' received but not processed.` });

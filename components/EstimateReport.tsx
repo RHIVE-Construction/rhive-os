@@ -195,7 +195,8 @@ const getStaticMapUrl = (
   allBuildings: Building[],
   includedBuildingIds: string[],
   place: Place,
-  mapsKey: string
+  mapsKey: string,
+  isCombined?: boolean
 ) => {
   if (!mapsKey) return '';
   
@@ -203,21 +204,25 @@ const getStaticMapUrl = (
   const markers: string[] = [];
   
   allBuildings.forEach((b, idx) => {
-    // Render all buildings on the property for context, highlight the current one in pink, others in gray
-    const isCurrent = b.id === building.id;
+    // Render all buildings on the property for context
+    // If isCombined is true, highlight all buildings in includedBuildingIds.
+    // Otherwise, highlight only the current building.
+    const isHighlighted = isCombined 
+      ? includedBuildingIds.includes(b.id)
+      : b.id === building.id;
     const vertices = b.polygonVertices || [];
     
     if (vertices.length >= 3) {
       const closedVertices = [...vertices, vertices[0]];
       const pathCoords = closedVertices.map(v => `${v.lat.toFixed(6)},${v.lng.toFixed(6)}`).join('|');
-      const pathColor = isCurrent ? '0xec028b' : '0x6b7280';
-      const pathFill = isCurrent ? '0xec028b25' : '0x6b728015';
-      const pathWeight = isCurrent ? '3' : '2';
+      const pathColor = isHighlighted ? '0xec028b' : '0x6b7280';
+      const pathFill = isHighlighted ? '0xec028b25' : '0x6b728015';
+      const pathWeight = isHighlighted ? '3' : '2';
       paths.push(`path=color:${pathColor}|weight:${pathWeight}|fillcolor:${pathFill}|${pathCoords}`);
     }
     
     const bldgCenter = getPolygonCenter(vertices, b.lat ?? place.latitude, b.lng ?? place.longitude);
-    const markerColor = isCurrent ? '0xec028b' : '0x6b7280';
+    const markerColor = isHighlighted ? '0xec028b' : '0x6b7280';
     markers.push(`markers=color:${markerColor}|label:${idx + 1}|${bldgCenter.lat.toFixed(6)},${bldgCenter.lng.toFixed(6)}`);
   });
 
@@ -265,9 +270,7 @@ const getStaticMapUrl = (
   else zoom = 19; // Cap max zoom at 19 to keep detail high but prevent clipping
   
   return `https://maps.googleapis.com/maps/api/staticmap?center=${mapCenterLat.toFixed(6)},${mapCenterLng.toFixed(6)}&zoom=${zoom}&size=400x400&maptype=satellite&${pathsQuery}&${markersQuery}&key=${mapsKey}`;
-};
-
-export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingData, surveyState, calcResult }) => {
+};export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingData, surveyState, calcResult }) => {
   const reportContentRef = useRef<HTMLDivElement>(null);
   const [mapsKey, setMapsKey] = useState<string>('');
 
@@ -275,9 +278,9 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
     getMapsApiKey().then(setMapsKey);
   }, []);
 
-  const primaryBuilding = buildingData.buildings.find(b => surveyState.includedBuildingIds.includes(b.id));
+  const primaryBuilding = buildingData?.buildings?.[0];
   const satelliteUrl = mapsKey && primaryBuilding
-    ? getStaticMapUrl(primaryBuilding, buildingData.buildings, surveyState.includedBuildingIds, place, mapsKey)
+    ? getStaticMapUrl(primaryBuilding, buildingData?.buildings || [], surveyState?.includedBuildingIds || [], place, mapsKey, true)
     : '';
 
   const handleDownloadPdf = async () => {
@@ -324,24 +327,24 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
       heightLeft -= pdfHeight;
     }
 
-    pdf.save(`RHIVE_Estimate_${place.address.split(',')[0]}.pdf`);
+    pdf.save(`RHIVE_Estimate_${place?.address?.split(',')?.[0] || 'Report'}.pdf`);
   };
 
   const { pricing } = usePricing();
-  const isGaf = surveyState.roofUpgrade.includes('GAF');
-  const upgradeCost = calcResult.roofEstimate.upgrades[surveyState.roofUpgrade as keyof typeof calcResult.roofEstimate.upgrades] || 0;
+  const isGaf = surveyState?.roofUpgrade?.includes('GAF') || false;
+  const upgradeCost = calcResult?.roofEstimate?.upgrades?.[surveyState?.roofUpgrade as keyof typeof calcResult.roofEstimate.upgrades] || 0;
 
-  const includedBuildings = buildingData.buildings.filter(b => surveyState.includedBuildingIds.includes(b.id));
+  const includedBuildings = (buildingData?.buildings || []).filter(b => surveyState?.includedBuildingIds?.includes(b.id));
   const buildingCalcs = includedBuildings.map(building => {
       const singleBldgData: BuildingData = {
           buildings: [building],
-          yearConstructed: buildingData.yearConstructed
+          yearConstructed: buildingData?.yearConstructed ?? new Date().getFullYear()
       };
       const singleSurveyState: SurveyState = {
-          ...surveyState,
+          ...(surveyState || {}),
           includedBuildingIds: [building.id],
           totalSq: 0 // force raw API measurements
-      };
+      } as SurveyState;
       const res = calculateEstimate({ buildingData: singleBldgData, surveyState: singleSurveyState }, pricing);
       return {
           building,
@@ -351,7 +354,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
 
   const hasMultipleBuildings = includedBuildings.length > 1;
   const totalPagesCount = hasMultipleBuildings ? (4 + includedBuildings.length) : 4;
-  return (
+  return (
     <div className="text-black bg-gray-300">
       <div className="max-h-[70vh] overflow-y-auto">
         <div ref={reportContentRef} className="font-serif">
@@ -361,36 +364,36 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                 <div className="grid grid-cols-2 gap-8 mt-6">
                     <div>
                         <SectionTitle>Property Data (AI Measured)</SectionTitle>
-                        <DetailItem label="Total Squares (Approx.):" value={`${calcResult.finalSq.toFixed(2)} SQ`} />
-                        <DetailItem label="Estimated Layers:" value={calcResult.estimatedLayers} />
-                        <DetailItem label="Max Pitch:" value={`${Math.max(...calcResult.pitchBreakdown.map(p => p.pitch), 0)}/12 Pitch`} />
-                        <DetailItem label="Total Facets:" value={calcResult.roofEstimate.totalFacets} />
-                        <DetailItem label="Year Built:" value={buildingData.yearConstructed} />
+                        <DetailItem label="Total Squares (Approx.):" value={`${(calcResult?.finalSq ?? 0).toFixed(2)} SQ`} />
+                        <DetailItem label="Estimated Layers:" value={calcResult?.estimatedLayers ?? 'Unknown'} />
+                        <DetailItem label="Max Pitch:" value={`${Math.max(...(calcResult?.pitchBreakdown || []).map(p => p?.pitch || 0), 0)}/12 Pitch`} />
+                        <DetailItem label="Total Facets:" value={calcResult?.roofEstimate?.totalFacets ?? 0} />
+                        <DetailItem label="Year Built:" value={buildingData?.yearConstructed ?? 'Unknown'} />
                     </div>
                      <div>
                         <SectionTitle>Your Selections</SectionTitle>
-                        <DetailItem label="Primary Shingle:" value={surveyState.roofUpgrade} />
-                        <DetailItem label="Shingle Color:" value={surveyState.shingleColor} />
-                        <DetailItem label="Heat Trace System:" value={surveyState.heatTrace.enabled ? `Included (${formatCurrency(calcResult.heatTraceEstimate.total)})` : 'Not Included'} />
-                        <DetailItem label="Gutter System:" value={surveyState.gutters.enabled ? `${surveyState.gutters.size} ${surveyState.gutters.style}` : 'Not Included'} />
+                        <DetailItem label="Primary Shingle:" value={surveyState?.roofUpgrade ?? ''} />
+                        <DetailItem label="Shingle Color:" value={surveyState?.shingleColor ?? ''} />
+                        <DetailItem label="Heat Trace System:" value={surveyState?.heatTrace?.enabled ? `Included (${formatCurrency(calcResult?.heatTraceEstimate?.total ?? 0)})` : 'Not Included'} />
+                        <DetailItem label="Gutter System:" value={surveyState?.gutters?.enabled ? `${surveyState?.gutters?.size ?? ''} ${surveyState?.gutters?.style ?? ''}` : 'Not Included'} />
                     </div>
                 </div>
 
                 <SectionTitle>Ballpark Investment Breakdown</SectionTitle>
                 <div className="grid grid-cols-2 gap-x-8">
                      <div>
-                        <DetailItem label="Roofing Materials" value={formatCurrency(calcResult.roofEstimate.breakdown.materials)} />
-                        <DetailItem label="Roofing Labor" value={formatCurrency(calcResult.roofEstimate.breakdown.labor)} />
-                        <DetailItem label="Overhead & Add-ons" value={formatCurrency(calcResult.roofEstimate.breakdown.overhead)} />
-                        <DetailItem label="Profit" value={formatCurrency(calcResult.roofEstimate.breakdown.profit)} />
-                        {upgradeCost > 0 && <DetailItem label={`${surveyState.roofUpgrade} Upgrade`} value={formatCurrency(upgradeCost)} />}
-                        <DetailItem label="Roofing Subtotal" value={formatCurrency(calcResult.roofEstimate.breakdown.total + upgradeCost)} isSubtotal/>
+                        <DetailItem label="Roofing Materials" value={formatCurrency(calcResult?.roofEstimate?.breakdown?.materials ?? 0)} />
+                        <DetailItem label="Roofing Labor" value={formatCurrency(calcResult?.roofEstimate?.breakdown?.labor ?? 0)} />
+                        <DetailItem label="Overhead & Add-ons" value={formatCurrency(calcResult?.roofEstimate?.breakdown?.overhead ?? 0)} />
+                        <DetailItem label="Profit" value={formatCurrency(calcResult?.roofEstimate?.breakdown?.profit ?? 0)} />
+                        {upgradeCost > 0 && <DetailItem label={`${surveyState?.roofUpgrade ?? ''} Upgrade`} value={formatCurrency(upgradeCost)} />}
+                        <DetailItem label="Roofing Subtotal" value={formatCurrency((calcResult?.roofEstimate?.breakdown?.total ?? 0) + upgradeCost)} isSubtotal/>
                     </div>
                      <div>
-                        <DetailItem label="Gutter System Estimate" value={formatCurrency(calcResult.gutterEstimate.total)} />
-                        <DetailItem label="Heat Trace System" value={formatCurrency(calcResult.heatTraceEstimate.total)} />
+                        <DetailItem label="Gutter System Estimate" value={formatCurrency(calcResult?.gutterEstimate?.total ?? 0)} />
+                        <DetailItem label="Heat Trace System" value={formatCurrency(calcResult?.heatTraceEstimate?.total ?? 0)} />
                         <div className="mt-4 pt-4 border-t-2 border-pink-500/80">
-                           <DetailItem label="Your Estimated Total" value={formatCurrency(calcResult.liveTotal)} isTotal/>
+                           <DetailItem label="Your Estimated Total" value={formatCurrency(calcResult?.liveTotal ?? 0)} isTotal/>
                         </div>
                     </div>
                 </div>
@@ -413,7 +416,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                 <div className="grid grid-cols-2 gap-8 items-start mt-4">
                     <div>
                         <h3 className="font-semibold text-lg font-sans mb-3 text-pink-600">Your Chosen System Components</h3>
-                        <DetailItem label="Shingle Line:" value={surveyState.roofUpgrade} />
+                        <DetailItem label="Shingle Line:" value={surveyState?.roofUpgrade ?? ''} />
                         <DetailItem label="Ice & Water Barrier:" value={isGaf ? 'WeatherWatch®' : 'WeatherLock® G'} />
                         <DetailItem label="Synthetic Underlayment:" value={isGaf ? 'FeltBuster®' : 'ProArmor®'} />
                         <DetailItem label="Starter Shingles:" value={isGaf ? 'Pro-Start®' : 'Starter Strip Plus'} />
@@ -473,24 +476,24 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                         <div className="col-span-5 bg-gray-50/50 p-4 border border-gray-200 rounded-lg">
                             <h3 className="font-sans font-bold text-lg text-pink-600 mb-4 pb-1 border-b border-gray-200">Combined Measurements</h3>
                             <div className="space-y-0.5 text-base">
-                                <DetailItem label="Total roof area" value={`${Math.round(calcResult.finalSq * 100)} sqft`} />
-                                <DetailItem label="Total pitched area" value={`${Math.round(calcResult.asphaltSq * 100)} sqft`} />
-                                <DetailItem label="Total flat area" value={`${Math.round(calcResult.flatRoofSq * 100)} sqft`} />
-                                <DetailItem label="Total roof facets" value={`${calcResult.roofEstimate.totalFacets} facets`} />
-                                <DetailItem label="Predominant pitch" value={`${calcResult.dominantPitch}/12`} />
-                                <DetailItem label="Total eaves" value={formatLength(calcResult.linearMeasurements.eaves)} />
-                                <DetailItem label="Total valleys" value={formatLength(calcResult.linearMeasurements.valleys)} />
-                                <DetailItem label="Total hips" value={formatLength(calcResult.linearMeasurements.hips)} />
-                                <DetailItem label="Total ridges" value={formatLength(calcResult.linearMeasurements.ridges)} />
-                                <DetailItem label="Total rakes" value={formatLength(calcResult.linearMeasurements.rakes)} />
-                                <DetailItem label="Total wall flashing" value={calcResult.linearMeasurements.wallFlashing ? formatLength(calcResult.linearMeasurements.wallFlashing) : '0ft 0in'} />
-                                <DetailItem label="Total step flashing" value={calcResult.linearMeasurements.stepFlashing ? formatLength(calcResult.linearMeasurements.stepFlashing) : '0ft 0in'} />
-                                <DetailItem label="Total transitions" value={calcResult.linearMeasurements.transitions ? formatLength(calcResult.linearMeasurements.transitions) : '0ft 0in'} />
+                                <DetailItem label="Total roof area" value={`${Math.round((calcResult?.finalSq ?? 0) * 100)} sqft`} />
+                                <DetailItem label="Total pitched area" value={`${Math.round((calcResult?.asphaltSq ?? 0) * 100)} sqft`} />
+                                <DetailItem label="Total flat area" value={`${Math.round((calcResult?.flatRoofSq ?? 0) * 100)} sqft`} />
+                                <DetailItem label="Total roof facets" value={`${calcResult?.roofEstimate?.totalFacets ?? 0} facets`} />
+                                <DetailItem label="Predominant pitch" value={`${calcResult?.dominantPitch ?? 0}/12`} />
+                                <DetailItem label="Total eaves" value={formatLength(calcResult?.linearMeasurements?.eaves ?? 0)} />
+                                <DetailItem label="Total valleys" value={formatLength(calcResult?.linearMeasurements?.valleys ?? 0)} />
+                                <DetailItem label="Total hips" value={formatLength(calcResult?.linearMeasurements?.hips ?? 0)} />
+                                <DetailItem label="Total ridges" value={formatLength(calcResult?.linearMeasurements?.ridges ?? 0)} />
+                                <DetailItem label="Total rakes" value={formatLength(calcResult?.linearMeasurements?.rakes ?? 0)} />
+                                <DetailItem label="Total wall flashing" value={calcResult?.linearMeasurements?.wallFlashing ? formatLength(calcResult.linearMeasurements.wallFlashing) : '0ft 0in'} />
+                                <DetailItem label="Total step flashing" value={calcResult?.linearMeasurements?.stepFlashing ? formatLength(calcResult.linearMeasurements.stepFlashing) : '0ft 0in'} />
+                                <DetailItem label="Total transitions" value={calcResult?.linearMeasurements?.transitions ? formatLength(calcResult.linearMeasurements.transitions) : '0ft 0in'} />
                                 <DetailItem label="Total parapet wall" value="0ft 0in" />
-                                <DetailItem label="Total unspecified" value={calcResult.linearMeasurements.unspecified ? formatLength(calcResult.linearMeasurements.unspecified) : '0ft 0in'} />
+                                <DetailItem label="Total unspecified" value={calcResult?.linearMeasurements?.unspecified ? formatLength(calcResult.linearMeasurements.unspecified) : '0ft 0in'} />
                                 <div className="pt-2 mt-2 border-t border-gray-300">
-                                    <DetailItem label="Hips + ridges" value={formatLength(calcResult.linearMeasurements.hips + calcResult.linearMeasurements.ridges)} isSubtotal />
-                                    <DetailItem label="Eaves + rakes" value={formatLength(calcResult.linearMeasurements.eaves + calcResult.linearMeasurements.rakes)} isTotal />
+                                    <DetailItem label="Hips + ridges" value={formatLength((calcResult?.linearMeasurements?.hips ?? 0) + (calcResult?.linearMeasurements?.ridges ?? 0))} isSubtotal />
+                                    <DetailItem label="Eaves + rakes" value={formatLength((calcResult?.linearMeasurements?.eaves ?? 0) + (calcResult?.linearMeasurements?.rakes ?? 0))} isTotal />
                                 </div>
                             </div>
                         </div>
@@ -510,20 +513,21 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
 
             {/* SEPARATE STRUCTURE PAGES */}
             {buildingCalcs.map(({ building, res }, idx) => {
+                const originalIdx = buildingData?.buildings.findIndex(b => b.id === building.id) ?? idx;
                 const pageNum = (hasMultipleBuildings ? 5 : 4) + idx;
-                const bldgName = `BLDG ${idx + 1}`;
-                const isPrimary = idx === 0;
+                const bldgName = `BLDG ${originalIdx + 1}`;
+                const isPrimary = originalIdx === 0;
 
                 return (
                     <ReportPage key={building.id} pageNumber={pageNum} totalPages={totalPagesCount}>
-                        <ReportHeader place={place} title={`BLDG ${idx + 1} Summary`} subtitle={`${bldgName} Measurements ${isPrimary ? '(Primary Structure)' : '(Manually Tagged)'}`} />
+                        <ReportHeader place={place} title={`BLDG ${originalIdx + 1} Summary`} subtitle={`${bldgName} Measurements ${isPrimary ? '(Primary Structure)' : '(Manually Tagged)'}`} />
                         <div className="grid grid-cols-12 gap-8 items-start mt-6">
                             <div className="col-span-6 flex flex-col items-center">
                                 <h3 className="font-sans font-bold text-lg text-black mb-4 self-start">Structure Diagram</h3>
                                 {mapsKey ? (
                                     <div className="w-full flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-lg">
                                         <img 
-                                            src={getStaticMapUrl(building, buildingData.buildings, surveyState.includedBuildingIds, place, mapsKey)} 
+                                            src={getStaticMapUrl(building, buildingData?.buildings || [], surveyState?.includedBuildingIds || [], place, mapsKey)} 
                                             alt={`${bldgName} Diagram`} 
                                             className="w-full h-auto max-w-[280px] rounded-lg shadow-md border border-gray-200" 
                                         />
@@ -531,7 +535,7 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                                     </div>
                                 ) : (
                                     isPrimary && !building.id.startsWith('BLD_') ? (
-                                        <RoofDrawing address={place.address} building={building} />
+                                        <RoofDrawing address={place?.address ?? ''} building={building} />
                                     ) : (
                                         <BuildingDrawing building={building} />
                                     )
@@ -540,23 +544,23 @@ export const EstimateReport: React.FC<EstimateReportProps> = ({ place, buildingD
                             <div className="col-span-6 bg-gray-50/50 p-4 border border-gray-200 rounded-lg">
                                 <h3 className="font-sans font-bold text-lg text-pink-600 mb-4 pb-1 border-b border-gray-200">Measurements</h3>
                                 <div className="space-y-0.5 text-base">
-                                    <DetailItem label="Total roof area" value={`${Math.round(res.finalSq * 100)} sqft`} />
-                                    <DetailItem label="Total pitched area" value={`${Math.round(res.asphaltSq * 100)} sqft`} />
-                                    <DetailItem label="Total flat area" value={`${Math.round(res.flatRoofSq * 100)} sqft`} />
-                                    <DetailItem label="Total roof facets" value={`${res.roofEstimate.totalFacets} facets`} />
-                                    <DetailItem label="Predominant pitch" value={`${res.dominantPitch}/12`} />
-                                    <DetailItem label="Total eaves" value={formatLength(res.linearMeasurements.eaves)} />
-                                    <DetailItem label="Total valleys" value={formatLength(res.linearMeasurements.valleys)} />
-                                    <DetailItem label="Total hips" value={formatLength(res.linearMeasurements.hips)} />
-                                    <DetailItem label="Total ridges" value={formatLength(res.linearMeasurements.ridges)} />
-                                    <DetailItem label="Total rakes" value={formatLength(res.linearMeasurements.rakes)} />
-                                    <DetailItem label="Total wall flashing" value={res.linearMeasurements.wallFlashing ? formatLength(res.linearMeasurements.wallFlashing) : '0ft 0in'} />
-                                    <DetailItem label="Total step flashing" value={res.linearMeasurements.stepFlashing ? formatLength(res.linearMeasurements.stepFlashing) : '0ft 0in'} />
-                                    <DetailItem label="Total transitions" value={res.linearMeasurements.transitions ? formatLength(res.linearMeasurements.transitions) : '0ft 0in'} />
-                                    <DetailItem label="Total unspecified" value={res.linearMeasurements.unspecified ? formatLength(res.linearMeasurements.unspecified) : '0ft 0in'} />
+                                    <DetailItem label="Total roof area" value={`${Math.round((res?.finalSq ?? 0) * 100)} sqft`} />
+                                    <DetailItem label="Total pitched area" value={`${Math.round((res?.asphaltSq ?? 0) * 100)} sqft`} />
+                                    <DetailItem label="Total flat area" value={`${Math.round((res?.flatRoofSq ?? 0) * 100)} sqft`} />
+                                    <DetailItem label="Total roof facets" value={`${res?.roofEstimate?.totalFacets ?? 0} facets`} />
+                                    <DetailItem label="Predominant pitch" value={`${res?.dominantPitch ?? 0}/12`} />
+                                    <DetailItem label="Total eaves" value={formatLength(res?.linearMeasurements?.eaves ?? 0)} />
+                                    <DetailItem label="Total valleys" value={formatLength(res?.linearMeasurements?.valleys ?? 0)} />
+                                    <DetailItem label="Total hips" value={formatLength(res?.linearMeasurements?.hips ?? 0)} />
+                                    <DetailItem label="Total ridges" value={formatLength(res?.linearMeasurements?.ridges ?? 0)} />
+                                    <DetailItem label="Total rakes" value={formatLength(res?.linearMeasurements?.rakes ?? 0)} />
+                                    <DetailItem label="Total wall flashing" value={res?.linearMeasurements?.wallFlashing ? formatLength(res.linearMeasurements.wallFlashing) : '0ft 0in'} />
+                                    <DetailItem label="Total step flashing" value={res?.linearMeasurements?.stepFlashing ? formatLength(res.linearMeasurements.stepFlashing) : '0ft 0in'} />
+                                    <DetailItem label="Total transitions" value={res?.linearMeasurements?.transitions ? formatLength(res.linearMeasurements.transitions) : '0ft 0in'} />
+                                    <DetailItem label="Total unspecified" value={res?.linearMeasurements?.unspecified ? formatLength(res.linearMeasurements.unspecified) : '0ft 0in'} />
                                     <div className="pt-2 mt-2 border-t border-gray-300">
-                                        <DetailItem label="Hips + ridges" value={formatLength(res.linearMeasurements.hips + res.linearMeasurements.ridges)} isSubtotal />
-                                        <DetailItem label="Eaves + rakes" value={formatLength(res.linearMeasurements.eaves + res.linearMeasurements.rakes)} isTotal />
+                                        <DetailItem label="Hips + ridges" value={formatLength((res?.linearMeasurements?.hips ?? 0) + (res?.linearMeasurements?.ridges ?? 0))} isSubtotal />
+                                        <DetailItem label="Eaves + rakes" value={formatLength((res?.linearMeasurements?.eaves ?? 0) + (res?.linearMeasurements?.rakes ?? 0))} isTotal />
                                     </div>
                                 </div>
                             </div>

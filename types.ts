@@ -28,6 +28,8 @@ export interface Building {
   lat?: number;
   lng?: number;
   polygonVertices?: { lat: number; lng: number }[];
+  isOverridden?: boolean;
+  overrideSq?: number;
 }
 
 export interface BuildingData {

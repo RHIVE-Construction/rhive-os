@@ -45,6 +45,7 @@ import { calculateEstimate } from '../lib/calculations';
 import { INITIAL_SURVEY_STATE } from '../lib/constants';
 import { WeatherReport } from '../components/WeatherReport';
 import CircuitryCard from '../components/CircuitryCard';
+import { Card, CardContent } from '../components/ui/card';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, Property, EaveOverhang, ProjectStage } from '../types';
 import { createProject as createProjectApi } from '../lib/api';
 import { getMapsApiKey } from '../lib/mapsConfig';
@@ -2183,7 +2184,7 @@ const CustomerInputPage: React.FC = () => {
             }
             // Check if user already exists in DB by phone, email, or name
             const match = users.find(u => 
-                (u.phone && contact.phone && u.phone.replace(/\D/g, '') === contact.phone.replace(/\D/g, '')) ||
+                (u.phone && contact.phone && String(u.phone).replace(/\D/g, '') === String(contact.phone).replace(/\D/g, '')) ||
                 (u.email && contact.email && u.email.toLowerCase().trim() === contact.email.toLowerCase().trim()) ||
                 (u.name && u.name.toLowerCase().trim() === `${contact.firstName} ${contact.lastName}`.toLowerCase().trim())
             );

@@ -94,7 +94,7 @@ export function calculateEstimate(inputs: CalculationInputs, pricing: Pricing): 
 
         // Apply special override to primary buildings only (non-custom buildings)
         const isCustomBuilding = building.id.startsWith('BLD');
-        if (!isCustomBuilding) {
+        if (!isCustomBuilding && !building.isOverridden) {
             if (isMemorial) {
                 const overrideSq = 24.57;
                 const ratio = bldgAsphaltSq > 0 ? overrideSq / bldgAsphaltSq : 1;

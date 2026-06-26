@@ -57,7 +57,7 @@ const AccountsListPage: React.FC = () => {
             const name = (a.accountName || a.name || '').toLowerCase();
             return (
                 name.includes(search.toLowerCase()) ||
-                (a.phone || '').includes(search) ||
+                String(a.phone || '').includes(search) ||
                 (a.email || a.email_1 || '').toLowerCase().includes(search.toLowerCase()) ||
                 (a.billingCity || a.projectCity || '').toLowerCase().includes(search.toLowerCase()) ||
                 (a.accountId || '').toLowerCase().includes(search.toLowerCase())

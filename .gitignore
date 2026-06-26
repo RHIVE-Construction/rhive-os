@@ -48,4 +48,5 @@ serviceAccountKey.json
 *.njsproj
 *.sln
 *.sw?
-
+*.bak
+justcall_test_results.json

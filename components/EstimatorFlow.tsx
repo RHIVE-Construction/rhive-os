@@ -3,7 +3,7 @@ import type { Place, BuildingData, SurveyState } from '../types';
 import { getMapsApiKey } from '../lib/mapsConfig';
 import { LandingPage } from './LandingPage';
 import { Dashboard } from './Dashboard';
-import { generateMockBuildingData } from '../lib/mockData';
+import { generateMockBuildingData, buildBuildingFromSolarData } from '../lib/mockData';
 import { INITIAL_SURVEY_STATE } from '../lib/constants';
 import { AddressConfirmation } from './AddressConfirmation';
 import { RoofOptions } from './RoofOptions';
@@ -64,6 +64,90 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
            setStreetViewUrl('https://picsum.photos/seed/roof/640/480');
            setAppState('addressConfirmation');
         });
+
+      // Asynchronously fetch Google Solar API data for the primary building
+      const fetchPrimarySolar = async () => {
+        try {
+          const apiK = apiKey || (await getMapsApiKey());
+          if (!apiK) return;
+
+          const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${place.latitude}&location.longitude=${place.longitude}&requiredQuality=HIGH&key=${apiK}`;
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Solar API returned status ${response.status}`);
+          }
+          const solarData = await response.json();
+          if (solarData && solarData.boundingBox) {
+            const snapped = buildBuildingFromSolarData(solarData, place.latitude, place.longitude, 1);
+            setBuildingData(prev => {
+              if (!prev) return prev;
+              const updatedBuildings = [...prev.buildings];
+              if (updatedBuildings.length > 0) {
+                const oldId = updatedBuildings[0].id;
+                updatedBuildings[0] = snapped;
+                setSurveyState(survey => {
+                  const newIds = survey.includedBuildingIds.map(id => id === oldId ? snapped.id : id);
+                  if (!newIds.includes(snapped.id)) {
+                    newIds.push(snapped.id);
+                  }
+                  return { ...survey, includedBuildingIds: newIds };
+                });
+              } else {
+                updatedBuildings.push(snapped);
+                setSurveyState(survey => {
+                  if (!survey.includedBuildingIds.includes(snapped.id)) {
+                    return { ...survey, includedBuildingIds: [...survey.includedBuildingIds, snapped.id] };
+                  }
+                  return survey;
+                });
+              }
+              return {
+                ...prev,
+                buildings: updatedBuildings
+              };
+            });
+          }
+        } catch (err) {
+          console.warn("Failed to fetch Solar API for primary address:", err);
+          const isCoachman = (Math.abs(place.latitude - 40.612) < 0.01 && Math.abs(place.longitude - -111.815) < 0.01);
+          if (isCoachman) {
+            import('../data/coachman_solar_response.json').then((coachmanData) => {
+              const snapped = buildBuildingFromSolarData(coachmanData.default, place.latitude, place.longitude, 1);
+              setBuildingData(prev => {
+                if (!prev) return prev;
+                const updatedBuildings = [...prev.buildings];
+                if (updatedBuildings.length > 0) {
+                  const oldId = updatedBuildings[0].id;
+                  updatedBuildings[0] = snapped;
+                  setSurveyState(survey => {
+                    const newIds = survey.includedBuildingIds.map(id => id === oldId ? snapped.id : id);
+                    if (!newIds.includes(snapped.id)) {
+                      newIds.push(snapped.id);
+                    }
+                    return { ...survey, includedBuildingIds: newIds };
+                  });
+                } else {
+                  updatedBuildings.push(snapped);
+                  setSurveyState(survey => {
+                    if (!survey.includedBuildingIds.includes(snapped.id)) {
+                      return { ...survey, includedBuildingIds: [...survey.includedBuildingIds, snapped.id] };
+                    }
+                    return survey;
+                  });
+                }
+                return {
+                  ...prev,
+                  buildings: updatedBuildings
+                };
+              });
+            }).catch(e => console.error("Failed to load local fallback coachman data", e));
+          }
+        }
+      };
+
+      setTimeout(() => {
+        fetchPrimarySolar();
+      }, 10);
 
     } catch (e: any) {
       console.error(e);

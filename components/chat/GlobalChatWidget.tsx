@@ -227,12 +227,12 @@ export const GlobalChatWidget: React.FC = () => {
     if (!chatUser) return null;
 
     return (
-        <div className="fixed bottom-6 right-6 z-[999] flex flex-col items-end">
+        <div className="fixed right-0 top-1/2 -translate-y-1/2 z-[999] flex items-center select-none">
             {isVideoCallActive && <VideoCallInterface onClose={() => setIsVideoCallActive(false)} />}
             
             {/* Main Chat Panel */}
             {isOpen && (
-                <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-[0_0_40px_rgba(236,2,139,0.2)] w-80 sm:w-96 h-[500px] mb-4 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
+                <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-[0_0_40px_rgba(236,2,139,0.2)] w-80 sm:w-96 h-[500px] mr-2 flex flex-col overflow-hidden animate-in slide-in-from-right-5 duration-300">
                     
                     {/* Header */}
                     <div className="bg-black/60 border-b border-gray-800 p-4 flex justify-between items-center shrink-0">
@@ -442,12 +442,20 @@ export const GlobalChatWidget: React.FC = () => {
                 </div>
             )}
 
-            {/* Floating Toggle Button */}
+            {/* Sleek Right Pull-Out Tab Button */}
             <button 
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-14 h-14 bg-[#ec028b] hover:bg-pink-600 rounded-full shadow-[0_0_20px_rgba(236,2,139,0.5)] flex items-center justify-center text-white transition-all hover:scale-110 active:scale-90"
+                className="w-8 h-28 bg-[#ec028b] hover:bg-pink-600 rounded-l-xl shadow-[-4px_0_15px_rgba(236,2,139,0.45)] flex flex-col items-center justify-center text-white transition-all hover:pl-1 active:scale-95 shrink-0"
+                style={{ borderRight: 'none' }}
             >
-                {isOpen ? <XIcon className="w-6 h-6" /> : <ChatBubbleLeftRightIcon className="w-7 h-7" />}
+                {isOpen ? (
+                    <XIcon className="w-5 h-5" />
+                ) : (
+                    <div className="flex flex-col items-center gap-2">
+                        <ChatBubbleLeftRightIcon className="w-5 h-5" />
+                        <span className="text-[10px] font-black tracking-widest uppercase rotate-180 select-none" style={{ writingMode: 'vertical-lr' }}>CHAT</span>
+                    </div>
+                )}
             </button>
         </div>
     );

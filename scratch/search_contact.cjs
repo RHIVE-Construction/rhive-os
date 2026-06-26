@@ -29,7 +29,7 @@ async function run() {
     contactsSnap.forEach(doc => {
         const data = doc.data();
         const fullName = `${data.first_name || ''} ${data.last_name || ''} ${data.name || ''} ${data.full_name || ''}`.toLowerCase();
-        if (fullName.includes('ladd') || fullName.includes('thorn')) {
+        if (fullName.includes('homer')) {
             matches.push({ id: doc.id, ...data });
         }
     });

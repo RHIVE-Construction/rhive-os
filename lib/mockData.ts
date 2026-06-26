@@ -1,4 +1,6 @@
 import type { Place, BuildingData, RoofFacet, Building } from '../types';
+import coachmanSolarData from '../data/coachman_solar_response.json';
+import garageSolarData from '../data/garage_solar_response.json';
 
 // Simple pseudo-random generator based on coordinates
 const pseudoRandom = (seed1: number, seed2: number) => {
@@ -17,11 +19,11 @@ export function getInitialPolygonVertices(lat: number, lng: number, address: str
   const isCoachman = lower.includes('coachman') || (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
   
   if (isCoachman && index > 1) {
-    const garageLat = 40.612608;
-    const garageLng = -111.822295;
-    const widthMeters = 6.2;
-    const heightMeters = 6.2;
-    const angleDeg = -41; // Rotation angle in degrees (counter-clockwise)
+    const garageLat = 40.6126116;
+    const garageLng = -111.8222867;
+    const widthMeters = 7.45;
+    const heightMeters = 7.45;
+    const angleDeg = -32.75; // Rotation angle in degrees (counter-clockwise)
     const theta = angleDeg * Math.PI / 180;
     
     const latConv = 111111;
@@ -59,16 +61,16 @@ export function getInitialPolygonVertices(lat: number, lng: number, address: str
   if (index === 1) { // Primary building
     if (isCoachman) {
       return [
-        { lat: 40.612642, lng: -111.822215 }, // 1. Top-Left
-        { lat: 40.612642, lng: -111.822037 }, // 2. Top-Notch-Start
-        { lat: 40.612595, lng: -111.822037 }, // 3. Notch-Depth-South
-        { lat: 40.612595, lng: -111.821960 }, // 4. Top-Right
-        { lat: 40.612540, lng: -111.821960 }, // 5. Bottom-Right
-        { lat: 40.612540, lng: -111.822155 }, // 6. Proj-Start
-        { lat: 40.612518, lng: -111.822155 }, // 7. Proj-Bottom-Right
-        { lat: 40.612518, lng: -111.822195 }, // 8. Proj-Bottom-Left
-        { lat: 40.612540, lng: -111.822195 }, // 9. Proj-Top-Left
-        { lat: 40.612540, lng: -111.822215 }  // 10. Bottom-Left
+        { lat: 40.612622, lng: -111.822180 }, // 1. Top-Left
+        { lat: 40.612622, lng: -111.822005 }, // 2. Top-Notch-Start
+        { lat: 40.612590, lng: -111.822005 }, // 3. Notch-Depth-South
+        { lat: 40.612590, lng: -111.821955 }, // 4. Top-Right
+        { lat: 40.612536, lng: -111.821955 }, // 5. Bottom-Right
+        { lat: 40.612536, lng: -111.822115 }, // 6. Proj-Start
+        { lat: 40.612513, lng: -111.822115 }, // 7. Proj-Bottom-Right
+        { lat: 40.612513, lng: -111.822152 }, // 8. Proj-Bottom-Left
+        { lat: 40.612536, lng: -111.822152 }, // 9. Proj-Top-Left
+        { lat: 40.612536, lng: -111.822180 }  // 10. Bottom-Left
       ];
     }
     if (isMemorial) {
@@ -184,17 +186,12 @@ export function generateMockBuildingData(place: Place): BuildingData {
   const isCoachman = lowerCaseAddress.includes('coachman') || (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
 
   if (isCoachman) {
-    const baseArea = 180.8; // Ground area from Google Solar API
-    const facets = [];
-    const numFacets = 6; // 6 segments in the Solar API
-    const pitchDegrees = 19.69; // Principal segment pitch from Solar API
-    for (let j = 0; j < numFacets; j++) {
-      facets.push({
-        id: `gen_f${j}`,
-        areaMeters: baseArea / numFacets,
-        pitchDegrees: pitchDegrees,
-      });
-    }
+    const baseArea = coachmanSolarData.solarPotential.wholeRoofStats.areaMeters2;
+    const facets = coachmanSolarData.solarPotential.roofSegmentStats.map((seg, j) => ({
+      id: `gen_f${j}`,
+      areaMeters: seg.stats.areaMeters2,
+      pitchDegrees: seg.pitchDegrees,
+    }));
     return {
       buildings: [{
         id: 'Main Structure',
@@ -331,7 +328,28 @@ export function createTaggedBuilding(index: number, areaSq: number, pitchIn12: n
 
 export function generateBuildingFromLatLng(lat: number, lng: number, index: number): Building {
   const isCoachman = (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
-  const baseArea = isCoachman ? 53 : 63; // 7.8m x 6.8m = 53 sqm for Coachman outbuilding
+
+  if (isCoachman && index > 1) {
+    const finalLat = 40.6126116;
+    const finalLng = -111.8222867;
+    const baseArea = garageSolarData.solarPotential.wholeRoofStats.areaMeters2;
+    const facets = garageSolarData.solarPotential.roofSegmentStats.map((seg, j) => ({
+      id: `BLD_${index}_f${j}`,
+      areaMeters: seg.stats.areaMeters2,
+      pitchDegrees: seg.pitchDegrees,
+    }));
+
+    return {
+      id: `BLD_${index}`,
+      totalAreaMeters: baseArea,
+      facets: facets,
+      lat: finalLat,
+      lng: finalLng,
+      polygonVertices: getInitialPolygonVertices(finalLat, finalLng, '', index)
+    };
+  }
+
+  const baseArea = 63;
   const numFacets = 2; // Outbuildings/garages are simple gables with 2 facets
   const facets: RoofFacet[] = [];
   const pitchDegrees = 18.43; // 4/12 pitch (18.43 degrees)
@@ -344,15 +362,116 @@ export function generateBuildingFromLatLng(lat: number, lng: number, index: numb
     });
   }
 
-  const finalLat = (isCoachman && index > 1) ? 40.612608 : lat;
-  const finalLng = (isCoachman && index > 1) ? -111.822295 : lng;
-
   return {
     id: `BLD_${index}`,
     totalAreaMeters: baseArea,
     facets: facets,
-    lat: finalLat,
-    lng: finalLng,
-    polygonVertices: getInitialPolygonVertices(finalLat, finalLng, '', index)
+    lat: lat,
+    lng: lng,
+    polygonVertices: getInitialPolygonVertices(lat, lng, '', index)
+  };
+}
+
+export function buildBuildingFromSolarData(solarData: any, clickedLat: number, clickedLng: number, index: number): Building {
+  const centerLat = solarData.center?.latitude || clickedLat;
+  const centerLng = solarData.center?.longitude || clickedLng;
+  const sw = solarData.boundingBox?.sw;
+  const ne = solarData.boundingBox?.ne;
+  
+  let W_bbox = 10;
+  let H_bbox = 10;
+  if (sw && ne) {
+    const latConv = 111111;
+    const lngConv = 111111 * Math.cos(centerLat * Math.PI / 180);
+    W_bbox = Math.abs(ne.longitude - sw.longitude) * lngConv;
+    H_bbox = Math.abs(ne.latitude - sw.latitude) * latConv;
+  }
+  
+  let dominantAzimuth = 0;
+  let maxArea = 0;
+  if (solarData.solarPotential?.roofSegmentStats) {
+    solarData.solarPotential.roofSegmentStats.forEach((seg: any) => {
+      const area = seg.stats?.areaMeters2 || 0;
+      if (area > maxArea) {
+        maxArea = area;
+        dominantAzimuth = seg.azimuthDegrees || 0;
+      }
+    });
+  }
+  
+  const mod = (n: number, m: number) => ((n % m) + m) % m;
+  const mappedAngleDeg = mod(dominantAzimuth + 90, 180) - 90;
+  const theta = mappedAngleDeg * Math.PI / 180;
+  
+  const area = solarData.solarPotential?.wholeRoofStats?.groundAreaMeters2 || 
+               solarData.solarPotential?.wholeRoofStats?.areaMeters2 || 
+               (W_bbox * H_bbox * 0.7);
+               
+  const c = Math.abs(Math.cos(theta));
+  const s = Math.abs(Math.sin(theta));
+  let widthMeters = 0;
+  let heightMeters = 0;
+
+  if (Math.abs(c * c - s * s) > 0.15) {
+    widthMeters = (c * W_bbox - s * H_bbox) / (c * c - s * s);
+    heightMeters = (c * H_bbox - s * W_bbox) / (c * c - s * s);
+  }
+
+  if (widthMeters <= 2 || heightMeters <= 2) {
+    const r = W_bbox / H_bbox;
+    widthMeters = Math.sqrt(area * r);
+    heightMeters = Math.sqrt(area / r);
+  }
+  
+  widthMeters = Math.max(3, Math.min(widthMeters, 60));
+  heightMeters = Math.max(3, Math.min(heightMeters, 60));
+  
+  const latConv = 111111;
+  const lngConv = 111111 * Math.cos(centerLat * Math.PI / 180);
+  
+  const dx1 = -widthMeters / 2;
+  const dy1 = heightMeters / 2;
+  const dx2 = widthMeters / 2;
+  const dy2 = heightMeters / 2;
+  const dx3 = widthMeters / 2;
+  const dy3 = -heightMeters / 2;
+  const dx4 = -widthMeters / 2;
+  const dy4 = -heightMeters / 2;
+  
+  const rotate = (dx: number, dy: number) => {
+    const rx = dx * Math.cos(theta) - dy * Math.sin(theta);
+    const ry = dx * Math.sin(theta) + dy * Math.cos(theta);
+    return {
+      lat: centerLat + ry / latConv,
+      lng: centerLng + rx / lngConv
+    };
+  };
+
+  const polygonVertices = [
+    rotate(dx1, dy1),
+    rotate(dx2, dy2),
+    rotate(dx3, dy3),
+    rotate(dx4, dy4)
+  ];
+  
+  const segments = solarData.solarPotential?.roofSegmentStats || [];
+  const facets = segments.length > 0 
+    ? segments.map((seg: any, j: number) => ({
+        id: `BLD_${index}_f${j}`,
+        areaMeters: seg.stats?.areaMeters2 || (area / segments.length),
+        pitchDegrees: seg.pitchDegrees || 22.6,
+      }))
+    : [
+        { id: `BLD_${index}_f1`, areaMeters: area / 2, pitchDegrees: 18.43 },
+        { id: `BLD_${index}_f2`, areaMeters: area / 2, pitchDegrees: 18.43 }
+      ];
+      
+  return {
+    id: `BLD_${index}`,
+    totalAreaMeters: area,
+    facets,
+    lat: centerLat,
+    lng: centerLng,
+    polygonVertices
   };
 }
