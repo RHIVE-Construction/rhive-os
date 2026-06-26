@@ -618,3 +618,105 @@ exports.verifySmsOtp = functions.https.onRequest((req, res) => {
     });
 });
 
+/**
+ * completePasswordReset
+ * POST body: { resetToken, newPassword }
+ * - Validates the JWT reset token (issued by verifySmsOtp)
+ * - Updates the user's password in Firebase Auth using Admin SDK
+ */
+exports.completePasswordReset = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+        const { resetToken, newPassword } = req.body;
+        if (!resetToken || !newPassword) {
+            return res.status(400).json({ error: 'Missing resetToken or newPassword' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+        }
+
+        // Validate the JWT token
+        const payload = verifyResetJWT(resetToken);
+        if (!payload) {
+            return res.status(401).json({ error: 'Invalid or expired reset token. Please start over.' });
+        }
+
+        // Ensure this token is specifically for password reset
+        if (payload.purpose !== 'password_reset') {
+            return res.status(403).json({ error: 'Token is not valid for password reset.' });
+        }
+
+        const { email, phone, userId } = payload;
+
+        try {
+            let firebaseUid = userId || null;
+
+            // 1. Try to find Firebase Auth user by email
+            if (!firebaseUid && email) {
+                try {
+                    const userRecord = await admin.auth().getUserByEmail(email);
+                    firebaseUid = userRecord.uid;
+                } catch (e) {
+                    console.warn('[completePasswordReset] User not found by email in Auth:', email, e.message);
+                }
+            }
+
+            // 2. Fallback: try by phone number
+            if (!firebaseUid && phone) {
+                try {
+                    const userRecord = await admin.auth().getUserByPhoneNumber(phone);
+                    firebaseUid = userRecord.uid;
+                } catch (e) {
+                    console.warn('[completePasswordReset] User not found by phone in Auth:', phone, e.message);
+                }
+            }
+
+            // 3. Fallback: look up in Firestore users collection if we have email or phone
+            if (!firebaseUid) {
+                const db = admin.firestore();
+                let userQuery = null;
+                if (email) {
+                    userQuery = await db.collection('users').where('email', '==', email).limit(1).get();
+                }
+                if ((!userQuery || userQuery.empty) && phone) {
+                    userQuery = await db.collection('users').where('phone', '==', phone).limit(1).get();
+                }
+                if (userQuery && !userQuery.empty) {
+                    const userData = userQuery.docs[0].data();
+                    firebaseUid = userData.firebaseUid || userData.uid || userQuery.docs[0].id;
+                }
+            }
+
+            if (!firebaseUid) {
+                return res.status(404).json({ error: 'Could not locate the user account to reset.' });
+            }
+
+            // 4. Update password in Firebase Auth
+            await admin.auth().updateUser(firebaseUid, { password: newPassword });
+            console.log(`[completePasswordReset] Password updated for UID: ${firebaseUid} (email: ${email})`);
+
+            // 5. Log the action to Firestore
+            try {
+                await admin.firestore().collection('user_log').add({
+                    actionType: 'USER_PASSWORD_RESET',
+                    description: `Password reset via SMS OTP for phone: ${phone}`,
+                    userId: firebaseUid,
+                    userName: email || phone || 'Unknown',
+                    userRole: 'User',
+                    payload: { phone, email },
+                    timestamp: new Date().toISOString()
+                });
+            } catch (logErr) {
+                console.warn('[completePasswordReset] Failed to write log:', logErr.message);
+            }
+
+            return res.status(200).json({ success: true, message: 'Password updated successfully.' });
+
+        } catch (error) {
+            console.error('[completePasswordReset] Error:', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+

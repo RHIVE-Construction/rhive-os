@@ -1066,3 +1066,33 @@ export const smsOtpService = {
     }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Password Reset Service (Step 3 of Forgot Password flow)
+// Calls Firebase Cloud Function: completePasswordReset
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const passwordResetService = {
+    /**
+     * Step 3: Complete password reset
+     * Calls the completePasswordReset Cloud Function with the JWT reset token
+     * and new password. The function uses Firebase Admin SDK to update Auth.
+     */
+    completePasswordReset: async (resetToken: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/completePasswordReset`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resetToken, newPassword })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                return { success: false, error: data.error || `HTTP ${res.status}` };
+            }
+            return { success: true };
+        } catch (error: any) {
+            console.error('[passwordResetService.completePasswordReset]', error);
+            return { success: false, error: 'Network error. Could not complete the password reset.' };
+        }
+    }
+};
+
