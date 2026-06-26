@@ -619,11 +619,30 @@ export const passwordResetService = {
     },
 
     /**
-     * Completes the password reset by updating password_hash on the user document
-     * and clearing the reset token fields — all within the `users` collection.
+     * Completes the password reset.
+     *
+     * AUTO-DETECTS token type:
+     *  - JWT token (starts with "eyJ") → from SMS OTP flow → calls completePasswordReset Cloud Function
+     *    which uses Firebase Admin SDK to update the real Firebase Auth password.
+     *  - Firestore token → from email reset flow → updates password_hash on the user document.
      */
-    completePasswordReset: async (token: string, newPassword: string) => {
+    completePasswordReset: async (token: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
         try {
+            // ── JWT path (SMS OTP forgot-password flow) ───────────────────────
+            if (token.startsWith('eyJ')) {
+                const res = await fetch(`${FUNCTIONS_BASE_URL}/completePasswordReset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resetToken: token, newPassword })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    return { success: false, error: data.error || `HTTP ${res.status}` };
+                }
+                return { success: true };
+            }
+
+            // ── Firestore token path (email reset flow) ───────────────────────
             // 1. Verify token and get userId directly
             const verification = await passwordResetService.verifyResetToken(token);
             if (!verification.success || !verification.userId) {
@@ -1015,10 +1034,8 @@ export const userLogService = {
 
 const FIREBASE_PROJECT_ID = (import.meta as any).env?.VITE_FIREBASE_PROJECT_ID || 'rhive-os';
 const FUNCTIONS_REGION = 'us-central1';
-// In dev, use the Firebase Emulator if running; in production, use the deployed URL
-const FUNCTIONS_BASE_URL = window.location.hostname === 'localhost'
-    ? `http://127.0.0.1:5001/${FIREBASE_PROJECT_ID}/${FUNCTIONS_REGION}`
-    : `https://${FUNCTIONS_REGION}-${FIREBASE_PROJECT_ID}.cloudfunctions.net`;
+// Always use the deployed production Cloud Functions (emulator not in use)
+const FUNCTIONS_BASE_URL = `https://${FUNCTIONS_REGION}-${FIREBASE_PROJECT_ID}.cloudfunctions.net`;
 
 export const smsOtpService = {
     /**
@@ -1062,36 +1079,6 @@ export const smsOtpService = {
         } catch (error: any) {
             console.error('[smsOtpService.verifyOtp]', error);
             return { success: false, error: 'Network error. Could not verify the OTP.' };
-        }
-    }
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Password Reset Service (Step 3 of Forgot Password flow)
-// Calls Firebase Cloud Function: completePasswordReset
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const passwordResetService = {
-    /**
-     * Step 3: Complete password reset
-     * Calls the completePasswordReset Cloud Function with the JWT reset token
-     * and new password. The function uses Firebase Admin SDK to update Auth.
-     */
-    completePasswordReset: async (resetToken: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
-        try {
-            const res = await fetch(`${FUNCTIONS_BASE_URL}/completePasswordReset`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ resetToken, newPassword })
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                return { success: false, error: data.error || `HTTP ${res.status}` };
-            }
-            return { success: true };
-        } catch (error: any) {
-            console.error('[passwordResetService.completePasswordReset]', error);
-            return { success: false, error: 'Network error. Could not complete the password reset.' };
         }
     }
 };
