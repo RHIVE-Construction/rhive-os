@@ -418,7 +418,7 @@ function verifyResetJWT(token) {
  * - Rate limits: 3 requests/minute per phone
  * - Generates 6-digit OTP, stores in Firestore, sends via JustCall SMS
  */
-exports.sendSmsOtp = functions.https.onRequest((req, res) => {
+exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
     return cors(req, res, async () => {
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
@@ -472,7 +472,7 @@ exports.sendSmsOtp = functions.https.onRequest((req, res) => {
                 expiresAt,
                 phone: normalizedPhone,
                 purpose: 'password_reset',
-                createdAt: admin.firestore.FieldValue.serverTimestamp()
+                createdAt: new Date().toISOString()
             });
 
             // ── Send SMS via JustCall v2.1 ───────────────────────────────────
@@ -557,7 +557,7 @@ exports.sendSmsOtp = functions.https.onRequest((req, res) => {
  * - Validates OTP, deletes it (single-use)
  * - Returns a short-lived JWT reset token
  */
-exports.verifySmsOtp = functions.https.onRequest((req, res) => {
+exports.verifySmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
     return cors(req, res, async () => {
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
@@ -624,7 +624,7 @@ exports.verifySmsOtp = functions.https.onRequest((req, res) => {
  * - Validates the JWT reset token (issued by verifySmsOtp)
  * - Updates the user's password in Firebase Auth using Admin SDK
  */
-exports.completePasswordReset = functions.https.onRequest((req, res) => {
+exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
     return cors(req, res, async () => {
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
