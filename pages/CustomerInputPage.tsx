@@ -104,10 +104,82 @@ interface AddressData {
 
 const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) => {
     const isApiReady = useGoogleMapsApi();
-    const mapRef = useRef<HTMLDivElement>(null);
+    // Use a callback ref so initMap fires as soon as the div is in the DOM,
+    // regardless of whether isApiReady was already true before the modal mounted.
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<any>(null);
     const markerRef = useRef<any>(null);
     const [isLocating, setIsLocating] = useState(false);
+    const mapInitializedRef = useRef(false);
+
+    const initMap = React.useCallback((container: HTMLDivElement) => {
+        if (!container || !isApiReady || !window.google || mapInitializedRef.current) return;
+        mapInitializedRef.current = true;
+
+        const defaultCenter = { lat: 40.7608, lng: -111.8910 }; // Salt Lake City
+        const mapInstance = new window.google.maps.Map(container, {
+            center: defaultCenter,
+            zoom: 12,
+            mapTypeId: 'satellite',
+            clickableIcons: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            zoomControl: true,
+            tilt: 0,
+        });
+
+        setMap(mapInstance);
+
+        mapInstance.addListener("click", (e: any) => {
+            const latLng = e.latLng;
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode({ location: latLng }, (results: any, status: any) => {
+                if (status === "OK" && results[0]) {
+                    const place = results[0];
+                    const addressComponents = place.address_components;
+                    let streetNumber = '', route = '', city = '', state = '', zip = '';
+                    if (addressComponents) {
+                        for (const component of addressComponents) {
+                            const componentType = component.types[0];
+                            switch (componentType) {
+                                case 'street_number': streetNumber = component.long_name; break;
+                                case 'route': route = component.short_name; break;
+                                case 'locality': city = component.long_name; break;
+                                case 'administrative_area_level_1': state = component.short_name; break;
+                                case 'postal_code': zip = component.short_name; break;
+                            }
+                        }
+                    }
+                    const placeName = place.name !== place.formatted_address ? place.name : undefined;
+                    const addressData = {
+                        address: streetNumber && route ? `${streetNumber} ${route}` : (place.formatted_address ? place.formatted_address.split(',')[0] : ''),
+                        city, state, zip,
+                        latitude: latLng.lat(),
+                        longitude: latLng.lng(),
+                        placeName
+                    };
+                    onSelect(addressData);
+                } else {
+                    alert("Could not determine address for this location.");
+                }
+            });
+        });
+    }, [isApiReady, onSelect]);
+
+    // Callback ref: called whenever the div mounts/unmounts
+    const setMapContainer = React.useCallback((node: HTMLDivElement | null) => {
+        mapContainerRef.current = node;
+        if (node && isApiReady) {
+            initMap(node);
+        }
+    }, [isApiReady, initMap]);
+
+    // If the API becomes ready AFTER the container is already in the DOM, init then
+    useEffect(() => {
+        if (isApiReady && mapContainerRef.current && !mapInitializedRef.current) {
+            initMap(mapContainerRef.current);
+        }
+    }, [isApiReady, initMap]);
 
     const centerOnUser = (showError = false) => {
         if (!navigator.geolocation) {
@@ -169,69 +241,6 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
         }
     }, [map]);
 
-    useEffect(() => {
-        if (!isApiReady || !mapRef.current || map) return;
-
-        const initMap = async () => {
-            const defaultCenter = { lat: 40.7608, lng: -111.8910 }; // Salt Lake City
-            
-            const mapInstance = new window.google.maps.Map(mapRef.current, {
-                center: defaultCenter,
-                zoom: 12, // Start at City View
-                mapTypeId: 'satellite', 
-                clickableIcons: false,
-                streetViewControl: false,
-                fullscreenControl: false,
-                zoomControl: true,
-                tilt: 0, 
-            });
-
-            setMap(mapInstance);
-
-            mapInstance.addListener("click", (e: any) => {
-                const latLng = e.latLng;
-                const geocoder = new window.google.maps.Geocoder();
-                
-                geocoder.geocode({ location: latLng }, (results: any, status: any) => {
-                    if (status === "OK" && results[0]) {
-                        const place = results[0];
-                        const addressComponents = place.address_components;
-                        let streetNumber = '';
-                        let route = '';
-                        let city = '';
-                        let state = '';
-                        let zip = '';
-
-                        if (addressComponents) {
-                            for (const component of addressComponents) {
-                                const componentType = component.types[0];
-                                switch (componentType) {
-                                    case 'street_number': streetNumber = component.long_name; break;
-                                    case 'route': route = component.short_name; break;
-                                    case 'locality': city = component.long_name; break;
-                                    case 'administrative_area_level_1': state = component.short_name; break;
-                                    case 'postal_code': zip = component.short_name; break;
-                                }
-                            }
-                        }
-                        const placeName = place.name !== place.formatted_address ? place.name : undefined;
-                        const addressData = {
-                            address: streetNumber && route ? `${streetNumber} ${route}` : (place.formatted_address ? place.formatted_address.split(',')[0] : ''),
-                            city, state, zip,
-                            latitude: latLng.lat(),
-                            longitude: latLng.lng(),
-                            placeName
-                        };
-                        onSelect(addressData);
-                    } else {
-                        alert("Could not determine address for this location.");
-                    }
-                });
-            });
-        };
-        initMap();
-    }, [isApiReady, map, onSelect]);
-
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
             <div 
@@ -251,7 +260,13 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
                     </button>
                 </div>
                 <div className="flex-1 relative">
-                    <div ref={mapRef} className="absolute inset-0 w-full h-full" />
+                    {!isApiReady && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10 gap-3">
+                            <div className="w-8 h-8 border-2 border-[#ec028b] border-t-transparent rounded-full animate-spin" />
+                            <p className="text-gray-400 text-sm">Loading map...</p>
+                        </div>
+                    )}
+                    <div ref={setMapContainer} className="absolute inset-0 w-full h-full" />
                     <button onClick={() => centerOnUser(true)} className={cn("absolute bottom-8 right-4 p-4 rounded-full bg-[#ec028b] text-white shadow-2xl hover:bg-pink-600 transition-all z-[10000] flex items-center justify-center border-2 border-white/20", isLocating && "animate-pulse")} title="Center on my location">
                         <RhiveGeopinIcon className="w-6 h-6" />
                     </button>
@@ -1110,24 +1125,30 @@ const AddressSection: React.FC<{
     useEffect(() => {
         if (!isApiReady || !inputRef.current || !window.google || isCollapsed || readOnly) return;
         
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-            fields: ['address_components', 'geometry', 'formatted_address', 'name'],
-            componentRestrictions: { country: 'us' }
-        });
+        // Only attach a new Autocomplete instance if one doesn't already exist
+        if (!autocompleteRef.current) {
+            autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+                fields: ['address_components', 'geometry', 'formatted_address', 'name'],
+                componentRestrictions: { country: 'us' }
+            });
+            autocompleteRef.current.addListener('place_changed', () => {
+                const place = autocompleteRef.current.getPlace();
+                handlePlaceSelected(place);
+            });
+        }
 
-        autocompleteRef.current.addListener('place_changed', () => {
-            const place = autocompleteRef.current.getPlace();
-            handlePlaceSelected(place);
-        });
+        // Focus the input now that autocomplete is ready
+        const focusTimer = setTimeout(() => inputRef.current?.focus(), 50);
+        return () => clearTimeout(focusTimer);
     }, [isApiReady, isCollapsed, readOnly]);
 
-    // Auto-focus the street input whenever the section expands
+    // Auto-focus on expand (even before API is ready, so it feels snappy)
     useEffect(() => {
-        if (!isCollapsed && !readOnly && inputRef.current) {
+        if (!isCollapsed && !readOnly && inputRef.current && !isApiReady) {
             const timer = setTimeout(() => inputRef.current?.focus(), 50);
             return () => clearTimeout(timer);
         }
-    }, [isCollapsed, readOnly]);
+    }, [isCollapsed, readOnly, isApiReady]);
 
     const handlePlaceSelected = (place: any) => {
         if (!place || !place.geometry) return;
