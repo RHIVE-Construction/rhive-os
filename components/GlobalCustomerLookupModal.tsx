@@ -203,42 +203,50 @@ export const GlobalCustomerLookupModal: React.FC = () => {
     useEffect(() => {
         if (!isOpen || !isApiReady || !inputRef.current) return;
 
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-            types: ['address'],
-            fields: ['formatted_address', 'geometry', 'address_components'],
-            componentRestrictions: { country: 'us' }
-        });
+        try {
+            if (!window.google?.maps?.places?.Autocomplete) {
+                console.warn('[RHIVE] Places API not available \u2014 autocomplete disabled in search modal.');
+                return;
+            }
+            autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+                types: ['address'],
+                fields: ['formatted_address', 'geometry', 'address_components'],
+                componentRestrictions: { country: 'us' }
+            });
 
-        autocompleteRef.current.addListener('place_changed', () => {
-            const place = autocompleteRef.current.getPlace();
-            if (place && place.formatted_address) {
-                setSearchQuery(place.formatted_address);
-                if (place.geometry) {
-                    const lat = place.geometry.location.lat();
-                    const lng = place.geometry.location.lng();
-                    const addressComponents = place.address_components;
-                    let streetNumber = '', route = '', city = '', state = '', zip = '';
-                    if (addressComponents) {
-                        for (const component of addressComponents) {
-                            const componentType = component.types[0];
-                            switch (componentType) {
-                                case 'street_number': streetNumber = component.long_name; break;
-                                case 'route': route = component.short_name; break;
-                                case 'locality': city = component.long_name; break;
-                                case 'administrative_area_level_1': state = component.short_name; break;
-                                case 'postal_code': zip = component.short_name; break;
+            autocompleteRef.current.addListener('place_changed', () => {
+                const place = autocompleteRef.current.getPlace();
+                if (place && place.formatted_address) {
+                    setSearchQuery(place.formatted_address);
+                    if (place.geometry) {
+                        const lat = place.geometry.location.lat();
+                        const lng = place.geometry.location.lng();
+                        const addressComponents = place.address_components;
+                        let streetNumber = '', route = '', city = '', state = '', zip = '';
+                        if (addressComponents) {
+                            for (const component of addressComponents) {
+                                const componentType = component.types[0];
+                                switch (componentType) {
+                                    case 'street_number': streetNumber = component.long_name; break;
+                                    case 'route': route = component.short_name; break;
+                                    case 'locality': city = component.long_name; break;
+                                    case 'administrative_area_level_1': state = component.short_name; break;
+                                    case 'postal_code': zip = component.short_name; break;
+                                }
                             }
                         }
+                        const shortAddr = streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0];
+                        const addressData = { address: shortAddr, city, state, zip, latitude: lat, longitude: lng };
+                        sessionStorage.setItem('globalSearchAddressData', JSON.stringify(addressData));
+                        setConfirmedAddress({ lat, lng, label: place.formatted_address });
                     }
-                    const shortAddr = streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0];
-                    const addressData = { address: shortAddr, city, state, zip, latitude: lat, longitude: lng };
-                    sessionStorage.setItem('globalSearchAddressData', JSON.stringify(addressData));
-                    setConfirmedAddress({ lat, lng, label: place.formatted_address });
+                } else if (place && place.name) {
+                    setSearchQuery(place.name);
                 }
-            } else if (place && place.name) {
-                setSearchQuery(place.name);
-            }
-        });
+            });
+        } catch (err) {
+            console.warn('[RHIVE] Places Autocomplete init failed in search modal:', err);
+        }
 
         return () => {
             if (autocompleteRef.current) {
@@ -424,6 +432,34 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                     sessionStorage.setItem('globalSearchQueryType', queryType || '');
                     if (queryType !== 'Address') {
                         sessionStorage.removeItem('globalSearchAddressData');
+                    } else if (queryType === 'Address' && isApiReady && window.google?.maps?.Geocoder) {
+                        // Pre-geocode so CustomerInputPage can open the map modal immediately
+                        const geocoder = new window.google.maps.Geocoder();
+                        geocoder.geocode({ address: searchQuery }, (results: any, status: string) => {
+                            if (status === 'OK' && results && results[0]) {
+                                const place = results[0];
+                                const comps = place.address_components || [];
+                                let streetNumber = '', route = '', city = '', state = '', zip = '';
+                                for (const c of comps) {
+                                    switch (c.types[0]) {
+                                        case 'street_number': streetNumber = c.long_name; break;
+                                        case 'route': route = c.short_name; break;
+                                        case 'locality': city = c.long_name; break;
+                                        case 'administrative_area_level_1': state = c.short_name; break;
+                                        case 'postal_code': zip = c.short_name; break;
+                                    }
+                                }
+                                const shortAddr = streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0];
+                                const addressData = {
+                                    address: shortAddr,
+                                    city, state, zip,
+                                    latitude: place.geometry.location.lat(),
+                                    longitude: place.geometry.location.lng()
+                                };
+                                sessionStorage.setItem('globalSearchAddressData', JSON.stringify(addressData));
+                                sessionStorage.setItem('globalSearchQueryType', 'Address');
+                            }
+                        });
                     }
                 }
                 setActivePageId('E-02a');
@@ -598,6 +634,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                                                 setIsOpen(false);
                                                 sessionStorage.setItem('globalSearchQuery', searchQuery);
                                                 sessionStorage.setItem('globalSearchQueryType', 'Address');
+                                                // globalSearchAddressData already set by place_changed listener above
                                                 setActivePageId('E-02a');
                                             }}
                                             className="text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-colors"

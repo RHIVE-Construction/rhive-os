@@ -260,30 +260,49 @@
   </style>
   <script>
     window.googleMapsApiLoaded = false;
+    window.googleMapsApiFailed = false;
     function onGoogleMapsApiReady() {
       window.googleMapsApiLoaded = true;
       window.dispatchEvent(new Event('google-maps-api-ready'));
     }
-    // Maps API key is served securely from the /api/config backend endpoint.
-    // It is never hardcoded here. Set VITE_GOOGLE_MAPS_API_KEY in your .env file.
+    function onGoogleMapsApiError() {
+      window.googleMapsApiFailed = true;
+      console.error('[RHIVE] Google Maps failed to load. Check API key validity and billing in GCP console.');
+      window.dispatchEvent(new Event('google-maps-api-failed'));
+    }
+    // Loads Maps API. Key is injected by Vite at serve/build time via %VITE_GOOGLE_MAPS_API_KEY%.
+    // Falls back to /api/config fetch for environments where template replacement isn't available.
     (function () {
       function loadMapsScript(apiKey) {
         if (!apiKey) {
           console.warn('[RHIVE] VITE_GOOGLE_MAPS_API_KEY is not set — Maps features disabled.');
+          window.googleMapsApiFailed = true;
+          window.dispatchEvent(new Event('google-maps-api-failed'));
           return;
         }
         var s = document.createElement('script');
         s.async = true;
-        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&libraries=places,geometry&callback=onGoogleMapsApiReady';
+        s.onerror = onGoogleMapsApiError;
+        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&v=weekly&libraries=places,geometry&callback=onGoogleMapsApiReady&loading=async';
         document.head.appendChild(s);
       }
 
-      fetch('/api/config')
-        .then(function (res) { return res.json(); })
-        .then(function (data) { loadMapsScript(data.mapsApiKey || ''); })
-        .catch(function (err) {
-          console.error('[RHIVE] Failed to fetch maps key from /api/config:', err);
-        });
+      // Try Vite template-injected key first (fast, synchronous availability)
+      var inlineKey = '%VITE_GOOGLE_MAPS_API_KEY%';
+      if (inlineKey && inlineKey.indexOf('%') === -1) {
+        // Vite replaced the template variable — use it directly
+        loadMapsScript(inlineKey);
+      } else {
+        // Fall back to /api/config (Vite dev server middleware)
+        fetch('/api/config')
+          .then(function (res) { return res.json(); })
+          .then(function (data) { loadMapsScript(data.mapsApiKey || ''); })
+          .catch(function (err) {
+            console.error('[RHIVE] Failed to fetch maps key from /api/config:', err);
+            window.googleMapsApiFailed = true;
+            window.dispatchEvent(new Event('google-maps-api-failed'));
+          });
+      }
     })();
   </script>
   <link rel="stylesheet" href="/index.css">
