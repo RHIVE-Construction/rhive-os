@@ -184,10 +184,18 @@ const LoginBridge: React.FC = () => {
     // Sync browser URL bar with activePageId for unauthenticated users
     useEffect(() => {
         if (!currentUser && activePageId) {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('page') !== activePageId) {
-                const newUrl = `${window.location.pathname}?page=${activePageId}`;
-                window.history.pushState({ path: newUrl }, '', newUrl);
+            const isHomePage = activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3';
+            if (isHomePage) {
+                // Clean URL for the home page — no ?page= param
+                if (window.location.search) {
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+            } else {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('page') !== activePageId) {
+                    const newUrl = `${window.location.pathname}?page=${activePageId}`;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+                }
             }
         }
     }, [activePageId, currentUser]);
@@ -212,7 +220,7 @@ const LoginBridge: React.FC = () => {
         const targetPageId = isPagePublic ? activePageId : 'P-00';
         const CurrentPage = pageComponentMap[targetPageId] || pageComponentMap['P-00'];
 
-        if (isPagePublic && CurrentPage) {
+        if (isPagePublic && !isLoginPage && CurrentPage) {
             return (
                 <div className={cn(
                     "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",

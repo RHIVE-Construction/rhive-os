@@ -542,11 +542,13 @@ export const userService = {
 
 export const passwordResetService = {
     /**
-     * Generates a reset token and stores it directly on the user document
-     * in the `users` collection. No separate password_resets collection needed.
+     * Generates a reset token, stores it on the user document,
+     * then queues a password-reset email via the Firestore `mail` collection.
+     * The "Trigger Email from Firestore" Firebase extension handles delivery.
      */
     createResetToken: async (email: string) => {
         try {
+            const { emailService } = await import('./emailService');
             const normalizedEmail = email.toLowerCase().trim();
 
             // 1. Verify user exists
@@ -573,7 +575,15 @@ export const passwordResetService = {
                 return { success: false, error: updateResult.error || 'Failed to generate reset token.' };
             }
 
-            return { success: true, token, email: normalizedEmail };
+            // 4. Queue password reset email via Firestore `mail` collection
+            const emailResult = await emailService.sendPasswordReset(normalizedEmail, token);
+            if (!emailResult.success) {
+                // Email queuing failed — still return success so user isn't locked out,
+                // but log the failure for investigation.
+                console.error('[passwordResetService] Email queuing failed:', emailResult.error);
+            }
+
+            return { success: true, token, email: normalizedEmail, emailQueued: emailResult.success };
         } catch (error: any) {
             console.error('Error in createResetToken:', error);
             return { success: false, error: error.message };
@@ -609,11 +619,30 @@ export const passwordResetService = {
     },
 
     /**
-     * Completes the password reset by updating password_hash on the user document
-     * and clearing the reset token fields — all within the `users` collection.
+     * Completes the password reset.
+     *
+     * AUTO-DETECTS token type:
+     *  - JWT token (starts with "eyJ") → from SMS OTP flow → calls completePasswordReset Cloud Function
+     *    which uses Firebase Admin SDK to update the real Firebase Auth password.
+     *  - Firestore token → from email reset flow → updates password_hash on the user document.
      */
-    completePasswordReset: async (token: string, newPassword: string) => {
+    completePasswordReset: async (token: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
         try {
+            // ── JWT path (SMS OTP forgot-password flow) ───────────────────────
+            if (token.startsWith('eyJ')) {
+                const res = await fetch(`${FUNCTIONS_BASE_URL}/completePasswordReset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resetToken: token, newPassword })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    return { success: false, error: data.error || `HTTP ${res.status}` };
+                }
+                return { success: true };
+            }
+
+            // ── Firestore token path (email reset flow) ───────────────────────
             // 1. Verify token and get userId directly
             const verification = await passwordResetService.verifyResetToken(token);
             if (!verification.success || !verification.userId) {
@@ -994,6 +1023,62 @@ export const userLogService = {
         } catch (error: any) {
             console.warn('🔥 Failed to write user action to Firestore user_log:', error);
             return { success: false, error: error.message };
+        }
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SMS OTP Service (for Forgot Password via phone number)
+// Calls Firebase Cloud Functions: sendSmsOtp / verifySmsOtp
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FIREBASE_PROJECT_ID = (import.meta as any).env?.VITE_FIREBASE_PROJECT_ID || 'rhive-os';
+const FUNCTIONS_REGION = 'us-central1';
+// Always use the deployed production Cloud Functions (emulator not in use)
+const FUNCTIONS_BASE_URL = `https://${FUNCTIONS_REGION}-${FIREBASE_PROJECT_ID}.cloudfunctions.net`;
+
+export const smsOtpService = {
+    /**
+     * Step 1: Send OTP to phone number
+     * Calls the sendSmsOtp Cloud Function
+     */
+    sendOtp: async (phone: string): Promise<{ success: boolean; error?: string; devCode?: string }> => {
+        try {
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/sendSmsOtp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                return { success: false, error: data.error || `HTTP ${res.status}` };
+            }
+            return { success: true, devCode: data.code }; // devCode only set in dev/simulation mode
+        } catch (error: any) {
+            console.error('[smsOtpService.sendOtp]', error);
+            return { success: false, error: 'Network error. Could not reach the OTP service.' };
+        }
+    },
+
+    /**
+     * Step 2: Verify OTP code
+     * Calls the verifySmsOtp Cloud Function → returns a short-lived resetToken
+     */
+    verifyOtp: async (phone: string, code: string): Promise<{ success: boolean; resetToken?: string; email?: string | null; error?: string }> => {
+        try {
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/verifySmsOtp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, code })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                return { success: false, error: data.error || `HTTP ${res.status}` };
+            }
+            return { success: true, resetToken: data.resetToken, email: data.email };
+        } catch (error: any) {
+            console.error('[smsOtpService.verifyOtp]', error);
+            return { success: false, error: 'Network error. Could not verify the OTP.' };
         }
     }
 };
