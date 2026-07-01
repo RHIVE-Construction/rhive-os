@@ -83,7 +83,7 @@ export const InteractiveRoofAnatomy = () => {
     const currentPackageInfo = hoveredPart ? hoveredPart.packageInfo : "";
     const currentPartName = hoveredPart ? hoveredPart.name : "The RHIVE System";
 
-    const PartButton = ({ part }: { part: (typeof rhiveSystemParts)[0] }) => {
+    const PartButton: React.FC<{ part: (typeof rhiveSystemParts)[0] }> = ({ part }) => {
         const buttonContent = (
             <button
                 onMouseEnter={() => setHoveredPart(part)}

@@ -37,6 +37,7 @@ export const PAGE_GROUPS: PageGroup[] = [
         pages: [
             { id: 'P-Landing', name: 'Landing Page', userType: 'Public', description: 'Universal Entry Point' },
             { id: 'P-00-V2', name: 'Landing Page 2.0', userType: 'Public', description: 'DISC Structured Entry' },
+            { id: 'P-00-V3', name: 'Landing Page 3.0', userType: 'Public', description: 'High-Convert Lead Gen' },
             { id: 'P-14', name: 'Maintenance', userType: 'Public', description: 'Maintenance Protocol' },
             { id: 'P-01', name: 'About Us', userType: 'Public', description: 'Mission, Vision & Values' },
             { id: 'P-02', name: 'Our Services', userType: 'Public', description: 'Residential & Commercial Solutions' },
