@@ -1013,7 +1013,8 @@ export const userLogService = {
             actionType,
             description,
             payload: payload || {},
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            read: false
         };
 
         try {

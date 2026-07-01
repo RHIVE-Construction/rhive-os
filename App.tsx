@@ -5,6 +5,7 @@ import { MockDatabaseProvider, useMockDB } from './contexts/MockDatabaseContext'
 import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { Sidebar } from './components/Sidebar';
 import LoginPage from './pages/LoginPage';
 import { GlobalHeader } from './components/GlobalHeader';
@@ -271,11 +272,13 @@ export default function App() {
         <ThemeProvider>
             <LanguageProvider>
                 <MockDatabaseProvider>
-                    <PricingProvider>
-                        <NavigationProvider>
-                            <LoginBridge />
-                        </NavigationProvider>
-                    </PricingProvider>
+                    <NotificationProvider>
+                        <PricingProvider>
+                            <NavigationProvider>
+                                <LoginBridge />
+                            </NavigationProvider>
+                        </PricingProvider>
+                    </NotificationProvider>
                 </MockDatabaseProvider>
             </LanguageProvider>
         </ThemeProvider>

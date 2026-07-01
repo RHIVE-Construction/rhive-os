@@ -6,20 +6,120 @@ import { RhiveLogo, SunIcon2 as SunIcon, MoonIcon2 as MoonIcon, GlobeAlt as Glob
 import WeatherForecastStrip from './WeatherForecastStrip';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
-import { User, Sparkles as SparklesIcon } from 'lucide-react';
+import { User, Sparkles as SparklesIcon, Check, CheckCheck } from 'lucide-react';
 import AIChatPanel from './AIChatPanel';
+import { useNotifications, getActivityIcon, ActivityNotification } from '../contexts/NotificationContext';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const formatRelativeTime = (timestamp: string): string => {
+    const now = Date.now();
+    const then = new Date(timestamp).getTime();
+    const diffMs = now - then;
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHrs = Math.floor(diffMins / 60);
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    const diffDays = Math.floor(diffHrs / 24);
+    if (diffDays === 1) return 'yesterday';
+    return `${diffDays}d ago`;
+};
+
+const groupByDay = (items: ActivityNotification[]) => {
+    const today: ActivityNotification[] = [];
+    const yesterday: ActivityNotification[] = [];
+    const older: ActivityNotification[] = [];
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - 86400000;
+
+    items.forEach(n => {
+        const t = new Date(n.timestamp).getTime();
+        if (t >= startOfToday) today.push(n);
+        else if (t >= startOfYesterday) yesterday.push(n);
+        else older.push(n);
+    });
+    return { today, yesterday, older };
+};
 
 // ─── Notification Bell Widget ────────────────────────────────────────────────
 const NotificationBell: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [notifications, setNotifications] = useState([
-        { id: '1', title: 'Emergency Tarping Required', message: 'Tarping request detected for property 4505 Industrial Parkway.', time: '5m ago', read: false },
-        { id: '2', title: 'Address Collision Detected', message: 'Linda Hansen and Tyler Hansen duplicated record merge needed.', time: '20m ago', read: false },
-        { id: '3', title: 'Boise Lead Routed', message: 'Lead from Boise region automatically flagged and held.', time: '1h ago', read: true }
-    ]);
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const { notifications, unreadCount, markRead, markAllRead, isLoading } = useNotifications();
 
-    const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    const groups = groupByDay(notifications);
+    const hasAny = notifications.length > 0;
+
+    const handleMarkRead = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        await markRead(id);
+    };
+
+    const renderGroup = (label: string, items: ActivityNotification[]) => {
+        if (items.length === 0) return null;
+        return (
+            <div key={label}>
+                <div className="text-[8px] font-black uppercase tracking-widest text-gray-600 px-1 py-1.5">{label}</div>
+                <div className="space-y-1.5">
+                    {items.map(n => (
+                        <div
+                            key={n.id}
+                            className={cn(
+                                "p-2.5 border transition-all flex gap-2.5 group/item relative",
+                                n.read
+                                    ? "bg-black/20 border-gray-800/60 text-gray-500"
+                                    : "bg-rhive-pink/5 border-[#ec028b]/20 text-white"
+                            )}
+                            style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                        >
+                            {/* Icon */}
+                            <span className="text-base leading-none mt-0.5 flex-shrink-0">
+                                {getActivityIcon(n.actionType)}
+                            </span>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start gap-1">
+                                    <span className={cn(
+                                        "text-[10px] font-black uppercase tracking-wide truncate",
+                                        n.read ? "text-gray-500" : "text-white"
+                                    )}>
+                                        {n.description}
+                                    </span>
+                                    <span className="text-[8px] font-mono text-gray-600 whitespace-nowrap flex-shrink-0">
+                                        {formatRelativeTime(n.timestamp)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between mt-1">
+                                    <span className="text-[9px] font-mono text-rhive-pink/60 uppercase">
+                                        {n.actionType.replace(/_/g, ' ')}
+                                    </span>
+                                    {/* Per-item mark as read button */}
+                                    {!n.read && (
+                                        <button
+                                            id={`btn-mark-read-${n.id}`}
+                                            onClick={(e) => handleMarkRead(e, n.id)}
+                                            title="Mark as read"
+                                            className="flex items-center gap-0.5 text-[8px] font-bold uppercase tracking-wider text-gray-600 hover:text-green-400 transition-colors cursor-pointer opacity-0 group-hover/item:opacity-100 focus:opacity-100"
+                                        >
+                                            <Check className="w-3 h-3" />
+                                            <span>Read</span>
+                                        </button>
+                                    )}
+                                    {n.read && (
+                                        <span className="text-[8px] text-gray-700 flex items-center gap-0.5">
+                                            <CheckCheck className="w-3 h-3" />
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="relative">
@@ -32,15 +132,15 @@ const NotificationBell: React.FC = () => {
                         ? "border-[#ec028b] text-[#ec028b] bg-[#ec028b]/10 shadow-[0_0_8px_rgba(236,2,139,0.3)]"
                         : "bg-black/40 border-gray-700/60 hover:border-[#ec028b]/50"
                 )}
-                title="System Notifications"
+                title="Activity & Notifications"
             >
                 <BellIcon className="w-4 h-4" />
                 {unreadCount > 0 && (
                     <span
                         id="notification-badge"
-                        className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rhive-pink text-white font-mono text-[8px] font-black flex items-center justify-center rounded-full border border-black shadow-[0_0_5px_rgba(236,2,139,0.8)] animate-pulse"
+                        className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-0.5 bg-rhive-pink text-white font-mono text-[8px] font-black flex items-center justify-center rounded-full border border-black shadow-[0_0_5px_rgba(236,2,139,0.8)] animate-pulse"
                     >
-                        {unreadCount}
+                        {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                 )}
             </button>
@@ -50,37 +150,56 @@ const NotificationBell: React.FC = () => {
                     <div className="fixed inset-0 z-[199]" onClick={() => setIsOpen(false)} />
                     <div
                         id="notification-dropdown"
-                        className="absolute right-0 mt-2.5 w-80 bg-black/95 border border-gray-800 shadow-2xl p-4 space-y-3 z-[200] animate-fade-in backdrop-blur-xl"
-                        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                        className="absolute right-0 mt-2.5 w-88 bg-black/95 border border-gray-800 shadow-2xl z-[200] animate-fade-in backdrop-blur-xl overflow-hidden"
+                        style={{
+                            width: '340px',
+                            clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
+                        }}
                     >
-                        <div className="flex justify-between items-center border-b border-gray-800 pb-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">System Alerts</span>
+                        {/* Header */}
+                        <div className="flex justify-between items-center px-4 pt-4 pb-2.5 border-b border-gray-800">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">
+                                    Activity Feed
+                                </span>
+                                {unreadCount > 0 && (
+                                    <span className="text-[8px] font-mono bg-rhive-pink/20 text-rhive-pink border border-rhive-pink/30 px-1.5 py-0.5 rounded-full">
+                                        {unreadCount} new
+                                    </span>
+                                )}
+                            </div>
                             {unreadCount > 0 && (
                                 <button
+                                    id="btn-mark-all-read"
                                     onClick={markAllRead}
-                                    className="text-[9px] font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-colors cursor-pointer"
+                                    className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-gray-500 hover:text-green-400 transition-colors cursor-pointer"
                                 >
-                                    Mark all read
+                                    <CheckCheck className="w-3 h-3" />
+                                    All read
                                 </button>
                             )}
                         </div>
-                        <div className="space-y-2.5 max-h-64 overflow-y-auto">
-                            {notifications.map(n => (
-                                <div
-                                    key={n.id}
-                                    className={cn(
-                                        "p-2.5 border transition-colors flex flex-col gap-1",
-                                        n.read ? "bg-black/20 border-gray-800 text-gray-400" : "bg-rhive-pink/5 border-[#ec028b]/20 text-white"
-                                    )}
-                                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
-                                >
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-black uppercase tracking-wider truncate mr-2">{n.title}</span>
-                                        <span className="text-[8px] font-mono text-gray-500 whitespace-nowrap">{n.time}</span>
-                                    </div>
-                                    <p className="text-[10px] leading-relaxed text-gray-400 font-medium">{n.message}</p>
+
+                        {/* Body */}
+                        <div className="p-3 space-y-1 max-h-[420px] overflow-y-auto custom-scrollbar">
+                            {isLoading ? (
+                                <div className="flex items-center justify-center py-8 gap-2">
+                                    <div className="w-1.5 h-1.5 bg-rhive-pink rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                    <div className="w-1.5 h-1.5 bg-rhive-pink rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                    <div className="w-1.5 h-1.5 bg-rhive-pink rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                                 </div>
-                            ))}
+                            ) : !hasAny ? (
+                                <div className="text-center py-8">
+                                    <div className="text-2xl mb-2">🔔</div>
+                                    <p className="text-[10px] text-gray-600 font-mono uppercase tracking-wider">No activity yet</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {renderGroup('Today', groups.today)}
+                                    {renderGroup('Yesterday', groups.yesterday)}
+                                    {renderGroup('Older', groups.older)}
+                                </>
+                            )}
                         </div>
                     </div>
                 </>
