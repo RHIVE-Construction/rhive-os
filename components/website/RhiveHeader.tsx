@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, LogOut, Menu, X, User } from 'lucide-react';
+import { Sun, Moon, Menu, X, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNavigation } from '../../contexts/NavigationContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -158,16 +158,7 @@ const RhiveHeader: React.FC = () => {
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 h-[1.5px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent drop-shadow-[0_0_8px_rgba(236,2,139,0.9)]" />
             </div>
 
-            {/* EXIT BUTTON (Far Left) */}
-            <div className="absolute left-10 flex items-center gap-6 z-10">
-                <button
-                    onClick={handleExit}
-                    className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300"
-                >
-                    <LogOut size={13} className="text-rhive-pink shrink-0" />
-                    <span>Exit to Portal</span>
-                </button>
-            </div>
+
 
             <nav className="flex-1 flex justify-end items-center gap-8 z-10 ml-[180px]">
                 {navLinks.slice(0, 3).map((link) => (
