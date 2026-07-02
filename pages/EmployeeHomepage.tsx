@@ -611,61 +611,92 @@ const EmployeeHomepage: React.FC = () => {
     };
 
     const timeAgo = (dateString: string) => {
-        if (!dateString) return 'Just now';
+        if (!dateString) return '—';
         const diff = Date.now() - new Date(dateString).getTime();
         const minutes = Math.floor(diff / 60000);
         if (minutes < 1) return 'Just now';
         if (minutes < 60) return `${minutes}m ago`;
         const hours = Math.floor(minutes / 60);
         if (hours < 24) return `${hours}h ago`;
-        return `${Math.floor(hours / 24)}d ago`;
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `${days}d ago`;
+        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    const formatFullDate = (dateString: string) => {
+        if (!dateString) return '';
+        return new Date(dateString).toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: 'numeric', minute: '2-digit', hour12: true,
+        });
     };
 
     useEffect(() => {
         const unsubscribe = projectService.subscribeToRecentActivity((firebaseProjects: any[]) => {
-            const activeProjects = (firebaseProjects && firebaseProjects.length > 0) ? firebaseProjects : projects;
-            
-            // Map project activities
-            const projectActivities = activeProjects.map((p: any, idx: number) => {
-                const owner = users.find(u => u.id === (p.account_id || p.owner_id));
-                const timestamp = new Date(p.updated_at || p.created_at || p.last_updated || Date.now()).getTime();
-                const mockNames = ['Rick Vance', 'Jenny Miller', 'Robert Chen', 'Thomas Henderson', 'Arthur Pendleton'];
+            // Only use real Firestore records — never fall back to mock DB data
+            const source = (firebaseProjects || []);
+
+            const actionVerb = (p: any) => {
+                const s = (p.current_stage || '').toLowerCase();
+                if (p.converted_at)          return 'Stage updated';
+                if (s.includes('complet'))   return 'Marked complete';
+                if (s.includes('invoic'))    return 'Invoice created';
+                if (s.includes('install'))   return 'Install scheduled';
+                if (s.includes('quote'))     return 'Quote issued';
+                if (s.includes('estimate'))  return 'Estimate requested';
+                return 'New lead intake';
+            };
+
+            const stagePill = (stage: string) => {
+                const s = (stage || '').toLowerCase();
+                if (s.includes('lead'))      return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
+                if (s.includes('estimate'))  return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+                if (s.includes('quote'))     return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
+                if (s.includes('sign'))      return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+                if (s.includes('install'))   return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
+                if (s.includes('invoic'))    return 'bg-green-500/10 text-green-400 border-green-500/30';
+                if (s.includes('complet'))   return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+                return 'bg-[#ec028b]/10 text-[#ec028b] border-[#ec028b]/30';
+            };
+
+            const stageDot = (stage: string) => {
+                const s = (stage || '').toLowerCase();
+                if (s.includes('lead'))      return 'bg-yellow-400 shadow-[0_0_5px_#facc15]';
+                if (s.includes('estimate'))  return 'bg-blue-400 shadow-[0_0_5px_#60a5fa]';
+                if (s.includes('quote'))     return 'bg-indigo-400 shadow-[0_0_5px_#818cf8]';
+                if (s.includes('sign'))      return 'bg-purple-400 shadow-[0_0_5px_#c084fc]';
+                if (s.includes('install'))   return 'bg-orange-400 shadow-[0_0_5px_#fb923c]';
+                if (s.includes('invoic'))    return 'bg-green-400 shadow-[0_0_5px_#4ade80]';
+                if (s.includes('complet'))   return 'bg-emerald-400 shadow-[0_0_5px_#34d399]';
+                return 'bg-[#ec028b] shadow-[0_0_5px_#ec028b]';
+            };
+
+            // Build activity entries from real project data.
+            // Exclude records without a real timestamp (seeded / mock items).
+            const projectActivities = source
+            .filter((p: any) => !!(p.updated_at || p.created_at || p.last_updated))
+            .map((p: any) => {
+                const dateStr = p.updated_at || p.created_at || p.last_updated || '';
+                const timestamp = dateStr ? new Date(dateStr).getTime() : 0;
+                const address = p.property_address || p.property?.address || p.property_address_full || '';
                 return {
-                    user: p.customer_name || p.contact_name || owner?.name || mockNames[idx % mockNames.length],
-                    action: 'submitted project',
-                    target: p.name || 'Unnamed Project',
+                    name: p.name || 'Unnamed Project',
+                    stage: p.current_stage || 'Lead',
+                    stagePillClass: stagePill(p.current_stage || ''),
+                    stageDotClass: stageDot(p.current_stage || ''),
+                    action: actionVerb(p),
+                    address,
                     timestamp,
-                    time: timeAgo(p.updated_at || p.created_at || p.last_updated),
+                    dateStr,
+                    // keep legacy fields for click handlers
+                    _raw: p,
                 };
             });
 
-            // Map property registration activities
-            const propertyActivities = properties.map((prop: any) => {
-                const idParts = prop._id.split('-');
-                const tsStr = idParts[1];
-                let timestamp = 0;
-                if (tsStr && /^\d{10,}$/.test(tsStr)) {
-                    timestamp = parseInt(tsStr, 10);
-                } else {
-                    if (prop._id === 'PROP-1') timestamp = Date.now() - 3600000 * 2;
-                    else if (prop._id === 'PROP-2') timestamp = Date.now() - 3600000 * 5;
-                    else if (prop._id === 'PROP-3') timestamp = Date.now() - 3600000 * 12;
-                    else timestamp = Date.now() - 3600000 * 24;
-                }
-                const owner = users.find(u => u.id === prop.owner_id);
-                return {
-                    user: owner?.name || 'System Operator',
-                    action: 'registered property',
-                    target: prop.address_full || 'Unnamed Property',
-                    timestamp,
-                    time: timeAgo(new Date(timestamp).toISOString()),
-                };
-            });
-
-            // Merge, sort desc by timestamp, and take top 5
-            const combined = [...projectActivities, ...propertyActivities]
-                .sort((a, b) => b.timestamp - a.timestamp)
-                .slice(0, 5);
+            // Sort newest first, take top 6
+            const combined = (projectActivities as any[])
+                .sort((a: any, b: any) => b.timestamp - a.timestamp)
+                .slice(0, 6);
 
             setActivity(combined);
             setActivityLoading(false);
@@ -680,7 +711,7 @@ const EmployeeHomepage: React.FC = () => {
             unsubscribe();
             unsubStats();
         };
-    }, [projects, properties, users, setActivePageId, setSelectedContactId, setSelectedAccountId, setSelectedPropertyId, setSelectedProjectId, setCurrentProjectId]);
+    }, [projects, properties, users]);
 
     const schedule = [
         { time: '09:00 AM', event: 'Team Standup', type: 'Meeting' },
@@ -772,74 +803,66 @@ const EmployeeHomepage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Card title="Recent Activity" className="h-full">
                             {activityLoading ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <div className="w-5 h-5 border-2 border-[#ec028b] border-t-transparent rounded-full animate-spin"></div>
-                                    <span className="ml-3 text-sm text-gray-500">Loading activity...</span>
+                                <div className="space-y-1">
+                                    {[1,2,3,4].map(i => (
+                                        <div key={i} className="flex items-center gap-3 px-2 py-3">
+                                            <div className="w-2 h-2 rounded-full bg-gray-800 animate-pulse shrink-0" />
+                                            <div className="flex-1 space-y-1.5">
+                                                <div className="h-3 bg-gray-800 rounded animate-pulse w-3/4" />
+                                                <div className="h-2.5 bg-gray-800/60 rounded animate-pulse w-1/2" />
+                                            </div>
+                                            <div className="h-2.5 bg-gray-800/40 rounded animate-pulse w-10 shrink-0" />
+                                        </div>
+                                    ))}
                                 </div>
                             ) : activity.length === 0 ? (
-                                <p className="text-sm text-gray-500 italic text-center py-6">No recent activity found.</p>
+                                <p className="text-sm text-gray-600 italic text-center py-8">No recent activity found.</p>
                             ) : (
-                                <ul className="space-y-4">
-                                    {activity.map((item, index) => (
-                                        <li key={index} className="flex items-start text-sm border-b border-gray-800 pb-3 last:border-0 last:pb-0">
-                                            <div className="w-2 h-2 rounded-full bg-[#ec028b] mt-1.5 mr-3 flex-shrink-0 shadow-[0_0_5px_#ec028b]"></div>
-                                            <div>
-                                                <p className="text-gray-300">
-                                                    <span 
-                                                        className="font-semibold text-white hover:text-rhive-pink cursor-pointer hover:underline transition-colors"
-                                                        onClick={() => {
-                                                            const foundUser = users.find(u => u.name.toLowerCase() === item.user.toLowerCase());
-                                                            if (foundUser) {
-                                                                const isCommercial = foundUser.name.includes('HOA') || 
-                                                                                     foundUser.name.includes('Group') || 
-                                                                                     foundUser.name.includes('Corp') || 
-                                                                                     foundUser.name.includes('Supply') || 
-                                                                                     foundUser.name.includes('Summit') || 
-                                                                                     foundUser.name.includes('Apex') || 
-                                                                                     foundUser.name.includes('Vanguard') || 
-                                                                                     foundUser.name.includes('BuildWest');
-                                                                if (isCommercial) {
-                                                                    setSelectedAccountId(foundUser.id);
-                                                                    setActivePageId('E-08');
-                                                                } else {
-                                                                    setSelectedContactId(foundUser.id);
-                                                                    setActivePageId('E-10');
-                                                                }
-                                                            } else {
-                                                                setActivePageId('E-24');
-                                                            }
-                                                        }}
-                                                        title="View user profile"
-                                                    >
-                                                        {item.user}
-                                                    </span> {item.action}{' '}
-                                                    <span 
-                                                        className="text-[#ec028b] font-medium hover:underline cursor-pointer"
-                                                        onClick={() => {
-                                                            const foundProject = projects.find(p => p.name.toLowerCase() === item.target.toLowerCase());
-                                                            const foundProperty = properties.find(p => p.address_full.toLowerCase() === item.target.toLowerCase());
-                                                            if (foundProject) {
-                                                                setCurrentProjectId(foundProject._id);
-                                                                if (foundProject.current_stage === 'Quote') {
-                                                                    setActivePageId('E-28');
-                                                                } else if (foundProject.current_stage === 'Estimate') {
-                                                                    setActivePageId('E-27');
-                                                                } else {
-                                                                    setActivePageId('E-15');
-                                                                }
-                                                            } else if (foundProperty) {
-                                                                setSelectedPropertyId(foundProperty._id);
-                                                                setActivePageId('E-12');
-                                                            } else {
-                                                                setActivePageId('E-05');
-                                                            }
-                                                        }}
-                                                    >
-                                                        {item.target}
-                                                    </span>.
+                                <ul className="space-y-0.5">
+                                    {(activity as any[]).map((item: any, index: number) => (
+                                        <li
+                                            key={index}
+                                            className="group flex items-start gap-3 px-2 py-3 rounded-lg hover:bg-gray-900/50 transition-colors border border-transparent hover:border-gray-800/60 cursor-pointer"
+                                            onClick={() => {
+                                                if (item._raw) {
+                                                    const p = item._raw;
+                                                    setCurrentProjectId(p.id || p._id);
+                                                    if ((p.current_stage || '').toLowerCase().includes('quote')) setActivePageId('E-28');
+                                                    else if ((p.current_stage || '').toLowerCase().includes('estimate')) setActivePageId('E-27');
+                                                    else setActivePageId('E-26');
+                                                }
+                                            }}
+                                        >
+                                            {/* Stage dot */}
+                                            <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${item.stageDotClass || 'bg-[#ec028b] shadow-[0_0_5px_#ec028b]'}`} />
+
+                                            <div className="flex-1 min-w-0">
+                                                {/* Name + stage pill */}
+                                                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                                                    <span className="text-sm font-bold text-white truncate max-w-[160px] group-hover:text-[#ec028b] transition-colors">
+                                                        {item.name || item.target}
+                                                    </span>
+                                                    {item.stage && (
+                                                        <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${item.stagePillClass || 'bg-[#ec028b]/10 text-[#ec028b] border-[#ec028b]/30'}`}>
+                                                            {item.stage}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {/* Action + address */}
+                                                <p className="text-xs text-gray-500 mt-0.5 truncate">
+                                                    <span className="text-gray-400 font-medium">{item.action}</span>
+                                                    {item.address ? <span className="text-gray-600"> · {item.address}</span> : null}
                                                 </p>
-                                                <p className="text-xs text-gray-500 mt-1">{item.time}</p>
+                                                {/* Full date */}
+                                                <p className="text-[10px] font-mono text-gray-600 mt-0.5">
+                                                    {formatFullDate(item.dateStr)}
+                                                </p>
                                             </div>
+
+                                            {/* Relative time */}
+                                            <span className="shrink-0 text-[10px] text-gray-600 font-mono pt-0.5 group-hover:text-gray-400 transition-colors whitespace-nowrap">
+                                                {timeAgo(item.dateStr)}
+                                            </span>
                                         </li>
                                     ))}
                                 </ul>

@@ -2245,9 +2245,32 @@ const CustomerInputPage: React.FC = () => {
             ? projects.find(p => p.property_id === existingProperty._id && p.status === 'Active')
             : null;
 
-        const projectName = requiresOrganization 
-            ? (companyData.propertyName || propertyData.address) 
-            : `${primaryContact.lastName} Residence`;
+        // ── Project Name Convention: LastName_StreetNum_FirstStreetWord ──────────────
+        // e.g. contact "James Bond" at "123 Camias Street" → "Bond_123_Camias"
+        const buildProjectName = (lastNameOrEntity: string, address: string): string => {
+            const clean = (s: string) => s.replace(/[^a-zA-Z0-9]/g, '');
+            const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+            // Compass directionals to skip when searching for street name word
+            const directionals = new Set(['N','S','E','W','NE','NW','SE','SW','NORTH','SOUTH','EAST','WEST']);
+            const addrParts = (address || '').trim().split(/\s+/);
+            const streetNum = addrParts[0] ? clean(addrParts[0]) : '';
+            // Find the first non-directional word after the street number
+            let streetWord = '';
+            for (let i = 1; i < addrParts.length; i++) {
+                const word = clean(addrParts[i]).toUpperCase();
+                if (word && !directionals.has(word)) {
+                    streetWord = cap(clean(addrParts[i]));
+                    break;
+                }
+            }
+            const entityPart = cap(clean(lastNameOrEntity));
+            const parts = [entityPart, streetNum, streetWord].filter(Boolean);
+            return parts.join('_') || 'New_Project';
+        };
+
+        const projectName = requiresOrganization
+            ? buildProjectName(companyData.propertyName || companyData.parentCompany || 'Commercial', propertyData.address)
+            : buildProjectName(primaryContact.lastName, propertyData.address);
 
         if (activeProjectOnProp) {
             // MERGE INTO ACTIVE PROJECT: append contacts/notes, do NOT duplicate card

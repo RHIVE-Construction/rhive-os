@@ -331,10 +331,21 @@ const LeadPage: React.FC = () => {
             }),
         }));
 
-        // Assigned groups first, unassigned at bottom
+        // Sort each group by its most-recent lead so the hottest group rises to the top
+        const sortGroupByLatest = (a: typeof groups[0], b: typeof groups[0]) => {
+            const latestA = a.projects[0]
+                ? new Date(a.projects[0].updated_at || a.projects[0].created_at || 0).getTime()
+                : 0;
+            const latestB = b.projects[0]
+                ? new Date(b.projects[0].updated_at || b.projects[0].created_at || 0).getTime()
+                : 0;
+            return latestB - latestA;
+        };
+
+        // Assigned groups first (sorted by most-recent lead), unassigned at bottom (also sorted)
         return [
-            ...groups.filter(g => g.assigneeId !== 'unassigned'),
-            ...groups.filter(g => g.assigneeId === 'unassigned'),
+            ...groups.filter(g => g.assigneeId !== 'unassigned').sort(sortGroupByLatest),
+            ...groups.filter(g => g.assigneeId === 'unassigned').sort(sortGroupByLatest),
         ];
     }, [projects]);
 
@@ -580,17 +591,47 @@ const LeadPage: React.FC = () => {
                                             </div>
                                         </div>
                                         
-                                        <div className="mt-4 flex items-center justify-between border-t border-gray-800 pt-3">
-                                            <span className={cn(
-                                                'text-[10px] px-2 py-1 rounded border font-black uppercase tracking-wider',
-                                                stageBadgeColor(project.current_stage)
-                                            )}>
-                                                {project.current_stage || 'Lead'}
-                                            </span>
-                                            
-                                            <span className="text-[10px] text-gray-600 font-mono">
-                                                {project.updated_at ? new Date(project.updated_at).toLocaleDateString() : 'New'}
-                                            </span>
+                                        <div className="mt-4 border-t border-gray-800 pt-3 space-y-2">
+                                            {/* Created date row */}
+                                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-mono">
+                                                <svg className="w-3 h-3 shrink-0 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                                                </svg>
+                                                <span className="text-gray-600">Created</span>
+                                                <span className="text-gray-400 font-semibold">
+                                                    {project.created_at
+                                                        ? new Date(project.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+                                                        : project.updated_at
+                                                            ? new Date(project.updated_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+                                                            : '—'}
+                                                </span>
+                                            </div>
+
+                                            {/* Stage badge + updated time */}
+                                            <div className="flex items-center justify-between">
+                                                <span className={cn(
+                                                    'text-[10px] px-2 py-1 rounded border font-black uppercase tracking-wider',
+                                                    stageBadgeColor(project.current_stage)
+                                                )}>
+                                                    {project.current_stage || 'Lead'}
+                                                </span>
+
+                                                <span className="text-[10px] text-gray-600 font-mono">
+                                                    {(() => {
+                                                        const d = project.updated_at || project.created_at;
+                                                        if (!d) return 'New';
+                                                        const diff = Date.now() - new Date(d).getTime();
+                                                        const m = Math.floor(diff / 60000);
+                                                        if (m < 1) return 'Just now';
+                                                        if (m < 60) return `${m}m ago`;
+                                                        const h = Math.floor(m / 60);
+                                                        if (h < 24) return `${h}h ago`;
+                                                        const days = Math.floor(h / 24);
+                                                        if (days < 7) return `${days}d ago`;
+                                                        return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                                    })()}
+                                                </span>
+                                            </div>
                                         </div>
                                     </Card>
                                 ))}

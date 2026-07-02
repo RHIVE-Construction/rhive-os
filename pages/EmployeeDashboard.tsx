@@ -5,6 +5,8 @@ import Card from '../components/Card';
 import { ChartBarIcon } from '../components/icons';
 import { PAGE_GROUPS } from '../constants';
 import { projectService } from '../lib/firebaseService';
+import { useNavigation } from '../contexts/NavigationContext';
+import { getStagePageId } from '../lib/utils';
 
 // ─── Weather Config (reuses same env key) ─────────────────────────────────────
 const GOOGLE_WEATHER_API_KEY = (import.meta as any).env?.VITE_GOOGLE_WEATHER_API_KEY || '';
@@ -424,6 +426,7 @@ function countByStage(projects: any[], keyword: string): number {
 // ─── Main Dashboard ────────────────────────────────────────────────────────────
 const EmployeeDashboard: React.FC = () => {
     const page = PAGE_GROUPS.flatMap(g => g.pages).find(p => p.id === 'E-01');
+    const { setActivePageId, setSelectedProjectId } = useNavigation();
     const [allProjects, setAllProjects] = useState<any[]>([]);
     const [recentProjects, setRecentProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -434,6 +437,8 @@ const EmployeeDashboard: React.FC = () => {
             setLoading(false);
 
             const sorted = [...data]
+                // Only include records that have a real Firestore timestamp
+                .filter(p => !!(p.updated_at || p.created_at))
                 .sort((a, b) =>
                     new Date(b.updated_at || b.created_at || 0).getTime() -
                     new Date(a.updated_at || a.created_at || 0).getTime()
@@ -467,7 +472,52 @@ const EmployeeDashboard: React.FC = () => {
         if (minutes < 60) return `${minutes}m ago`;
         const hours = Math.floor(minutes / 60);
         if (hours < 24) return `${hours}h ago`;
-        return `${Math.floor(hours / 24)}d ago`;
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `${days}d ago`;
+        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    const formatFullDate = (dateString: string) => {
+        if (!dateString) return '';
+        return new Date(dateString).toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: 'numeric', minute: '2-digit', hour12: true
+        });
+    };
+
+    const stageDotColor = (stage: string) => {
+        const s = (stage || '').toLowerCase();
+        if (s.includes('lead'))     return 'bg-yellow-400 shadow-[0_0_6px_#facc15]';
+        if (s.includes('estimate')) return 'bg-blue-400 shadow-[0_0_6px_#60a5fa]';
+        if (s.includes('quote'))    return 'bg-indigo-400 shadow-[0_0_6px_#818cf8]';
+        if (s.includes('sign'))     return 'bg-purple-400 shadow-[0_0_6px_#c084fc]';
+        if (s.includes('install'))  return 'bg-orange-400 shadow-[0_0_6px_#fb923c]';
+        if (s.includes('invoic'))   return 'bg-green-400 shadow-[0_0_6px_#4ade80]';
+        if (s.includes('complet'))  return 'bg-emerald-400 shadow-[0_0_6px_#34d399]';
+        return 'bg-[#ec028b] shadow-[0_0_6px_#ec028b]';
+    };
+
+    const stagePillColor = (stage: string) => {
+        const s = (stage || '').toLowerCase();
+        if (s.includes('lead'))     return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
+        if (s.includes('estimate')) return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+        if (s.includes('quote'))    return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
+        if (s.includes('sign'))     return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+        if (s.includes('install'))  return 'bg-orange-500/10 text-orange-400 border-orange-500/30';
+        if (s.includes('invoic'))   return 'bg-green-500/10 text-green-400 border-green-500/30';
+        if (s.includes('complet'))  return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        return 'bg-[#ec028b]/10 text-[#ec028b] border-[#ec028b]/30';
+    };
+
+    const actionVerb = (project: any) => {
+        const s = (project.current_stage || '').toLowerCase();
+        if (project.converted_at) return 'Stage updated';
+        if (s.includes('complet')) return 'Marked complete';
+        if (s.includes('invoic'))  return 'Invoice created';
+        if (s.includes('install')) return 'Install scheduled';
+        if (s.includes('quote'))   return 'Quote issued';
+        if (s.includes('estimate')) return 'Estimate requested';
+        return 'New lead intake';
     };
 
     // ── Stage bar config ───────────────────────────────────────────────────────
@@ -546,36 +596,70 @@ const EmployeeDashboard: React.FC = () => {
 
                 {/* Recent Activity Card */}
                 <Card title="Recent Activity" className="lg:col-span-2">
-                    <div className="space-y-4">
+                    <div className="space-y-1">
                         {loading ? (
-                            [1, 2, 3].map(i => (
-                                <div 
-                                    key={i} 
-                                    className="h-12 bg-gray-900 animate-pulse" 
-                                    style={{
-                                        clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)',
-                                        WebkitClipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
-                                    }}
-                                />
-                            ))
-                        ) : recentProjects.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 text-sm">No recent activity found.</div>
-                        ) : (
-                            recentProjects.map((project) => (
-                                <div key={project.id} className="flex items-start gap-3 border-b border-gray-800/50 pb-4 last:border-0 last:pb-0">
-                                    <div className="mt-1.5 w-2 h-2 rounded-full bg-[#ec028b] shadow-[0_0_8px_#ec028b] shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-300 leading-snug">
-                                            <span className="font-bold text-[#ec028b]">{project.name || 'Unnamed'}</span>
-                                            {' · '}
-                                            <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                                {project.current_stage || 'Lead'}
-                                            </span>
-                                        </p>
-                                        <p className="text-xs text-gray-600 mt-0.5">{timeAgo(project.updated_at || project.created_at)}</p>
+                            [1, 2, 3, 4].map(i => (
+                                <div key={i} className="flex items-center gap-3 px-3 py-3">
+                                    <div className="w-2 h-2 rounded-full bg-gray-800 animate-pulse shrink-0" />
+                                    <div className="flex-1 space-y-1.5">
+                                        <div className="h-3 bg-gray-800 rounded animate-pulse w-3/4" />
+                                        <div className="h-2.5 bg-gray-800/60 rounded animate-pulse w-1/2" />
                                     </div>
+                                    <div className="h-2.5 bg-gray-800/40 rounded animate-pulse w-12 shrink-0" />
                                 </div>
                             ))
+                        ) : recentProjects.length === 0 ? (
+                            <div className="text-center py-10 text-gray-600 text-sm italic">No activity recorded yet.</div>
+                        ) : (
+                            recentProjects.map((project) => {
+                                const dateStr = project.updated_at || project.created_at || '';
+                                const address = project.property_address ||
+                                    project.property?.address ||
+                                    project.property_address_full || '';
+                                return (
+                                    <div
+                                        key={project.id}
+                                        onClick={() => {
+                                            setSelectedProjectId(project.id);
+                                            setActivePageId(getStagePageId(project.current_stage));
+                                        }}
+                                        className="group flex items-start gap-3 px-3 py-3 rounded-lg hover:bg-gray-900/60 transition-colors border border-transparent hover:border-gray-800/80 cursor-pointer"
+                                    >
+                                        {/* Stage dot */}
+                                        <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${stageDotColor(project.current_stage)}`} />
+
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                                <span className="text-sm font-bold text-white truncate max-w-[200px]">
+                                                    {project.name || 'Unnamed Project'}
+                                                </span>
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${stagePillColor(project.current_stage)}`}>
+                                                    {project.current_stage || 'Lead'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-0.5 truncate">
+                                                <span className="text-gray-400 font-medium">{actionVerb(project)}</span>
+                                                {address ? <span className="text-gray-600"> · {address}</span> : null}
+                                            </p>
+                                            {/* Date row */}
+                                            <p className="text-[10px] font-mono text-gray-600 mt-1">
+                                                {formatFullDate(dateStr)}
+                                            </p>
+                                        </div>
+
+                                        {/* Relative time + arrow */}
+                                        <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                                            <span className="text-[10px] text-gray-600 font-mono group-hover:text-gray-400 transition-colors whitespace-nowrap">
+                                                {timeAgo(dateStr)}
+                                            </span>
+                                            <svg className="w-3.5 h-3.5 text-gray-700 group-hover:text-[#ec028b] transition-colors opacity-0 group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                );
+                            })
                         )}
                     </div>
                 </Card>
