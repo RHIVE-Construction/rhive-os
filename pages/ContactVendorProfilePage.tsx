@@ -192,9 +192,18 @@ const ContactVendorProfilePage: React.FC = () => {
 
     useEffect(() => {
         if (contractor.phone && !loading && contactData) {
+            const cleanPhone = String(contractor.phone).replace(/\D/g, '');
+            if (!cleanPhone) {
+                setCommunications({
+                    texts: [],
+                    calls: [],
+                    loading: false,
+                    error: null
+                });
+                return;
+            }
             setCommunications(prev => ({ ...prev, loading: true }));
             
-            const cleanPhone = String(contractor.phone).replace(/\D/g, '');
             const variations = [cleanPhone];
             if (cleanPhone.length === 10) {
                 variations.push(`+1${cleanPhone}`);
@@ -269,67 +278,143 @@ const ContactVendorProfilePage: React.FC = () => {
                 return { texts: mockTexts, calls: mockCalls };
             };
 
-            fetch(`https://us-central1-rhive-os.cloudfunctions.net/getJustCallCommunications?phone=${encodeURIComponent(contractor.phone)}`)
+            const apiPromise = fetch(`https://us-central1-rhive-os.cloudfunctions.net/getJustCallCommunications?phone=${encodeURIComponent(contractor.phone)}`)
                 .then(async (res) => {
                     if (!res.ok) {
                         throw new Error(`HTTP error! status: ${res.status}`);
                     }
                     return res.json();
                 })
-                .then(data => {
-                    if (data && (data.texts?.length > 0 || data.calls?.length > 0)) {
-                        setCommunications({ texts: data.texts || [], calls: data.calls || [], loading: false, error: null });
-                    } else {
-                        throw new Error("API returned no history");
-                    }
-                })
-                .catch(() => {
-                    const smsQuery = query(
-                        collection(db, 'sms_logs'),
-                        where('contact_number', 'in', uniqueVariations)
-                    );
-                    const callsQuery = query(
-                        collection(db, 'call_logs'),
-                        where('contact_number', 'in', uniqueVariations)
-                    );
+                .then(data => ({
+                    texts: data.texts || [],
+                    calls: data.calls || []
+                }))
+                .catch(err => {
+                    console.warn("JustCall API fetch failed:", err);
+                    return { texts: [], calls: [] };
+                });
 
-                    Promise.all([
-                        getDocs(smsQuery),
-                        getDocs(callsQuery)
-                    ])
-                    .then(([smsSnap, callsSnap]) => {
-                        const dbTexts = smsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        const dbCalls = callsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const smsQuery = query(
+                collection(db, 'sms_logs'),
+                where('contact_number', 'in', uniqueVariations)
+            );
+            const callsQuery = query(
+                collection(db, 'call_logs'),
+                where('contact_number', 'in', uniqueVariations)
+            );
 
-                        const getMillis = (item: any) => {
-                            if (item.timestamp?.toMillis) return item.timestamp.toMillis();
-                            if (item.created_at) return new Date(item.created_at).getTime();
-                            if (item.updated_at?.toMillis) return item.updated_at.toMillis();
-                            return Date.now();
-                        };
+            const dbPromise = Promise.all([
+                getDocs(smsQuery),
+                getDocs(callsQuery)
+            ])
+            .then(([smsSnap, callsSnap]) => {
+                const dbTexts = smsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const dbCalls = callsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                return { texts: dbTexts, calls: dbCalls };
+            })
+            .catch(err => {
+                console.warn("Direct Firestore retrieval failed:", err);
+                return { texts: [], calls: [] };
+            });
 
-                        dbTexts.sort((a, b) => getMillis(b) - getMillis(a));
-                        dbCalls.sort((a, b) => getMillis(b) - getMillis(a));
-
-                        if (dbTexts.length > 0 || dbCalls.length > 0) {
-                            setCommunications({
-                                texts: dbTexts,
-                                calls: dbCalls,
-                                loading: false,
-                                error: null
-                            });
+            Promise.all([apiPromise, dbPromise])
+                .then(([apiRes, dbRes]) => {
+                    // Merge and de-duplicate texts
+                    const allTexts = [...apiRes.texts, ...dbRes.texts];
+                    const textMap = new Map();
+                    allTexts.forEach(text => {
+                        const body = text.sms_info?.body || text.body || text.content || text.message || '';
+                        const timestampVal = text.timestamp?.toDate 
+                            ? text.timestamp.toDate() 
+                            : (text.timestamp?.seconds 
+                                ? new Date(text.timestamp.seconds * 1000) 
+                                : (text.timestamp ? new Date(text.timestamp) : null));
+                        const date = text.created_at || text.date || (text.sms_date ? `${text.sms_date}T${text.sms_time || '00:00:00'}` : null) || timestampVal?.toISOString() || '';
+                        const textId = text.sms_id || text.id || `${body}_${date}`;
+                        
+                        if (!textMap.has(textId)) {
+                            textMap.set(textId, text);
                         } else {
-                            const mocks = getMockHistory();
-                            setCommunications({
-                                texts: mocks.texts,
-                                calls: mocks.calls,
-                                loading: false,
-                                error: null
-                            });
+                            const existing = textMap.get(textId);
+                            textMap.set(textId, { ...existing, ...text });
                         }
-                    })
-                    .catch((err) => {
-                        console.warn("Direct Firestore retrieval failed:", err);
+                    });
+                    const mergedTexts = Array.from(textMap.values());
+
+                    // Merge and de-duplicate calls
+                    const allCalls = [...apiRes.calls, ...dbRes.calls];
+                    const callMap = new Map();
+                    allCalls.forEach(call => {
+                        const timestampVal = call.timestamp?.toDate 
+                            ? call.timestamp.toDate() 
+                            : (call.timestamp?.seconds 
+                                ? new Date(call.timestamp.seconds * 1000) 
+                                : (call.timestamp ? new Date(call.timestamp) : null));
+                        const date = call.created_at || call.call_date || (call.call_date ? `${call.call_date}T${call.call_time || '00:00:00'}` : null) || timestampVal?.toISOString() || '';
+                        const callId = call.call_id || call.id || `${date}`;
+                        
+                        if (!callMap.has(callId)) {
+                            callMap.set(callId, call);
+                        } else {
+                            const existing = callMap.get(callId);
+                            callMap.set(callId, { ...existing, ...call });
+                        }
+                    });
+                    const mergedCalls = Array.from(callMap.values());
+
+                    const getMillis = (item: any) => {
+                        try {
+                            if (item.timestamp?.toMillis) {
+                                const m = item.timestamp.toMillis();
+                                if (!isNaN(m)) return m;
+                            }
+                            if (item.timestamp?.toDate) {
+                                const m = item.timestamp.toDate().getTime();
+                                if (!isNaN(m)) return m;
+                            }
+                            if (item.timestamp?.seconds) {
+                                const m = item.timestamp.seconds * 1000 + (item.timestamp.nanoseconds || 0) / 1000000;
+                                if (!isNaN(m)) return m;
+                            }
+                            if (item.created_at) {
+                                const d = new Date(item.created_at);
+                                if (!isNaN(d.getTime())) return d.getTime();
+                            }
+                            if (item.date) {
+                                const d = new Date(item.date);
+                                if (!isNaN(d.getTime())) return d.getTime();
+                            }
+                            if (item.call_date) {
+                                const time = item.call_time || '00:00:00';
+                                const d = new Date(`${item.call_date}T${time}`);
+                                if (!isNaN(d.getTime())) return d.getTime();
+                            }
+                            if (item.sms_date) {
+                                const time = item.sms_time || '00:00:00';
+                                const d = new Date(`${item.sms_date}T${time}`);
+                                if (!isNaN(d.getTime())) return d.getTime();
+                            }
+                            if (item.timestamp) {
+                                const d = new Date(item.timestamp);
+                                if (!isNaN(d.getTime())) return d.getTime();
+                            }
+                        } catch (e) {
+                            console.warn("Failed to parse time for item", item, e);
+                        }
+                        return 0;
+                    };
+
+                    mergedTexts.sort((a, b) => getMillis(b) - getMillis(a));
+                    mergedCalls.sort((a, b) => getMillis(b) - getMillis(a));
+
+                    if (mergedTexts.length > 0 || mergedCalls.length > 0) {
+                        setCommunications({
+                            texts: mergedTexts,
+                            calls: mergedCalls,
+                            loading: false,
+                            error: null
+                        });
+                    } else {
                         const mocks = getMockHistory();
                         setCommunications({
                             texts: mocks.texts,
@@ -337,6 +422,16 @@ const ContactVendorProfilePage: React.FC = () => {
                             loading: false,
                             error: null
                         });
+                    }
+                })
+                .catch(err => {
+                    console.error("Error processing merged communications:", err);
+                    const mocks = getMockHistory();
+                    setCommunications({
+                        texts: mocks.texts,
+                        calls: mocks.calls,
+                        loading: false,
+                        error: null
                     });
                 });
         }
@@ -466,16 +561,22 @@ const ContactVendorProfilePage: React.FC = () => {
                     ) : (
                         <div className="space-y-4">
                             <h4 className="text-white font-semibold">Text Messages</h4>
-                            {Array.isArray(communications.texts) && communications.texts.length > 0 ? communications.texts.map((text: any, i: number) => {
-                                const direction = text.direction || text.sms_info?.direction || 'unknown';
+                             {Array.isArray(communications.texts) && communications.texts.length > 0 ? communications.texts.map((text: any, i: number) => {
+                                const direction = text.direction || text.sms_info?.direction || (text.event_type === 'sms.received' ? 'inbound' : (text.event_type === 'sms.sent' ? 'outbound' : 'unknown'));
                                 const isIncoming = direction.toLowerCase() === 'inbound' || direction.toLowerCase() === 'incoming';
-                                const dateStr = text.created_at || text.date || (text.sms_date ? `${text.sms_date}T${text.sms_time || '00:00:00'}` : null);
+                                const timestampVal = text.timestamp?.toDate ? text.timestamp.toDate() : (text.timestamp?.seconds ? new Date(text.timestamp.seconds * 1000) : (text.timestamp ? new Date(text.timestamp) : null));
+                                const dateStr = text.created_at || text.date || (text.sms_date ? `${text.sms_date}T${text.sms_time || '00:00:00'}` : null) || timestampVal?.toISOString();
+                                const displayDate = (() => {
+                                    if (!dateStr) return new Date().toLocaleString();
+                                    const d = new Date(dateStr);
+                                    return isNaN(d.getTime()) ? new Date().toLocaleString() : d.toLocaleString();
+                                })();
                                 const content = text.sms_info?.body || text.body || text.content || text.message || '';
                                 return (
                                 <div key={text.id || i} className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
                                     <div className="flex justify-between items-center mb-1">
                                         <p className="text-sm font-semibold text-gray-300">{isIncoming ? '↓ Received' : '↑ Sent'}</p>
-                                        <p className="text-xs text-gray-400">{dateStr ? new Date(dateStr).toLocaleString() : new Date().toLocaleString()}</p>
+                                        <p className="text-xs text-gray-400">{displayDate}</p>
                                     </div>
                                     <p className="text-white whitespace-pre-wrap">{content}</p>
                                 </div>
@@ -484,9 +585,15 @@ const ContactVendorProfilePage: React.FC = () => {
                             
                             <h4 className="text-white font-semibold mt-6">Call Logs</h4>
                             {Array.isArray(communications.calls) && communications.calls.length > 0 ? communications.calls.map((call: any, i: number) => {
-                                const direction = call.direction || call.call_info?.direction || 'unknown';
+                                const direction = call.direction || call.call_info?.direction || (call.event_type === 'call.completed' && call.justcall_number && call.contact_number ? 'inbound' : 'unknown'); 
                                 const isIncoming = direction.toLowerCase() === 'inbound' || direction.toLowerCase() === 'incoming';
-                                const dateStr = call.created_at || call.call_date || (call.call_date ? `${call.call_date}T${call.call_time || '00:00:00'}` : null);
+                                const timestampVal = call.timestamp?.toDate ? call.timestamp.toDate() : (call.timestamp?.seconds ? new Date(call.timestamp.seconds * 1000) : (call.timestamp ? new Date(call.timestamp) : null));
+                                const dateStr = call.created_at || call.call_date || (call.call_date ? `${call.call_date}T${call.call_time || '00:00:00'}` : null) || timestampVal?.toISOString();
+                                const displayDate = (() => {
+                                    if (!dateStr) return new Date().toLocaleString();
+                                    const d = new Date(dateStr);
+                                    return isNaN(d.getTime()) ? new Date().toLocaleString() : d.toLocaleString();
+                                })();
                                 const status = call.status || call.call_info?.type || call.call_type || 'completed';
                                 const duration = call.duration || call.call_duration?.total_duration || call.call_duration?.conversation_time || 0;
                                 const recording = call.recording_url || call.recording || call.call_info?.recording;
@@ -494,7 +601,7 @@ const ContactVendorProfilePage: React.FC = () => {
                                 <div key={call.id || i} className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
                                     <div className="flex justify-between items-center mb-1">
                                         <p className="text-sm font-semibold text-gray-300">{isIncoming ? '↓ Inbound Call' : '↑ Outbound Call'}</p>
-                                        <p className="text-xs text-gray-400">{dateStr ? new Date(dateStr).toLocaleString() : new Date().toLocaleString()}</p>
+                                        <p className="text-xs text-gray-400">{displayDate}</p>
                                     </div>
                                     <p className="text-white">Status: <span className="capitalize">{status}</span> • Duration: {duration}s</p>
                                     {recording && (
