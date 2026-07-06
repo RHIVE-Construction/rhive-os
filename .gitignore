@@ -28,7 +28,7 @@ setup-secrets.sh
 *.tar.gz
 
 # REFERENCES (TOGGLE: Comment out to allow AI indexing; Un-comment to protect during push)
-# REFERENCES/
+REFERENCES/
 
 # Environment variables (already covered above by .env and .env.*)
 
