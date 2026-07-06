@@ -2266,8 +2266,20 @@ const CustomerInputPage: React.FC = () => {
             setSubmissionSummary({ type: 'Project Merged', name: projectName });
             setIsSuccessModalOpen(true);
         } else {
-            // Create new project
-            const newProjId = createProject(projectName, projectCategory, targetPropertyId, ownerId);
+            // Determine the correct pipeline stage based on form selections:
+            // - Insurance claim → Quote (needs a quote built from claim)
+            // - Ready to buy → Quote (skip estimate, go straight to quote)
+            // - Exploring / estimate needed → Estimate
+            // - Default → Lead
+            let initialStage: string = 'Lead';
+            if (isInsurance || purchaseIntent === 'Ready') {
+                initialStage = 'Quote';
+            } else if (purchaseIntent === 'Exploring') {
+                initialStage = 'Estimate';
+            }
+
+            // Create new project at the correct stage
+            const newProjId = createProject(projectName, projectCategory, targetPropertyId, ownerId, initialStage);
             setCurrentProjectId(newProjId);
             setSubmissionSummary({ type: 'Project Created', name: projectName });
             setIsSuccessModalOpen(true);

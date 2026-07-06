@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage, Locale } from '../contexts/LanguageContext';
 import { cn } from '../lib/utils';
+import { getStagePageId } from '../lib/utils';
 import { RhiveLogo, SunIcon2 as SunIcon, MoonIcon2 as MoonIcon, GlobeAlt as Globe, MagnifyingGlassIcon, BellIcon } from './icons';
 import WeatherForecastStrip from './WeatherForecastStrip';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
-import { User, Sparkles as SparklesIcon, Check, CheckCheck } from 'lucide-react';
+import { User, Sparkles as SparklesIcon, Check, CheckCheck, RotateCcw, ExternalLink } from 'lucide-react';
 import AIChatPanel from './AIChatPanel';
 import { useNotifications, getActivityIcon, ActivityNotification } from '../contexts/NotificationContext';
 
@@ -44,9 +45,62 @@ const groupByDay = (items: ActivityNotification[]) => {
 };
 
 // ─── Notification Bell Widget ────────────────────────────────────────────────
+
+// Maps an actionType + payload to a navigation target { pageId, selectedId, selectedType }
+const resolveNotificationTarget = (
+    actionType: string,
+    payload?: Record<string, any>
+): { pageId: string; selectedId?: string; selectedType?: string } | null => {
+    const at = actionType?.toLowerCase();
+
+    // Project-related actions
+    if (payload?.projectId || [
+        'create_project', 'stage_change', 'save_quote', 'approve_quote',
+        'lead_created', 'lead_updated', 'project_stage_changed',
+        'estimate_created', 'estimate_updated', 'quote_saved', 'quote_approved',
+        'quote_rejected', 'meeting_scheduled', 'meeting_updated',
+        'document_uploaded', 'payment_recorded'
+    ].some(k => at?.includes(k.replace(/_/g, ''))))
+    {
+        const projectId = payload?.projectId;
+        if (!projectId) return null;
+
+        // Use the canonical getStagePageId utility (same as EmployeePipelinePage)
+        // Fall back to E-26 (Lead page) rather than E-15 so ProjectStageLayout can show the record
+        const stage = payload?.newStage || payload?.stage || '';
+        const resolvedPage = getStagePageId(stage);
+        const pageId = (resolvedPage === 'E-15' || !resolvedPage) ? 'E-26' : resolvedPage;
+        return { pageId, selectedId: projectId, selectedType: 'project' };
+    }
+
+    // Property-related actions
+    if (payload?.propertyId || at?.includes('property')) {
+        const propertyId = payload?.propertyId;
+        if (!propertyId) return null;
+        return { pageId: 'E-12', selectedId: propertyId, selectedType: 'property' };
+    }
+
+    // Contact-related actions
+    if (payload?.contactId || at?.includes('contact')) {
+        const contactId = payload?.contactId;
+        if (!contactId) return null;
+        return { pageId: 'E-10', selectedId: contactId, selectedType: 'contact' };
+    }
+
+    // Account-related actions
+    if (payload?.accountId || at?.includes('account')) {
+        const accountId = payload?.accountId;
+        if (!accountId) return null;
+        return { pageId: 'E-08', selectedId: accountId, selectedType: 'account' };
+    }
+
+    return null;
+};
+
 const NotificationBell: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const { notifications, unreadCount, markRead, markAllRead, isLoading } = useNotifications();
+    const { notifications, unreadCount, markRead, markUnread, markAllRead, isLoading } = useNotifications();
+    const { setActivePageId, setSelectedProjectId, setSelectedPropertyId, setSelectedContactId, setSelectedAccountId } = useNavigation();
 
     const groups = groupByDay(notifications);
     const hasAny = notifications.length > 0;
@@ -56,22 +110,60 @@ const NotificationBell: React.FC = () => {
         await markRead(id);
     };
 
+    const handleMarkUnread = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        await markUnread(id);
+    };
+
+    const handleItemClick = async (n: ActivityNotification) => {
+        // Mark as read
+        if (!n.read) {
+            await markRead(n.id);
+        }
+
+        // Resolve navigation target
+        const target = resolveNotificationTarget(n.actionType, n.payload);
+        if (!target) {
+            setIsOpen(false);
+            return;
+        }
+
+        // Set the selected record then navigate
+        if (target.selectedType === 'project' && target.selectedId) {
+            setSelectedProjectId(target.selectedId);
+        } else if (target.selectedType === 'property' && target.selectedId) {
+            setSelectedPropertyId(target.selectedId);
+        } else if (target.selectedType === 'contact' && target.selectedId) {
+            setSelectedContactId(target.selectedId);
+        } else if (target.selectedType === 'account' && target.selectedId) {
+            setSelectedAccountId(target.selectedId);
+        }
+        setActivePageId(target.pageId);
+        setIsOpen(false);
+    };
+
     const renderGroup = (label: string, items: ActivityNotification[]) => {
         if (items.length === 0) return null;
         return (
             <div key={label}>
                 <div className="text-[8px] font-black uppercase tracking-widest text-gray-600 px-1 py-1.5">{label}</div>
                 <div className="space-y-1.5">
-                    {items.map(n => (
+                    {items.map(n => {
+                        const target = resolveNotificationTarget(n.actionType, n.payload);
+                        const isNavigable = !!target;
+                        return (
                         <div
                             key={n.id}
+                            onClick={() => handleItemClick(n)}
                             className={cn(
                                 "p-2.5 border transition-all flex gap-2.5 group/item relative",
+                                isNavigable ? "cursor-pointer" : "cursor-default",
                                 n.read
-                                    ? "bg-black/20 border-gray-800/60 text-gray-500"
-                                    : "bg-rhive-pink/5 border-[#ec028b]/20 text-white"
+                                    ? "bg-black/20 border-gray-800/60 text-gray-500 hover:bg-gray-900/40 hover:border-gray-700"
+                                    : "bg-rhive-pink/5 border-[#ec028b]/20 text-white hover:bg-rhive-pink/10 hover:border-[#ec028b]/40"
                             )}
                             style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                            title={isNavigable ? "Click to view record" : undefined}
                         >
                             {/* Icon */}
                             <span className="text-base leading-none mt-0.5 flex-shrink-0">
@@ -87,15 +179,20 @@ const NotificationBell: React.FC = () => {
                                     )}>
                                         {n.description}
                                     </span>
-                                    <span className="text-[8px] font-mono text-gray-600 whitespace-nowrap flex-shrink-0">
-                                        {formatRelativeTime(n.timestamp)}
-                                    </span>
+                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                        {isNavigable && (
+                                            <ExternalLink className="w-2.5 h-2.5 text-rhive-pink/40 opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                                        )}
+                                        <span className="text-[8px] font-mono text-gray-600 whitespace-nowrap">
+                                            {formatRelativeTime(n.timestamp)}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className="flex items-center justify-between mt-1">
                                     <span className="text-[9px] font-mono text-rhive-pink/60 uppercase">
                                         {n.actionType.replace(/_/g, ' ')}
                                     </span>
-                                    {/* Per-item mark as read button */}
+                                    {/* Per-item action buttons */}
                                     {!n.read && (
                                         <button
                                             id={`btn-mark-read-${n.id}`}
@@ -108,14 +205,21 @@ const NotificationBell: React.FC = () => {
                                         </button>
                                     )}
                                     {n.read && (
-                                        <span className="text-[8px] text-gray-700 flex items-center gap-0.5">
-                                            <CheckCheck className="w-3 h-3" />
-                                        </span>
+                                        <button
+                                            id={`btn-mark-unread-${n.id}`}
+                                            onClick={(e) => handleMarkUnread(e, n.id)}
+                                            title="Mark as unread"
+                                            className="flex items-center gap-0.5 text-[8px] font-bold uppercase tracking-wider text-gray-700 hover:text-yellow-400 transition-colors cursor-pointer opacity-0 group-hover/item:opacity-100 focus:opacity-100"
+                                        >
+                                            <RotateCcw className="w-2.5 h-2.5" />
+                                            <span>Unread</span>
+                                        </button>
                                     )}
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         );
@@ -157,15 +261,14 @@ const NotificationBell: React.FC = () => {
                         }}
                     >
                         {/* Header */}
-                        <div className="flex justify-between items-center px-4 pt-4 pb-2.5 border-b border-gray-800">
+                        <div className="flex justify-between items-center px-4 pt-3 pb-2.5 border-b border-gray-800">
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">
-                                    Activity Feed
-                                </span>
-                                {unreadCount > 0 && (
-                                    <span className="text-[8px] font-mono bg-rhive-pink/20 text-rhive-pink border border-rhive-pink/30 px-1.5 py-0.5 rounded-full">
-                                        {unreadCount} new
+                                {unreadCount > 0 ? (
+                                    <span className="text-[9px] font-mono bg-rhive-pink/20 text-rhive-pink border border-rhive-pink/30 px-1.5 py-0.5 rounded-full">
+                                        {unreadCount} unread
                                     </span>
+                                ) : (
+                                    <span className="text-[9px] font-mono text-gray-600 uppercase tracking-widest">All caught up</span>
                                 )}
                             </div>
                             {unreadCount > 0 && (

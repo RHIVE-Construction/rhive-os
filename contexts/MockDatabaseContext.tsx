@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Project, Property, User, ProjectStage, PROJECT_STAGES_ORDER } from '../types';
-import { contactService, userService, userLogService } from '../lib/firebaseService';
+import { contactService, userService, userLogService, firestoreService } from '../lib/firebaseService';
 import { session, initialUser } from '../lib/session';
 
 interface MockDatabaseContextType {
@@ -15,7 +15,7 @@ interface MockDatabaseContextType {
     logout: () => void;
 
     // Actions
-    createProject: (name: string, type: any, propertyId: string, accountId: string) => string;
+    createProject: (name: string, type: any, propertyId: string, accountId: string, initialStage?: string) => string;
     addUser: (user: Partial<User>) => void;
     addProperty: (property: Partial<Property>) => string;
     updateProperty: (propertyId: string, updates: Partial<Property>) => void;
@@ -461,15 +461,31 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             address_full: property.address_full || 'Unknown Address',
             type: property.type || 'Residential',
             owner_id: property.owner_id || 'Unknown',
-            coordinates: { lat: 0, lng: 0 },
+            coordinates: property.coordinates || { lat: 0, lng: 0 },
             features: property.features || [],
             buildings: property.buildings || [],
             escrow_note: property.escrow_note
         };
         setProperties(prev => [...prev, newProperty]);
-        userLogService.logAction('ADD_PROPERTY', `Property added: ${newProperty.address_full} (ID: ${newId})`, { propertyId: newId, property: newProperty });
+
+        // Persist to Firestore so property records survive page refreshes
+        firestoreService.addDocument('properties', {
+            address_full: newProperty.address_full,
+            type: newProperty.type,
+            owner_id: newProperty.owner_id,
+            coordinates: newProperty.coordinates,
+            features: newProperty.features,
+            buildings: newProperty.buildings,
+            escrow_note: newProperty.escrow_note,
+        }).then(result => {
+            userLogService.logAction('ADD_PROPERTY', `Property added: ${newProperty.address_full}`, { propertyId: result.id || newId, property: newProperty });
+        }).catch(() => {
+            userLogService.logAction('ADD_PROPERTY', `Property added: ${newProperty.address_full} (ID: ${newId})`, { propertyId: newId, property: newProperty });
+        });
+
         return newId;
     };
+
 
     const updateProperty = (propertyId: string, updates: Partial<Property>) => {
         setProperties(prev => prev.map(p =>
@@ -483,21 +499,50 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         userLogService.logAction('ADD_COMMUNICATION', `Communication logged to ${targetId} (${type})`, { type, targetId, content });
     };
 
-    const createProject = (name: string, type: any, propertyId: string, accountId: string) => {
-        const newId = `PROJ-${projects.length + 1}`;
-        const newProject: Project = {
-            _id: newId,
+    const createProject = (name: string, type: any, propertyId: string, accountId: string, initialStage: string = 'Lead') => {
+        // Build a document that the Firestore-backed pipeline (projectService.subscribe) can read
+        const projectDoc: Record<string, any> = {
             name,
             project_type: type,
             property_id: propertyId,
             account_id: accountId,
-            current_stage: 'Estimate',
+            current_stage: initialStage,   // Honour the stage chosen by the form
             status: 'Active',
-            last_updated: new Date().toISOString().split('T')[0]
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
         };
-        setProjects([...projects, newProject]);
-        userLogService.logAction('CREATE_PROJECT', `Project "${name}" created (ID: ${newId})`, { projectId: newId, name, type, propertyId, accountId });
-        return newId;
+
+        // Persist to Firestore so the real-time pipeline subscription sees it immediately
+        let resolvedId = `PROJ-${Date.now()}`;
+        firestoreService.addDocument('projects', projectDoc).then((result) => {
+            if (result.success && result.id) {
+                resolvedId = result.id;
+            }
+            // Log activity AFTER Firestore write so notification includes the real Firestore ID
+            // Include stage in payload so notification click resolves to correct stage page
+            userLogService.logAction(
+                'CREATE_PROJECT',
+                `Project "${name}" created and added to ${initialStage} pipeline`,
+                { projectId: result.id || resolvedId, name, type, propertyId, accountId, stage: initialStage, newStage: initialStage }
+            );
+        }).catch((err) => {
+            console.warn('[MockDB] Firestore createProject error, falling back to local state:', err);
+        });
+
+        // Also update local mock state for immediate in-session consistency
+        const newProject: Project = {
+            _id: resolvedId,
+            name,
+            project_type: type,
+            property_id: propertyId,
+            account_id: accountId,
+            current_stage: initialStage as any,
+            status: 'Active',
+            last_updated: new Date().toISOString()
+        };
+        setProjects(prev => [...prev, newProject]);
+
+        return resolvedId;
     };
 
     const updateProjectStage = (projectId: string, stage: ProjectStage) => {

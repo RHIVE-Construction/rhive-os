@@ -30,6 +30,7 @@ interface NotificationContextType {
         payload?: Record<string, any>
     ) => Promise<void>;
     markRead: (id: string) => Promise<void>;
+    markUnread: (id: string) => Promise<void>;
     markAllRead: () => Promise<void>;
     isLoading: boolean;
 }
@@ -65,6 +66,25 @@ export const ACTIVITY_ICONS: Record<string, string> = {
 
 export const getActivityIcon = (actionType: string) =>
     ACTIVITY_ICONS[actionType] || '🔔';
+
+// ─── Project-only action types (what appears in the notification feed) ──────────
+// Strictly project/pipeline events only — no user management, no property admin, no comms noise.
+const PROJECT_ACTION_TYPES = new Set([
+    // Project lifecycle
+    'CREATE_PROJECT', 'STAGE_CHANGE', 'SAVE_QUOTE', 'APPROVE_QUOTE',
+    // Standardized lower-case keys
+    'lead_created', 'lead_updated', 'project_stage_changed',
+    'estimate_created', 'estimate_updated',
+    'quote_saved', 'quote_approved', 'quote_rejected',
+    'meeting_scheduled', 'meeting_updated',
+    'payment_recorded', 'document_uploaded',
+    'MEETING_SCHEDULED', 'APPOINTMENT_BOOKED',
+]);
+
+const isProjectAction = (actionType: string) =>
+    PROJECT_ACTION_TYPES.has(actionType) ||
+    PROJECT_ACTION_TYPES.has(actionType?.toUpperCase()) ||
+    PROJECT_ACTION_TYPES.has(actionType?.toLowerCase());
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
@@ -108,10 +128,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const unsub = onSnapshot(
             q,
             (snap) => {
-                const docs = snap.docs.map(d => ({
-                    id: d.id,
-                    ...d.data()
-                } as ActivityNotification));
+                const docs = snap.docs
+                    .map(d => ({ id: d.id, ...d.data() } as ActivityNotification))
+                    // Only surface pipeline-relevant activity — no login/logout/page_visit noise
+                    .filter(n => isProjectAction(n.actionType));
                 // Keep only the most recent 50
                 setNotifications(docs.slice(0, 50));
                 setIsLoading(false);
@@ -148,6 +168,18 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
     }, []);
 
+    // Mark a single notification as unread
+    const markUnread = useCallback(async (id: string) => {
+        try {
+            await updateDoc(doc(db, 'user_log', id), { read: false });
+            setNotifications(prev =>
+                prev.map(n => n.id === id ? { ...n, read: false } : n)
+            );
+        } catch (err) {
+            console.warn('[NotificationContext] markUnread error:', err);
+        }
+    }, []);
+
     // Mark all unread notifications as read for this user
     const markAllRead = useCallback(async () => {
         try {
@@ -174,6 +206,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             unreadCount,
             logActivity,
             markRead,
+            markUnread,
             markAllRead,
             isLoading
         }}>

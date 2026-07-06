@@ -192,6 +192,48 @@ const normalizeDeal = (deal: any): any => ({
     updated_at: deal.updated_at || deal.Modified_Time || null,
 });
 
+// Helper to normalize a Firestore 'leads' document (CRM import) to the common project shape.
+// Leads have fields like projectAddress, firstName, lastName, projectType, etc.
+const normalizeLead = (lead: any): any => {
+    // Build display name from available fields
+    const displayName =
+        lead.name ||
+        (lead.firstName && lead.lastName ? `${lead.firstName} ${lead.lastName}` : null) ||
+        lead.projectName ||
+        lead.lastName ||
+        'Unnamed Lead';
+
+    // Build address from available fields
+    const address = [
+        lead.property_address ||
+        lead.projectAddress ||
+        lead.projectStreet ||
+        lead.street,
+        lead.city,
+        lead.state,
+        lead.zipCode,
+    ].filter(Boolean).join(', ') || '';
+
+    return {
+        ...lead,
+        _source: 'leads',
+        // Normalised fields that ProjectStageLayout + Dashboard expect
+        name: displayName,
+        current_stage: lead.current_stage || lead.Stage || 'Lead',
+        project_type: lead.projectType || lead.project_type || lead.serviceSolution || 'Residential',
+        property_address: address,
+        // Preserve contact info in a predictable place
+        contact_name: displayName,
+        contact_email: lead.email || lead.secondaryEmail || '',
+        contact_phone: lead.phone || lead.mobile || lead.contactPhone2 || '',
+        lead_source: lead.leadSource || lead.lead_source || lead.howDidYouHear || '',
+        notes: lead.additionalProjectDetails || lead.notes || '',
+        // Timestamps
+        created_at: lead.created_at || lead._importedAt || null,
+        updated_at: lead.updated_at || lead.created_at || lead._importedAt || null,
+    };
+};
+
 // Helper to convert CamelCase ProjectInput to SnakeCase for compatibility
 const mapProjectToSnakeCase = (input: ProjectInput) => ({
     user_id: input.userId,
@@ -217,7 +259,7 @@ export const projectService = {
         const d = await firestoreService.getAllDocuments('deals');
         const combined = [
             ...(p.data || []),
-            ...(l.data || []),
+            ...(l.data || []).map(normalizeLead),
             ...(d.data || []).map(normalizeDeal),
         ];
         return { success: true, data: combined };
@@ -236,7 +278,7 @@ export const projectService = {
         });
 
         const unsubLeads = firestoreService.subscribeToDocuments('leads', (data) => {
-            leads = data;
+            leads = data.map(normalizeLead);
             notify();
         });
 
@@ -277,58 +319,47 @@ export const projectService = {
     },
     subscribeToRecentActivity: (callback: (data: any[]) => void, limitCount = 6) => {
         let projectDocs: any[] = [];
-        let leadDocs: any[] = [];
-        let dealDocs: any[] = [];
-        let projectsFired = false;
-        let leadsFired = false;
-        let dealsFired = false;
-        let notified = false;
+        let leadDocs:    any[] = [];
+        let dealDocs:    any[] = [];
 
+        // Helper: coerce Firestore Timestamp OR ISO string to ms
+        const toMs = (val: any): number => {
+            if (!val) return 0;
+            if (typeof val === 'object' && typeof val.seconds === 'number')
+                return val.seconds * 1000 + Math.floor((val.nanoseconds || 0) / 1e6);
+            const ms = new Date(val).getTime();
+            return isNaN(ms) ? 0 : ms;
+        };
+
+        // Re-fires on every Firestore snapshot (no one-shot guard)
         const notify = () => {
-            if (notified) return;
-            if (!projectsFired || !leadsFired || !dealsFired) return;
-            notified = true;
-            clearTimeout(safetyTimer);
             const merged = [...projectDocs, ...leadDocs, ...dealDocs]
                 .sort((a, b) =>
-                    new Date(b.updated_at || b.created_at || b._importedAt || 0).getTime() -
-                    new Date(a.updated_at || a.created_at || a._importedAt || 0).getTime()
+                    toMs(b.updated_at || b.created_at || b._importedAt) -
+                    toMs(a.updated_at || a.created_at || a._importedAt)
                 )
                 .slice(0, limitCount);
             callback(merged);
         };
 
-        const safetyTimer = setTimeout(() => {
-            if (!notified) {
-                projectsFired = true;
-                leadsFired = true;
-                dealsFired = true;
-                notify();
-            }
-        }, 800);
-
         const unsubP = onSnapshot(
             collection(db, 'projects'),
-            (snap) => { projectDocs = snap.docs.map(mapDoc); projectsFired = true; notify(); },
-            () => { projectsFired = true; notify(); }
+            (snap) => { projectDocs = snap.docs.map(mapDoc); notify(); },
+            () => { notify(); }
         );
         const unsubL = onSnapshot(
             collection(db, 'leads'),
-            (snap) => { leadDocs = snap.docs.map(mapDoc); leadsFired = true; notify(); },
-            () => { leadsFired = true; notify(); }
+            // Apply normalizeLead so name / property_address / stage are standardised
+            (snap) => { leadDocs = snap.docs.map(mapDoc).map(normalizeLead); notify(); },
+            () => { notify(); }
         );
         const unsubD = onSnapshot(
             collection(db, 'deals'),
-            (snap) => { dealDocs = snap.docs.map(mapDoc).map(normalizeDeal); dealsFired = true; notify(); },
-            () => { dealsFired = true; notify(); }
+            (snap) => { dealDocs = snap.docs.map(mapDoc).map(normalizeDeal); notify(); },
+            () => { notify(); }
         );
 
-        return () => {
-            clearTimeout(safetyTimer);
-            unsubP();
-            unsubL();
-            unsubD();
-        };
+        return () => { unsubP(); unsubL(); unsubD(); };
     },
     getById: (id: string) => firestoreService.getDocument('projects', id),
     createBatch: (dataArray: any[]) => firestoreService.createBatch('projects', dataArray),

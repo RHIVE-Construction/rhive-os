@@ -5,6 +5,8 @@ import Card from '../components/Card';
 import { ChartBarIcon } from '../components/icons';
 import { PAGE_GROUPS } from '../constants';
 import { projectService } from '../lib/firebaseService';
+import { useNavigation } from '../contexts/NavigationContext';
+import { getStagePageId } from '../lib/utils';
 
 // ─── Weather Config (reuses same env key) ─────────────────────────────────────
 const GOOGLE_WEATHER_API_KEY = (import.meta as any).env?.VITE_GOOGLE_WEATHER_API_KEY || '';
@@ -427,16 +429,28 @@ const EmployeeDashboard: React.FC = () => {
     const [allProjects, setAllProjects] = useState<any[]>([]);
     const [recentProjects, setRecentProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const { setActivePageId, setSelectedProjectId } = useNavigation();
 
     useEffect(() => {
         const unsubscribe = projectService.subscribe((data: any[]) => {
             setAllProjects(data);
             setLoading(false);
 
+            // Helper: extract ms from either a Firestore Timestamp ({seconds,nanoseconds})
+            // or an ISO date string — leads use Timestamps, projects use ISO strings.
+            const toMs = (val: any): number => {
+                if (!val) return 0;
+                if (typeof val === 'object' && typeof val.seconds === 'number') {
+                    return val.seconds * 1000 + Math.floor((val.nanoseconds || 0) / 1e6);
+                }
+                const ms = new Date(val).getTime();
+                return isNaN(ms) ? 0 : ms;
+            };
+
             const sorted = [...data]
                 .sort((a, b) =>
-                    new Date(b.updated_at || b.created_at || 0).getTime() -
-                    new Date(a.updated_at || a.created_at || 0).getTime()
+                    toMs(b.updated_at || b.created_at) -
+                    toMs(a.updated_at || a.created_at)
                 )
                 .slice(0, 6);
             setRecentProjects(sorted);
@@ -459,9 +473,17 @@ const EmployeeDashboard: React.FC = () => {
     // Stage bar max for percentage width
     const maxForBar = Math.max(leadCount, estimateCount, quoteCount, installCount, completedCount, 1);
 
-    const timeAgo = (dateString: string) => {
-        if (!dateString) return '—';
-        const diff = Date.now() - new Date(dateString).getTime();
+    const timeAgo = (dateVal: any) => {
+        if (!dateVal) return '—';
+        // Handle Firestore Timestamp objects ({seconds, nanoseconds})
+        let ms: number;
+        if (typeof dateVal === 'object' && typeof dateVal.seconds === 'number') {
+            ms = dateVal.seconds * 1000;
+        } else {
+            ms = new Date(dateVal).getTime();
+            if (isNaN(ms)) return '—';
+        }
+        const diff = Date.now() - ms;
         const minutes = Math.floor(diff / 60000);
         if (minutes < 1) return 'Just now';
         if (minutes < 60) return `${minutes}m ago`;
@@ -561,21 +583,36 @@ const EmployeeDashboard: React.FC = () => {
                         ) : recentProjects.length === 0 ? (
                             <div className="text-center py-8 text-gray-500 text-sm">No recent activity found.</div>
                         ) : (
-                            recentProjects.map((project) => (
-                                <div key={project.id} className="flex items-start gap-3 border-b border-gray-800/50 pb-4 last:border-0 last:pb-0">
-                                    <div className="mt-1.5 w-2 h-2 rounded-full bg-[#ec028b] shadow-[0_0_8px_#ec028b] shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-300 leading-snug">
-                                            <span className="font-bold text-[#ec028b]">{project.name || 'Unnamed'}</span>
-                                            {' · '}
-                                            <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">
-                                                {project.current_stage || 'Lead'}
-                                            </span>
-                                        </p>
-                                        <p className="text-xs text-gray-600 mt-0.5">{timeAgo(project.updated_at || project.created_at)}</p>
+                            recentProjects.map((project) => {
+                                const handleProjectClick = () => {
+                                    setSelectedProjectId(project.id);
+                                    setActivePageId(getStagePageId(project.current_stage));
+                                };
+
+                                return (
+                                    <div
+                                        key={project.id}
+                                        onClick={handleProjectClick}
+                                        className="flex items-start gap-3 border-b border-gray-800/50 pb-4 last:border-0 last:pb-0 cursor-pointer group/row rounded-sm hover:bg-white/5 -mx-2 px-2 transition-colors duration-150"
+                                        title={`View ${project.name || 'project'} record`}
+                                    >
+                                        <div className="mt-1.5 w-2 h-2 rounded-full bg-[#ec028b] shadow-[0_0_8px_#ec028b] shrink-0 group-hover/row:scale-125 transition-transform" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-300 leading-snug">
+                                                <span className="font-bold text-[#ec028b] group-hover/row:underline">{project.name || 'Unnamed'}</span>
+                                                {' · '}
+                                                <span className="text-gray-500 text-xs font-bold uppercase tracking-wider">
+                                                    {project.current_stage || 'Lead'}
+                                                </span>
+                                            </p>
+                                            <p className="text-xs text-gray-600 mt-0.5">{timeAgo(project.updated_at || project.created_at)}</p>
+                                        </div>
+                                        <svg className="w-3.5 h-3.5 text-gray-700 group-hover/row:text-rhive-pink shrink-0 mt-1 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                        </svg>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
                     </div>
                 </Card>
