@@ -15,6 +15,7 @@ import AddressScanInput from '../components/AddressScanInput';
 import { GoogleTestimonials } from '../components/GoogleTestimonials';
 import FinancingCalculator from '../components/FinancingCalculator';
 import { cn } from '../lib/utils';
+import { LightboxNavigation } from '../components/LightboxNavigation';
 
 // --- GLITCH TEXT COMPONENT ---
 const GlitchText = ({ text, className }: { text: string; className?: string }) => {
@@ -571,33 +572,27 @@ const PublicHomepageV3: React.FC = () => {
             {/* ── LIGHTBOX MODAL OVERLAYS ───────────────────────────────────── */}
             <AnimatePresence>
                 {activeLightbox && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl overflow-y-auto"
-                        onClick={() => setActiveLightbox(null)}
-                    >
+                    <div className="fixed inset-0 z-[1000] isolate">
+                        <LightboxNavigation onClose={() => setActiveLightbox(null)} />
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 p-4 py-24 bg-black/90 backdrop-blur-xl overflow-y-auto scrollbar-hide"
+                            onClick={() => setActiveLightbox(null)}
+                        >
                         <motion.div
                             initial={{ scale: 0.9, y: 20, opacity: 0 }}
                             animate={{ scale: 1, y: 0, opacity: 1 }}
                             exit={{ scale: 0.9, y: 20, opacity: 0 }}
                             transition={{ type: "spring", damping: 25, stiffness: 180 }}
-                            className="relative w-full max-w-4xl bg-black border border-white/10 p-8 md:p-12 text-left my-8 isolate overflow-hidden shadow-[0_0_50px_rgba(236,2,139,0.15)]"
+                            className="relative w-full max-w-4xl mx-auto bg-black border border-white/10 p-8 md:p-16 text-left isolate overflow-hidden shadow-[0_0_50px_rgba(236,2,139,0.15)]"
                             style={{ clipPath: 'polygon(32px 0, 100% 0, 100% calc(100% - 32px), calc(100% - 32px) 100%, 0 100%, 0 32px)' }}
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Top Accent Lines */}
                             <div className="absolute top-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent opacity-50" />
                             <div className="absolute bottom-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-rhive-blue to-transparent opacity-50" />
-
-                            {/* Close Button */}
-                            <button
-                                onClick={() => setActiveLightbox(null)}
-                                className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors p-2 rounded-full border border-white/5 bg-white/5 cursor-pointer"
-                            >
-                                <X size={18} />
-                            </button>
 
                             {/* Content based on active state */}
                             {activeLightbox === 'emergency' && (
@@ -1052,7 +1047,7 @@ const PublicHomepageV3: React.FC = () => {
                                             <p className="text-gray-300 font-serif italic text-base leading-[1.65]">
                                                 RHIVE Construction is a proudly female-owned and operated company specializing in residential and commercial roofing. But roofing is only the beginning of our story.
                                             </p>
-                                            <div className="text-gray-300 text-[15px] leading-[1.65] font-serif space-y-4 max-h-[30vh] overflow-y-auto pr-2">
+                                            <div className="text-gray-300 text-[15px] leading-[1.65] font-serif space-y-4 pr-2">
                                                 <p>We were built to challenge an industry known for inflated pricing, vague bids, poor communication, and short-lived warranties. RHIVE exists to flip that script—with honesty, precision, and care. We bring a new standard to the industry: one rooted in transparency, technology, and trust.</p>
                                                 <p>By bypassing expensive brick-and-mortar showrooms and traditional high-pressure sales reps who claim commissions on every square, we direct-connect you with manufacturer-approved installers and itemized pricing sheets. Every dollar in your project cost is visible and trackable.</p>
                                             </div>
@@ -1258,7 +1253,7 @@ const PublicHomepageV3: React.FC = () => {
                                     <p className="text-gray-300 font-serif italic text-base leading-[1.65] max-w-[65ch]">
                                         Experience a construction project defined by absolute transparency, automated scheduling, and constant communications. Here is our 10-stage process from digital intake to asset handover:
                                     </p>
-                                    <div className="grid md:grid-cols-2 gap-4 max-h-[40vh] overflow-y-auto pr-2">
+                                    <div className="grid md:grid-cols-2 gap-4 pr-2">
                                         {[
                                             { num: "01", title: "LEAD", desc: "Digital intake. Drone flights and Google Solar API overlays analyze property geometry." },
                                             { num: "02", title: "ESTIMATE", desc: "Instant ballpark numbers. Our AI uses Google Solar data to generate a low-friction financial starting point." },
@@ -1429,9 +1424,9 @@ const PublicHomepageV3: React.FC = () => {
                                     </div>
                                 </div>
                             )}
-
                         </motion.div>
                     </motion.div>
+                </div>
                 )}
             </AnimatePresence>
         </div>

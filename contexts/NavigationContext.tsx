@@ -44,8 +44,13 @@ const NavigationContext = createContext<NavigationContextType | undefined>(undef
 const SESSION_KEY = 'rhive_active_page';
 
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Restore last active page from sessionStorage on first load
+    // Restore last active page from URL first, then sessionStorage, then default
     const [activePageId, setActivePageIdRaw] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const urlPage = params.get('page');
+            if (urlPage) return urlPage;
+        }
         try {
             return sessionStorage.getItem(SESSION_KEY) || 'P-00-V3';
         } catch {
