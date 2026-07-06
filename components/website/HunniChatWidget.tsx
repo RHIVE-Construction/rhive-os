@@ -189,7 +189,7 @@ const HunniChatWidget: React.FC = () => {
     return (
         <>
             {/* FLOATING ACTION BUTTON */}
-            <div className="fixed bottom-8 left-8 z-[1000]">
+            <div className="fixed bottom-8 right-8 z-[1000]">
                 <motion.button
                     whileHover={{ scale: 1.1, rotate: -5 }}
                     whileTap={{ scale: 0.9 }}
@@ -210,8 +210,8 @@ const HunniChatWidget: React.FC = () => {
                     </div>
 
                     {/* Tooltip */}
-                    <div className="absolute left-full ml-4 bg-black/85 backdrop-blur-xl border border-rhive-pink/30 px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap">
-                        <span className="text-[10px] font-bold text-white tracking-widest uppercase">RHIVE AI ASSISTANT</span>
+                    <div className="absolute right-full mr-4 bg-black/85 backdrop-blur-xl border border-rhive-pink/30 px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap">
+                        <span className="text-[10px] font-bold text-white tracking-widest uppercase">Ask Hunni</span>
                     </div>
                 </motion.button>
             </div>
@@ -220,11 +220,11 @@ const HunniChatWidget: React.FC = () => {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, x: -100, y: 50, scale: 0.95 }}
+                        initial={{ opacity: 0, x: 100, y: 50, scale: 0.95 }}
                         animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: -100, y: 50, scale: 0.95 }}
+                        exit={{ opacity: 0, x: 100, y: 50, scale: 0.95 }}
                         transition={{ type: "spring", stiffness: 260, damping: 25 }}
-                        className="fixed bottom-28 left-8 w-[380px] h-[550px] z-[1000] flex flex-col group isolate select-none"
+                        className="fixed bottom-28 right-8 w-[380px] h-[550px] z-[1000] flex flex-col group isolate select-none"
                     >
                         {/* 1. Backdrop Glow & Chamfer Background */}
                         <div

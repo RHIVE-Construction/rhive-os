@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RHIVE Construction | Tech-Noir Roofing Ecosystem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- Fonts: Rubik for UI/Body, Space Grotesk for Display/Headers -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&family=Space+Grotesk:wght@300;700&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'rhive-pink': '#ec028b',
+                        'rhive-gold': '#e2ab49',
+                        'rhive-blue': '#08137C',
+                        'rhive-obsidian': '#050505',
+                    },
+                    fontFamily: {
+                        sans: ['Rubik', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --rhive-pink: #ec028b;
+            --rhive-obsidian: #050505;
+            --rhive-glass: rgba(255, 255, 255, 0.03);
+            --rhive-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--rhive-obsidian);
+            color: #ffffff;
+            font-family: 'Rubik', sans-serif;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Tech-Noir Circuitry Background */
+        .circuit-overlay {
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10h10v10H10zM50 50h5v5h-5z' fill='%23ec028b' fill-opacity='0.02'/%3E%3Cpath d='M0 0h100v100H0z' fill='none' stroke='%23ec028b' stroke-width='0.1' stroke-opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .glass {
+            background: var(--rhive-glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--rhive-border);
+        }
+
+        .text-neon {
+            color: var(--rhive-pink);
+            text-shadow: 0 0 15px rgba(236, 2, 139, 0.4);
+        }
+
+        /* MASTER SYSTEM: Clipped Corner Button (Chamfered) */
+        .btn-tech {
+            position: relative;
+            background-color: var(--rhive-pink);
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-tech:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(236, 2, 139, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-tech-outline {
+            position: relative;
+            background: transparent;
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            /* Clip path doesn't work perfectly with border, using pseudo-element or simplistic fallback for outline */
+            /* Using standard border radius for outline to maintain border visibility, or specific SVG tech */
+        }
+
+        .btn-tech-outline:hover {
+            border-color: var(--rhive-pink);
+            color: var(--rhive-pink);
+        }
+
+        /* MASTER SYSTEM: Card Shape */
+        .card-tech {
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            /* Chamfered corners logic from Master System */
+            clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+            transition: all 0.3s ease;
+        }
+
+        .card-tech:hover {
+            border-color: rgba(236, 2, 139, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stage-card {
+            transition: all 0.5s ease;
+            border-left: 2px solid var(--rhive-border);
+            opacity: 0.3;
+        }
+
+        .stage-card.active {
+            border-left: 4px solid var(--rhive-pink);
+            background: linear-gradient(90deg, rgba(236, 2, 139, 0.1) 0%, transparent 100%);
+            opacity: 1;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--rhive-obsidian);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--rhive-pink);
+        }
+
+        .faq-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="circuit-overlay"></div>
+
+    <!-- NAVIGATION (P-05) -->
+    <nav class="fixed top-0 w-full z-50 glass px-6 py-4 flex justify-between items-center transition-all duration-300 border-b border-white/5"
+        id="main-nav">
+        <div class="flex items-center space-x-2">
+            <!-- Brand Mark -->
+            <div class="w-10 h-10 bg-white flex items-center justify-center"
+                style="clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);">
+                <span class="text-black font-black text-xl">R</span>
+            </div>
+            <span class="text-2xl font-black tracking-tighter uppercase font-display">RHIVE<span
+                    class="text-rhive-pink">.</span></span>
+        </div>
+
+        <div class="hidden lg:flex space-x-10 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">
+            <a href="#about" class="hover:text-white transition-colors duration-200">About (P-01)</a>
+            <a href="#services" class="hover:text-white transition-colors duration-200">Services (P-02)</a>
+            <a href="#process" class="hover:text-white transition-colors duration-200">The Process (P-03)</a>
+            <a href="#financing" class="hover:text-white transition-colors duration-200">Financing (P-04)</a>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <a href="#estimate" class="btn-tech px-8 py-3 text-[10px]">Get Quote</a>
+            <button class="lg:hidden text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION (P-01) -->
+    <section id="hero"
+        class="relative h-screen flex flex-col justify-center items-center text-center px-6 overflow-hidden pt-20">
+        <!-- Dynamic Background Elements -->
+        <div class="absolute inset-0 z-0">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-rhive-pink/10 rounded-full blur-[120px]"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-rhive-blue/20 rounded-full blur-[120px]"></div>
+        </div>
+
+        <div class="z-10 max-w-5xl relative">
+            <div
+                class="inline-flex items-center space-x-2 px-4 py-1 glass border border-rhive-pink/30 mb-8 opacity-0 hero-el">
+                <span class="w-2 h-2 bg-rhive-pink rounded-full animate-pulse"></span>
+                <span class="text-[10px] font-bold tracking-[0.3em] text-white uppercase">Reimagined for the
+                    Future</span>
+            </div>
+
+            <h1
+                class="text-6xl md:text-8xl lg:text-[130px] font-black tracking-tighter leading-[0.85] uppercase mb-8 opacity-0 hero-el">
+                FINISH <br><span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-gray-500">ON
+                    TOP</span><span class="text-rhive-pink">.</span>
+            </h1>
+
+            <p
+                class="text-gray-400 max-w-2xl mx-auto text-lg md:text-xl font-light leading-relaxed mb-12 opacity-0 hero-el">
+                The world’s first AI-driven roofing experience.
+                <span class="text-white font-medium">Transparent Pricing.</span>
+                <span class="text-white font-medium">Lifetime No-Leak Guarantee.</span>
+                <span class="text-white font-medium">Excellence Engineered.</span>
+            </p>
+
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6 justify-center opacity-0 hero-el">
+                <button class="btn-tech px-10 py-4 text-xs">Explore Services</button>
+                <button onclick="document.getElementById('estimate').scrollIntoView()"
+                    class="btn-tech-outline px-10 py-4 text-xs rounded-none border border-white/20 hover:border-rhive-pink transition-colors">Instant
+                    Estimate</button>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-50 gap-2">
+            <span class="text-[8px] tracking-[0.2em] uppercase">Scroll</span>
+            <div class="w-[1px] h-12 bg-gradient-to-b from-rhive-pink to-transparent"></div>
+        </div>
+    </section>
+
+    <!-- CAPABILITIES / SERVICES (P-02) -->
+    <section id="services" class="py-32 px-6 max-w-[1400px] mx-auto relative z-10">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-24 border-b border-white/10 pb-8">
+            <div>
+                <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-2">Capabilities<span
+                        class="text-rhive-pink">.</span></h2>
+                <p class="text-gray-500 uppercase tracking-widest text-xs font-bold">Residential & Commercial
+                    Infrastructure</p>
+            </div>
+            <div class="mt-6 md:mt-0">
+                <span
+                    class="text-rhive-gold text-xs font-bold tracking-widest border border-rhive-gold/30 px-3 py-1 rounded-sm">LICENSED
+                    & INSURED IN UT, ID, WA</span>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Residential Card -->
+            <div class="card-tech p-8 group">
+                <div
+                    class="h-12 w-12 bg-white/5 flex items-center justify-center mb-8 text-rhive-pink group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-4 uppercase font-display">Residential</h3>
+                <p class="text-gray-500 text-sm leading-relaxed mb-8 min-h-[80px]">Owens Corning Duration Shingles with
+                    "California Cut Valleys" and a strict No-Layovers policy.</p>
+                <ul class="space-y-3 mb-8">
+                    <li class="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-tight"><span
+                            class="w-1 h-1 bg-rhive-pink mr-3"></span>Asphalt Shingles</li>
+                    <li class="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-tight"><span
+                            class="w-1 h-1 bg-rhive-pink mr-3"></span>Composite Slate</li>
+                    <li class="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-tight"><span
+                            class="w-1 h-1 bg-rhive-pink mr-3"></span>Metal Roofing</li>
+                </ul>
+                <a href="#"
+                    class="inline-block text-[10px] font-bold text-rhive-pink uppercase tracking-widest border-b border-rhive-pink/30 pb-1 group-hover:border-rhive-pink transition-colors">Build
+                    Yours</a>
+            </div>
+
+            <!-- Commercial Card -->
+            <div class="card-tech p-8 group">
+                <div
+                    class="h-12 w-12 bg-white/5 flex items-center justify-center mb-8 text-rhive-pink group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-4 uppercase font-display">Commercial</h3>
+                <p class="text-gray-500 text-sm leading-relaxed mb-8 min-h-[80px]">High-performance GAF PVC and TPO
+                    membranes backed by NDL (No Dollar Limit) warranties.</p>
+                <ul class="space-y-3 mb-8">
+                    <li class="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-tight"><span
+                            class="w-1 h-1 bg-rhive-pink mr-3"></span>Flat Roof Systems</li>
+                    <li class="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-tight"><span
+                            class="w-1 h-1 bg-rhive-pink mr-3"></span>TPO / PVC</li>
+                    <li class="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-tight"><span
+                            class="w-1 h-1 bg-rhive-pink mr-3"></span>Liquid Applied</li>
+                </ul>
+                <a href="#"
+                    class="inline-block text-[10px] font-bold text-rhive-pink uppercase tracking-widest border-b border-rhive-pink/30 pb-1 group-hover:border-rhive-pink transition-colors">Scale
+                    Up</a>
+            </div>
+
+            <!-- Gutters -->
+            <div class="card-tech p-8 group">
+                <div
+                    class="h-12 w-12 bg-white/5 flex items-center justify-center mb-8 text-rhive-pink group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-4 uppercase font-display">Gutters</h3>
+                <p class="text-gray-500 text-sm leading-relaxed mb-8 min-h-[80px]">Seamless 6" K-Style drainage systems
+                    designed for high-volume storm management.</p>
+                <a href="#"
+                    class="inline-block text-[10px] font-bold text-rhive-pink uppercase tracking-widest border-b border-rhive-pink/30 pb-1 group-hover:border-rhive-pink transition-colors">View
+                    Specs</a>
+            </div>
+
+            <!-- Ice Defense -->
+            <div class="card-tech p-8 group">
+                <div
+                    class="h-12 w-12 bg-white/5 flex items-center justify-center mb-8 text-rhive-pink group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-4 uppercase font-display">Ice Defense</h3>
+                <p class="text-gray-500 text-sm leading-relaxed mb-8 min-h-[80px]">Industrial-grade heat cables and snow
+                    retention systems for zero-risk winter protection.</p>
+                <a href="#"
+                    class="inline-block text-[10px] font-bold text-rhive-pink uppercase tracking-widest border-b border-rhive-pink/30 pb-1 group-hover:border-rhive-pink transition-colors">Fortify</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10-STAGE PROCESS (P-03) -->
+    <section id="process" class="py-32 bg-rhive-obsidian relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20"
+            style="background-image: radial-gradient(#333 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+        <div class="max-w-6xl mx-auto px-6 relative z-10">
+            <div class="text-center mb-24">
+                <h2 class="text-4xl md:text-7xl font-black uppercase tracking-tighter mb-4 font-display">Zero
+                    Surprises<span class="text-rhive-pink">.</span></h2>
+                <p class="text-gray-500 uppercase tracking-[0.3em] text-xs font-bold">The Automated Antigravity Workflow
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+                <!-- Left Column: Sticky Summary -->
+                <div class="hidden md:block">
+                    <div class="sticky top-32">
+                        <h3 class="text-3xl font-bold mb-6 text-white uppercase font-display">Track Every Step</h3>
+                        <p class="text-gray-400 mb-8 leading-relaxed">
+                            Construction is notorious for "ghosting" and delays. We rebuilt the entire fulfillment
+                            engine. You get a notification at every single milestone.
+                        </p>
+                        <div class="p-6 border border-rhive-pink/20 bg-rhive-pink/5 rounded-lg backdrop-blur-sm">
+                            <h4 class="text-rhive-pink font-bold uppercase text-xs tracking-widest mb-2">Current Status
+                            </h4>
+                            <div class="text-2xl font-mono text-white">AWAITING INPUT...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: The Stages -->
+                <div class="space-y-6">
+                    <!-- Stage 1 -->
+                    <div class="stage-card active p-8 rounded-r-xl border-l-2 border-rhive-pink">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-rhive-pink font-black text-xs tracking-widest">STAGE 01</span>
+                            <span class="text-white/20 font-mono text-xs">0%</span>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2 uppercase text-white font-display">The Intake & Identity</h4>
+                        <p class="text-gray-400 text-sm">Identity resolution via Google Solar API. We analyze your
+                            property's geometry before the first call.</p>
+                    </div>
+
+                    <!-- Stage 2 -->
+                    <div class="stage-card p-8 rounded-r-xl border-l-2 border-white/10">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-white font-black text-xs tracking-widest">STAGE 02</span>
+                            <span class="text-white/20 font-mono text-xs">10%</span>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2 uppercase text-white font-display">The Ballpark Estimate</h4>
+                        <p class="text-gray-400 text-sm">Instant math-driven pricing based on aerial measurements.
+                            Transparency from minute one.</p>
+                    </div>
+
+                    <!-- Stage 3 -->
+                    <div class="stage-card p-8 rounded-r-xl border-l-2 border-white/10">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-white font-black text-xs tracking-widest">STAGE 03</span>
+                            <span class="text-white/20 font-mono text-xs">20%</span>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2 uppercase text-white font-display">The Deep Dive Inspection
+                        </h4>
+                        <p class="text-gray-400 text-sm">Comprehensive visual audit using drone and infrared data. Zero
+                            guesswork on your roof deck.</p>
+                    </div>
+
+                    <!-- Stage 5 (Jump) -->
+                    <div class="stage-card p-8 rounded-r-xl border-l-2 border-white/10">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-white font-black text-xs tracking-widest">STAGE 05</span>
+                            <span class="text-white/20 font-mono text-xs">50%</span>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2 uppercase text-white font-display">The Material Drop</h4>
+                        <p class="text-gray-400 text-sm">Automated logistics. You get a photo when materials hit your
+                            driveway.</p>
+                    </div>
+
+                    <!-- Stage 10 -->
+                    <div class="stage-card p-8 rounded-r-xl border-l-2 border-white/10">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-white font-black text-xs tracking-widest">STAGE 10</span>
+                            <span class="text-white/20 font-mono text-xs">100%</span>
+                        </div>
+                        <h4 class="text-xl font-bold mb-2 uppercase text-white font-display">The Trophy Room</h4>
+                        <p class="text-gray-400 text-sm">Lifetime No-Leak certification and automated warranty delivery
+                            to your Home Asset Manager.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINANCING (P-04) -->
+    <section id="financing" class="py-32 px-6 border-y border-white/5 bg-white/[0.02]">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="relative">
+                    <!-- Tech Card Shape -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-rhive-pink to-purple-600 blur-[80px] opacity-20">
+                    </div>
+                    <div class="card-tech p-12 bg-black/80 backdrop-blur-xl border border-white/10">
+                        <h3 class="text-2xl font-bold mb-8 uppercase font-display">The RPSP Efficiency Credit</h3>
+                        <div class="flex items-baseline space-x-4 mb-2">
+                            <span class="text-5xl font-black text-rhive-pink">10%</span>
+                            <span class="text-xl font-bold text-white">SAVINGS</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-8 border-b border-white/10 pb-8">
+                            We pass administrative savings directly to you. Convert within 48 hours (Residential) to
+                            eliminate "Chase Costs" and unlock the efficiency rate.
+                        </p>
+
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="p-4 bg-white/5 rounded-sm">
+                                <div class="text-xl font-bold text-white mb-1">50%</div>
+                                <div class="text-[9px] uppercase tracking-widest text-gray-500">Deposit</div>
+                            </div>
+                            <div class="p-4 bg-white/5 rounded-sm">
+                                <div class="text-xl font-bold text-white mb-1">40%</div>
+                                <div class="text-[9px] uppercase tracking-widest text-gray-500">Start</div>
+                            </div>
+                            <div class="p-4 bg-rhive-pink/10 border border-rhive-pink/30 rounded-sm">
+                                <div class="text-xl font-bold text-rhive-pink mb-1">10%</div>
+                                <div class="text-[9px] uppercase tracking-widest text-rhive-pink">Finish</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-6 font-display">Capital &
+                        <br><span class="text-rhive-pink">Incentives.</span></h2>
+                    <p class="text-gray-400 text-lg mb-10 font-light">
+                        Stop overpaying for "sales commissions" and "follow-up fatigue." Our automated pipeline reduces
+                        overhead, and our RPSP credit rewards you for efficiency.
+                    </p>
+
+                    <ul class="space-y-4 mb-10">
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-rhive-pink mt-1 mr-4 flex-shrink-0" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span class="text-sm text-gray-300"><strong>0% APR Financing</strong> options available for
+                                qualified homeowners.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-rhive-pink mt-1 mr-4 flex-shrink-0" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span class="text-sm text-gray-300"><strong>Soft Credit Check</strong> only. No impact to
+                                your score to prequalify.</span>
+                        </li>
+                    </ul>
+
+                    <button class="btn-tech px-12 py-4 text-xs">Check Your Rate</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ESTIMATOR (P-08) -->
+    <section id="estimate" class="py-32 bg-rhive-pink text-rhive-obsidian relative">
+        <!-- Abstract Circuitry Pattern -->
+        <div class="absolute inset-0 opacity-10"
+            style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');">
+        </div>
+
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <h2
+                class="text-5xl md:text-8xl font-black uppercase italic tracking-tighter mb-8 leading-none font-display">
+                THE INSTANT ESTIMATE.</h2>
+            <p class="text-rhive-obsidian/80 font-bold uppercase tracking-widest text-xs mb-12">Anonymous Ballpark
+                Pricing • No Email Required • 95% Accuracy</p>
+
+            <div
+                class="bg-rhive-obsidian p-2 rounded-full flex flex-col md:flex-row max-w-2xl mx-auto shadow-2xl overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                <input type="text" placeholder="ENTER PROPERTY ADDRESS..."
+                    class="bg-transparent text-white flex-grow px-8 py-4 outline-none placeholder-gray-500 font-bold uppercase text-sm tracking-widest font-mono">
+                <button
+                    class="bg-white text-rhive-obsidian px-12 py-4 rounded-full font-black uppercase text-xs hover:bg-gray-200 transition-colors tracking-widest">Analyze</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT / FOUNDERS (P-01) -->
+    <section id="about" class="py-32 px-6 max-w-7xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-12">
+            <div>
+                <h2 class="text-4xl font-black uppercase tracking-tighter mb-8 font-display">Leadership<span
+                        class="text-rhive-pink">.</span></h2>
+                <div class="card-tech p-8 mb-6">
+                    <h4 class="text-xl font-bold text-white mb-2">Michael Robinson</h4>
+                    <p class="text-rhive-pink text-xs font-bold uppercase tracking-widest mb-4">Founder / CEO</p>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Architect of the "Anti-Gravity" workflow. Obsessed with removing friction from construction
+                        through radical transparency and AI integration.
+                    </p>
+                </div>
+                <div class="card-tech p-8">
+                    <h4 class="text-xl font-bold text-white mb-2">Kara Robinson</h4>
+                    <p class="text-rhive-pink text-xs font-bold uppercase tracking-widest mb-4">Founder / Operations</p>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        The operational backbone ensuring the "Zero Surprises" promise is kept on every single job site.
+                    </p>
+                </div>
+            </div>
+            <div class="relative h-full min-h-[400px] card-tech flex items-center justify-center bg-white/5">
+                <p class="text-gray-600 font-mono text-xs uppercase tracking-widest">[Founder Image Asset Placeholder]
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ (P-06) -->
+    <section class="py-24 px-6 max-w-3xl mx-auto">
+        <h2 class="text-3xl font-black uppercase tracking-tighter mb-12 text-center font-display">Intel & Protocols<span
+                class="text-rhive-pink">.</span></h2>
+
+        <div class="space-y-4">
+            <div class="card-tech overflow-hidden">
+                <button onclick="toggleFaq(this)"
+                    class="w-full p-6 text-left flex justify-between items-center font-bold uppercase text-xs tracking-widest hover:text-rhive-pink transition-colors">
+                    Why do you show your cost breakdowns?
+                    <span class="text-rhive-pink font-mono text-lg">+</span>
+                </button>
+                <div class="faq-content bg-white/5">
+                    <p class="p-6 text-sm text-gray-400 leading-relaxed border-t border-white/5">
+                        Most contractors hide their profit and overhead. At RHIVE, we believe integrity starts with
+                        math. You see exactly what we pay for shingles, labor, and what we keep to sustain our
+                        guarantee.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card-tech overflow-hidden">
+                <button onclick="toggleFaq(this)"
+                    class="w-full p-6 text-left flex justify-between items-center font-bold uppercase text-xs tracking-widest hover:text-rhive-pink transition-colors">
+                    What is the "No-Leak Guarantee"?
+                    <span class="text-rhive-pink font-mono text-lg">+</span>
+                </button>
+                <div class="faq-content bg-white/5">
+                    <p class="p-6 text-sm text-gray-400 leading-relaxed border-t border-white/5">
+                        If we installed it and it leaks, we fix it for free. Period. No service fees, no "administrative
+                        costs." We follow manufacturer guidelines to the letter so your warranty is ironclad.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER (P-05) -->
+    <footer class="py-24 px-6 border-t border-white/10 relative bg-black">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-12 relative z-10">
+            <div class="col-span-1 md:col-span-1">
+                <div class="text-3xl font-black tracking-tighter uppercase mb-8 font-display">RHIVE<span
+                        class="text-rhive-pink">.</span></div>
+                <p class="text-gray-500 text-xs leading-loose uppercase tracking-widest font-mono">
+                    Utah | Idaho | Washington <br>
+                    Silicon Slopes HQ <br>
+                    (435) 417-6637
+                </p>
+            </div>
+
+            <div>
+                <h5 class="font-black text-rhive-pink text-[10px] uppercase tracking-[0.3em] mb-6">Direct Comms</h5>
+                <ul class="text-gray-400 text-xs space-y-4 font-bold uppercase tracking-widest">
+                    <li><a href="#" class="hover:text-white transition">Leadership Direct</a></li>
+                    <li><a href="#" class="hover:text-white transition">Contractor Portal (S-01)</a></li>
+                    <li><a href="#" class="hover:text-white transition">Careers</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h5 class="font-black text-rhive-pink text-[10px] uppercase tracking-[0.3em] mb-6">Social Grid</h5>
+                <div class="flex space-x-4">
+                    <!-- Social Placeholders -->
+                    <div
+                        class="w-8 h-8 card-tech flex items-center justify-center hover:bg-rhive-pink hover:text-white transition-colors cursor-pointer">
+                        <span class="text-xs">IG</span>
+                    </div>
+                    <div
+                        class="w-8 h-8 card-tech flex items-center justify-center hover:bg-rhive-pink hover:text-white transition-colors cursor-pointer">
+                        <span class="text-xs">LI</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <button class="w-full btn-tech-outline py-4 text-[10px]">Client Vault Access</button>
+                <p class="mt-8 text-[8px] text-gray-600 font-bold uppercase tracking-[0.3em] leading-relaxed">
+                    © 2026 RHIVE CONSTRUCTION LLC. <br>
+                    RADICAL TRANSPARENCY INITIATIVE.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SYMBIOTE AI FAB -->
+    <div class="fixed bottom-8 right-8 z-[100]">
+        <button
+            class="w-14 h-14 bg-white flex items-center justify-center text-rhive-pink rounded-full hover:scale-110 transition duration-500 shadow-[0_0_30px_rgba(236,2,139,0.5)]">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // Initialize GSAP
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Hero Animations
+        window.onload = () => {
+            const tl = gsap.timeline();
+            tl.to(".hero-el", {
+                opacity: 1,
+                y: 0,
+                duration: 1.2,
+                stagger: 0.15,
+                ease: "power4.out"
+            });
+        };
+
+        // Scroll Reveal for Sections
+        gsap.utils.toArray('section').forEach(section => {
+            gsap.from(section, {
+                opacity: 0,
+                y: 50,
+                duration: 1,
+                scrollTrigger: {
+                    trigger: section,
+                    start: "top 85%",
+                    toggleActions: "play none none none"
+                }
+            });
+        });
+
+        // Stage Journey Animation
+        const stages = gsap.utils.toArray('.stage-card');
+        stages.forEach((stage, i) => {
+            ScrollTrigger.create({
+                trigger: stage,
+                start: "top 65%",
+                onEnter: () => {
+                    stages.forEach(s => {
+                        s.classList.remove('active');
+                        s.style.opacity = "0.3";
+                    });
+                    stage.classList.add('active');
+                    stage.style.opacity = "1";
+                },
+                onEnterBack: () => {
+                    stages.forEach(s => {
+                        s.classList.remove('active');
+                        s.style.opacity = "0.3";
+                    });
+                    stage.classList.add('active');
+                    stage.style.opacity = "1";
+                }
+            });
+        });
+
+        // FAQ Logic
+        function toggleFaq(btn) {
+            const content = btn.nextElementSibling;
+            const icon = btn.querySelector('span');
+
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.innerText = "+";
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+                icon.innerText = "-";
+            }
+        }
+
+        // Nav Glass Effect on Scroll
+        window.onscroll = function () {
+            const nav = document.getElementById('main-nav');
+            if (window.pageYOffset > 50) {
+                nav.classList.add('bg-black/90');
+                nav.classList.remove('glass');
+                nav.style.padding = "1rem 1.5rem";
+            } else {
+                nav.classList.remove('bg-black/90');
+                nav.classList.add('glass');
+                nav.style.padding = "1.5rem 1.5rem";
+            }
+        };
+    </script>
+
+</body>
+
+</html>

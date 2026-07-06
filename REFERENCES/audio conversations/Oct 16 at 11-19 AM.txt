@@ -1,0 +1,1447 @@
+Any system that you're installing. We upload this in here. We pull that information out of repub directly. We link all of the pricey to make sure it is the most accurate, and this is linked to your individual Roof Hub account. So, if you have contractors to be on specific pricing you've worked out.
+
+That's all going to show up here, and it updates every 24 hours. So, you're always going to have the most up-to-date pricing when you're putting together proposals. The days where you're like, oh, I, you know, put this order through, and you missed that, you know, there was a price increase, and then you, you know, lose a little bit money on that because you didn't have the accurate information.
+
+That's all gonna be taken care of right here for you, um, without any issues. Any questions on that? To integrate with only SRS. Um. For purposes of today, correct? It's all right. We do, um, integrate with the other ones, but we, um, you know, through SRS, you get a.
+
+That's how you get those pilot seances through them so, but we'll always favor SRS. They'll be your default. Okay, what do you mean pilot seats? Um, the part of what we're offering is, um srs, is sponsoring three months for free for new subscribers. So if you haven't used the rest before?
+
+It today or this week, and then if we're already signed up with you, then that doesn't apply correct.
+
+Be happy! Um, and then the next thing that we do is we put together proposal templates for you. So, again, any type of system that you're installing. We build these out. That's going to have all the relevant information. We have different sections in there. We build this out based off of how you're already quoting, so we don't want to change your quoting, you know the way that you have it built out right now?
+
+We just want to make it look pretty and exciting. We build out an about us section for you that's automatically in here. If you already have that, that's great. We can put you know, plug and Play, or we build this out for you at no additional charge. Here has all the information, contact information, testimonials, all of your certifications and services that you offer.
+
+We have an inspection photo option as well, so we do integrate with company cam. So, if you are using that, you can easily upload your photos right here. If not, you can also just do it on your phone, your iPad, while you're out in the field. Very easy to add those in there.
+
+Estimate page that we build out again, based off of how you guys are already used to voting so. If you had like a good, better, best option or an upgrade option, or I have a contractor that's like literally, every line item he breaks it out. We'll do it if that's what you want.
+
+Um, and then, so we'll show here. It's also going to include all of your labor materials going to be baked in here as well. You can make you can edit this as two, so you go in. Here you can take in and or subtract your ad any type of material that you might need for a specific project.
+
+The profitability they can go ahead, and we preset these margins if they want to. You know, if your sales guys out there, and they're, like, hey, we, you know, I want to be really aggressive, and they try to put in. A number that's lower than 30. They definitely can't do that because we want to make sure that you are actually making money while you're doing this.
+
+Um, and then we have herbs and conditions, so whatever your contract is that you already have in place, we just upload this in here again. We don't, it's not standard. Language. It's like specific to your company and how you already have it built out there. And then we also include all of the, you know, some different, uh, pamphlets on why you're choosing this certain, you know, manufacturer for this roof, a lot of it to.
+
+I know, you know, I talked to a lot of roofers like. This is great because now, I don't have to, like, have 40 stacks of pamphlets in my truck at all times. It can just be right here through, um, this nice little proposal. So, when you send this to the customer, it has all of this, like a pretty much a packet.
+
+Yeah, that they'll be getting. Yeah, yeah, it's all emailed over to them. And you can, you know, if you have customers that want it printed? You obviously can, but um, mostly, it's going to be emailed over to them. Is they putting it all into one PDF or what is the yeah, so I'll show you how that all works together here so?
+
+Channel them, but you go to this measure report typically over. Here you'll click down, you'll say. Hey. You know, create a proposal you'll click on that, and it'll pull in the con, the measurement report, and all of your pricing and marry it together. So, then, that way, you'll be able to have.
+
+A full proposal, and this is what it's going to look like once it generates. So it pulled from this particular. Measurement that we ran is going to pull in the supplier. It's already locked in here for them. Um, and then you can, um, you'll see the details all these different things.
+
+If this was one that hadn't been signed yet, you could edit it here, and it will show you all of the information that you could you know. If you want to add in? Certain things take out stuff. That's where you know you can want to play around with the profitability and the margins you can, but it won't let you go below 30 and then when they go ahead and they sign this.
+
+When this is kind of overall, how it's going to look. So all that information that we just went over. This is what the homeowner is going to receive, so they can see all these different things they can see, you know, the upgrade options that they want? And then, you know, terms and conditions this one here is they get to choose what they want to add on.
+
+So, to discuss word? And then, when they sign, it's very similar to DocuSign, so you don't have to have a DocuSign account. It's all baked in here, and it's just a couple clicks of the button really easy for them to go ahead and get. And then you'll see the terms and conditions, and then why Landmark and all those good things?
+
+Questions on that. So when they sign it, is it connected to like your CRM or anything like that? It's connected right here into River. So, like it is the CRM, oh right, because you guys are now as hearing, yep, Ender. Oh, yep.
+
+Yeah, she'll sign me up. Okay, great. Um, awesome. And so, then, like the one last thing, the couple things I want to show you is, how easy it is for you to go ahead and deliver, you know, make that material order. So when are you going here? You'll see that this is one you click here.
+
+You go down to create material order. And it's gonna pull from that proposal. What the homeowner signed off on hit continue. Um, you can exclude any material with zero quantity typically going to be your labor cost. Pull in all of that information here, and you're going to be able to see in real time.
+
+What's available what you need to call for? Apparently, Nashville's having a short.
+
+Hit save and you hit finalize order. It's not going to let you send this over to your lovely SRS rep until you provide them all of the information that you need. So, where you want it delivered how you want it delivered? Who's the point of contact for the day, uh, the date that you you need it by and the time and then.
+
+On the material orders or how that all works together. How would you add in pipe tax? Is that always manual? Um, no, if it's like, if you are, we can set it. So, that's always automatic. But, if you, if it's different, every time you have to add that in, okay, that makes sense.
+
+The sizes and stuff, right? Yeah. You also from here. Um, should create a few.
+
+From this, um proposal, as well. This is where you can also create your work orders and your invoices. So, if you send these out to your crew, so it's already. It's automatic, and then it says that you sent over to your customer as well. The, what would you go through and like, edit as you mentioned labor, but I didn't see anything there about how to, you know, one layer.
+
+There are clear off, yeah. Wheelbarrow ground load. Yeah, all that stuff. How do you edit that? Yeah, so you can definitely, um, again. This is just based off of how this one is built out, right? So the way that this one is built out is like, that's all kind of thing in there, so that's not like seeing show me the labor cotton place necessarily.
+
+Yeah, but you can go in there, however, you are. You're gonna have to. Tell the coil, you know, it's on the computer. Like, oh, there's three layers, so I'm gonna have to, you know, bump up my labor. Number of hours, whatever. Like, however, you quoted, like? Didn't see that.
+
+How does that happen? Yeah. Is there a page that you can have a labor attribution? Um, measurement, that's coming in from roofer so. Simply would be like, oh, it's this many squares. We charge this much labor, so it automatically calculates it into your yeah. Yeah, that's what's happening. Like, there's that auto calculation of, like, hey, this is very good as far as like, editing that, um, since this is like, already, like?
+
+I don't really have one. That's, like, it's a drought. Yeah. I could be a back end. So, yeah, template that you're building? Fine items that will automatically.
+
+Um. Our own custom, so that would be like a custom field for specifications. So, how do you want to see in the beginning? It looks similar to this, that has to be built out for every single job, or just build it out one time for your company, and that's now how it looks.
+
+Build it out one time, so then that proposal we build it out, and it will automatically be in there that you can edit it as you can two for each individual one. Okay, yeah, cool. Does that make sense? We're in development right now. Yeah.
+
+The ability out all with you as well. So, like, yeah, we have a whole implementation team that's already included in, like the services that we offer where you can go ahead and put like big building options. Ensure that, like, if as easy as possible, so that way. It's not like a every single time of having to make a change or whatnot.
+
+It's all very easy to understand for them in here. So, then, that way, you know, if it's like, okay, if there wasn't one there? Uh, this is awesome, because then when you get to, that's a simple, but yeah, fairly outside of their scope images. Yeah, yeah. So we've been working on it for three years where, it's like, yeah.
+
+Great is we also have an instant SMH tool, so it is a link that we embed onto your website. You can also create barcode onto your truck wraps your yard. Art of, and it should a quick way for a homeowner to get kind of a rough estimate based off of your what it's going to cost like to replace, um, obviously.
+
+Like, we all, you know, it's always. So, nobody wants to replace their room. It's a very frustrating thing. Is that a fun purchase spot and this just helps kind of lower that barrier? Yeah, you'll see this. It says I'm going to use just mine be so that you know they don't think so.
+
+We'll just put in a um, the best salesperson. Here's how we need, and then it's very similar to that Sally imagery and show you exactly what that. How it looks like this, uh, we ask them. Obviously, they're not going to know all where that information.
+
+Let the timeline is of the project, so you kind of know how much. So, how perfect it is for them. It helps eliminate an entire Pickers, um, the software. We have a partnership before, um, and then you can add things as well. Over to you, they hit continue. There is some pricing that's blurred out.
+
+Obviously, we're not going to give it over to them until we get the contact information for you so you can actually reach out and contact them. And then once I had get my estimate, they will have an estimate here based off of your price per square or per square foot that will populate here.
+
+This is all individualized, so everyone's will look different. This is just based off of, you know, kind of giving that, you know, broad range of, hey, you know, obviously, we want to get a broader range because you don't want homeowners like, oh, you said, it was 25, 000, but actually, now it's 30, 000.
+
+How can we make this better? So, um, yeah, so it's just a great way to kind of get numbers in front of them, and then get warm leads sent into you, and because it will populate here into your job sport. So right there, and then this is really where you're going to run a lot of your performance, too.
+
+So you'll see exactly where that came from. You can see, you know, scroll down. You can see the insta estimate, look, and see exactly what it was that was given over to them.
+
+Set up, but every time a new job comes in, we can preset it. So, there's, you know, stones don't use the call. So-and-so needs to order the report, and so it's just a reminder that automatically flow in that will automatically trigger the individuals who need that information. We integrate with iCal and gcal, so you'll be able to see right in here in the calendar event so you can schedule right in here.
+
+It's going to remind you to order your, um, your measurement report, and then you'll see in here to one that's kind of, you know, completed. Where there is that proposal, you'll see the proposal that has been won. You're going to see the material orders that have been placed for this one.
+
+It's going to break out your job costing on this as well. So, uh, you can see what your gross profit margin should be. Any attachments that you need, so if you have to get permits and you need them. If you have that uploaded here, all live in here as well, and then this will kind of, just follow your homeowner through the course of their relationship with you.
+
+So, everywhere, from, you know?
+
+Any questions on the job board? Anything that's in there? I know it's a lot of information to take in when you customize those jobs with 100, even all you customize. We can also set it so that there's like trigger statements. So, if this happens, then this happens, and if this happens, this email gets sent out all of that stuff.
+
+So, um, it's like, hey, if they open the proposal three times, then it will set a reminder to call them and be like, hey, you just wanted to know what you're, you know what you thought about it? So, um, a lot of good things to kind of keep your business running smoothly and make sure things don't fall through across like, I'm still waiting for a proposal from eight months ago when something was supposed to give me one.
+
+I just never got it. Um, and it's just a good way. You know that 40 of homeowners go with the first proposal that they receive. So, if you're able to have that measure report, come off of the roof and say, hey, can I, you? They say they want a proposal, and you can take five minutes in the truck to get it over to them.
+
+Games customized, uh, like which employees have? What kind of access? Yep, yeah. There's um, there are different layers that you have in there, so you have a manager who can see everything you remember who can only see what's assigned to them. Some people cannot see, like, any of the financial information.
+
+Yeah, yeah, you can set all the facts good. When a job comes in because they filled it out on online, and then you have those tasks and then. Is there a spot where you can Mark if the task has been completed or not? Or yeah, yeah, so like, just, let's say that this test, I'll just.
+
+I'm gonna get an email letting me know that I need to do that, and then once that you once I see that I can click back and then come together. Awesome. Yeah, okay. Follows through any other questions, uh, I'm curious about. Of course, the pricing the packages, but also.
+
+Um, you guys have done a lot within the last, like couple years. I've been, uh, it was, like, uh, the future of roof, or is there anything new that you're trying to integrate, or I don't know if you can share that or what, yeah, curious? Great question. So, um?
+
+Of pricing. Just so, you guys can all see kind of what we're offering right now. So, we have four different packages that we. Four different packages that, we, you know, see most of our contractors go into. The pay as you go is going to be one of those words like, hey, I'm ordering, like, maybe a couple of reports a month.
+
+It doesn't really make sense to have any type of like plan in place. Those reports are a little bit more expensive. They are 19 with a 24 hour turnaround time, and then if you want the material calculations. Their five dollars extra, so we got 24 dollars for, um, you know?
+
+At that report that we went over. The pro plan, um, really? What you get with that is, you get a couple of the CRM features, so you can have like a couple of proposals, templates built out, and then it brings those down to those 13 measurement, reports the premium and the elite.
+
+Those are the ones that qualify for those pilot seeds. So, again, SRS right now is offering three months for free for new, um, new contractors. Again, get those 13 reports. The biggest difference between premium and Elite is the elite has that instant estimating tool in it, as well as unlimited seats.
+
+So, if you have more than five employees who are going to be utilizing it, definitely, you know, you're going to need to be into the elite plan and that instant estimating tool is just a great tool to have, especially if you are trying to, you know, build out your business, or you're putting more emphasis and marketing over the course of the next couple of years.
+
+Of our guys get, you know, get their, um? You know jobs that they didn't think that they would get because of like having that. I have somebody who like will put it on the back of their child, and you know they sponsor the local Little League team, and so it's on the back of the Dugout.
+
+So, every, you know, parent that is there, they see it, and they're getting jobs that way. Somebody I heard a story the other day or someone were like, put it on, put it on, like in the bathroom. I think you're a null and a guy like scanned it. And then he, like, got a big like, you know, job, and he upsold him by about ten thousand dollars.
+
+So it is, it does pay for itself for sure, and SRS is paying for three months, so you might as well, like, you know?
+
+10 months. And so, at the end of the four months and you decide, hey? You know, I don't want to keep paying this. You can always downgrade into premium, so. Is the 15 and 10 percent there? Yeah, it's a little confusing, so it's a it's a discount. So if you, it's a 15 discount, um, after so you pay for the first month you get the next three months for free.
+
+And then, after that, you get a 15 discount every month 15 off the 169 yeah, and then 10 off of the 349, so I think it's like it shakes out to be like 143 for the premium and like 3 15 for vov. Is month to month. You take it with with you, decide at the end of, however long you're with us.
+
+You don't want to stay with us, you get to take all your data. We don't hold on to it. Um, I know that sometimes it's hard to cool data out of CRM, so you get to take it with you. It's not our data, it's yours. They're your customers. And then, as far as like, what we have going on.
+
+Um, I do know that in the next couple of weeks, we're doing a big product dump. It's still a surprise to me because I'm not on the product side, but we are constantly evolving. We're constantly growing. We really do want to be that place for. You know, be able to run their businesses smoothly and successfully win more jobs.
+
+Obviously, more jobs you win. The more material orders you're placing with SRS, and that's going to obviously impact them too, so. Win for everybody! Yes, another question sorry, instant estimator. What is the difference between an instant estimator and a normal estimator? Because isn't it all built out of a template you make, or am I right, or was that last tool that I showed you where it was like the homeowner bozan and puts in their address.
+
+And that's it gives you that kind of those, you know, so you can put it on your website and stuff. Just another way to experience generation go out and like, okay, actually do the measure report. Do the proposal, do all that stuff, and they'll get like a firmer number for them.
+
+For that whole proposal, cool, yeah. Down over from the previous CRM. Is that possible to? Yeah, we can upload it in there, and he is a customizable like, what Fields, what information you want to have? Yeah, yeah, that's available too. And our and that's part of the implementation process, too, is that we help build the how and help you make sure that is any good, like, easy to digested.
+
+It's fitting your business versus like this is all you do.
+
+Is that the monthly plan that you have there? All of those FF is included. Is there any integration with Point folks on the bookkeeping side? Yeah, we do integrate with QuickBooks so we can stack that in, and it pushes into those books. For all of that information, what about getting mints?
+
+To collect payments from them. Yeah, you can do it that way. We also have a payment collection. Software in there as well, and I think our fees are pretty competitive and the fact some of the lowest ones so you can easily do it through us as well. What about, like, ACH or fees?
+
+Know off the top of my head what they are through us, but they are some of the lower ones.
+
+Is there a limit on reports that you can run no, so you can run as many as you want so? To clarify, so that monthly price that's like the CRM price. The only thing on top of that is the 13 reports every month, and then you can run as many as you want.
+
+So, I think you, I think you answered it, but? For the elite. I think you said five seats. Yeah, yep. So five members or five still is unlimited. So, as many members as you want, yeah, I was curious if you charge. Nope, all included unlimited.
+
+Any other questions? Um. Do you have any quantity of database restrictions if we were pulling in a large number of customers? Um, as far as I know, no okay. I haven't ran into that with you guys, but I haven't taken that step yet. Um. Okay. Yeah.
+
+Any other questions? Okay, cool. Well, I know, you want to sign up. You're ready to go. Um, perfect. So, yeah, I mean, if you guys have any other specific, you know, individual questions you want to come up? We can do that. What I'd love to do, you know, food is here and ready.
+
+So, if you guys grab it? Come on by. I would love to, you know, please, like, make sure that I got everybody who's here. You're wanting more information. We can set up another call as well, so.
+
+Um, so right now, I would say that, we, you know, there's a limited amount of seats that we have available. And so, my recommendation would be to get in by the end of the month from your ID. If possible. So, it's not like, no, not end of today. Yeah, you got a couple of weeks to be able to make that decision.
+
+All right, awesome. Well, I will start this series, you know about, right today, um?
+
+Facebook.
+
+Yeah, I was, I was experience. Okay.
+
+I don't know. Um, what are you supposed?
+
+Back in the car, okay? Okay, yeah.
+
+Officiate any wedding since the last one I saw you in, yeah. Nope, still haven't been paid for a while, right? Oops, I gotta hit him up. Hey, yeah, I came it and tacos, or okay, yeah, absolutely. Yeah, payment in a good time as well, you know, and you're wanting.
+
+Oh, is a good time that one was so good, I saw, um, just a few days later because we did a thing at the bowling alley since there, like corporate people were all coming into town, and I was just like really talked to Victors. Yeah, it was really cool.
+
+Do you like freaked out at all with rain. She's like, I just don't let myself get stressed out by things she's done. So, he's the stressor. She's the one that's, like, yeah, yeah. I wanted to be like, I'm like, can you just like bottle that up? That's the cool stuff going on.
+
+Man, yeah, it's fun. I'm never bored. It's really just the like, yeah.
+
+And so, then, three years ago, some of the kids do this. And then it knows where I'm going, you know, when it came out three years ago, yeah, and now, with biascoting, he developing. Yeah, a little bit, dude, it's nuts. It's so cool as a teenager. Yeah! And then I got into, like, you have the spreadsheet and gives you the numbers.
+
+You can connect it with yourself. It's usually Google Suite. So, like Google Slides and you build a whole presentation and you have those numbers automatically, and now you have your reports, you have your. Oh yeah, very basic way to do it, but it, it worked, and it looked better than anybody's right and then, and Supercuts, right, because it's how I want to do it, not how they think is reviewing is done.
+
+Yeah, yeah, you just have a really strong vision of things to be a certain way. And, like, I love this platform, but part of our model is Michelle material, labor, overhead, and profit. Thanks, John. This doesn't appreciate. It's a whole different business model. You can't build an invoice with this automatically with that, so you try and estimate exactly what your materials and exactly what your labor is.
+
+I know how many miles it is from my house two years and that I go there about five times for residential or based upon how many?
+
+I understand how you can break down here. All right, I guess I'm asking how much, uh, you tell them that you're profiting for the job, because, um. Did you set it at like 40? Is that kind of your profit? It's not a margin it's based upon. Yeah, it's based upon all of the factors.
+
+Like, if you were? When we price something, and I throw a 40 Mark. Now, I I'm just shooting and going. I want to make this much money, but how much do you need to make? How many jobs per year, and that can be changing. It's a variable system, and that's why sometimes roofers get into it, and it's a job that they didn't estimate.
+
+So, that's why the the actual margin is doing this at the end because it's a margin. It's a guesstimate when I know everything that I'm spending. I can calculate it based upon the type of job, the type of complexities of the job, like with Flat Earth. For example, if we did the roof out there, there was no curves.
+
+There's no pipes. There's no right. So, my Square cost is going to be less so. My quantity of time with labor is going to be less. Right, so everything is calculated. It gets to where if we lose a bid because I didn't want to win it. It's not because, like, there was a, do you do you on your estimate?
+
+Do you show exactly what you calculate to profit from the job. Is that how that you break it down so you see the the number? Yeah, but it doesn't go like we're popping this because of this item. This item and this item, and this item, that's just how it's calculated.
+
+Because here's the thing. Yeah, we're all getting the same prices within a bright margin, because if you're a huge company, yeah, you're paying less sure. But are you paying thousands of dollars less for material generally, not unless it's like 100 squares? Then we start talking bigger companies. Yep, and so there.
+
+That's another thing. We did a government job down in Cedar. And everybody came in at like 1 30 to 180. Except for the guy that won at 95, and my estimate was 104 for material and labor with our with our crews. Now, we know he was buying that job because he had experts he had leftover or he doesn't know what the fuck she's doing before he's about to eat.
+
+So, then it's like, okay, now I know how he plays when he has extra. And I know how they play, because with government, it's all public, I see. So, then you know, what are their margins roughly? What? What do we need to win this? Round, you gotta see everybody else's proposals in government when it's public.
+
+Yeah, not their proposals, but their numbers. And because we're, they could have a different skill. Yes, and then you talk to your Regional like we talked to Anne Marie GAF Regional rep, and she's like, oh, that company they use Versa code, oh, that company they use IB, oh, you know.
+
+So, then you start knowing this company works at this margin with these materials, and if they want to win, this is what they could do they don't. Trying to just do good business. This is what they do. And now you can start calculating that as well, right? So it's just data collection.
+
+Okay, okay. Yes, awesome! Thank you.
+
+Who are you with yeah? R5 construction, okay, cool. Yeah, we're fairly new. It's been in the game for just three years. Okay, sweet. Where are you guys out mostly? Um, a little bit everywhere. Yeah, up and down the Wasatch. Okay, cool out. Titulia is probably the furthest west. Yeah, I mean, as you know, you're running, deciding, and stuff here.
+
+Yeah, it's not good. I didn't know if you guys did all this stuff as well, yeah, totally. Yeah, I love Roofing. Everybody needs one all right. What?
+
+Oh, okay. Building a house out? Nice. That is so cool. A little bit of everything right now. Yeah. It's pretty stressful. Yeah. Yep, like, I know why this is happening. I just don't want it to. Yeah, exactly like I should just stick with everything. It's like way less stress.
+
+Yeah, right. In the Box, I bet so many different variables, just a homeowner. You're at their house for a day. The job side, right? And then you're out of this, but I have to keep talking with this homework for months. See, we hadn't even broken groundings, oh my God.
+
+Yeah, you feel it. That's awesome. There's at that moment. I was, like, I probably should have to do this at that moment. He knew he done fucked up. That's so funny. Cool. Nice to meet you again. Thank you very okay. If you think of anything in your shop so you're loaded, I think they said the griffin behind it.
+
+Yeah, I know, that's cool. I'm sorry, I have a bunch of shit in there. We'll leave now. Get it done. Okay, we're gonna go get the mom? Thank you, thank you. Okay, yeah, I got this.
+
+Intro there. I'm just doing with you if you get something. Yeah. The computers. What?
+
+Like when you buy some hit music too, right? Yeah.
+
+Okay. Already came over because I wanted to eat here so I could get more.
+
+You're good, buddy. It's so fun! Good. I just was like, why? This was.
+
+I like toggles for like sandwiches. There's so much.
+
+It's just not.
+
+I feel like I don't even need a to build another Parker. I just need to grab more tortilla.
+
+You sent me a picture.
+
+Yesterday, I was think.
+
+And we decide.
+
+How are you well? How are you guys, Brian, right? Yeah. Good. I was at knockout and everything. Are you back for service? Seconds with my three. There's plenty. To me, there wasn't enough. It was a jab at me. I'm like, I'm trying to go to the gym. No. Tinder, I get no results.
+
+That's why you just make yourself look like a female, and you tell them to go to Snapchat money. Try to work the corner, and then they're like, no, you owe me money. With AI. But from Winter for skiing and snowmobility. Like, I gotta start working out again. Yeah. To be able to get myself out of this.
+
+It's kind of hard to like, actually get up once you fall. Yes. Well, if it's about the size of a copy, can you're good to blow through anything bigger than a Coke? Can you better be a little careful, but I forget that sometimes. That's okay. I spilled my chocolate way too.
+
+Well, you have no other options. I mean, I smoked a mask pine tree came out of nowhere here. I'll tell you what smoked it last year. I was like, I haven't looked at myself a little sense.
+
+Building division. I've seen the wrong way. Yeah, I've really been able to learn some experiences.
+
+Degrees on this one is delicious.
+
+I think I've been able to eat this much food for a while.
+
+Oh, really.
+
+So, yeah, a couple other guys.
+
+Yeah, I'm gonna put the food away I can. You guys have any kids three kids? Yeah, yeah, all. For my previous trips, it's the best 6, 12, and 14. How old are you? Yeah? I love every moment with them, and I'm sad when I they're not here. And I really enjoy the ability to be an adult and get stuff done when they're not at the same time.
+
+And it's, it's really good for us because? Get that at all time, and not just. Parents 100 of the time, which is fine. But man, it gets, it's just different. It's a lot. Like that. A lot of energy, like when we have them for a week or through the weekend.
+
+My Monday is, like, oh, you know, catching up on sleep hydration because we're out running around. Stress of, like, oh, I need to do more now to make them happy. So, it's awesome having a like part-time. I wish it was. Yeah, I don't wish, but pretty cool. If it was an option for everyone instead of like, you have to get a report to get this option.
+
+Yeah, I mean, that would be sweet. No, I'm crazy. You can buy it when you have a baby, I guess. Well, I feel like that's what Thai generational households are, so that's true, you know. But us Americans are, like, nope, get out. And then, don't talk to me where I feel like other cultures, you live with the whole entire family forever, so you would get that.
+
+Yeah, if we were family oriented, but we're not. Yeah.
+
+I got yeah, yeah. They're great, but I've tried that, and I'm like, I'm good. I can hardly do that, really. I feel like, I mean, I can. But like, I'm there, right, more than like a couple or a few days. It's like I got it, yeah. But then, I also feel like it's no longer your home like once you leave.
+
+Now you're uncomfortable going there in the sense of like. Tv. Where's my like, my own space, and it's just awkward? Like, when you visit family, it is family, but you're still like, what do I do with myself now? True on down time? You're not comfortable, so I feel like it's just different.
+
+Definitely different, not saying that I want to lose my family. You. I feel like I have felt the shift from when I did live there compared to now that I don't and then visiting yeah, or even moving back in and you're like. Yeah, this is weird. Yeah, can? I can I shower?
+
+Is that? Is that okay? What's really weird? My dad came to me and he's like. I know, you know, the door code, but you need to knock before you come in. It's, like, okay, like I get it. My parents are in there, like mid to late 70s, and I know they still have sex, so I'm like, okay, I'll knock.
+
+Don't worry.
+
+Yeah, there's not. You know, after 35, a geriatric pregnancy, okay, super high risk. Yeah, yeah, that's what they tell me. I'm like, what are you talking about? Tylenol, and uh.
+
+Oh man, that's hilarious. Yeah, it's been fun. I feel like, oh, she's the youngest, too, just a smaller family. And so we both suck at cooking for each other. We expect people to do stuff for us, so when he doesn't, and I like. You got yourself a snack, but not me.
+
+And then I eat less because I'm like if I get this, then I have to do this and this and this I'll just stay. Yeah. Or, you have to like, get your snack downstairs and eat them. Year five for us that I realized, oh, we're just both the youngest, and we noticed that pattern that we both have my wife's the youngest as well, yeah, and uh, you run into that a little bit.
+
+Well, we always just like, annoy the hell out of each other. Yeah. Um. Yeah, they were like, I feel like the youngest is always pretty needy. Yeah. Definitely not easy to admit it, but I can see it in different patterns.
+
+Yeah, what are you doing paying attention to me? It's like, watch me do this car wheel for the sixth time. What, what? Oh God. Yeah.
+
+Um, just in the valley. Yeah, Salt Lake Valley, yeah, South Jordan, specifically. Yeah, that's where I was born and raised until like eight or nine. And then parents moved us to South Jordan. And yeah, it's been good. It's weird going. I lived in Texas for a couple years just with family and.
+
+The common. Where this was? 15 years ago now, but the common religion here in Texas was awesome. People were just like welcoming. It didn't matter if I showed up in jeans or whatever, right here. I grew up here, Mike, no way. Um, but yeah. Interesting, but then also in Texas.
+
+It's like, don't go in this area. Don't go down this street. That's a real thing, you know, like, no, like, you'll get shanked, like what you know, and then the diversity totally different in different states? Like Utah is like welcoming as a culture, but? They're welcoming as a home, and then as a like a community like they're very clicky, I guess.
+
+Whereas, maybe it's the opposite. It's, like, you'll catch a cold from someone or something, right? Oh, you're gonna, and I get it to a certain extent, because if I'm trying to be this specific thing, I wouldn't want to be all the others have all the other specific things around me, you know.
+
+But then, it's not that I completely agree with it. You're like that makes sense. Okay, fine. Yeah, do you feel like you try and do that with, like your friendships, like, surround yourself. Yeah, definitely because they're like the five people you surround yourself, which is how successful you'll be mentality.
+
+That's who you are, and I can see that for sure.
+
+With now or your family, right? If you take a sibling that say you're struggling or a friend or whatever compared to the one that's successful. Would you be able to talk about usually complaining and then negative complaints and the the possibility and growth obligation possibility? Who do you want to be and who do you want to listen to?
+
+I'd rather listen to the person that's looking forward and has a positive mindset, even if something happens in life. That isn't the best, but it's like, well, that's awesome, because now I have to go this way, and it led me to this direction and my life, blah, blah, blah.
+
+And that's just how it is. So, it's like, yeah, who do you want to surround yourself with and become because that's what it is when I one thing I've really enjoyed is, are you done? Yes, thank you.
+
+Ringing in my head. What is my ultimate frequency? My vibration versus? I'm seeing opportunities and learning and growing. It's two different paths. So, like songs, we changed. Or stop listening to a lot of mainstream stuff, because when it's stuck in my head, I'm seeing about breakups. If I'm listening to Taylor Swift, and how hard life is and how poor me and I need something better.
+
+And that's from a place of lack, not understanding place of abundance. And then it's like, if you really look at it in your relationships, like one of? I guess, um. She's obsessed with Taylor Swift, and she also can't hold a relationship or anything to save her life or friendships or nothing.
+
+As an example, you know, so it's just like in. If that's what you're living, and you're putting your life towards that thing. Yeah, and don't get me wrong. The beat's good. It's popular for a reason, but what am I telling? What is my subconscious saying all day? I don't want it, saying that, you know?
+
+Interesting, because I see what you mean, but I also feel like you can just enjoy something totally for, like what it is. Yes, and I don't know, because a lot of art, you know, maybe? Now, it has meaning, but it, maybe, is, I just like, what do you listen to, um?
+
+Like it is more positive. Yeah, but even then. My problem with Christian music or some Christian views is that I don't have the power and I have to rely on that outward. It's an outward praise, and I believe in my inherent inner life, it sure was created by the Divine.
+
+I'm on my journey. Can you imagine walking over like knowing your magic if you're walking your whole life? Not thinking your magic until? Um, there's AI. Now that you can? Here. Just say, I want a song that sounds like, you know, this band or this band, and I want every word to be of a high frequency.
+
+I don't want to use words like, butt, um, kinda, so everything is absolutely. Everything is a high vibration, and then you can listen to whatever band. So, now what I'm saying is empowering me and what's stuck in my head is empowering me because the negative voices? So easy to.
+
+A doctor and continue. So, um. Frequency type music. No lyric music. So, if I really liked Taylor Swift song, I'd look for the lyric free version, oh shit, so it's not. Yeah, so it's not like? Tacos, bro. That's fine. Yeah, just kidding. No, you smell like your tongue. Yeah.
+
+Is that what it is? Yeah, because I've been the same weight for the last eight months, are you like more taller? Maybe I don't know. I haven't been to the gym into a good job, and it's not that I'm like, I like, if you were, like, yeah, I've been running.
+
+I'd be, like, oh my, gosh. I was so proud of myself. Sometimes, like, I'll be on Tuesday nights. Well, I usually only get like 12. So I feel like I was super proud of myself. That's awesome. Yeah, totally. At least you're doing that because most people don't. I know, I don't.
+
+I'm like, I should be stretching right now.
+
+Speed like a tiger. It's a Tiger Woods. Okay, I don't know if it's a tiger. Funny, it looked, I was gonna say. But tiger was, yeah, I just got it from a clubhouse. Yeah, you guys are good. The house is good. Yeah, good. The house has been amazing. Did you see this?
+
+I know it's so easy, but just like I didn't even see it. Oh, you need to see it.
+
+I'm so excited! Now I know I was like, this is cool, and I'm like, they obviously know their customers. Yeah, good. Good. Super excited. Yeah, it's small, simple. Yeah, but we're learning all the paperwork and everything with this one. So, without being government, you guys, okay, you just let me know, hey, he's out of town.
+
+Back through Thanksgiving, and then I'm down in Vegas for the rodeo in December. I got a, that's where, so you always know a lot going on. We start fall break tomorrow with the kids, so that's gonna be a little busy for us. We're already, like, whatever, how are we gonna do this?
+
+Yeah, yeah, I had a hit and run the other day in my neighborhood or whatever in our neighborhood, and she ended up coming back. But now, she's she didn't have insurance or anything. Yeah, yeah, yeah. So my car's been in the shop all week, and I have a rental it's due tomorrow, and his cars are the thing because everything's wrong with his car.
+
+We are the sunroof, I think leaking, or the windshield. Not sure, but then I opened up the sunrise.
+
+Try to pump. That's cool. Hopefully it'll come right out. And I'm such an OCT. But at least it's driving. I'm not having leaking sunlight, sir yeah, yeah. One month after I got my car and I bought it cash because it was after my divorce, um. Station went in and got a drink, walked out, and someone was like.
+
+I left it in neutral and it rolled back and hit one of the barriers. The whole side. They wouldn't even like drive straight. I'm sorry if I left. No, you're fine. It was just like, yes, I finally played something like in full, a great car. And then, after that, you know you're like I can finally have something.
+
+And it's nice, and it's my love. Yeah, yeah, they just showed me. I'm here for the journey, of course. Yeah, well, good. Yeah, it's good to see you guys like your schedule. They're way different than most people. Yes, um, I feel like not as much lately. In the beginning, though, you are 100 correct.
+
+Yeah. And I'm like, but it really does wake us up. So, I kind of prefer it. So, just call, yeah, you're sleeping. If you really need to sleep. Yeah, or I'll go back and sleep after I'm done talking to you. Yeah. Knows what it's like, she's always like, oh, my goals.
+
+Oh, that's so cool. Yeah, it was so fun. I haven't played golf, but I was hitting about that. It was so fun. Yeah, that'll be fun. Let me know if there's anything. Okay, definitely. Yep, let's go.
+
+Oh yeah, yeah.
+
+We went on the roof, and no one was there, so I'm not sure. Um. Good to see you guys!
+
+So? Okay, and then also. Um, they emailed us. And I think need like approval for some other things that they found with your car.
+
+So, if you want to go in my email?
+
+Um. It's there. F what? You want to go on my email to look at.
+
+I don't have your account on.
+
+And then it's the Enterprise. Oh. In Mill Creek. Right, not in Sandy? Correct?
+
+Don't tell him your car is ready. Yeah. Quality assurance. Your call may be monitored or. Nation about our privacy policy. Please visit privacy.ehi.com to help us serve you better. Please listen to this entire message. For hours and location information. Press one to check rates availability or to book a reservation.
+
+Press 2 to confirm, modify, or cancel an existing reservation, press three to speak to an employee at our local office, press four. If you are in need of roadside assistance, if you are calling to book a new reservation or check, raise press option one. For all other inquiries, press option two.
+
+Hi, I am just wondering what time I need to drop off my car tomorrow or my rental tomorrow?
+
+Yep.
+
+And if you can't find it with that phone number, I have a different one that might be. Hey Cara, yeah, that's correct. Location. Uh, but it says here.
+
+Of tomorrow till, um. 1159. P or am? Happy OPM! Okay, so not until later that night then. Yeah, that's all. This is a to return it. Oh, awesome, cool. And then it doesn't have to be at that exact location, correct?
+
+Location in the city. Okay, awesome, awesome. But I will, I will. Are you trying to drop it off here with us? So, the place I'm picking up my car is, um, oh yeah, in Mill Creek. So, yes, yes, planning on dropping it off. In Mill Creek. Yeah. Yeah, something okay, awesome.
+
+And then, what time? Because if it is later, what time do you guys close Dropbox like, yeah, where's the Dropbox for the keys? So, we close at 5, 30. The Dropbox is going to be to. Left out the door. You know, when you're coming in, okay, uh, and you can hear there, drop it off.
+
+And I said. Awesome! That sounds great. Thank you so much, I appreciate it. Okay, bye. Cool, so we have two cars tomorrow. Okay, now let's look at my bank account.
+
+Say, good morning. Um, so I was supposed to bring my makeup for a touchdown, but I forgot it. So. Be the best in my face for today, probably, and then the meaning of an attorney to set up my business. Was a couple of Partners so. Um, super excited about that.
+
+I might have to just go buy some of the new emergency makeup between the two. Anyway, have a great day.
+
+You'll have to tell me more about your business. That sounds really cool and super exciting to be doing it with the lawyers and everything. That way you get started off the right way. Um, yeah, hope you have a great day, and you look amazing. You don't have to go and get makeup.
+
+You'll be fine. You'll have to tell me more about. So I have?
+
+Does your credit card have that much available? No, it has 956. Oh, okay. And it's a. And then on my checking, I have 600, so should I just pay off some of my credit card? So I have more money on my credit card. And then just do one transaction.
+
+Say that again. On my credit card, I only have. $156. So, should I take some of my money for my checking and pay off my credit card? So, then I have. I may not clear in time, so I would just. Two transactions. How much do you have in your bank?
+
+600, so I'd pay 200 from your bank card and then credit card, the rest.
+
+Okay, now I'm going to. Subaru.
+
+Mark Miller.
+
+Mill Creek.
+
+We gave two designers the same 500 West, then turn right onto 3300 South.
+
+At the light, turn right. Start your course Creator journey by joining.
+
+Continue on 3300 South for three quarters of a mile. Honor Sakai was the lake owner, then, or what type of roofing he did? It seemed really nice. Yeah, I was gonna say, I really liked him.
+
+Well, that's exciting that she got a sale. With that guy. And she got a sale. Yeah, that older guy. I still don't know what you're talking about. In the meeting today. And how he's like signed me up. Oh, the roof. Is? And the old guy was like that, okay?
+
+We weren't talking about roofer or the meeting, and then you just said in school. She got a sale. So, I was confused.
+
+Start your.
+
+Okay, can you look at the email? That I forward to.
+
+Which emailed? Did you forward it to?
+
+At the light, turn right onto South State Street.
+
+In half a mile, turn left onto Baird Avenue.
+
+The next right, then turn left.
+
+This is their service, not their um Body Shop.
+
+So, maybe? I don't know. This isn't where we went before, though. For sure. It was. It was off of state. Right off the state, if that makes sense.
+
+So?
+
+Okay, so 647 dollars to look at the. Sunroof. Further so that they can figure out what's going on because?
+
+I mean, I guess that's what it takes to get it to not rain into our car. So, add service 600, 650, and they're gonna look at it. Right? But it says sun shade. At the stop sign, turn left onto South 200 East.
+
+In 800 feet, turn left on the Eastport Avenue. Holy shit! Oil leak 3191 dollars. That's to fix it. I don't know.
+
+I have 10 valve cover, leaking oil front engine, cover leaking and lower oil pan. Recommend resale of engine cover, oil pan and valve cover to complete repair. Three grand.
+
+What are you doing honey? I'm going where it's telling me to go okay? Because I don't know where I'm going. I'm just asking because it doesn't tell you to back up.
+
+In 600 feet, turn right onto South State Street.
+
+What I'm like, you also could pull over and look at the address that we're going to and see if it looks like the place. Before we keep on driving in backup circles at the stop sign, turn right onto South State Street, then make a U-turn.
+
+Stupid. So, are we spending 3 100 to get it to stop leaking?
+
+And this is just number two of nine things. We're at 3 700 already. I know, we're adding it all up. Do you want to add it up? Can we? Let's get there. And then, you can help me. I'm not. I'm not going to be good at this if you're backing up and you're driving the way that you're driving.
+
+So, if you don't want to stop and figure out where we're going, then I'm going to stop this so I can pay attention to what you're doing so I can help you drive. Or not, get hit. This is what it looks like.
+
+And where are we? Yeah. So? Yeah, it's on the south side of it, so we need to go to Baird Avenue. It's like three streets down. Go ahead.
+
+Yeah, it's front wheel drive. That's right, slipping so much.
+
+Yes, it'll be here.
+
+I wish that was my car. They fixed my window.
+
+Let's drive. I would just.
+
+My car down in your wallet.
+
+So, yes, on the oil leak.
+
+Or, do we want to see if someone else will do it for Less? They literally have to take the whole engine apart. To put it back together. Because the gaskets are failing. So? Um, what's the first one? How much was that one? The sunroom.
+
+647.50, 647, 50. Okay.
+
+And that's just. To diagnose it more. Okay. Okay.
+
+91.80. 191.
+
+For the leak. The oil leak.
+
+Transmission fluid leaking raised vehicle on four post lift panel that the PTU is leaking transmission fluid. Recommend, we reseal the PTU and perform a PTU service. 1440 dollars. 50 cents 1440.15. And they're giving me pictures of everything they're doing. So that's really cool. Four Mountain balance, four tires.
+
+Tires around component made of rubber and reinforce the cords or belts made of several choices of materials. So? Fourteen hundred dollars for tires if we want to get tires. Okay, I'm I'm putting no on that.
+
+Rear Vision camera. Upon arriving stage rear camera. Looked up. TBS found no available for concern. Perform testing found that camera had internally failed to recommend replacement camera. 870 dollars. Okay. Should I add that or no? With the backup, we can do that another time. So, I'm not adding. Check engine.
+
+I guess State's check engine light present pulled codes found no active codes at this time. Recommend the customer to return vehicle when the concern is currently present. In order to diag. Correctly, so they'll charge us 185 dollars right now. If we want to bring it back later, so I'm not selecting that.
+
+To do. Rear defogger not operating? Hooked up scan to? It wasn't the rear defogger. I was having issues with, so I'm not selecting that. During inspection found driver rear passenger seatbelt seat belt buckle broke 383 dollars. Before fixing that seat belt, or I can try to. Glue it, so I'm not gonna check that.
+
+83 yeah. And the last one was. Rear seat.
+
+So they want 185 dollars to take the seat apart and look at it. And readjust it. But I know that it's not working well, so we're just going to hit no on. So all together with everything. Besides the like 180 to bring it back. $8,100.
+
+So this 5791 sharp Chargers are 60.
+
+Yeah, 57.91.
+
+They don't have the defrost. They thought it was the rear. And I can text her and say that, yes, please. I was looking at. The report and? It wasn't the rear defrost that was having issues. It's the. Heater hitting the windshield. That doesn't work.
+
+It wasn't the rear defrost that was having.
+
+Can we please adjust that?
+
+Well, I said. What three to twelve Grand? We're at, like six, that's not bad.
+
+To like. Now, I don't have to put. Transmission fluid in it every week or feel like I'm doing something wrong.
+
+Okay, we need to look at your car before we leave. Make sure that they don't need to redo something or whatever. We're hoping that that's my car, and they fixed my window. Yes, it was. Like, does my life just love me? Yes, it does. I'm just gonna come with you.
+
+Let's get rid. Robinson. It's like different crosstalk you've ever seen, it falls. Would you feel like you've learned about yourself this year and getting that point? And just place them together.
+
+Is deductible with a thousand dollars.
+
+So, come.
+
+Come by generic Viagra. If you're over 60. You qualify for nine tablets of 100 milligram, generic biographer Jesse, seven dollars with free shipping from Friday plans. Are you breaking it up into multiple payments? All you need to do is go Friday plans. I really like. It has the pictures and I can approve it and it explains it.
+
+This is our. Streamlined by billion dollar company. It's working, as well as the name brand.
+
+I've spent in years. What a Friday, plansvip.com. So, here's the email that they sent to be able to look at. Uh, what they have quoted. So, I hit review and approve.
+
+Um. And then I come here. It gives me a general overview of what I'm going to be approving or looking at. We hit review Services. Now we have.
+
+Option one, and they hit here at the bottom right, but it doesn't really explain. To hit next at that blue button. What you assume?
+
+I could not. I could not have them change the oil gaskets, and we could get quotes for that. That's the 30 3100 one. We just want to get it done and then just okay. And then it shows pictures of what they were. Quoting or diagnosing? Okay, st. Fluid. They can.
+
+Same pictures for that one. I'm pretty sure. Want tires, we're gonna get those at Costco.
+
+Rear camera. Seriously invoice your toothache. We'll be right down. I don't think we need a camera right now. We could go somewhere else. To get the camera.
+
+I need a second so I can come and look at your car. Um. Then it shows. Than diagnosing. Interesting. Yes, rear defogger, I don't need that. A seat buckle. You don't need that.
+
+We're going to see. We don't need that. So now it comes in and it has what I selected pre-selected. I can view the media. That gives me all of the pictures, so this is really like the checkout shopping cart.
+
+Okay, so I'm gonna prove that much. And that gets the oil leak, the transmission leak. And they're diagnosing the. Is being still the sunroof? I'm not doing the seat belts. I'm not doing the rear seat. I'm not doing the rear defocker, and I'm not doing. The tires, the tires.
+
+And.
+
+Yeah, yeah, the very on stage Street, uh, you're gonna have to go out, drive out to State Street, yeah.
+
+Or the camera. I think we could probably get. Better deal than 870 dollars for that little. It might be a 200 camera even in the Collision. I'm like, is there a Pirates? Now you know they're marking it up to so they can get good. Okay, they don't even have, I know.
+
+Yeah, so I think this is good. I'm gonna move forward. Cool!
+
+This is so cool, you can approve it from here for them. That's probably such a huge time and Money Saver. That is so cool. Okay, now they're working on.
+
+And I recorded the whole process of going through the email to the quote and selection, and then. That's cool. Because that gives us an idea of what mobile version needs to look like. And I feel like it's very comprehensive. No, they spent millions.
+
+Oh wait, this doesn't replace, which means that the damage was. Past this, so that's really nice.
+
+And then this is what I was wanting to check. Who is? Is this our ugly ass fucking bumpy where they're gonna go? Oh, you know what I mean, but it actually looks really good in my opinion?
+
+I mean, it looks like it looks. I think it looks really.
+
+You probably have new bulbs so? That one will go out. Probably in the next couple of months.
+
+Yeah.
+
+I hold home.
+
+I'm going backwards the whole way then.
+
+I realized they didn't offer like transmission fluid exchange. They didn't offer an oil change. They didn't offer power steering fluid exchange. They didn't offer any. Feels like Services for my mileage. Does that make sense? You know, you're going at 60 000, you have a 60 000 service, and it's like change all of these things, and then a hundred and then 150, and yeah.
+
+They didn't do any of that. Maybe it's because they were like, cute, too much stuff we don't even want.
+
+Right. I would think they would have had a diet. Because now it feels like it's not that much, but I'm like, we still need to get stuff done.
+
+Yes, and no, because I don't want her to be like? So, ultimately, I need to do the research if I, what does it need at this mileage or whatever?
+
+Sammy told me he worshiped the devil. We were in, uh, Dan Tanner's on that restaurant with all the pictures of Sammy was, like, you know, Satan is as powerful as God. I was like, what the fuck I'm talking about? Tammy doesn't really worship the devil, right? That's just something you say.
+
+That's something they think is cool. Actual devil worship. Is it? Uh, the reason that I initially was fascinated with Sammy Davis, Jr. Was that, um, he was a member of a Church of Satan? Urban legend. I mean, there's photographs in terms with Anton Levine photographs of him with Anton Laveria, the founder of the Church of Satan.
+
+Now, let's just pretend pretend for a minute that the devil is actually real. If the rumors of people in Hollywood selling their souls? Maybe for extra long, human life is true. Do you think there's any truth to that? There couldn't be any truth to that, right? Because the devil's not real.
+
+And so, there would be no selling your soul to the devil, and there would be no being granted. You've just submitted your mitigation. What's in your weight needed name for your hard-earned one? You know, it's low, you know, the line items have to change, but where? Can't even get set there.
+
+Used an extra long mortal life, but they're all lately. I've been uncovering some people who would have had stroke, long wives, and thinking hands on them, or they hear what I did a video on. Sure seems to match a very perfectly with Andrew Tate even down to facial markings, but you can go check that video if you're interested, so I wonder if he seems able to prolong his life?
+
+I sell him. So, like a drinking company, approval approaches family would be able to, right?
+
+Can't help but notice the very fast similarities in Sammy Davis Jr in down chewable. If you just ignore the nose, because rhinoplasty is a thing and making make your nose look a lot different. So, so, than when, yeah, push their heads together other than the rhinoplasty nose. They will seem to line up really well, especially those eyebrows and eyes with.
+
+In fact, same placement and pushiness and roundedness, exact same chin and lips, you know, area. But first, the newer scene, the video I did where I said Selena Trinidad, and then they came. J-Lo and MJo played the part of Selena. Smartest right in the exact same place, and that's probably how easily Salina's face watch the chin and not even move can morph with just a little bit of skin tucking and pudding of the face into JLo back and forth, almost like it's the same person that had some plastic surgery done.
+
+Jayla played the heart of Selena in the Selena movie, so Selena. Played sewing up in the Selena movie. Here's two marks right there and two other arms right there. Mostly, those are holes that got removed and left holes. One of them loves to post Selena.
+
+Played Sandy Davis Jr in a move. To fuck you, and now I'm gonna help you receive the truth of this with my girl trustee mother. I don't know whether it's a nurse, or even my eyes. No, it's the hour. Yeah, in the strength of the Holy Spirit who expose these monsters, um, those two and those to the exact same place.
+
+And then that's come down a little lower and want to be able to literally exact hole in their face right there.
+
+Which mean?
+
+And that is my absolute plain elephants. They say, no, the devil is real and worshiping it. So there's a little bit absolutely needs that beyond is real, and that's why I exposed the Darkness so you can find a way.
+
+So, live Jesus and the light in heavenly Father, and you can become fearless, like I am, because all I'm trying to do is be by example. And I'm afraid of these people.
+
+Flower aloe vera bullets are made out of soft blood, so they extend faster and dissipate more their energy. So, we're going to fill the bullets with different softer metals and see if they perform.
+
+It's really important and Associates if you know the extension of the person you wish to reach. You may dial it at any time. Otherwise, please press zero or hold for the operator.
+
+Please stay on the line while your call is transferred to the operator.
+
+This is Chris. Hi Chris, this is Kara with Resolute construction. How are you doing? Excellent. I understand your meeting with Spencer today. I am. I actually. It's one of my. Teammates. That's actually meeting with them, so I'm glad that's scheduled. Yes, yes, yes, that's correct. So let me get you back to him before he wants to do that.
+
+Um, I actually have a question about my billing. That's why I called, oh. I believe. Yep, I'm like, I believe, you're the gal. I am awesome! So can I help you with so I just got an invoice in the mail and it says for September 30th and then it says invoice total is 11, 115, and then it says previous balance 820 and then current payment negative 820.
+
+And then I have my balance due, which is the 11, 15. So I'm more just curious. 8, 15, is because that's a payment that I didn't pay. And now, it's 11, 15, or. What's going on? Um, so? The current activity, the meeting and bookkeeping Corrections for 1115. That's current activity.
+
+Okay, the 820 is what we billed you last month. And you paid it. So, the remaining balance is just the current activity. Okay, okay. And that's what I thought was happening. But then, as I kept. Looking at it. I'm, like, I don't know, maybe? It's saying that I didn't pay the 820, and I remember, I know, I did so.
+
+Maybe they didn't get it, and this is our first time like using sending out a check through our system, so I'm like, maybe they didn't get it. I better call her and find out before. Um, I just sent another one. Comes in. Okay, okay. Previous balance. It goes back to the first to the previous month, okay, or the first of September so?
+
+Balance is what your last invoice was for. Or a month ago, for a payments or the payments that occurred during the last month. And balanced due is the remainder of the activity and your balance. Two matches your current activity. Okay, okay, because you paid the other. Awesome, okay, that that makes sense.
+
+Well, I will be sending off a check, um. Today, so we'll take seven to ten business days. So, um, this is my notice for you, so hopefully you get it. Thank you! You love girl. I know that you said to, like, call, or whatever. So more to let, you know.
+
+So then we didn't get a late fee, so more also doing that. But, yep, awesome. Yeah. Okay, thanks Chris bye.
+
+The other one stayed with them. Yeah. Easy girl! I'm doing good your friend out. There is waiting for you almost clean now. All right, big guy. Let's warm up for a bit file for the rest. Watch. You take a nap?
+
+See there, buddy. Try to keep up. I have a 47 year old biological man. I have been on hormones for the year a little over a year. I just had my boobs done. I've had one facial surgery, uh, I am not gonna have bottom surgery. I'm gonna do one more face surgery on the bottom of my chin.
+
+To look as much like a female as I can that's and wanted to be my whole life. I understand that I cannot ever be a biological female. For those of you people that cannot Define what a female is, realize that you're part of the problem. Okay, the female is someone who is born a female with X chromosomes and can have babies that they give birth.
+
+That said that some men can have babies because they're trans men. Well, that's because they're biological women. Let's not all the nonsense and stop all of them. Pronouns. Uh, my biological name, and my legal name is David. Uh, the name I like for users down piano, so make sure you copy that ask me any questions you want.
+
+I'll answer them bye! Okay, try to keep up.
+
+And I dropped my kick it in.
+
+Okay, guys. So, we are getting ready to go about a little under an hour to go. Plus, I is in.
+
+Okay, so I guess a topic we want to talk about? Elon Musk just? Three posted like 35 minutes ago so? My viral video from Tick Tock to his Twitter X page and just labeled it honest.
+
+Elon Musk just? Reposted like 35 minutes ago or so? My viral video from Tick Tock to his Twitter X page and just labeled it honest. I'm pretty happy about that. Elon Musk just?
+
+90% of you have probably already all been in the bathroom with a trans woman and didn't even know because there's plenty of trans women out there there. So passable that you wouldn't even know that you were in the bathroom with someone who would smile on it, and when I said I don't care about pronouns and like people like, oh, so you don't have pronouns, and everybody has a pronoun and that's, like, well, yeah, I understand the church and I had some, but what I mean is like, I'm not going to demand you call me.
+
+She are trans women, no matter what do not belong. In female Sports, you know, belong in even a locker rooms in any way shape or form, if more insulted that you're being misgendered. Well, maybe you should look in the mirror and think about, you know, what? You're not quite passing.
+
+I think the world has definitely put more emphasis in protecting people's feelings over facts. I've got so many compliments from men and women, you know. All the hate came from.
+
+Of trans people better and to help create more Bridges as opposed to walls.
+
+Hello, hello. I was just responding to you, but here you are. Awesome! Um, Michael's not going to be joining us this meeting, so recorded, uh? We'll see how it goes. I feel like sometimes your guys's stuff is over my head, and sometimes I get it. So we got this.
+
+We're so excited.
+
+So, I'll just have to, um. Revert back, I guess if? I don't know how to answer the question. Um. But anywho. Victor, I feel like your hair is getting so long. I know, I see you like every week. Yeah, but it's so long. Are you like planning to grow it out?
+
+What? What are you doing? Are you just like? Uh, it's just. Taking me like quite a while, like? Um, find another Barber that I can trust. I don't. Okay. I get that. I feel like Michael's definitely gone through the and even myself, but I feel like guys haircuts are way worse.
+
+You know, finding a good one because a girl you can stick it up in a ponytail where you just kind of like it's fine, but a guy once it's chopped it. That's what your haircut is. So? Yeah, finding a good Barber is definitely. Uh, chore. My wife argues that my wife argues that it's gonna grow.
+
+Yeah, well, sometimes your hair takes a while to grow back. So? I don't know. I'm excited to see how long it gets, and I'm also excited for when you cut it, and you do find the barber that you like, because that's exciting. The longest I, I had, it was, like, um.
+
+To my waist. Wow. And this was 2015, I think, okay, but I had. I had dreadlocks after it, and then I cut it. Okay, do you have pictures of this? Cut my dreadlocks. Yeah, I can send it later after the meeting. Okay. Yeah, I need to see that. That's so funny.
+
+That's pretty cool. That's cool. That's crazy, that your hair was that long. What about you, James? Have you had really long hair before? Or just long hair. I feel like for a guy that's what Victor's had his long hair considered.
+
+Uh. Yes. Below. That ears your ears. Okay, yeah. Just covers all of my. Is, uh, top of my hand, doesn't, you know? You had a nice Shack going on so you could just whip your hair back, like this. I love it. I love it. Oh, cool. Um. Okay.
+
+I guess if any of you guys are just excited to share and want to go first, um, you, you can pick on your projects or whatever. And where you're at. Yeah, I can. I can go first, okay?
+
+I'm so excited that you're. Like? Monitor is working, too, and we can see you.
+
+Oh yeah, so exciting! I had my system updated and hadn't I haven't updated it before now? Oh yeah, okay. So, this is what I'm currently.
+
+We must talk about what I did this inside.
+
+So we. Oh, there he goes. Oh, and he's back. I spoke too soon. Okay, may you see my screen. No, we just see us. Oh, how about now? Yeah, it's starting to share. It says screen being shared. Loading.
+
+So? We went to. Okay, now it's back on us again. I work now. Nope. Well, it's not throwing mailbox power, no? It's just showing us.
+
+And then. That's so funny.
+
+It might be happening. So we ended up. Taking. Our car in today! Um, the. So the company car has like a a a sunroof, and it's been raining like, super, super bad here, and so it was either the sunroof that was leaking, or like the actual oh, it's shared.
+
+Okay, I'll stop talking. Okay, hurry Vic before it stops. I've added. Um, I've edited. Miller automation inside n8, and I completely deleted the ad insurance mailer. Note to the wind and tail damage, I just added it directly inside the automation inside mailbox power. So I, are you saying what the damage?
+
+Okay, so are you saying when they get sent the wind damage mailer as example, then? That will be sent. Oh, I see where it like, now goes down in it. Okay, so instead of in the innate in node, it's just going to be within mailbox power. Yeah, awesome, uh, singles for the hail damage.
+
+Uh-Huh! Oh, cool! Edit it inside there, and I, I believe, I sent one of the damaged mailers last week. Or, or that was two weeks ago. I'm not sure if you guys have received the mailer. Nope. Okay. Um. And then I'm still working on the. Estimates Miller. Uh James, and and seeking help from James regarding the other creation of the estimate entry.
+
+Uh, because yesterday, it wasn't working. But right now, I see that it's working, but then the.
+
+It's the first name is not. I still need to check that out. It's, as you can see. Where is it? It's getting so first name. Yeah, it's blank, but then it has the numbers. Yeah. Yeah, but it has it should be home owner based on the. Um, lead, that was created.
+
+Okay, um, I'll investigate further regarding this one so that I can. Um. Properly test. Everything here for the estimate. Uh, we need to. And I just asked James if if the. Estimate that's being created is. Uh, being related to the. Um. Needs that was created, they. From the estimate.
+
+I have also updated. Functions that we have in the workflow. Because we added mechanical damage to. Um.
+
+We added mechanical damage to. Where was it? Estimator, milliliter. So I needed to add.
+
+Yeah, cuz we've I needed to add, like the other merge Fields. I shifted out because initially I didn't have. Um, the mechanical damage. Added into the. Um, let me show you. And then did Sheena already make that switch as well? Yep, she already changed the okay, and then other is right there.
+
+I believe she already changed this. Because I have edited it and? Instead of using like merge 17 to 20 for the damage types. Because now we have. I swish it over and start it at 16 and.
+
+I had everything. Uh, all the other merge Fields. Um. I had everything changed over. Awesome! And then were you able everything on? Go ahead, sorry! Computed, but to be able to test everything. Uh, we need to have the. Full flow of of the canvas lead form, going into leads, going to creating the estimate.
+
+So that all of these can be tested if if they do reflect the values coming from the estimates module. Okay. So, we just need to make sure that flow is. Um. Yeah, okay, these are roll up David. I'm just testing out. Like, since yesterday, we've been testing James and I have been testing.
+
+Awesome!
+
+Everything from lead creation, and then I am partially. Um, helping them. Call block, but but just on the side. And when I, I don't have anything to work on, like, specifically, okay, how's the testing going with the flow so far? You guys from the? The form. Um, right now.
+
+Before we hop on the call, um, this is what transpired. Like, I managed to create, automatically create, and an estimate entry. As I've mentioned earlier, it's returning a null on the first name, probably because I had a workflow for the first name in the leads module, because from the canvas form.
+
+Homeowner, whom is set to know. Um, we pass it off as an empty field inside the leads module so. Um, I have a workflow in there that if the first name comes from the form is empty, it will replace the empty, um. To a homeowner, so maybe that's why it's returning null because?
+
+When the lead is automatically created, it automatically creates the estimate entry at once without. Um, as synchronously before the workflow for the. Homeowner kicks in into the first name filled in the leads. So, maybe that's why it's returning null? Initially. Now, it's empty. Yeah, yeah. Hmm. I'm like, where is it, even getting that, um?
+
+Word from? Like, why homeowner? Yeah, and how it's saying? Right. Oh, um. Because initially. If we have homeowner home, no? I set a workflow that it auto. Remember that when creating a leap in CRM, we? We need a last name. Yeah. Um, but since if, uh, if we select no on here, so technically, there's no first name and last name being passed on to the leads module.
+
+So, what we did was? Created the work build app automatically creates like numbers, number, a unique number identifier for the last name, just so that it creates a lead entry and then the first name. Is replaced with a homeowner. Uh, it. I have it as a workflow. Okay, yeah.
+
+Here on lead create without first name last name. And then. So, if there is a name, if the homeowner is home? And then we send them out a mailer. It just puts their first name and last name in, like normal, and then it would still create the the mailer.
+
+But now, it would just fill in. Last name. Oh yeah, yeah, cool. Okay, so ultimately, just figuring out. Why it gave that error on the first name? Um, yeah. Initially, I think it's cross. It's because. When there's no first game pass from the canvas form.
+
+So initially, there's there's empty. First, there's an empty value on the first name because there's no first name passed on. And since we had the estimate created automatically. Um. It's the. The empty first name is what's best on to. To the first name field in the estimates module, um.
+
+Probably, I can set like, um. Right schedule. Timer, like this one, two minutes, like, maybe? Maybe 2 minutes after lead is created. Like, wait 2 minutes. For the home owner for the first name to be created because there. For this function to? Click in to replace the empty value for the first name to switch it to, say, home owner.
+
+The a great estimate is.
+
+It's triggered.
+
+Creole. For a solution, this one. And then, once everything is complete, I actually. Edited all of the. On here to include all the other. Merge skills that we need for the damage types. Awesome. Okay, I just have one question since we have mechanical damage now. In mailbox power, we do not have.
+
+Do we need like to add? Mechanical damage mailer, like what we have for the other dinos types? Um.
+
+Yeah, I so I feel like mechanical damage is kind of hard, cuz. Um. It can be all sorts of things. So? Um. But yeah, maybe we can look into that and create one. I feel like we originally. So we did mechanical damage, and then we didn't do a mailer.
+
+For. Like on purpose. But I agree, I don't feel like it makes sense. And it's confusing and like, why is it on there? Then we should just take it off. Um. But then also mechanical damage is something that I feel like, you see. Commonly in a way so? It.
+
+It does need to be there, so maybe Sheena and I can come up with something. For the flow and a mailer. That kind of talks about multiple things, and then maybe even that. Then it can, like, check the most comment or we can do the most common ones, and then it can check.
+
+Which one, like, what mechanical damage they're actually? They have. Um. Or maybe you can just talk about what mechanical damage is ultimately. Maybe that would just be easier. Um. But. Yeah, and then we can just add that into the flow, um. When, when needed. Okay, so um, I actually added, added it here in the future.
+
+Awesome. So, in case anything changes, so if we have like new mailers for the, uh, for this specific damage. Like, okay, you can just add all the other modes on. Awesome. Okay, cool. Cool. Look at you being proactive.
+
+Um, I'm so excited! I'm excited to see it like flow all the way through, and then either. So? Are we able to? Go through the mailers. And because, ultimately, I feel like we would want us. We're wanting to test and see if each one works correct, so we would go in as a customer, and then we do wind damage, and then it would create that flow.
+
+And then we would go in as a customer again and then do hail and then water damage and so forth and go through all of them and send the mailers to us. Are we going to be able to do that with the same address, or do I need to find addresses to send these mailers to?
+
+Um. Maybe we can test it out again using your address, but first I need we need to like, delete. Um, like, my address, my account. Yeah, yeah, the same, because inside mailbox power, just to be sure, okay, um? Also, I've added the mechanical damage from item on the form as well.
+
+Okay, cool. Awesome! Thanks! Thank you! Thank you! Cool, yeah, let me know what? You can go ahead. Just let me know if we're needing to get multiple addresses to send them to, um. But preferably, I think if we could just delete. Our account. And then, um. Redo it, then I think, yeah, yeah, but then, at the same time, if it's gonna take, because I know the mailers.
+
+Um. Ultimately, it's like a full like month or more to send them all. So, yeah. At that point, it's kind of, like, well. We just kind of yeah with the automation. Um, you can see that it takes like. 21 days. Yeah. Yeah. So? Um.
+
+And. Some days like? Or the mailer to be received. So, no, technically, not 21 days. Yeah. Exactly! So maybe I'll try and find some addresses too. So if? We need that. Then it's automatically there for a backup. Um. Two awesome! Well, I feel like, we're like, so close. There's one thing.
+
+I have created this lead and and this is. Mostly for on on James's end. Because I've created this test lead. And it automatically created. This estimates entry and. And I've mentioned earlier to him. I've asked him if this is a related list to like a related record to this leap that was created.
+
+And also. He mentioned something about some of the addresses not having roof stats. Uh. I'm not sure what he meant. Um, what he meant regarding that one, but I have this. This is an entry that was automatically created from the lead. Some of? I'm not sure, maybe? It has something to do with the roof stats that he was mentioning, um.
+
+I think he mentioned that. The current proof doesn't have solar. It would not have roof steps. I'm not sure. Because this, this are the fields that I need. These are the merge Fields inside the mailer estimates mean. Okay, and then, um. And those didn't generate anything. When you created the lead?
+
+Um. James, do you want to hop in and? Shed some light on. What you were referring to? What I'm using right now, or what you're using right now, the Google.
+
+That API is. Constantly getting the information of the building. Actually, not just the roads. Is just also the building.
+
+Yeah, it's getting the spare of the building. And. If the address. Doesn't water my information about the? Building information like a square, like a lot of stuff that just like a big mention. Groups, that is, some in. Um. Information about the? Little Roofing, so it included the. It. It includes the, uh, just like the gutter gather.
+
+Hit cable so? In the center of this. I mean, the beach. This is the. Uh, I mean. Start of the building the page. Okay, so how tall it is? Yes, it the bitch, and then. Uh, square square meter, so I mean the gram. Step up the building, the gram meter.
+
+Is the one that? With the really that we're really getting from that building information. So, if the building doesn't have? Information. We can entertain. Uh, the information, like duration, mark duration, map duration. Well, because it it is needed. Calculation from this pitch factor, and then the that one means Square load.
+
+The square load is the square meter. Yeah, yeah, um, when this entrance was created, it automatically sped out this, but there's no square load, and I think that's actually supposed to be switched because the pitch at 17.41 actually doesn't make any sense. I think that might be the square load.
+
+And then the pitch factor would look more like one slash 12 or 2, 12, and so forth. Um. So it might just be in the wrong spot, but maybe it comes in differently. And I'm just unaware, so maybe that makes sense to you. James for the pitch tractor? But.
+
+In my knowledge, that doesn't make sense. And then, are you saying, too, that not? On the Google API on the address.
+
+Excuse me, um? That not all of? The information is there for each roof, like, or each building, so not all of them are actually gonna provide the square load or the pitch factor or. Um.
+
+Maybe even like the eave length, because I'm not sure what necessarily you were you were referring to for, like the heat, cable, and stuff. Um. Um, the actually what we getting from the password API is the square square meter, the parameter. And then the information, and then the pitch factor on.
+
+Um. From the information because there's? There's a lot of pitch. In that information, and then it will get in the average of that pitch. After we getting the damage it will. It will put it in here in Pitch Packer, so. And then. Once we get the parameter and then the pitch, it will automatically computer than this.
+
+That's like the duration maturation. Yeah, cuz I. I tested both if if? If the two of these fields have values, it will automatically calculate this. Uh, so if you manually put something in there, Vic then does it work? Yeah, it actually does work. Oh, um, yeah. Well, that's really cool.
+
+Do you know why? Um, oh, sorry, go ahead. The pitch Factor becomes null. I'm not sure why? Yeah, um, and then James. Do you know why it shows up as? Like 17. Something and? That that's from the University API, because we're getting the average of that Beach. Uh, that's what Michael told me about.
+
+Health, and they helping me get. Bitch deliberation. So okay, I'm getting all of the beach degrees. After that, we're getting the average.
+
+Okay, and then Victor. What happens if now, so you put in the Square load manually, and then it auto deletes the pitch factor? What if you put in a pitch? What put something else beside 17 maybe do like 10? Or 15. That's fine, too.
+
+Okay, I'm actually changed. I don't think it changed, um? I don't think the numbers actually changed. But then, it just. You stuck it in.
+
+Yeah, I didn't change. Okay. Interesting. When they deleted the pitch factor. Yeah.
+
+Okay. And that's ultimately James, cuz the API. Maybe working properly or connected? Or pulling in the information, the way that it needs to be. And actually, I will try to check and.
+
+Getting to? The ball because? Um. As far as I know, uh, we should get the building information from the solar API, but since the address is information DB. We're having a limited. Access of the API, and maybe I'll try to invest in YouTube. Okay, this disabled again. Maybe I will try to reconnect?
+
+Okay. About. Compilation. I don't know why. I don't know why it is entering. Um, but, but it's completing the we just don't know why. Blank, but it's calculating.
+
+Yeah, maybe, yeah, if you see this picture, and yeah, that it means that it is a building so? There's something like? In the front and the? Updating the page pin. It's not showing us. The right value. Yeah, maybe in the back, and it has a value. Yeah, because if the button would be able, there's something.
+
+Yeah. Updating, so I don't know if, even if we did.
+
+It's also also. Updating my future platform, but there's.
+
+There's no update on that. Okay. Were you saying when you update the square load? That it also updates the pitch Factor automatically. That's what you're seeing, I know, oh no. Okay. Uh, updating here, and they can edit the expression is. Population of new durations. Some of the information also below are also should be updating.
+
+Okay.
+
+Yeah, cuz then it does. Yeah, and it is also referred to input some of the pins there we will text. The error of that, uh, what's pressing it?
+
+Because it it is. Simply if the calculated from two to three fields actually. So, with the each factor is.
+
+There's also, I think. That's the pitch factor. There's also pitch AP stroller. Yeah, yeah, that one? Uh. I don't know. There's also. Um, dependency of. Uh, calculation.
+
+Yeah, that one, the square, escuelo, and then the? Actually also needed from that population. If. Values. It's just not calculation. Okay, so that should be. Are you saying from Google API that should be getting filled to or? Uh, that one is automation from our. Uh, the one that we needed from.
+
+So the API is? Okay, and then is the raw square in Pitch. Is that from our actual? Like our online estimate, or is that our quoting tool? Uh, it is from the English. Okay. Huh? Okay. Well, interesting. It's interesting that it loads. Once you put in the squares. And it's also really cool that it does, and so you see it working, you know?
+
+It just has. Well, I, I think, even if it deletes the pitch factor, it's still getting the 17 point something. It's just not throwing on there. The calculation is. Let's multiply. Yeah. Um. To some things that if you try to edit also the pitch. The upper part of?
+
+The. Uh, the value of armpit is the.
+
+So, so you would put, um, yeah, so you would be. For example, no try. Yeah, that's right.
+
+That one. So, it is. That this place between the beach is low.
+
+So it didn't change. Yeah, but the calculations didn't actually change. But the pitch factor did show up. Yeah. So?
+
+Um, this actually changed as well.
+
+Uh-Huh! But if, yeah, you say that the squares is different? On the square ra. Then it doesn't change anything.
+
+Hmm.
+
+Okay, debug it. Okay.
+
+Oh, cool! Cuckoo.
+
+The new version of this is the electric. Uh, yeah, a little bit like?
+
+Yeah, I will try to check that method.
+
+Awesome! Coco. Well, thanks, Vic and! That was so cool. I'm so excited, you guys, I feel like it's really coming together. I'm so excited. And to even see, like the. The totals of the roof calculations and stuff. Like, actually, working is. And then. Now, it's like, once they're all in, you know, now we just have to connect to mailbox power and everything.
+
+So that's that's so exciting. And. I feel like, ultimately, there's just a few little tweaks that we have to make to get the right numbers where they need to be. And. Calculate correctly, but I mean. It is working, so that's really cool. That's so cool. Um, maybe later. Trying to check press the ingredients?
+
+Uh, also from my end. I have meeting new information of the products. Awesome! First four only. And. I'm trying to root them into one advantage first before I can plug in into our.
+
+Work them as a new package before inserting into. Import me? Uh, data, or the record interviews before getting our.
+
+Yeah, yeah, um. Quick question though, so putting the product names and descriptions in there. If we switch. The name of the product. Are you connecting it to where it's like as example, um? Um. Like gutter clean out. And that's how? Categorizing it to other things and how it's going to connect is using that name.
+
+So, if we switch the name in the future to instead of gutter clean out. It's just gutter cleaning. Is it going to mess up things? And we need to figure out like? What we want to name it specifically right now. Uh, edit the inclusion. I included the function that package.
+
+I think.
+
+Uh, the only thing. What matters is the package? That's the only thing that. Uh, like affecting the future. Okay, so the actual name but not the description? Okay, then I'm gonna look at the different package names because I know. Like the actual package for the shingles. I know those are correct, but then there was other.
+
+Packages. Like, say, for gutters or for heat cable or cleanings like tree trimming and stuff like that. That's where we didn't necessarily want to name it that, specifically, that's on the um. The Google Docs. But it was just ultimately a reminder of, like, okay, we need to put this on there.
+
+And then, we'll write the description and figure out what we actually want to call it, but I know you are. Putting in the name and then just putting like a false description on some of them so you can connect it, right? So? Um. Yeah, I'll go in and. Uh, modify the names.
+
+Of them. So then you can at least move forward with that without us. Then switching it and then messing it up on you. Cuz. And then. Now you have to like. Do it again, right? Because that's annoying. Um, and I'll let I'll let you know. When when that's done?
+
+And hopefully you didn't already put all of the names in there and then. Now, you already have to redo it. There's already. Just everything then. Okay, cool. Awesome! Um. So now, the like Roofing packages are in the products module and? Now, we just need to connect it to the like estimate tool as well.
+
+Maybe even the quoting tools. So, then, when they select it, it's like. Selecting those ones.
+
+And only time and testing them in the quotation. I haven't. Do. Oh, okay. Coco. Awesome! And then, uh, yeah, and then just.
+
+Process will be intake, so that's what I'm doing this. Uh, so that's. Awesome! Awesome, awesome, okay? Well, thank you guys, so much for sharing. And I'm so surprised, Victor, how long your video lasted that was? Incredible! It took a second to get there, but after it did it, was it stayed strong?
+
+That's so funny. That's funny. Um. Oh cool, what it, um? What did you guys do over the weekend, because I know? We had Monday off, or I guess, yeah. Your Tuesday. Would it be Tuesday? For you guys. Tuesday, because your day ahead?
+
+Uh, yesterday, we.
+
+And talk about the sentence meeting because? I think, uh, what's up, we? We're going to have the same place we can that day. Yeah, yeah, because we ended up, um. Because you guys had the day off. So more, just wondering, like, did you do anything fun for your day off?
+
+Because your weekend was long, ultimately?
+
+Well on my weekend. Uh, this place my driving lesson. Yes, we can. You're, what? Uh, just finished my drivingness. And this weekend, your driving lesson cool, that's exciting. Was it your written or your like? Physical driving lesson.
+
+That's really cool. That's exciting. So, now, do you have your like driver's license or learner's permit? What? What does that look like, for you now? I will get my non-pro rational next week. That's cool. Well, congratulations. That's really exciting. What made you get your driver's license? Like, why, why now?
+
+Actually, my.
+
+11 and 10 years ago. Okay. Yeah, I do not get. Non-Professional license. Okay, I'm getting this because I always project to come back to the agency and get mine and professional license. And, and committed to getting my network. You're like, I just want it, and I feel like. That, that's what you're doing.
+
+That's awesome. That's so cool. Well, congratulations. That's really exciting. Um. Yeah, I feel like when I was younger. Um, we. I didn't necessarily really care to drive, so I didn't get my driver's license when I like, should have it wasn't? Too much further than I think it was only like a year or so later than other people.
+
+Cuz, you can get like your learner's permit at, like, 15, like right, when you turn 15, and I just didn't because I didn't care. Um, but that's, that's super exciting. That's so cool.
+
+And that's really cool. Victor, that's really pretty. Did you like take a boat there? And then you just hung out on a little like Island. Yep, but it's only like 15 minutes away between 20 minutes, both right away. Oh, from your from your house or from Island or whatever, um, from the mainland, but uh, going to where the boats.
+
+And it takes like four hours from where? Are absolutely. Oh, okay. Well, that's really pretty. What did you guys do? Why you were there? We just happened to. Um. Made plans with some of our friends to just camp out.
+
+That's really cool. Did you bring your kiddos and stuff too? Or was it just like a adult activity? Yeah, we brought the kids. Well, that's really good. Some drone shots. I'm gonna uploading send them over so that you guys can check it. Well, that is so cool. Um, does your kids go?
+
+Do they scuba dive too? And your wife? Uh, my wife tried it twice to discover scuba. She doesn't have the license. Okay, my kid is five years old, so that's right. Love. She loved. Putting on her goggles. Yeah, going underwater, though. That's cool. Maybe when she turns like eight or nine, I'll have.
+
+Um, try it. Well, that will be really fun. Hopefully, she really enjoys it. Well, your dreads look super cool, too.
+
+Your hair looks so thick that's crazy! I feel like, um. Most of the time. When people have dreads, it's either full. Or their hairs, like really thin. And then, just like you can see their scalp and stuff, so that's awesome. How thick your hair was or it is? It looks really cute!
+
+No, it's not thick anymore. No. Yeah. Well, dang it. And that's kind of nice, too, because I feel like it's all humid there. So, it might feel a lot better with not having as thick of hair. So, my sister? And her husband for their anniversary. They ended up going to.
+
+Japan for like, a week or two weeks, I don't know. Um, but? Anywho, I guess it was like super humid there and now they come back and their skin and stuff is so pretty. It's all like she doesn't have any acne, and it's just their Skin's all like, smooth, and glossy.
+
+That's so nice here in Utah. It's so, so, so dry, so I feel like. Like, Maureen and I look the same age.
+
+But. Um. But anyways, but yeah, it was just really interesting. How, like that little time, can make such a difference, and I feel like they had tons of fun and had, like, all these little souvenirs and candy and all this anime stuff. So, that was pretty cool. On little knick-knack, things they did.
+
+Oh, and I guess so, they went. Um. Like Universal there? And. My sister, she definitely is like a heavier girl. And then her boobs are like ginormous, like her bra, one of her cup sizes is like bigger than my head, like her boobs are massive. She just has, like, ginormous titties, and anyways, so I guess, like the entire time like she went to go, get on a ride and they're, like, oh like, you're too big, like the strap things wouldn't secure her and stuff, so she wasn't able to ride on like any of the rides, but?
+
+Japan, like everybody's a lot smaller than here in the states. I feel like, probably, and so like finding clothes and stuff because they're just like bigger. And then, I feel like, really tall, too. And then the third, like clothes or anything, fit them either. So that was like, really interesting, I don't know.
+
+So, there's a fun fact about Japan, I guess you guys.
+
+Okay, anyways. I'll stop talking, and I'll let you guys go. Thank you, um, so much. I will see you guys, we're creating about Japan. Yeah, right? Um. Yeah, um, let me know if you have any questions or anything, and if not, I will talk. You talk to you tomorrow or on Monday, so?
+
+Okay, awesome. Okay, bye. You guys have a good one.
+
+Get out, go downstairs. Go preachers out!
+
+Go lay down creature.
+
+Get out! Get out!
+
+Let me set this up! Perfect!
+
+Yeah, I woke up at 3, 30. I passed out for 10 minutes.
+
+I don't know. I haven't talked to her.
+
+Yeah, storm rolling.
+
+But I'm fine with rain.
+
+Or if it ends up like this when it's colder. Man, it'll be so much snow. It'll be nuts. If it rains this morning, oh yeah. 27 degrees really?
+
+This neighborhood. Yeah, but you guys are. Yeah, you're equating this here for Halloween. Our neighborhood will be fun! Trick or treat, though.
+
+Did you celebrate Halloween?
+
+That's what it was for us. So when I was? Scarlet Sage. We would go to. All right church building, like how we play dodgeball now? We didn't do that, then we would just go to our church building and.
+
+Grandpa's sister, Aunt Sandy. And then our cousins. Their last name is Lim l-a-m-b. And return to just talking. Then the kids would run around and get yelled at for running around because they're in a church. It was ultimately. We thought it was fun because we got a little bit of candy and we got.
+
+Get in trouble for doing something that. What we wanted to do. Looking back.
+
+Graph also believed that he put up a Christmas tree. You're worshiping a tree, not Jesus, so we never had a Christmas tree till I was, like your age.
+
+You're not worshiping Jesus. Yeah, Grandpa's. Like, we don't worship trees.
+
+That's what other religions celebrate. The way that LDS religion celebrates. It is the Easter is actually. Jesus's birthday.
+
+Yeah.
+
+All right, if you have. He'll tell you.
+
+No, just Grandpa, um?
+
+Yeah, he'll tell you, but that's what I remember is. He's actually. Birthday supposedly. Christmas is actually supposedly Easter or something. That's what I remember.
+
+Stories.
+
+Celebrate Christmas! So, and her mom died. But her mom went in the hospital. She was like nine and then died when she was like. She didn't have a normal life. And Grandpa Hank didn't have a normal life. They grew up in the fields as farmers.
+
+Parents owned like a gas station, and then like a breakfast place or something. They've always been like business. Entrepreneur people. Yeah. Out in Washington state in the middle of nowhere. Yeah, Hickold grandpa. And Grandma. Was raised in another country without a mom.
+
+Yeah, so I wasn't raised normal at all. All the all of your uncles and Aunt Jenny? I don't think they were raised pretty normal either. And Tony didn't even know what a period was. So she just started bleeding, so she was dying. Because Grandma didn't get taught. I guess.
+
+I don't know, and then Aunt Jenny's really frustrated about that. It feels like she was kind of cheated out of, like. Having a normal upbringing or whatever?
+
+And then the obvious church is all about no sex before marriage. And they say that it's like. The closest sin to killing? So, if you're not married. You have sex with somebody. It's almost like you're committing murder in God's eyes, is what they say. That's fucking crazy.
+
+It's really sad messes up a lot of people.
+
+And then you're not supposed to watch traded art movies or listen to music the swear words in it. Which is all great. It all has. Half of it is, like, oh, I can see how? That's good. Especially as a kid, you don't need to be watching that stuff. You're doing that stuff, you know?
+
+But when? You hit an age where the world's real now, and you can't just hide because you're a kid at home. You don't know what is happening. Your body's going nuts and changing. You're attracted to the. Gender. Having thoughts? They teach you it's evil basically.
+
+Oh, while I'm saying that we were sent here for a test. We, we forgot all of our previous memories. Because this is a test. To see who we truly are. But then we have the Bible in the Book of Mormon and these religions that tell us exactly how to get past the test.
+
+Why did we lose our memories? That's stupid. It's like, if they tell you okay, we're having a test on math can't use a calculator, but you can use a calculator, like what? Right hand. No, you can't, but here's a calculator so I can. Well, no, but it's the only way you can do it.
+
+What?
+
+Look, you know what to do with the numbers?
+
+Yeah, her whole thought is that if you know how to do it manually, then you understand it better. And I do agree with that, but? To what extent? Uh, like the math that you're learning, might be some math that you use because of, like. Your job or whatever. And when you get that job, they're not going to go.
+
+Do you know this? Oh, you don't. Okay, you're fired. Nobody go, okay. Let us show you how we do it. Like, even with college, you go all the way through college, and they go okay. Now you have your degree in business analytics, and you go look for a business analytics job, and if you're lucky enough to find one.
+
+You train on exactly how they do the job. And the math and step by step. I mean, they make it for dummies, so you never really have to know much, except for understanding how things work, but not how to make things work. I don't know. World has a lot of wasted time.
+
+Like I was telling your mom.
+
+If you went with me on every if you went with me to work? You learn how to measure you, learn how to calculate you, learn how to sell. Sales is a huge scale. You learn how to kill people. You learn how to talk to people you, learn how to email people you, learn how to.
+
+Things you learn, how to pay for things, learn how to? I mean everything. I said they send you to school for 15 years. Really 18 years of your life you're doing learning? So that you can get out of high school and be an idiot. Because I'll tell you high school kids really is?
+
+And then, if you're really smart, go to college to be an idiot. And bro. It's gonna be so pointless when you're in college. Unless they're actually teaching you things that the world is learning at the same time. But right now, every month. Is like a whole new? A whole new year of training, because that's how fast technology is growing.
+
+So, when you go to school, you're going to learn how to what happened 10 years ago with technology because it takes them that long to write the books and to get them approved and to get them into the schools and into the systems. So, you're learning outdated information and Technology.
+
+Schools were designed and created by the Rothschilds, the Rothschilds. Are. The companies are the it's the family that owns the steel mills. In the Industrial Revolution. Go to these schools, and you can learn how to be a worker. Schools were designed to make. Factory worker originally is how they structured it.
+
+So that then we could advance and. Get our country to grow, especially during the war and stuff that you find out. The war was actually just because people wanted to make money. Been. So they started Wars so that the government can spend money on what the rich people wanted to make money on, which is weapons and machinery, and all of that stuff.
+
+None of them went to war. They just sent us and our kids to war. World's so corrupt, bro. That was your age. I wanted to go to. Because I thought I'd be fighting for my country. You're not fighting for your country. You're fighting for rich people to get rich and to kill people.
+
+For it. It's sad. It's so sad. It's just a rich man's game on a whole different level.
+
+So just know that. And sure, maybe our country wouldn't be doing as good if we didn't kill a bunch of people. But there was no point for war, it's for money.
+
+And now, the last couple years you find out. Billions and trillions of dollars.
+
+People are dying for no reason. People. Some kids. At the same time, everybody's killing each other, thinking that they're being a hero.
+
+Hmm, let me say that the Earth. Curves, lose your ball. You got the salt box? No, it's flat. Slap, because if you find an airplane and when you fly in an airplane, if the Earth moves round? You'd have to tip the nose down about. Like, I think it was like 20 or 30 feet.
+
+To stay on the Earth's culture, but they don't do that late. Instead, point the nose up. So they don't run into the Earth because the airplane is going down. So that?
+
+I think it's. I don't know exactly what it is. No, I think the warm part of it is. A hundred percent, because even in like, it's like a dome, but then it's flat on the bottom.
+
+I. I'm I'm not set on. Yeah, I also saw.
+
+What really yeah, we're doing this thing about space? Like?
+
+And didn't fly for another 13 miles. But if you look in the shadow of?
+
+First of all, I don't think cameras would work in space. Because. Just. Dense, it is, and whatever. And, like, there's no air particles for the camera to reflect off of. And second of all, they had a giant green screen behind casting a shadow on. I'm pretty sure that's a green screen in the background.
+
+My teacher's on. No, that's just the giant camera that they use. No, I'm pretty sure that's a green screen. Did you say so? Who was holding the camera? Yeah, because even behind the camera. No one was holding it. The shadow was the camera floating on a few sticks. That's a tripod.
+
+Yeah, and it shows I'm getting out of the. Spaceship who got out first to set up the camera. They couldn't get the so. Spaceships are only meant to launch and then land once. They can't launch land and then launch again and then land again. So, in order for them to get on the moon, they'd have to figure out like an anchor to reach the moon and then float down to the Moon.
+
+But it wouldn't be possible. That's funny.
+
+And get your baseball stuff too, because your friends wanted to play catch.
+
+You can thank me later for this powerful remedy. You're going to use the avocado pit most people. Throw it away.
+
+All you do is dice it up and put it in glass container with rubbing alcohol. Look at the brown color, you know, it's ready. This is going to take away all your aches and pains everywhere. You can thank me later for this powerful remedy. You're going to use the avocado pit.
+
+Just know that. With the moon and?
+
+And then talk. It might not make sense to teachers. Other shirts. For real truth. If there's?
+
+And it doesn't mean you're wrong. Doesn't necessarily mean they're wrong. It just means that.
+
+That's how they were taught to believe things. Everybody has their own world of belief.
+
+And we can't prove it. Unless we're getting a spaceship and go die proven. I got you.
+
+Some showers and see what's going on. Yeah.
+
+The Titanic was not the Titan. I know it was the other ship, and they sunk it for insurance money. That was the Rothschilds it sunk it. Yeah, because they have the old. Whatever it's called, though. Then I have the Titanic. Where they have new or both. That was the other one, and then they just painted the Titanic onto the other one and the other ones came onto the Titanic.
+
+And the part they don't tell you is that? The families of the other wealthy people that were their competitors were on that ship. Every single.
+
+One guy that? Was supposed to be on the ship. The one guy that was supposed to be on the ship canceled five minutes before the ship took off because he knew that it was. Along with all of his other co-workers.
+
+Evil bullcrap lies, and then they survived and wrote the storybooks that they gave to the school systems that they designed.
+
+And. That's what's been repeated through history. Over and over and over for all of time. Crap flies. And then, they say, keep down in the past, so it doesn't happen again. We don't know what the past was, because the people that lied are the one who wrote the past.
+
+And so all we can learn is that? This world's garbage. And you can't trust anyone? Especially with money involved.
+
+I have to say, no, it's brand new. It hasn't been ran through the warm-up cycle, and I don't want to be using the company generator.
+
+For personal use.
+
+Uncle David said, do you have a generator that Rosie's boss can use to power out? Is that his house at his house? Yeah, maybe. That rich guy should have spent $1,000.
+
+Like, let me ruin my stuff so.
+
+So, I'm gonna see if Kara wants to go to. Come on Grandpa's, and then, if not, I'm gonna go drop you guys off to eat. And then I'll come pick you up in just a little bit when you're done eating.
+
+Constant adrenaline.
+
+Um.
+
+I think it will be best for me to not be there.
+
+But then you guys.
+
+I'm trying to stop smoking. Yeah, I mean, I quit a couple weeks ago.
+
+And I don't know if it's going to be forever or just a little bit. And I want to everyday. So I get angry and want to break something because my testosterone's so freaking high. Be really nice just to calm down.
+
+It's exhausting. Hello! Hey, um, do you want to go to my mom's with the kids, or do you want me just to drop them off?
+
+Okay, I'll come pick you up. We're turning on to. South Jordan Parkway off of the corridor. Um, in just a second, so I'll see you in probably six minutes.
+
+Cool! Hey, love you bye!
+
+So, if Grandma and Grandpa say so, what did Michael say why he didn't want to come? Just. Um. He says his emotions are like when when Grandpa was 35.
+
+Probably.
+
+I'm really good at being an asshole.
+
+I'm sure you will again at some point in your life. I love you.
+
+Are the best.
+
+Recoat it. It's like a chipper machine, and just like Cuts up a couple inches forever, whatever depth they set it up.
+
+Must have just had a lot of. Our weather. The water, freezing and cracking stuff. Maybe?
+
+Streets in other states that don't get. Or so often have much better streets for longer ships.
+
+And then sometimes they have crappier streets because they don't have to build them as nice. It's weird. Depends upon where you go and where they're at as a city. Municipality, another name for, like? Like a city.
+
+It's like.
+
+Um, just to the left right there. Well, if you keep going, the street, yeah. Water park. No, I like his big empty field.
+
+All right.
+
+Okay, I'll go get Kara if you guys.
+
+So, dropping you guys off and having to go back? Love you baby!
+
+Okay, kids are ready.
+
+Yep.
+
+Hey, you! How are you? Oh, no. You and your glasses. You are so silly. Slap. Um. Crazy! Busy. I love your hair, South Jordan. We're kind of by my parents. Nice, okay. Yeah, just, uh, probably three months ago now, so it hasn't been too long, but? It's been really good.
+
+We moved in. The kids got here and within 20 minutes, they had like four new friends and the neighborhoods packed with kids. It's awesome. Yeah. I figure that, yeah, how about you? What's new in your world? What are you doing? I'm a working actor, you know, um? As of right now.
+
+For November and December, I will be performing in three different states. That's awesome! You know? I will be up in Salt Lake. At the. Plus beginning of beginning beginning of November, okay? Yeah, so. But I, uh. Besides working, besides that, I, you know? Me and my medical shit. I had a heart attack.
+
+I'm fine now. Wow. Yeah. That's that happen. That was in March. Um, what did that look like? Um, I thought I was having like, like, I couldn't really breathe. So, I thought I was having really bad asthma because I've been having it for so long. Um. And then. And just wanted to eat my dinner.
+
+I'm started getting grumpy. Okay, I just wanted to finish my dinner, so I had to finish my dinner, and then I couldn't breathe during my dinner, and that's when I finally, and it was like an all day thing. I just knew I'd have to be admitted to the hospital, and I didn't want to go to the hospital, so I was kind of just sitting there all day being like, I'm fine.
+
+I was not. And that's when, like, I could not breathe. And I was, like, okay, time to go if I had my mom called 9-1-1, and I. I couldn't like get off my nebulizer, so they. They're like, you gotta get off that I was, like, I know, but I'm scared.
+
+Then, we tried to walk down the stairs and in three flights of stairs to get down, and I couldn't get all the way down and eventually the. Firefighter, he, like, put me, I guess, over his shoulder, and like, put me on the garden. And that's probably when I had the heart attack, um.
+
+I got like this huge strength, and I like stood up, um. And they're really trying to hold me down on the gurney. And I like reached up, put my hand in the air, and that's the last thing I remember. And then I woke up in the hospital. Covered. Vomit and like?
+
+I was very confused, and they were like, had to do some final tests they left, and then I was there. My mom was there. And it was, I had no idea what was going on. And then they came in, and the doctor was like. So? We're gonna like hold you, or like, we need to hold you overnight or whatever, and I like, was, like, so grumpy, I was like, I don't want to do that.
+
+I want to go home now. I'm like. And then, finally, the doctor, like a different doctor, came in. And because it was a shame change. You know, cuz I've been there throughout the middle of the night. You're, like, so you had a heart attack and all I give is a laugh.
+
+Just laughed. Because I was like, that's what happens to other people. Other people have heart attacks. I don't. Um, I guess, like, and it kept going up. They kept doing my levels like testing the levels of like your enzyme or whatever, and it got up to like 1900. It's supposed to be at zero, right?
+
+Like, it was a bad heart attack I did into heart failure got. Two months healed my heart failure. Yay! Now I have an oxygen machine. For my asthma because I can't breathe at night, totally fine. I just don't breathe when I'm not in conscious, so. But yeah. Now, I'm much happier about life.
+
+Dang! That's a lot. Oh yeah, yeah. Um. What does it look like if you like, go jogging or running? Are you? Are you super limited? I've been able to. Do some. I'm chewy and I went to the beach. We ran. So much fun! I've never been able to do that.
+
+Gonna run with my dog. Um, I, I still have asthma. But, like, I don't know, I have, like, I'm able to do some more things. Now, I think I like, got, I think. Sick for a really long time. And like. My body just needed to just like. That's it, we're done.
+
+And then, like, two months later, I went to the hospitaling for a week got better, too, in a different way. And so, I think, like, my body just had to like, kill off all those things and. Flushed out and? I don't know. I feel so much. Like, not only better like, emotionally.
+
+Like, I still have bad days, but like, physically, it's like. Oh yeah, I can carry that I can go up the stairs. Like, it's not like exhausting to like, walk around with chewy all the time. Like, have asthma shoulder, like, maybe some issues with oxygen. Like, I like my 99.9 oxygen.
+
+It's this, like, you know, this oxygen. It's part separated. What is, what is this oxygen? Where are you at the ones that we all have in the, uh? Right now, I'm in Tucson. But like, I'm just talking about, like regular H2O, not H2O. Or it's like the percentage of air is like 30 something, and then there's like other chemicals like nitrogen.
+
+Other things that we breathe in, and like, we're supposed to filter it out. I might just not be able to very well. It's always fine. Maybe I'll get there. And now, I flick with an oxy machine so. I had to fly with it, so I was, like, I'm okay, traveling.
+
+Um, I'm better. I'm genuinely better. That's awesome! It makes me happy to hear that.
+
+I missed you. I miss you too. Just a couple days ago, I mean, I think about you all the time, and I feel like I've looked you up. Many times and. Just to see if? Still here. Like, I don't know, you know, it's. Yeah, it's been such a disconnect.
+
+A couple days ago, I was thinking, like, I need to reach out and just ask if she's alive still. And then you messaged me today, and that was. That was pretty cool. Just seeing the coincidence of, like, my intent? Uh, manifesting our communication. Well, I was thinking about top reaching out to you on Monday.
+
+Uh. And then I, yeah. Okay, I can do it. You know, I also, I have no concept of time anymore.
+
+Apparently, I've been away from Utah a lot longer than I realized. I don't know. At times it feels like. Genuinely, you know? If you still have a connection with someone, it's okay. So I, I think that, like, yeah, we definitely. We definitely get some type of connection. Be able to be like, hey.
+
+Talk to you! Totally! Yeah, I feel like we've both been open to that. Um. I have that happen all the time with people that I've been close with. It's like, we're communicating through the quantum, not just through the physical.
+
+Yeah, you're definitely making it more into. Mushrooms and like? Spirituality. And like interconnectedness between people and whatnot. Two, since I've been like. Physically away from people you know? Yeah. Well, is that a Jeep did I see Jeep on the? Uh, that was my mom's Jeep, oh. Uh, I got a I have a new car, though, what is it?
+
+This is adorable, she says. 2012 Ford Focus SE, oh fun!
+
+Because why no one needs this anymore? That's funny. Yeah, this is. Oh, I have to show you my pants.
+
+We'll figure it out. We'll figure it out. You're like, Genie. Hello! And then my hair will change depending on the light. Yeah. Work it later. And I just got some, uh, copper conditioner. So, I'm gonna keep adding more and more red. Oh, that's exciting. Yeah, I like it. It's funny you texted me.
+
+Carol was right by me, and I was like, what blonde, and she's like, no red, you idiot like she knows you like redheads. She didn't say you idiot, but she was like, no, it's red, like, it's gonna be red. And then you sent the picture. It was so funny.
+
+Well, I. What's been fun is like, I've never dyed my hair for me. Right, I've only ever done it for, like theater, or like for a roll. And then, I've like dealt with that. But this is like, I'm, like, okay, I want to dye my hair. I'm ready for a change, huh?
+
+Like, I had always wanted to try red. It helped knowing that, you know? You would think it would look good on me so. I've been liking the red. Yeah, I like it. It looks good. But it's like, it's brunette in certain lights. So, it's like. It's like Cherry come over right now.
+
+I think. And then, I'll keep adding the copper. Oh, I got from there. That's awesome! And it's been a lot of like changes, but they've all been really good. Yeah. Yeah, same. I quit smoking weed a couple weeks ago, and I'm.
+
+Like? Constant. Epinephrine. It's overwhelming and exhausting. Just like raging 100 percent of the time. The first week was like, I was a 50 year old woman on menopause, like. Sweats and? Yeah. It's been nuts, so that's been my current. Change. Okay, that's different. But it, yeah. I don't know.
+
+I'm really good at being an asshole when I need to be and. I'm not very good at. Being nice when I'm not high all the time. It's more, just like I'm not a pushover. Okay. It's interesting. I'm angry, I'm angry often. Oh, okay, I get that. It's just like super high drive, but then, because I've been used to weed for the last 6 years of my life, it's.
+
+It's like all my hormones are just on a hundred percent. Like all the freaking time, it's nuts. I, I can at least agree and attest to the like. The hormonal change my hormones are completely different after my heart attack. My hair is different. It started curling like more and like doing and like growing and growing.
+
+Yeah, so it's and I'll get mad. No, I was an angry person. Yeah, having to deal with like new hormones as an adult. It's weird. It is, we. It is, yeah. Yeah. Are you? Are you supplemented with anything else or? Clean of everything. Just clean. I took some shots for a couple of days, but That was about it, and that was more just to like.
+
+I had some Playmates that I spent time with, and so that helped me get out of my mind, cuz I'm always thinking a thousand miles an hour. Yeah, um. But yeah, just that I'm not wanting vices anymore, and I want to get back. I've been working out more again, and it's been really good, but?
+
+Um. My mind is, I feel like it's so sharp that. I find bullshit very easily and quickly.
+
+So I don't know.
+
+Hinderson like? Maybe what you're saying was part of that, like? I recently realized I was smart. Like smarter than? Average, right, and other people. I don't know. I just. Issues with thinking that other people weren't smart. And so, like lately, it's been. I don't know. I'll have friends, and they, like, I don't know, want to talk.
+
+Shit, that does not fucking matter. What not, earth, like, it's like. You're actually the mirror in this situation. This is really. But new people don't like that. No people just want to be like, yeah, honey, um, he would be a good match for you. You're right, that's that's better than Max.
+
+He's still terrible, both of them. You should just probably not talk to either of them, but yeah. I can't say that. Yeah. Or like here, it's very like everything's very political or racially. Driven. Yes, that's interesting. Yeah. It comes up a lot. Yeah, this world is.
+
+The last two weeks. I haven't enjoyed this world much. Yeah. It's just garbage. It's just fucking garbage, and I'm tired of. I don't know. Billy for being waiting for something to happen, but that's kind of where it's at. What do you mean? I just haven't. The the world that, like when we were promised.
+
+I expected when we were growing up is not a thing I just barely had. How's the conversation with my mom about minimum wage today? And I'm like, you didn't even think you haven't even thought about this until now. That like? Yeah, $15 an hour. It's not actually that much.
+
+Like, but So, it just feels like. What? What is this world that, like, we're like, we're? We're gonna be trying to live forward thrive on, you know? I don't think. I think that's the trick. Is that we get whatever we want if we have Relentless intent? But everybody else is a crab in the bot in the bucket, pulling everybody down.
+
+And believing in lies the lies of the world. Uh-Huh!
+
+I don't know. Things have been going good. Otherwise, though, I mean, with the move, we're in a really nice neighborhood. It's really awesome here and. Um, we're doing our first government job tomorrow. Oh, okay, yeah, what? What city, what? It's a school up in Ogden. We've done a couple of Megaplex theaters so.
+
+We did. Yeah, we did like tons of insurance and residential the first year and then. Property Management commercial, the second year, and now we've done. Um, movie theaters, and now getting into government. And so? Really opening up those streams and fine-tuning the data and? Building and growing. I love that.
+
+That's awesome. Yeah, yeah, thanks. You guys, have you guys have come a long way? Yeah, I I, I'm excited to come over and see this home office at this place now. Yeah, I built. Uh, remote office, and so it's a full off-grid office in a trailer that we can take to job sites and stuff.
+
+It's really cool. Okay, wow, good for you, guys. Yeah, yeah, it's. It's been fun building. Creating. Um. Not bored with that, that's for sure. I feel like you're the kind of guy who wouldn't be able to get bored with owning his running a company. I don't know. You just seem like you find something to do.
+
+Yeah. Yeah, still the same Vision. Still, the same plans, it's just. You know how it is? Things unfold in their own ways. Oh yeah, I've worked. Obviously, I've taken my break from Harper world, but I've worked plenty of corporate and. Ebbs and flows for sure. Um, yeah.
+
+Um, let's see what else? How's baseball? Is that coming up how right it just finished a few weeks ago and? I think. Pulling them out of baseball because of finances, cuz it's starting to get crazy and they're traveling. He's getting to that point. Yeah, and his mom. Mean every couple of months.
+
+She's like. We're gonna pull them out, and I'm like, okay. Like, I'm giving you everything I got. She keeps on thinking that I'm hiding money from her, and it's like, girl, you don't know what. Like, you're an idiot. So, it's good. I've been closing you long enough, and I have finger, you know, I figured by this.
+
+It's, like, I know you're not hiding anything somewhere. Yeah. And they, they just don't get it. I mean, after seeing that we did movie theaters and stuff, they think that. I don't know they, they're not business people. They don't understand business in the separation of business and personal and.
+
+Yeah, things like that. So when you only see? I don't know. I wear the same shoes. I wear the same clothes. I drive the same car. We got in a house and we have tenants in the basement. So? She's just up in the night. I don't know. That's what, like.
+
+Uh, it happens, and it's really frustrating. It just happens between the X's sometimes. Or one of them gets all you know like this with the money, and like. It's just like, shut up, like, stop. I don't know. I don't know where it comes from.
+
+Yeah. She had a baby and works at a tanning salon, making nine bucks an hour, and then tells me that I need to go get a different job because. I'm not supporting her, I guess. It's ridiculous, and it's like, um. If we were still together, we'd be in a worse situation because we wouldn't have your boyfriend that makes a bunch of money.
+
+Yeah. And what so? But she's not married to her boyfriend. No, I don't know that he will marry her. That's yeah, so that's her fault. Then, for now, uh, getting pregnant by, uh, you know, when she's not married to someone she should know better, she has had kids. Anyway, seriously.
+
+That's so dumb. Why would you? Women are dumb, I don't know. And then, it's funny, cuz Clark. My boy! Count. 13. He's 11 now or 12. He's 12, braylon's 14. Oh, okay. Um. But he's like. I guess they went negative in their account for the first time, so things are just really stressful for them.
+
+And I was, like, I'm negative in my personal account every month. Like, I get my check and in a couple days it's gone because of the two x's and the two states that are just taking all my money. Yeah, so. But then, in the end, it's like, we're fine, we're doing, we're eating, we're we're living in a great neighborhood, like we're doing fine.
+
+It's just that. Like, if we focus on how much money do we have, then it could be stressful, but it's the same as if we had a ton of money right now, I wouldn't be doing anything different or eating much different, really, either. You know? So? Make sure I'd have steak a little bit more often, but.
+
+Maybe, maybe, maybe not. I don't even know. Those things that like life is so much more than like a dollar sign. Like it doesn't. It really matters. Yes, I've been homeless. I, I understand Financial Security isn't necessary thing. But also. And there's so much there. Yeah, I'm like, I'm in an infinite race.
+
+I'm I'm building something that's? That'll be around for a long time. Is the goal not to make as much money as I can this year? You know, and yeah. Just different. Financial thing. Grows to me so much. Totally! Totally! Yeah. And sex drive is like been weird and off.
+
+With play partners and stuff. I don't know. So that sucks because I usually that's like my. Happiness. Yeah. And it. It's not exciting for me right now. That's unfortunate. Yeah, it's really weird, I. I haven't ever experienced this unless I'm like, sick. For a couple days, you know what I mean, but not like weeks at a time?
+
+What did Bill did this happen before you quit weird or was this? Is this new since you've quit? I feel like I've seen the pattern of it. Doing this. And then, when I. Quit weed it. It definitely hit hard and made it. You know, brought the pattern out even more.
+
+And I'm finding that I'm. Like more demisexual, I guess, but then I'm also like, I don't know if I went and hooked up with somebody. Just them if it would be normal again. Cuz lately, I've played with like a partner and her husband and I didn't get hard at all.
+
+I, I enjoyed it, and it was fun. And she is so hot, and I'm super into her. And it's just like my body's not excited. Like, my mind still enjoyed it, but? I don't know, and then playing. With Cara. Um. As a partner in lifestyle doesn't really happen. So?
+
+That's been weird, and every time I find. Play partner that I feel I could fit that, like, oh, be my partner. Let's be partners in lifestyle. Then Cara is like trying to jump on board, and it's like, no, I'm like. It's not what you want. You made me go look for this, I don't know.
+
+Uh, yeah, I understand. We're saying with that at least, but I've kind of seen that, yeah. And then. She'll play with some people here and there, a little bit like when I beg her forever. But then, now, it's turned into, like, I get excited when I talk about playing with other guys and.
+
+That's not. That doesn't take care of my needs. And it's been like that almost the whole time with Kara, right? So it's just like. Definitely that. That's a pattern that. Uh, she. I don't know, she definitely. I'm not sure, I'd be like this, and stuff like how she is.
+
+That's why it seemed like she just said lifestyles to be, like, ah, to be with you, but then, like she actually wouldn't be in lifestyle. Sure wasn't with you. Yeah, sometimes comes across totally, and I feel like that's where she wants it to go. Eventually is not being in lifestyle, but it's like.
+
+I still haven't had my lifestyle like experience and, and then she's like, I don't have friends and you have all these friends because I have different Playmates I. And it's like. Well, we'd have tons of friends if I could take you on double dates with people. And if we could go and play with Pete, like if we were lifestyle, we'd have tons of friends.
+
+Yeah, and you don't even need to play, but if you tell them that you won't at the beginning, that doesn't work. You know, I get it. If you don't, if you're not feeling it or whatever. And then, when we're in those situations, she is filling it. So I can't even go into a situation where I'm.
+
+Like, secure. Knowing what the fuck's gonna happen? Yeah, no, I mean, I've seen that back and forth from her, for sure. And, like, where it's like, I thought you didn't want. Oh, you do, okay? Yeah, and then. Ultimately, I feel like she doesn't care for it. But then, I mean, who doesn't, like, good sex?
+
+Or fun sex. It's always usually fun. Exactly it. It's like, I mean, it's. Yeah, it seems like she just wants to have sex. But not actually. Play and enjoy other people. Yeah, and then in on one on like another end. I'm like, that's great too, because then I know where that's at there.
+
+It's just. Me figuring out what I want and what I'm. Wanting to build because? I mean, I feel like we all get what we want. We just need to want the right thing. And so, I'm trying to figure out what that is. Uh, for me, because I'm not really sure what life looks like without sex being exciting for me.
+
+Yeah. Like, that's been my drive for. 25 years. Since I was nine, it was like sexuality drives me. Yeah. Yeah, so also then not having a partner that's able to explore that it's hard. Yeah, and then. Spy sex drive. I would mean a very specific type of partner with that.
+
+And Kara's Drive is high. I mean, we like, we do it often still and our our personal connection sexually is still fine. A little bit weird this last couple weeks, but that's just because. I'm on menopause, I guess.
+
+Yeah, well, I mean, it's like, it's not only yeah. High sex drive, but I like, very. I think I'm shouting, um. I like going out and having an adventure of sex. Like, just missionary all the time. I, it doesn't work for me. It's like, yeah, I'm a high sex drive.
+
+Yeah, you can get me off, but like. I don't want to have like, and I don't want to sit in the bedroom all the time. You know, that's one of the things that's like very important to me is like. I need a partner. It's only to like, explore. You know, yeah, and scratching up.
+
+So, that's like. But that also comes like finding a man then. Is comfortable with his sexuality, you know, and that's hard to fight. Yeah. Yeah, I agree, I. The Hot Springs, a nude hot springs in Salt Lake. Oh yeah, um. I guess every risk every Thursday. Yeah. Fucking spam girl is it's so annoying!
+
+There, they interrupt them, I know. Yeah, I'm gonna um, go to that sometime soon. I have. Okay, I have a friend that her and her husband go on Thursdays. Well, me when I'm in town. Do you want to go? Yeah, that would be super fun. Let's do that. I'll be in town.
+
+November. Like, first through the 11th. Okay. Maybe also a 20, the 30th. Am I getting down 30th? Cool! Yeah, just let me know. You know, I've been there once. Yeah. Yeah, that'd be fun, um. Depending upon if we have the kids or whatever. Yeah, I'll try to figure out something with Kara and just hang out with you.
+
+See if we can catch up or something? Yeah, and then. Hot Springs would be super fun! What did you say? Even if we have to go on a drive, yeah, I'm down. Yeah. I'm, like, I don't want to have to. Connect with user Keras filter anymore. No, we're friends.
+
+Yeah. I. And I don't want to be here. Showed up, uh, mining cameras, 10-year reunion. I was there. If she wanted to be friends with me, she would have shown up at our dinner. It was so awkward. Hello, one second.
+
+Like this, like spam numbers over and over and over. Gosh. That's the third one. And that's the same number. Um, they're like 800 numbers. No, so it looks like it's the same, but it looks like they're different, too, you know? No, I'm still, I'm still willing to be Karen's friend, but she never seemed like she wanted to be friends with me fine.
+
+Well, it's the I'm attracted to you and I enjoy sex with you and. She's not into girls, and she's not wanting to have sex with you because she doesn't want to have sex with girls. And so, then it's the like. Trying to be friends when it's a sexual connection, ultimately.
+
+But then? I don't know, it's just. Me trying to get her to be comfortable when it's like, I just need to go. Somewhere else, and then she'll be fine. Yeah, and she's been great. I mean, I, I have Playmates over pretty much any time I want and? And she's cool.
+
+Like it, it's been really cool. Um. It's just different than like what you were inspecting getting into it. Yeah, totally thought it would look a little bit different. Um, because in the beginning, she came and like played with girls with me, and we had a girlfriend for a few months.
+
+And then. Uh, Erin, right? Uh, no, Aaron was just. Another Playmate, um Lauren, was the girlfriend. Yeah. So, it's figuring that out. But then, I feel like she has fomo ultimately. So, then? I think that's what it is. And I'm sure I do too. I, you know? That makes sense.
+
+I can see it. And I, I do, too. I'm sure, you know, I'm sure if she was doing, like, if the roles flipped, I would probably be the same. Or worse, I don't know. But, like, I mean, also, the roles are Rivers like, you're actually actively speaking, others, you know.
+
+It's weird. There's this. Girl that I went and played with her and her husband, and I was like the first. Like person, they didn't know that they played with. It was usually just his friends or whatever. And she's super hot. But then, she's like she was. 2 or 23 when I met her.
+
+Now she's 24.
+
+It was just always awkward, cuz she was like had to record the whole time and then, like. Which is fine? But it wasn't like talked about. Because they're just new in it, right? So the the communication and the connection has been all weird because she's trying to not have her husband get upset or whatever.
+
+And then. And so then, I'm like, I don't like, maybe I'm demisexual because? She came over yesterday. And we played for a minute, and then my body stopped working, and we just like talked and hung out. And it was the best time I've ever had with her, and we were just talking.
+
+Because she was like, real, that time. It wasn't just a oh, I gotta go. I don't know. And act a little bit. Yeah, and like, oh, this is what happens in your life. Oh, you're a human. You're not just. A. And so I'm, like, well, that's weird because I used to be able to.
+
+Just, I can't. Oh, I, I think I've been developing more of a demisexual, like? I actually have some, I think. Someone is a person. Uh-huh. Because I'm like, yeah, I used to be able to get no fucking middle of a room. And now, I'm like, I don't want to be touched.
+
+Oh, you can look. That's funny. And like, sometimes I'll be like, I wanna I could. I could have a group of men again, and then I'm, like, but I don't have to be all these men that I like and care about. Work. That's so funny. Yeah, and then, when it comes to that?
+
+I. Ultimately, they're like being in the corner of. Party, like how we used to talk, like, like you used to tell me, like, I'll just sit in the corner and, and you can put like condoms on me, and then guys can just come in and like that. That's still my.
+
+Desired Kink, I guess. But it's never happened, and I feel like that's why. So it's more like a bucket. List in my head, I don't know. I don't know what it is. It's frustrating is what it is. Oh my God, I get to explore that with, you know, the person that you, you know, just to marry?
+
+It's one thing, too, you know. It's like, that's a bucket list item. It's, like, okay, I gotta find someone. Yeah. Yeah. Come around, I don't know, you know? It will when I'm sure mine's slowing down because she'll hit her mid 30s and go fucking nuts. And then I'll be like, I waited 15 years for this, and now I'm not interested.
+
+Yeah.
+
+I don't know. And then. At the same time, I, I mean, there's. This is me in. A heightened, frustrated emotional state, you know. And there's so many cool, awesome things, too. It's just. Where I'm at this week today. Opa, I'm, you know? I'm here for real, you know, I'll take you as?
+
+And you, I, you know, whatever, I'm open, I'll give it to you. Don't worry. Bring me down together. And tell them we love each other. How do you feel tell me? Yeah, do you? Like it. I might have to answer that.
+
+Like this In This Moment. Do you want this? That's so funny. Yeah, I, I feel like, lately, I've kind of wanted to just like. Someone that I'm not usually like into. I don't know. I, like, before Kara, I used to hook up. Often and? I'm into hooking up. It wasn't like, super.
+
+Picky. Cuz I, I could find a connection with the individual, and so. If it feels good, and we have a a good conversation and stuff. It was great. Or not. I was just horny so. Now, I'm like, I, I kind of want to test it. And just like, go, hook up with somebody and see if.
+
+I'm just in my head or I'm. In my house, which keeps me in my head, I don't know. Only one way to find out get out of the house. Yeah. Yeah, so there's that working on the business. We have a. Team of five people in the Philippines that are developers and marketing and everything like that, so that's really cool.
+
+Yeah, we've had them since. Last December. Okay. Um, so almost a whole year now. And that's been then the right thing. Yeah, it's been awesome, because for them. Six or seven bucks an hour is like 45 bucks an hour here. You know, and so they're like bachelor's degrees. They know their shit, and they're awesome.
+
+And. Yeah, so we, we've built a lot of new systems. We've been designing a lot of new stuff and. We're on track to open up our second business, um, end of next year, and bring on. Uh, siding, possibly Windows. Yep. But it's been a great like. Cheach code almost because we have full-time employees that work on our hours.
+
+But we're paying as much as like one good employee here, and we're getting five of them so. And they're not. They don't work like lazy Americans. Like, we almost have to tell him to stop working, and they, I swear, they work outside of hours just because they like the projects and the like Innovation and stuff.
+
+Yeah, it's really cool. With our like taxes and stuff, our admin assistant. Taken over and got our books all up to date and. Yay! Yeah! It's been awesome. So really found in so many ways, and then with Ai and Technology. I've been learning a little bit of code, but learning how to code and develop with AI.
+
+To really be able to mock up designs to take to our developers so that he can fix it, you know, really coat it, make it work. But now, instead of me giving them just a rough idea, I can talk to Ai and build a whole example like functional example that we can now Implement into our systems.
+
+So okay? Yeah, it's super fun. Yeah.
+
+I'm realizing how? Uh, just. I've been so removed from technology just because, like? I love my lifestyle. Everything you know with this, uh? It's so funny, she's gently. Uh, I shot her a video I made into it. Not so, Millennial court and I was like. What do you mean?
+
+Anyway. He was Snapchatting this boy. And then. He said, I love you, and they've only ever talked like they met in the club, and then they've met on Snapchat. And he's not asked her out on a date. She just said, I love you after, like, 2 weeks, and all I said was, like, so say, look out.
+
+Dot dot dot really, and then she used AI. She was like, what do I do about this boy? He responded, and she did this whole prompt and I went? Oh, that's how you use AI. Okay, okay? We like, went, and like locked back through it. It was like, you pushed me too hard.
+
+I just felt uncomfortable, but I wanted to at least tell you that I love y'all as a person, you know, and I was, like, wow, this is, this is crazy. So. I might just have to get really close with my Jesse friends. How do you do this? I'm like, really.
+
+YouTube YouTube is like flooded with different ways you can use it or hop into it or start learning or whatever you want ultimately. But it's like, you know, really, you could. Cuz you always liked bookkeeping right or payroll. It was payroll. I am. It's stuff. Like, yeah, it's stuff like that, where it's like?
+
+Super automated systems, and you can develop the software now, just by talking to AI, and so. It the world's gonna change? So much in the next three years. Um, and in the. Yeah, in the next 10 years, it's gonna be. It could be like, bad, really bad because of this shift between.
+
+Having to have workers and then. Having robots that? Are infinite. And if it's not 10, it's 20, but like, we're coming up on it. It's gonna be nuts. Oh yeah, and like, I mean, I'm I'm on. Like, also, the other side of it with, like, not business, but like the art side, uh-huh.
+
+And that's been kind of crazy to see people using AI for, oh yeah. Like, Photoshop, you can do Photoshop stuff with AI. Now you pop it in, tell it what to do, and it does it and. Free and fast and? And just getting started on the like, new levels, it.
+
+It's crazy. All of my ideas have been able. Like, I've had ideas. Oh, like, we could do this if we built this. And then, three months later, AI can do it. I'm, like, holy shit, like, it's here already. Yeah. But oh well, I like hanging out with tangible people.
+
+Yeah. Yeah, what I think would be really cool is, um. Now, you can do. Only fans in Snapchat with AI, you don't. It doesn't even have to be you like. This sounds crazy, but. I could clone myself to where it looks like it's me, and it's just Kara talking, and it's changing the voice and everything right.
+
+And so, you turn that into an onlyfans girl. You realize there. There's a lot of money that can be made right now when. Like, people know it can be done, but. It's still new. Yeah, and. It's getting good. I got. I matched with this girl on Tinder last week.
+
+Super cute tons of pictures that she sent me. And. Then it was, like, oh, but I'm out of gas money. Get if you can send me some gas money. I'll I'll come right over. And like it. It's getting good to where? I'm barely catching it. You know what I mean?
+
+Yeah, and I feel like. Every day. I probably watch an hour of what is the newest AI, like every day? And so. I'm sure there's so many scams, it's nuts. Yeah. I mean, I. I only get like fed, like Ai, and I'll see the AI videos. It's like, once they get good enough to be.
+
+You know, scammy link with influencer faces like the original Logan Paul, where he's selling makeup or whatever. I haven't seen it. Happened. He got Sora or whatever, yeah. So they were able to use his him and Sora and make videos and it like, came out where it was, like, hey guys, I'm Logan, Paul.
+
+I'm gay.
+
+It's really funny. But those are like the points where it's at, where it's like, oh, ripping point with AI where, like people, aren't gonna be able to know that's not Logan policy because it. It looks like Logan Paul as far as like, normal people will be, I'll tell. Yeah, yeah.
+
+And that's video. I mean, pictures are so easy. Now, it's crazy. You can take pictures and then animate it. So, like if I took a picture of me here. It would animate and move my hand like this and everything, and it would look like I'm talking to you and actually active and staring you in the eye and looking away and.
+
+It's nuts, and it doesn't mean it's super easy to get it perfected. But it's possible, and people are doing it. Oh God, it's been done more than we get to know. Oh, totally.
+
+Totally! Here, though. Yeah, I mean, that's like, our, like, I mean, your kids will not know a world without AI? Right, crazy? Unless we have a? Extinction event, you know? They know AI for the rest of their lives, which is like, it feels so silly to be like only our ages and be like.
+
+Back in my day, we are on a car, right? Like, but we're already there. Yeah, like? I, I make the joke. Like, I'm, like, yeah, I haven't even turned 30. I've already had a heart attack and AI taking over the world, like. I don't know what's gonna happen by the 740, like?
+
+It's fun. It's fine. I have not quit. Weird. I'm so stressful. That's totally fine. I still have like half a pound. Okay, well, if you need to get rid of it. How much I can smoke, we'll see. Yeah, I'll I'll put you down, that's for sure.
+
+Any out smoke people all the time because they're all. Now, I'm constantly hiding that I've been hiding for years. Yeah. I feel like you, you definitely have a high tolerance, and I usually. I'm the one with the high tolerance, cuz I smoker, or used to smoke everyday for. Years.
+
+I might be quiet. Maybe I can? And a joint with me. When I'm up there, and if not, you can watch me. Yeah, I'll watch and, and we'll see. I'm not dedicated to. An expectation so that I don't think your fingers away from me. What's that? And he said, I don't think you can keep your fingers away from me.
+
+So, you probably can't just watch. Um. With the weed, I cannot. I can just watch.
+
+That's what he said. I'm, like, we better have some fun when you come. That would be fun. No, I don't fine.
+
+Like, I don't know that I have to be with you, I think. I'm, I'm excited to see how that is with you and. Because I feel like, even just. You texting me like, I can tell my body's going through an older pattern of, like, ooh, you know? And that's actually, really fun, because.
+
+Because of what I've been talking about. And I, for me, I always enjoyed knowing that I like knowing that you're thinking about me when you're doing something else. I learned that after being in like those situations be like, and like watching me like, ah, keep thinking about me right now.
+
+You're, like, ah, hey, look at me, uh.
+
+That sounds really fun, um. I feel like. When you and I used to play, I used to watch Kara's videos and stuff. Um, but when you said that, I pictured, like, going to a chick's house and then just having you like, stand there and let me watch you while I'm playing with the girl that would be hot.
+
+Uh, well, that would happen to me sometimes because you would be having sex with another wait a minute, and I would just watch and I'd be like, okay. But how can I get him to look over it? Yeah. And Android parties. Well, we'll have some fun, and I feel like with the.
+
+But with you or the right people. I feel like I could have. The same type of fun, for sure. It's just. Different people right now, and I'm off a little bit.
+
+Yeah, but I am so glad that. Oh, we're in think, and we're able in touch base. Yeah, what city are you in in Arizona? Oh, Tucson, you said that, okay? That's cool. I think I've driven through Tucson. I stayed in like Scottsdale one time. Scott Jones and Phoenix Tucson is an hour and a half south of Phoenix.
+
+Yeah, I feel like.
+
+Because there's nothing to do in Tucson. My phone's about to die, oh.
+
+Oh, I need to switch to the car. Sounds like it. Yes, it is now. I'm everywhere, not just in your phone. I'm, uh, focused hard on you. That's appropriate.
+
+You're so cute! So, I'm gonna join fighting boys.
+
+Uh, I need to skip that. All I gotta drive get my dog fed, but it's not me talking to not touch base. We'll keep around okay. Let me know. And then, when you're coming to town, let me know. And we can. See what, yeah, what we can do? So, congratulations!
+
+I would love any type of pictures. Okay, well, I love you, and you're so great you, too. I love you too. Talk to you soon.
+
+We have the kiddos for fall break. Until the second Monday from now. Come on! It'd be fun to hang out and have the girls play.
+
+This voice is entirely AI generated.
+
+High quality.
+
+Your roofing company that's capable of 5 million, maybe 7 million a year, but you're stuck at 2.5 million. And you know exactly what's missing a predictable Marketing System, everything up?
+
+What's up guys Sam Taggart here with?
+
+This is the evolution.
+
+This is insane. You can now get this $2,000 AI browser that can do literally everything for free. What the hell? This is common. The world's first AI browser that actually does stuff for you. Look no ends. Comments controlling my browser, replying the email.
+
+I want to see naked girls masturbate.
+
+Hey Google.

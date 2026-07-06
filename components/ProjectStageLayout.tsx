@@ -98,7 +98,11 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
             if (p?.property?.address) {
                 return [p.property.address, p.property.city, p.property.state].filter(Boolean).join(', ');
             }
-            return p?.property_address || 'Address not specified';
+            // property_address is set by normalizeLead / normalizeDeal / direct projects
+            if (p?.property_address) return p.property_address;
+            // Fallback: assemble from loose fields (legacy leads schema)
+            const parts = [p?.street || p?.projectStreet, p?.city, p?.state, p?.zipCode].filter(Boolean);
+            return parts.length > 0 ? parts.join(', ') : 'Address not specified';
         };
 
         // ── Advance to next pipeline stage ──────────────────────────────

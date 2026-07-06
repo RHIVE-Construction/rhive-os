@@ -1,0 +1,203 @@
+[Speaker 1]
+Exit us and said. Um, so you're saying
+
+[Speaker 2]
+That Melanie texts from? Um, ACS. She texts in about a job, and then she'll email in about a job.
+
+[Speaker 1]
+Yeah, or like all email her and ask for an update on like, hey. Um, are we moving forward with the job? What's going on with it, and then the next day she'll either text me? And. Like, we're moving forward. So, then I almost feel like the system needs to be able to look at both forms of communication and like, compare them and know what's going on.
+
+[Speaker 1]
+Because she won't even respond to the email, she just texts us.
+
+[Speaker 2]
+I see.
+
+[Speaker 1]
+Because maybe she didn't see the email yet, and then she's just doing her own communication. Possibly, so it's like
+
+[Speaker 2]
+It needs to be. Um, up-to-date, smart for the contact that's communicating from a project. So, if there's email and text communication from the same contact, it turns that into. What the conversation is? The question is, is there ever a situation like this? Where there are? Two conversations going, and you wouldn't want to talk about the email conversation in a text back or vice versa.
+
+[Speaker 2]
+About the same job.
+
+[Speaker 2]
+See, this is the tough thing, too, because she takes us about one job. How do we file that?
+
+[Speaker 2]
+Is when Melanie. When there's an ACS job? Or property. Do we always see? Melanie's communication, even though it has nothing to do with that. So, then you're scrolling until it does.
+
+[Speaker 3]
+Do
+
+[Speaker 2]
+You see the problem here? So? Melanie, Texas about the West Jordan first one, right? And then she, and so we put the West Jordan first one in the system in the CRM, and it has its own project file. So now, when she texts us, you can see that she's there, and it's texting. Her about this job. And it's her phone number. And then we build one for the. Logan, Ogden, or whatever that we did the pipe check thing because she just
+
+[Speaker 1]
+Sent us a new address. Yep, because
+
+[Speaker 2]
+She sent us a new address. Well, she's the one associated with it. And so, now, on that one, it's receiving her texts. What says keep these texts about this job, but keep those texts about those job over there?
+
+[Speaker 1]
+Yeah, so when it's texting? And that's why it's like it needs to be smart enough, like a person where, when she's having two conversations in one text thread. About two different jobs and used to be able to identify. What's going on because?
+
+[Speaker 2]
+Not even we will be able to though, but
+
+[Speaker 1]
+I feel like sometimes, like, I mean, we are smart enough. And we do it all the time. And then other times. Yeah, we do have to get clarification because it gets confusing,
+
+[Speaker 2]
+Right? But
+
+[Speaker 1]
+Then, you ask for clarification. But there is times where you're like, oh, I know
+
+[Speaker 2]
+What I'm talking about. Now, what about phone calls? If she calls me, and then it transcribes it. Does it automatically get smart enough to identify that project? And then it filters that transcription for the call into that project. Or is it just that? Now, there's a call for Melanie. And we can tag the call on based upon the projects it's talking about. Okay, I just figured it out.
+
+[Speaker 1]
+Okay. Um. Adam said he's about a half hour away, so you have like three minutes.
+
+[Speaker 2]
+25 minutes, okay?
+
+[Speaker 2]
+Okay, what is
+
+[Speaker 1]
+It? Your how did you figure it out?
+
+[Speaker 2]
+So? What I think it needs to be is?
+
+[Speaker 2]
+Let's say, this is. The 30th property that Melanie's giving us okay? It has Melanie as a contact in there, and all of her communication and it auto filters. The tags for this property? And so. It has a AI. Tagger. So when she calls, and she's talking about this address. It's finding it in our system.
+
+[Speaker 2]
+But then, what if it's not built in the system already?
+
+[Speaker 3]
+Shit.
+
+[Speaker 2]
+It's the first time she called.
+
+[Speaker 1]
+Then it would check our system just like we would and say, oh, there's no. Address that's linked to this with new project because we do the same thing we go, and somebody calls us. We type in the address or phone number, oh no, lead, or nope, no address. And then, you've created a new address so. You would have to do. It would have to be doing the same thing. And maybe it doesn't completely create a new lead or address project, whatever. But it creates it in a way, and then we have to approve it. So,
+
+[Speaker 2]
+It like drafts up at a new customer input based upon the phone call, yeah.
+
+[Speaker 1]
+You're like, is this correct? I couldn't find anything, and then we would double check it as.
+
+[Speaker 1]
+A person and then say yes or no. Because sometimes I feel like on phone calls. You don't even talk about the address or anything. So then, how can it locate the tax? Because if it talks about the address, I feel like then, it's easy, and it can quickly identify the address or the. The property by being like wild Cove. Oh, we know it's this one, and this is the current project that's being worked on. So, it's most likely to this conversation or to this property. But if you just say, hey, um, just a quick update, we ended up finding the correct colors. So, everything's gonna match now?
+
+[Speaker 1]
+And that's the only job we're working on with her. That day. Or, like, this time, so we don't need to say, oh, on wild wave Cove. You know in the conversation because she already knows what we're talking about as a person.
+
+[Speaker 2]
+So, we would need to grab context of all the past communication we have with them.
+
+[Speaker 2]
+Which means that really, when we meet on site, we're always recording.
+
+[Speaker 2]
+And then. That also means that in the project file, we need a recording upload. So that it has all of our walkthroughs and walk arounds and summaries of that and what's happened. And then.
+
+[Speaker 1]
+Yeah, so we really need to use our think. Our recorder thing and then also be able to record on our phone because we do like.
+
+[Speaker 2]
+When
+
+[Speaker 1]
+You record, it stops your recording if you're recording on your phone. Like, if I'm recording on my phone and then I go and record a video,
+
+[Speaker 2]
+We need two devices this way.
+
+[Speaker 1]
+Yeah. Okay, so we just yeah, need to switch and do both devices.
+
+[Speaker 2]
+Or, I guess the tablet could be? Using doing the microphones, and they're good for like 500 feet or whatever.
+
+[Speaker 1]
+Well, and we have two phones so.
+
+[Speaker 2]
+Let's pause that.
+
+[Speaker 2]
+Cool!
+
+[Speaker 2]
+Oh.
+
+[Speaker 2]
+It's so weird when they like.
+
+[Speaker 2]
+On that church building. I feel
+
+[Speaker 1]
+Like where there should have been siding or bricks. They just shingled up. What is that? Just like that piece right there.
+
+[Speaker 1]
+Is that
+
+[Speaker 2]
+Even decode?
+
+[Speaker 2]
+Yeah, probably.
+
+[Speaker 2]
+These are so bad.
+
+[Speaker 3]
+They're
+
+[Speaker 2]
+Not. Yeah, I mean, they have, like, literally, like five red shoes. I don't know, probably. The gaps. That makes them look like they're falling in shit is because they use. Different, um, color patterns, some that have the Shadow and some that don't. So he looks inconsistent and like shit though everywhere, but it's actually decent condition. Yeah. Like they had cracked pipe Jacks and. A ridge vent section that needed to be replaced or something.
+
+[Speaker 2]
+Juicy
+
+[Speaker 1]
+IPA, iPad.
+
+[Speaker 2]
+Ipa. That's what it is, just juicy IPA. Yeah, it's a type of beer.
+
+[Speaker 2]
+We're at night. They're always.
+
+[Speaker 2]
+They have two windows that are broken.
+
+[Speaker 2]
+Couldn't
+
+[Speaker 1]
+Michaela just take off all of the blinds?
+
+[Speaker 1]
+Like, cuz, a lot of houses don't have, like, new houses don't have blinds. It sounds sort of getting new blinds as an example, or even like the front window. Yeah. That looks like shit, so you might as well just take out.
+
+[Speaker 1]
+Okay,
+
+[Speaker 2]
+So what were we talking about? Um, how do I identify different conversations, I think yeah?
+
+[Speaker 2]
+Adam is his name.
+
+[Speaker 2]
+Are you really?

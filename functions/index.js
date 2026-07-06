@@ -31,15 +31,15 @@ function getPhoneVariations(phone) {
     if (!phone) return [];
     const variations = new Set();
     const cleanPhone = String(phone).trim();
-    
+
     // 1. Original
     variations.add(cleanPhone);
-    
+
     // 2. Digits only
     const digits = cleanPhone.replace(/\D/g, '');
     if (digits) {
         variations.add(digits);
-        
+
         // 3. Handle US Numbers (10 or 11 digits)
         let tenDigits = "";
         if (digits.length === 10) tenDigits = digits;
@@ -55,7 +55,7 @@ function getPhoneVariations(phone) {
             variations.add(`${tenDigits.substring(0, 3)}-${tenDigits.substring(3, 6)}-${tenDigits.substring(6)}`);
         }
     }
-    
+
     return Array.from(variations).slice(0, 10); // Firestore 'in' operator limit is 10
 }
 
@@ -150,7 +150,7 @@ exports.justCallInformation = functions.https.onRequest((req, res) => {
             // 1. Fetch Contact (using flexible variations)
             const variations = getPhoneVariations(phoneNumber);
             const contactSnapshot = await db.collection('contacts').where('phone', 'in', variations).limit(1).get();
-            
+
             if (contactSnapshot.empty) {
                 return res.status(200).json({ found: false, message: "No contact found for this number.", tried: variations });
             }
@@ -367,6 +367,355 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
         } catch (e) {
             console.error('JustCall Webhook Handler Error:', e.message);
             return res.status(500).json({ error: e.message });
+        }
+    });
+});
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SMS OTP — Forgot Password (ported from smsotp repo)
+// Uses: JustCall v2.1 API, Firestore otp_codes + otp_rate_limits
+// ─────────────────────────────────────────────────────────────────────────────
+
+const JWT_SECRET = process.env.JWT_SECRET || 'rhive_otp_reset_secret_at_least_32_chars_long';
+
+/** Normalise any phone format → E.164 */
+function normalizePhone(phone) {
+    if (!phone) return '';
+    const trimmed = phone.trim();
+    const digits = trimmed.replace(/\D/g, '');
+    if (trimmed.startsWith('+')) return `+${digits}`;
+    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+    if (digits.length === 10) return `+1${digits}`;
+    return `+${digits}`;
+}
+
+/** Simple HMAC-SHA256 JWT using Node's built-in crypto */
+function base64url(buf) {
+    return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+function signResetJWT(payload) {
+    const header = base64url(Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })));
+    const now = Math.floor(Date.now() / 1000);
+    const body = base64url(Buffer.from(JSON.stringify({ ...payload, iat: now, exp: now + 600 }))); // 10-min token
+    const sig = base64url(crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest());
+    return `${header}.${body}.${sig}`;
+}
+function verifyResetJWT(token) {
+    try {
+        const [header, body, sig] = token.split('.');
+        const expected = base64url(crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest());
+        if (sig !== expected) return null;
+        const payload = JSON.parse(Buffer.from(body, 'base64').toString());
+        if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+        return payload;
+    } catch { return null; }
+}
+
+/**
+ * sendSmsOtp
+ * POST body: { phone }
+ * - Rate limits: 3 requests/minute per phone
+ * - Generates 6-digit OTP, stores in Firestore, sends via JustCall SMS
+ */
+exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+        const { phone } = req.body;
+        if (!phone) return res.status(400).json({ error: 'Missing phone number' });
+
+        const normalizedPhone = normalizePhone(phone);
+        if (!normalizedPhone || normalizedPhone.length < 8) {
+            return res.status(400).json({ error: 'Invalid phone number format' });
+        }
+
+        try {
+            const db = admin.firestore();
+            const now = Date.now();
+            const oneMinuteAgo = now - 60000;
+
+            // ── Rate Limiting (3 per minute per phone) ──────────────────────
+            const rateLimitRef = db.collection('otp_rate_limits').doc(normalizedPhone.replace(/\+/g, ''));
+            const rateLimitSnap = await rateLimitRef.get();
+            let timestamps = [];
+            if (rateLimitSnap.exists) {
+                const data = rateLimitSnap.data();
+                if (data && Array.isArray(data.timestamps)) {
+                    timestamps = data.timestamps.filter(ts => ts >= oneMinuteAgo);
+                }
+            }
+            if (timestamps.length >= 3) {
+                return res.status(429).json({ error: 'Too many OTP requests. Please wait a minute before trying again.' });
+            }
+            timestamps.push(now);
+            await rateLimitRef.set({ timestamps });
+
+            // ── Verify user exists in Firestore users collection ─────────────
+            const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
+            if (usersSnap.empty) {
+                // Also try without normalizing (stored formats may vary)
+                const usersSnap2 = await db.collection('users').where('phone', '==', phone.trim()).limit(1).get();
+                if (usersSnap2.empty) {
+                    return res.status(404).json({ error: 'No account found with this phone number.' });
+                }
+            }
+
+            // ── Generate 6-digit OTP ─────────────────────────────────────────
+            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = new Date(now + 5 * 60000).toISOString(); // 5 minutes
+
+            // ── Save OTP to Firestore ────────────────────────────────────────
+            const otpDocId = normalizedPhone.replace(/\+/g, '');
+            await db.collection('otp_codes').doc(otpDocId).set({
+                code: otpCode,
+                expiresAt,
+                phone: normalizedPhone,
+                purpose: 'password_reset',
+                createdAt: new Date().toISOString()
+            });
+
+            // ── Send SMS via JustCall v2.1 ───────────────────────────────────
+            // Read inline at call time so runtime env vars are picked up
+            const apiKey = process.env.JUSTCALL_API_KEY || '';
+            const apiSecret = process.env.JUSTCALL_API_SECRET || '';
+            const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '';
+            let smsSent = false;
+            let smsError = '';
+
+            console.log('[sendSmsOtp] JustCall config:', {
+                apiKeySet: !!apiKey,
+                apiSecretSet: !!apiSecret,
+                fromNumber: fromNumber || 'NOT SET'
+            });
+
+            if (apiKey && apiSecret && fromNumber) {
+                try {
+                    let formattedFrom = fromNumber.trim();
+                    if (!formattedFrom.startsWith('+')) {
+                        if (formattedFrom.length === 11 && formattedFrom.startsWith('1')) formattedFrom = `+${formattedFrom}`;
+                        else if (formattedFrom.length === 10) formattedFrom = `+1${formattedFrom}`;
+                    }
+
+                    const payload = {
+                        justcall_number: formattedFrom,
+                        contact_number: normalizedPhone,
+                        body: `Your RHIVE password reset code is: ${otpCode}. This code expires in 5 minutes.`
+                    };
+
+                    const response = await axios.post('https://api.justcall.io/v2.1/texts/new', payload, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `${apiKey}:${apiSecret}`
+                        },
+                        timeout: 10000
+                    });
+
+                    if (response.status >= 200 && response.status < 300) {
+                        smsSent = true;
+                        console.log('[sendSmsOtp] JustCall SMS sent successfully:', response.data);
+                    } else {
+                        smsError = response.data?.message || JSON.stringify(response.data);
+                        console.error('[sendSmsOtp] JustCall error:', response.data);
+                    }
+                } catch (smsErr) {
+                    smsError = smsErr.response?.data?.message || smsErr.message;
+                    console.error('[sendSmsOtp] JustCall request failed:', smsError);
+                }
+            } else {
+                // Dev/demo mode: log OTP to console
+                console.log(`\n==================================================`);
+                console.log(`[SMS SIMULATION] To: ${normalizedPhone}`);
+                console.log(`[SMS SIMULATION] Code: ${otpCode}`);
+                console.log(`==================================================\n`);
+                smsSent = true; // allow flow to continue in dev
+            }
+
+            if (!smsSent) {
+                return res.status(502).json({
+                    error: `Failed to send SMS: ${smsError}. Check JustCall credentials in functions/.env`
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: 'Verification code sent to your phone.',
+                // Only return code in dev (no JustCall configured)
+                code: (apiKey && apiSecret && fromNumber) ? undefined : otpCode
+            });
+
+        } catch (error) {
+            console.error('[sendSmsOtp] Error:', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+/**
+ * verifySmsOtp
+ * POST body: { phone, code }
+ * - Validates OTP, deletes it (single-use)
+ * - Returns a short-lived JWT reset token
+ */
+exports.verifySmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+        const { phone, code } = req.body;
+        if (!phone || !code) return res.status(400).json({ error: 'Missing phone or code' });
+
+        const normalizedPhone = normalizePhone(phone);
+        const otpDocId = normalizedPhone.replace(/\+/g, '');
+
+        try {
+            const db = admin.firestore();
+            const otpRef = db.collection('otp_codes').doc(otpDocId);
+            const otpSnap = await otpRef.get();
+
+            if (!otpSnap.exists) {
+                return res.status(400).json({ error: 'Invalid or expired verification code.' });
+            }
+
+            const otpData = otpSnap.data();
+
+            // Check code match
+            if (otpData.code !== code.trim()) {
+                return res.status(400).json({ error: 'Incorrect verification code. Please try again.' });
+            }
+
+            // Check expiration
+            if (new Date() > new Date(otpData.expiresAt)) {
+                await otpRef.delete();
+                return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+            }
+
+            // Single-use: delete OTP after successful verification
+            await otpRef.delete();
+
+            // Find user email by phone to pass to password reset service
+            const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
+            let userEmail = null;
+            let userId = null;
+            if (!usersSnap.empty) {
+                const userData = usersSnap.docs[0].data();
+                userEmail = userData.email || null;
+                userId = usersSnap.docs[0].id;
+            }
+
+            // Issue a short-lived reset JWT (10 minutes)
+            const resetToken = signResetJWT({ phone: normalizedPhone, email: userEmail, userId, purpose: 'password_reset' });
+
+            return res.status(200).json({
+                success: true,
+                resetToken, // Used by PasswordResetPage to call completePasswordReset
+                email: userEmail
+            });
+
+        } catch (error) {
+            console.error('[verifySmsOtp] Error:', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+/**
+ * completePasswordReset
+ * POST body: { resetToken, newPassword }
+ * - Validates the JWT reset token (issued by verifySmsOtp)
+ * - Updates the user's password in Firebase Auth using Admin SDK
+ */
+exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+        const { resetToken, newPassword } = req.body;
+        if (!resetToken || !newPassword) {
+            return res.status(400).json({ error: 'Missing resetToken or newPassword' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+        }
+
+        // Validate the JWT token
+        const payload = verifyResetJWT(resetToken);
+        if (!payload) {
+            return res.status(401).json({ error: 'Invalid or expired reset token. Please start over.' });
+        }
+
+        // Ensure this token is specifically for password reset
+        if (payload.purpose !== 'password_reset') {
+            return res.status(403).json({ error: 'Token is not valid for password reset.' });
+        }
+
+        const { email, phone, userId } = payload;
+
+        try {
+            let firebaseUid = userId || null;
+
+            // 1. Try to find Firebase Auth user by email
+            if (!firebaseUid && email) {
+                try {
+                    const userRecord = await admin.auth().getUserByEmail(email);
+                    firebaseUid = userRecord.uid;
+                } catch (e) {
+                    console.warn('[completePasswordReset] User not found by email in Auth:', email, e.message);
+                }
+            }
+
+            // 2. Fallback: try by phone number
+            if (!firebaseUid && phone) {
+                try {
+                    const userRecord = await admin.auth().getUserByPhoneNumber(phone);
+                    firebaseUid = userRecord.uid;
+                } catch (e) {
+                    console.warn('[completePasswordReset] User not found by phone in Auth:', phone, e.message);
+                }
+            }
+
+            // 3. Fallback: look up in Firestore users collection if we have email or phone
+            if (!firebaseUid) {
+                const db = admin.firestore();
+                let userQuery = null;
+                if (email) {
+                    userQuery = await db.collection('users').where('email', '==', email).limit(1).get();
+                }
+                if ((!userQuery || userQuery.empty) && phone) {
+                    userQuery = await db.collection('users').where('phone', '==', phone).limit(1).get();
+                }
+                if (userQuery && !userQuery.empty) {
+                    const userData = userQuery.docs[0].data();
+                    firebaseUid = userData.firebaseUid || userData.uid || userQuery.docs[0].id;
+                }
+            }
+
+            if (!firebaseUid) {
+                return res.status(404).json({ error: 'Could not locate the user account to reset.' });
+            }
+
+            // 4. Update password in Firebase Auth
+            await admin.auth().updateUser(firebaseUid, { password: newPassword });
+            console.log(`[completePasswordReset] Password updated for UID: ${firebaseUid} (email: ${email})`);
+
+            // 5. Log the action to Firestore
+            try {
+                await admin.firestore().collection('user_log').add({
+                    actionType: 'USER_PASSWORD_RESET',
+                    description: `Password reset via SMS OTP for phone: ${phone}`,
+                    userId: firebaseUid,
+                    userName: email || phone || 'Unknown',
+                    userRole: 'User',
+                    payload: { phone, email },
+                    timestamp: new Date().toISOString()
+                });
+            } catch (logErr) {
+                console.warn('[completePasswordReset] Failed to write log:', logErr.message);
+            }
+
+            return res.status(200).json({ success: true, message: 'Password updated successfully.' });
+
+        } catch (error) {
+            console.error('[completePasswordReset] Error:', error);
+            return res.status(500).json({ error: error.message });
         }
     });
 });

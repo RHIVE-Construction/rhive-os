@@ -5,19 +5,24 @@ import { MockDatabaseProvider, useMockDB } from './contexts/MockDatabaseContext'
 import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { Sidebar } from './components/Sidebar';
 import LoginPage from './pages/LoginPage';
 import { GlobalHeader } from './components/GlobalHeader';
+import RhiveHeader from './components/website/RhiveHeader';
 import { pageComponentMap } from './pageRegistry';
 import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
+import HunniChatWidget from './components/website/HunniChatWidget';
 import { DevNavigator } from './components/DevNavigator';
 import { FloatingBackButton } from './components/FloatingBackButton';
+import { GlobalCustomerLookupModal } from './components/GlobalCustomerLookupModal';
+import { GlobalWeatherModal } from './components/GlobalWeatherModal';
 import { cn } from './lib/utils';
 import { session } from './lib/session';
 
 const AppContentAuthenticated: React.FC = () => {
-    const { activePageId, setActivePageId } = useNavigation();
+    const { activePageId, setActivePageId, showEditorMenu } = useNavigation();
     const { currentUser } = useMockDB();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -53,17 +58,48 @@ const AppContentAuthenticated: React.FC = () => {
             window.history.replaceState({ ...window.history.state, path: newUrl }, '', newUrl);
         }
     }, [activePageId]);
-
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const pageCode = params.get('page');
+        if (pageCode) {
+            // If logged in and trying to go to login page P-06, redirect to dashboard directly
+            if (currentUser && pageCode === 'P-06') {
+                let target = 'E-01';
+                switch (currentUser.role) {
+                    case 'Customer': target = 'C-01'; break;
+                    case 'Contractor': target = 'CO-01'; break;
+                    case 'Supplier': target = 'S-01'; break;
+                }
+                setActivePageId(target);
+                // Clean up query param immediately
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.delete('page');
+                const newSearch = newParams.toString();
+                const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+                window.history.replaceState({}, '', newUrl);
+                return;
+            }
+
+            if (pageCode !== activePageId) {
+                setActivePageId(pageCode);
+            } else {
+                // Only clean up the page query param once activePageId matches it
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.delete('page');
+                const newSearch = newParams.toString();
+                const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
+                window.history.replaceState({}, '', newUrl);
+            }
+        }
         const handleCustomNav = (e: any) => {
             if (e.detail) setActivePageId(e.detail);
         };
         window.addEventListener('nav-page', handleCustomNav);
         return () => window.removeEventListener('nav-page', handleCustomNav);
-    }, [setActivePageId]);
+    }, [activePageId, setActivePageId, currentUser]);
 
     useEffect(() => {
-        if (currentUser && !activePageId) {
+        if (currentUser && (!activePageId || activePageId === 'P-06')) {
             switch (currentUser.role) {
                 case 'Super Admin': setActivePageId('SA-01'); break;
                 case 'Admin': setActivePageId('E-01'); break; // Unified entry point
@@ -106,6 +142,9 @@ const AppContentAuthenticated: React.FC = () => {
             </div>
             <FloatingEstimator />
             <FloatingBackButton />
+            <HunniChatWidget />
+            <GlobalCustomerLookupModal />
+            <GlobalWeatherModal />
             {window.location.hostname === 'localhost' && <DevNavigator />}
         </div>
     );
@@ -154,10 +193,18 @@ const LoginBridge: React.FC = () => {
     // Sync browser URL bar with activePageId for unauthenticated users
     useEffect(() => {
         if (!currentUser && activePageId) {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('page') !== activePageId) {
-                const newUrl = `${window.location.pathname}?page=${activePageId}`;
-                window.history.pushState({ path: newUrl }, '', newUrl);
+            const isHomePage = activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3';
+            if (isHomePage) {
+                // Clean URL for the home page — no ?page= param
+                if (window.location.search) {
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+            } else {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('page') !== activePageId) {
+                    const newUrl = `${window.location.pathname}?page=${activePageId}`;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+                }
             }
         }
     }, [activePageId, currentUser]);
@@ -176,11 +223,13 @@ const LoginBridge: React.FC = () => {
     }, [activePageId, currentUser]);
 
     if (!currentUser) {
-        // If a public page is active (except P-06 which is LoginPage itself), render that page inside the public layout!
-        const isPublicPage = (activePageId || '').startsWith('P-') && activePageId !== 'P-06' && activePageId !== '';
-        const CurrentPublicPage = isPublicPage ? pageComponentMap[activePageId] : null;
+        const isLoginPage = activePageId === 'P-06';
+        const hasOwnHeader = activePageId === 'P-00' || activePageId === 'P-00a' || activePageId === 'P-00b' || !activePageId;
+        const isPagePublic = activePageId && activePageId.startsWith('P-');
+        const targetPageId = isPagePublic ? activePageId : 'P-00';
+        const CurrentPage = pageComponentMap[targetPageId] || pageComponentMap['P-00'];
 
-        if (isPublicPage && CurrentPublicPage) {
+        if (isPagePublic && !isLoginPage && CurrentPage) {
             return (
                 <div className={cn(
                     "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
@@ -192,7 +241,7 @@ const LoginBridge: React.FC = () => {
                         lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
                     />
                     <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto relative">
-                        <CurrentPublicPage />
+                        <CurrentPage />
                     </main>
                     <FloatingEstimator />
                     <FloatingBackButton />
@@ -216,6 +265,10 @@ const LoginBridge: React.FC = () => {
                     <LoginPage onLogin={login} />
                 </main>
                 <FloatingEstimator />
+                <HunniChatWidget />
+                <GlobalCustomerLookupModal />
+                <GlobalWeatherModal />
+                {window.location.hostname === 'localhost' && <DevNavigator />}
             </div>
         );
     }
@@ -228,11 +281,13 @@ export default function App() {
         <ThemeProvider>
             <LanguageProvider>
                 <MockDatabaseProvider>
-                    <PricingProvider>
-                        <NavigationProvider>
-                            <LoginBridge />
-                        </NavigationProvider>
-                    </PricingProvider>
+                    <NotificationProvider>
+                        <PricingProvider>
+                            <NavigationProvider>
+                                <LoginBridge />
+                            </NavigationProvider>
+                        </PricingProvider>
+                    </NotificationProvider>
                 </MockDatabaseProvider>
             </LanguageProvider>
         </ThemeProvider>

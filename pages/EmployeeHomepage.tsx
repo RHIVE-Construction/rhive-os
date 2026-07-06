@@ -24,388 +24,8 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { projectService, dashboardService, firestoreService } from '../lib/firebaseService';
 import WeatherForecastStrip from '../components/WeatherForecastStrip';
-import { getStagePageId } from '../lib/utils';
+import { getStagePageId, cn } from '../lib/utils';
 
-// ─── Global Dispatch Inline Search ────────────────────────────────────────────
-const GlobalDispatchSearch: React.FC = () => {
-    const { setActivePageId, setSelectedContactId, setSelectedProjectId, setSelectedPropertyId } = useNavigation();
-    const [open, setOpen] = useState(false);
-    const [query, setQuery] = useState('');
-    const [contacts, setContacts] = useState<any[]>([]);
-    const [projects, setProjects] = useState<any[]>([]);
-    const [properties, setProperties] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const wrapperRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    // Subscribe to all three collections once
-    useEffect(() => {
-        const unsubContacts = firestoreService.subscribeToDocuments('contacts', (data) => {
-            setContacts(data);
-            setLoading(false);
-        });
-        const unsubProjects = projectService.subscribe((data) => {
-            setProjects(data);
-        });
-        const unsubProps = firestoreService.subscribeToDocuments('properties', (data) => {
-            setProperties(data);
-        });
-        return () => { unsubContacts(); unsubProjects(); unsubProps(); };
-    }, []);
-
-    // Close when clicking outside
-    useEffect(() => {
-        const handler = (e: MouseEvent) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-                setOpen(false);
-                setQuery('');
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
-
-    const lq = query.toLowerCase().trim();
-
-    const filteredContacts = lq
-        ? contacts.filter(c => {
-            const name = `${c.first_name || ''} ${c.last_name || ''} ${c.name || ''}`.toLowerCase();
-            return name.includes(lq) || (c.email || '').toLowerCase().includes(lq) || (c.phone || '').includes(lq);
-        })
-        : contacts.slice(0, 4);
-
-    const filteredProjects = lq
-        ? projects.filter(p =>
-            (p.name || '').toLowerCase().includes(lq) ||
-            (p.current_stage || '').toLowerCase().includes(lq) ||
-            (p.property_address || '').toLowerCase().includes(lq)
-        )
-        : projects.slice(0, 4);
-
-    const filteredProperties = lq
-        ? properties.filter(p =>
-            (p.address_full || '').toLowerCase().includes(lq) ||
-            (p.city || '').toLowerCase().includes(lq) ||
-            (p.type || '').toLowerCase().includes(lq)
-        )
-        : properties.slice(0, 3);
-
-    const hasResults = filteredContacts.length + filteredProjects.length + filteredProperties.length > 0;
-    const totalCount = filteredContacts.length + filteredProjects.length + filteredProperties.length;
-
-    const handleOpen = () => {
-        setOpen(true);
-        setTimeout(() => inputRef.current?.focus(), 50);
-    };
-
-    const go = (pageId: string) => {
-        setOpen(false);
-        setQuery('');
-        setActivePageId(pageId);
-    };
-
-    const goContact = (id: string) => {
-        setOpen(false);
-        setQuery('');
-        setSelectedContactId(id);
-        setActivePageId('E-10');
-    };
-
-    const goProject = (id: string, stage?: string) => {
-        setOpen(false);
-        setQuery('');
-        setSelectedProjectId(id);
-        setActivePageId(getStagePageId(stage));
-    };
-
-    const goProperty = (id: string) => {
-        setOpen(false);
-        setQuery('');
-        setSelectedPropertyId(id);
-        setActivePageId('E-12');
-    };
-
-    const stageBadge = (stage?: string) => {
-        const s = (stage || '').toLowerCase();
-        if (s.includes('lead')) return '#eab308';
-        if (s.includes('quote')) return '#60a5fa';
-        if (s.includes('sign')) return '#c084fc';
-        if (s.includes('install') || s.includes('progress')) return '#fb923c';
-        if (s.includes('complet') || s.includes('paid')) return '#4ade80';
-        return '#6b7280';
-    };
-
-    return (
-        <div ref={wrapperRef} style={{ position: 'relative' }}>
-            {/* ── Trigger Button (collapsed state) ── */}
-            {!open && (
-                <button
-                    onClick={handleOpen}
-                    id="global-dispatch-btn"
-                    className="group flex items-center px-4 py-2 bg-black/40 border border-[#ec028b] rounded-full hover:bg-[#ec028b] hover:text-white text-[#ec028b] transition-all duration-300 shadow-[0_0_10px_rgba(236,2,139,0.2)] hover:shadow-[0_0_20px_rgba(236,2,139,0.5)]"
-                >
-                    <MagnifyingGlassIcon className="w-5 h-5 mr-2" />
-                    <span className="font-semibold text-sm">Global Dispatch</span>
-                </button>
-            )}
-
-            {/* ── Expanded Search Input ── */}
-            {open && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{
-                        display: 'flex', alignItems: 'center',
-                        background: 'rgba(0,0,0,0.6)',
-                        border: '1px solid rgba(236,2,139,0.6)',
-                        borderRadius: 24,
-                        padding: '6px 14px',
-                        gap: 8,
-                        boxShadow: '0 0 16px rgba(236,2,139,0.18)',
-                        backdropFilter: 'blur(12px)',
-                        minWidth: 280,
-                    }}>
-                        <MagnifyingGlassIcon style={{ width: 16, height: 16, color: '#ec028b', flexShrink: 0 }} />
-                        <input
-                            ref={inputRef}
-                            id="global-dispatch-input"
-                            type="text"
-                            value={query}
-                            onChange={e => setQuery(e.target.value)}
-                            placeholder="Search contacts, projects, properties…"
-                            style={{
-                                background: 'transparent',
-                                border: 'none',
-                                outline: 'none',
-                                color: '#ffffff',
-                                fontSize: 13,
-                                fontWeight: 500,
-                                width: '100%',
-                                letterSpacing: '0.01em',
-                            }}
-                        />
-                        {query && (
-                            <button
-                                onClick={() => setQuery('')}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', display: 'flex', padding: 0 }}
-                            >
-                                <XIcon style={{ width: 14, height: 14 }} />
-                            </button>
-                        )}
-                    </div>
-                    <button
-                        onClick={() => { setOpen(false); setQuery(''); }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}
-                    >
-                        <XIcon className="w-3 h-3" />
-                        Cancel
-                    </button>
-                </div>
-            )}
-
-            {/* ── Dropdown Results Panel ── */}
-            {open && (
-                <div style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 10px)',
-                    right: 0,
-                    width: 420,
-                    maxHeight: 520,
-                    overflowY: 'auto',
-                    background: 'linear-gradient(140deg, rgba(6,4,14,0.98) 0%, rgba(12,6,22,0.98) 100%)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 16,
-                    boxShadow: '0 24px 60px rgba(0,0,0,0.9), 0 0 20px rgba(236,2,139,0.08)',
-                    backdropFilter: 'blur(24px)',
-                    zIndex: 99999,
-                    overflow: 'hidden',
-                }}>
-
-                    {/* Header */}
-                    <div style={{
-                        padding: '12px 16px 10px',
-                        borderBottom: '1px solid rgba(255,255,255,0.07)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    }}>
-                        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#ec028b' }}>
-                            Global Dispatch
-                        </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: loading ? '#eab308' : '#4ade80' }} />
-                            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                {loading ? 'Syncing' : `${totalCount} results`}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div style={{ maxHeight: 460, overflowY: 'auto' }}>
-
-                        {/* ── Contacts ── */}
-                        {filteredContacts.length > 0 && (
-                            <div>
-                                <div style={{ padding: '8px 16px 4px', fontSize: 9, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>
-                                    👤 People &amp; Contacts
-                                </div>
-                                {filteredContacts.slice(0, 5).map((c: any) => {
-                                    const name = c.first_name || c.last_name
-                                        ? `${c.first_name || ''} ${c.last_name || ''}`.trim()
-                                        : c.name || 'Unknown';
-                                    return (
-                                        <div
-                                            key={c.id}
-                                            onClick={() => goContact(c.id)}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', gap: 12,
-                                                padding: '10px 16px',
-                                                cursor: 'pointer',
-                                                borderBottom: '1px solid rgba(255,255,255,0.04)',
-                                                transition: 'background 0.15s',
-                                            }}
-                                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(236,2,139,0.07)')}
-                                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                                        >
-                                            <div style={{
-                                                width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                                                background: 'rgba(236,2,139,0.1)', border: '1px solid rgba(236,2,139,0.25)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            }}>
-                                                <UserIcon style={{ width: 16, height: 16, color: '#ec028b' }} />
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
-                                                <p style={{ margin: '2px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {[c.role, c.email].filter(Boolean).join(' · ')}
-                                                </p>
-                                            </div>
-                                            <ArrowRightIcon style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {/* ── Projects ── */}
-                        {filteredProjects.length > 0 && (
-                            <div>
-                                <div style={{ padding: '8px 16px 4px', fontSize: 9, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>
-                                    💼 Active Projects
-                                </div>
-                                {filteredProjects.slice(0, 5).map((p: any) => (
-                                    <div
-                                        key={p.id}
-                                        onClick={() => goProject(p.id, p.current_stage)}
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: 12,
-                                            padding: '10px 16px',
-                                            cursor: 'pointer',
-                                            borderBottom: '1px solid rgba(255,255,255,0.04)',
-                                            transition: 'background 0.15s',
-                                        }}
-                                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(236,2,139,0.07)')}
-                                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                                    >
-                                        <div style={{
-                                            width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                                            background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.25)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        }}>
-                                            <BriefcaseIcon style={{ width: 16, height: 16, color: '#60a5fa' }} />
-                                        </div>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name || 'Unnamed Project'}</p>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                                                {p.current_stage && (
-                                                    <span style={{
-                                                        fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em',
-                                                        color: stageBadge(p.current_stage), border: `1px solid ${stageBadge(p.current_stage)}44`,
-                                                        background: `${stageBadge(p.current_stage)}18`, borderRadius: 4, padding: '1px 5px',
-                                                    }}>{p.current_stage}</span>
-                                                )}
-                                                {p.property_address && (
-                                                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.property_address}</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <ArrowRightIcon style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* ── Properties ── */}
-                        {filteredProperties.length > 0 && (
-                            <div>
-                                <div style={{ padding: '8px 16px 4px', fontSize: 9, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>
-                                    📍 Properties &amp; Sites
-                                </div>
-                                {filteredProperties.slice(0, 4).map((p: any) => {
-                                    const addr = p.address_full || [p.property_address, p.city, p.state].filter(Boolean).join(', ') || 'Unknown Address';
-                                    return (
-                                        <div
-                                            key={p.id}
-                                            onClick={() => goProperty(p.id)}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', gap: 12,
-                                                padding: '10px 16px',
-                                                cursor: 'pointer',
-                                                borderBottom: '1px solid rgba(255,255,255,0.04)',
-                                                transition: 'background 0.15s',
-                                            }}
-                                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(236,2,139,0.07)')}
-                                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                                        >
-                                            <div style={{
-                                                width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                                                background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            }}>
-                                                <MapPinIcon style={{ width: 16, height: 16, color: '#4ade80' }} />
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{addr}</p>
-                                                {p.type && (
-                                                    <p style={{ margin: '2px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{p.type}</p>
-                                                )}
-                                            </div>
-                                            <ArrowRightIcon style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {/* Empty state */}
-                        {!loading && !hasResults && (
-                            <div style={{ padding: '28px 16px', textAlign: 'center' }}>
-                                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' }}>
-                                    {lq ? `No results for "${query}"` : 'No records in Firebase yet.'}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* View all link */}
-                        {hasResults && (
-                            <div
-                                onClick={() => go('E-02')}
-                                style={{
-                                    padding: '10px 16px',
-                                    borderTop: '1px solid rgba(255,255,255,0.07)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                    cursor: 'pointer',
-                                    fontSize: 11, fontWeight: 700, color: '#ec028b',
-                                    letterSpacing: '0.06em', textTransform: 'uppercase',
-                                    transition: 'background 0.15s',
-                                }}
-                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(236,2,139,0.07)')}
-                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                            >
-                                Open Full Dispatch &nbsp;→
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
 
 // Task Item Component
 const TaskItem = ({ label, initialStatus, badge }: { label: string; initialStatus: boolean; badge?: string }) => {
@@ -432,41 +52,354 @@ const TaskItem = ({ label, initialStatus, badge }: { label: string; initialStatu
     );
 };
 
-// Compact Session Widget
+// Avatar upload and cloud sync modal (local files, Google Drive, Google Photos)
+interface AvatarUploadModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSelectAvatar: (url: string) => void;
+    currentAvatar: string;
+}
+
+const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({ isOpen, onClose, onSelectAvatar, currentAvatar }) => {
+    const [selectedTab, setSelectedTab] = useState<'upload' | 'drive' | 'photos'>('upload');
+    const [uploadError, setUploadError] = useState('');
+    const [selectedMockImg, setSelectedMockImg] = useState<string | null>(null);
+
+    if (!isOpen) return null;
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            setUploadError('Invalid file type. Please upload an image.');
+            return;
+        }
+        setUploadError('');
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (event.target?.result) {
+                onSelectAvatar(event.target.result as string);
+                onClose();
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const mockDriveFiles = [
+        { id: 'd1', name: 'michael_headshot_pro.jpg', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200' },
+        { id: 'd2', name: 'rhive_logo_badge.png', url: 'https://i.imgur.com/t0VcSgJ.png' },
+        { id: 'd3', name: 'executive_portrait.png', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200' }
+    ];
+
+    const mockPhotos = [
+        { id: 'p1', name: 'vacation_smile.jpg', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200' },
+        { id: 'p2', name: 'office_profile.jpg', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200' },
+        { id: 'p3', name: 'casual_weekend.jpg', url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200' }
+    ];
+
+    const filesToDisplay = selectedTab === 'drive' ? mockDriveFiles : mockPhotos;
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[99999] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+            <div 
+                className="w-full max-w-md bg-black border border-rhive-pink/40 shadow-[0_0_30px_rgba(236,2,139,0.25)] p-6 relative flex flex-col gap-4 text-left"
+                style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+                    <div>
+                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest block">IDENTITY MAPPING</span>
+                        <h3 className="text-sm font-black text-white uppercase tracking-wider mt-0.5">Operator Avatar Sync</h3>
+                    </div>
+                    <button onClick={onClose} className="p-1 bg-black border border-gray-850 hover:border-rhive-pink/50 text-gray-400 hover:text-white rounded">
+                        ✕
+                    </button>
+                </div>
+
+                {/* Mode Tabs */}
+                <div className="grid grid-cols-3 gap-1.5 bg-gray-900/40 p-1 border border-gray-850 rounded-lg">
+                    {[
+                        { id: 'upload', label: 'Local Upload' },
+                        { id: 'drive', label: 'Google Drive' },
+                        { id: 'photos', label: 'Google Photos' }
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => { setSelectedTab(tab.id as any); setSelectedMockImg(null); }}
+                            className={cn(
+                                "py-1.5 text-[9px] font-extrabold uppercase tracking-wider transition-all rounded",
+                                selectedTab === tab.id
+                                    ? "bg-rhive-pink/20 border border-rhive-pink/40 text-white font-black"
+                                    : "text-gray-400 hover:text-white"
+                            )}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Tab Panels */}
+                <div className="min-h-[160px] flex flex-col justify-center">
+                    {selectedTab === 'upload' && (
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="border border-dashed border-gray-800 hover:border-rhive-pink/50 transition-colors w-full p-6 text-center cursor-pointer relative group flex flex-col items-center justify-center rounded-lg bg-black/40">
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleFileChange} 
+                                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
+                                />
+                                <span className="text-2xl mb-1 group-hover:scale-110 transition-transform">📁</span>
+                                <span className="text-xs font-bold text-gray-300 group-hover:text-white">Choose a local file...</span>
+                                <span className="text-[9px] text-gray-500 uppercase font-mono mt-1">PNG, JPG or WebP</span>
+                            </div>
+                            {uploadError && <p className="text-[10px] text-red-500 font-bold uppercase">{uploadError}</p>}
+                        </div>
+                    )}
+
+                    {(selectedTab === 'drive' || selectedTab === 'photos') && (
+                        <div className="space-y-3">
+                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-wider mb-1.5 flex items-center gap-1.5">
+                                <span>🌐</span>
+                                <span>Connected to G-Suite: Select image file</span>
+                            </p>
+                            <div className="grid grid-cols-3 gap-2">
+                                {filesToDisplay.map(file => (
+                                    <div 
+                                        key={file.id}
+                                        onClick={() => setSelectedMockImg(file.url)}
+                                        className={cn(
+                                            "border p-1 bg-black hover:border-rhive-pink cursor-pointer transition-all flex flex-col items-center gap-1.5 rounded-lg group relative",
+                                            selectedMockImg === file.url ? "border-rhive-pink shadow-[0_0_10px_rgba(236,2,139,0.3)] bg-rhive-pink/10" : "border-gray-800"
+                                        )}
+                                    >
+                                        <img src={file.url} alt={file.name} className="w-16 h-16 object-cover rounded" />
+                                        <span className="text-[8px] text-gray-400 font-mono tracking-tighter truncate w-full text-center group-hover:text-white">{file.name}</span>
+                                        {selectedMockImg === file.url && (
+                                            <div className="absolute top-1 right-1 bg-green-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black">✓</div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Bottom Actions */}
+                <div className="flex gap-2 border-t border-gray-900 pt-4 mt-2">
+                    <Button variant="secondary" className="w-1/2" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button 
+                        className="w-1/2 bg-rhive-pink text-white" 
+                        disabled={selectedTab !== 'upload' && !selectedMockImg}
+                        onClick={() => {
+                            if (selectedMockImg) {
+                                onSelectAvatar(selectedMockImg);
+                            }
+                            onClose();
+                        }}
+                    >
+                        Sync Avatar
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Compact Session Widget transformed into clocks logger
 const SessionWidget = () => {
     const { currentUser } = useMockDB();
     const { setActivePageId } = useNavigation();
 
+    // Clocking states
+    const [clockStatus, setClockStatus] = useState<'in' | 'break' | 'out'>(() => {
+        return (localStorage.getItem('rhive_clock_status') as any) || 'in';
+    });
+    const [elapsedTime, setElapsedTime] = useState(() => {
+        const stored = localStorage.getItem('rhive_clock_elapsed') || '0';
+        return parseInt(stored, 10);
+    });
+    const [shiftNotes, setShiftNotes] = useState(() => {
+        return localStorage.getItem('rhive_clock_notes') || '';
+    });
+
+    const [isClockExpanded, setIsClockExpanded] = useState(false);
+    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+
+    // Live Local Time Clock
+    const [localTime, setLocalTime] = useState(() => new Date().toLocaleTimeString());
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setLocalTime(new Date().toLocaleTimeString());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Avatar state
+    const [avatarUrl, setAvatarUrl] = useState(() => {
+        const stored = localStorage.getItem(`avatar_${currentUser?.id}`);
+        return stored || currentUser?.avatarUrl || "https://i.pravatar.cc/150?u=employee";
+    });
+
+    // Live Shift Timer Effect
+    useEffect(() => {
+        let interval: any = null;
+        if (clockStatus === 'in') {
+            interval = setInterval(() => {
+                setElapsedTime(prev => {
+                    const next = prev + 1;
+                    localStorage.setItem('rhive_clock_elapsed', String(next));
+                    return next;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [clockStatus]);
+
+    const handleStatusChange = (status: 'in' | 'break' | 'out') => {
+        setClockStatus(status);
+        localStorage.setItem('rhive_clock_status', status);
+        if (status === 'out') {
+            setElapsedTime(0);
+            localStorage.setItem('rhive_clock_elapsed', '0');
+        }
+    };
+
+    const formatTime = (totalSec: number) => {
+        const hrs = Math.floor(totalSec / 3600);
+        const mins = Math.floor((totalSec % 3600) / 60);
+        const secs = totalSec % 60;
+        return [
+            hrs.toString().padStart(2, '0'),
+            mins.toString().padStart(2, '0'),
+            secs.toString().padStart(2, '0')
+        ].join(':');
+    };
+
     return (
-        <div className="bg-gray-900/60 border border-gray-700/50 rounded-xl p-4 flex items-center justify-between backdrop-blur-sm mb-6 shadow-lg">
-            <div className="flex items-center">
-                <div className="relative">
-                    <img src={currentUser?.avatarUrl || "https://i.pravatar.cc/150?u=employee"} alt="User" className="w-12 h-12 rounded-full border border-[#ec028b]" />
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-black border border-[#ec028b] rounded-full"></div>
+        <div 
+            className="bg-gray-900/60 border border-gray-700/50 p-5 flex flex-col gap-4 backdrop-blur-sm mb-6 shadow-lg relative overflow-hidden"
+            style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+        >
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rhive-pink/40 to-transparent"></div>
+            
+            {/* User Session Row */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                    <div 
+                        className="relative group cursor-pointer" 
+                        onClick={() => setIsAvatarModalOpen(true)} 
+                        title="Click to open premium avatar upload/sync settings"
+                    >
+                        <img 
+                            src={avatarUrl} 
+                            alt="User" 
+                            className="w-12 h-12 rounded-full border-2 border-[#ec028b] hover:brightness-110 transition-all shadow-[0_0_8px_rgba(236,2,139,0.3)] object-cover" 
+                        />
+                        <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center text-[8px] font-black uppercase text-white opacity-0 group-hover:opacity-100 transition-opacity">EDIT</div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border border-black rounded-full shadow-sm"></div>
+                    </div>
+                    <div className="ml-4 text-left">
+                        <h3 
+                            className="text-white font-bold cursor-pointer hover:text-rhive-pink transition-colors text-sm uppercase tracking-wider"
+                            onClick={() => setActivePageId('E-03')}
+                            title="Go to my profile"
+                        >
+                            {currentUser?.name}
+                        </h3>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">{currentUser?.role}</p>
+                    </div>
                 </div>
-                <div className="ml-4">
-                    <h3 className="text-white font-bold">{currentUser?.name}</h3>
-                    <p className="text-xs text-[#ec028b] font-medium">Clocked In: 08:00 AM</p>
-                </div>
-            </div>
-            <div className="flex space-x-2">
-                <button
-                    onClick={() => setActivePageId('E-03')}
-                    className="px-3 py-1.5 bg-black hover:bg-gray-900 text-xs text-white rounded-full border border-gray-700 hover:border-gray-500 transition-colors"
+
+                <div 
+                    className="text-right cursor-pointer hover:text-[#ec028b] transition-colors group/time"
+                    onClick={() => setIsClockExpanded(!isClockExpanded)}
+                    title="Click to expand/toggle Time Clock controls"
                 >
-                    My Info
-                </button>
-                <button className="px-3 py-1.5 bg-black hover:bg-gray-900 text-xs text-gray-400 hover:text-white rounded-full border border-gray-800 hover:border-gray-600 transition-colors">
-                    Clock Out
-                </button>
+                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block group-hover/time:text-[#ec028b]/80">LOCAL TIME</span>
+                    <span className="font-mono text-white text-xs font-black mt-1 block flex items-center justify-end gap-1.5">
+                        <span>⏰</span>
+                        <span>{localTime}</span>
+                    </span>
+                </div>
             </div>
+
+            {/* Collapsible Shift Controls */}
+            {isClockExpanded && (
+                <div className="flex flex-col gap-3 border-t border-gray-800/80 pt-3 animate-fade-in text-left">
+                    <div className="flex justify-between items-center">
+                        <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">SHIFT DURATION</span>
+                        <span className="font-mono text-white text-xs font-black bg-black/50 border border-gray-850 px-2 py-0.5 rounded">{formatTime(elapsedTime)}</span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                        {[
+                            { id: 'in', label: 'Duty Active', color: 'bg-green-500/10 border-green-500/30 text-green-400' },
+                            { id: 'break', label: 'On Break', color: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400' },
+                            { id: 'out', label: 'Off Duty', color: 'bg-red-500/10 border-red-500/30 text-red-400' }
+                        ].map(opt => (
+                            <button
+                                key={opt.id}
+                                onClick={() => handleStatusChange(opt.id as any)}
+                                className={cn(
+                                    "py-1.5 border text-[9px] font-extrabold uppercase tracking-widest transition-all rounded",
+                                    clockStatus === opt.id 
+                                        ? opt.color + " shadow-[0_0_8px_rgba(236,2,139,0.15)] font-black"
+                                        : "bg-black/30 border-gray-800 text-gray-500 hover:text-white hover:border-gray-700"
+                                )}
+                                style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Shift Logger Notes */}
+                    <div className="flex flex-col gap-1.5 mt-1">
+                        <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest block">SHIFT LOG / NOTES</label>
+                        <textarea
+                            value={shiftNotes}
+                            onChange={(e) => {
+                                setShiftNotes(e.target.value);
+                                localStorage.setItem('rhive_clock_notes', e.target.value);
+                            }}
+                            placeholder="Enter shift activity logs, dispatch details, or site notes..."
+                            className="w-full bg-black border border-gray-800 focus:border-[#ec028b] px-3 py-2 outline-none text-xs text-white resize-none h-16 transition-colors"
+                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                        />
+                        <div className="flex justify-between items-center text-[8px] font-mono text-gray-500 mt-1">
+                            <span>LOGGER STATE:</span>
+                            <span className="text-green-500 font-bold uppercase">{clockStatus === 'in' ? 'ACTIVE RECORDING' : clockStatus === 'break' ? 'PAUSED' : 'OFF DUTY'}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Avatar Upload Modal */}
+            <AvatarUploadModal 
+                isOpen={isAvatarModalOpen}
+                onClose={() => setIsAvatarModalOpen(false)}
+                onSelectAvatar={(url) => {
+                    setAvatarUrl(url);
+                    if (currentUser) currentUser.avatarUrl = url;
+                    localStorage.setItem(`avatar_${currentUser?.id}`, url);
+                }}
+                currentAvatar={avatarUrl}
+            />
         </div>
     );
 };
 
 // KPI Stat Card Component
 const StatCard = ({ label, value, icon: Icon, trend, loading }: { label: string, value: string, icon: any, trend?: string, loading?: boolean }) => (
-    <div className="bg-gray-900/60 border border-gray-700/50 p-4 rounded-xl flex items-center justify-between backdrop-blur-sm hover:border-[#ec028b]/50 transition-all duration-300 group shadow-lg">
+    <div 
+        className="bg-gray-900/60 border border-gray-700/50 p-4 flex items-center justify-between backdrop-blur-sm hover:border-[#ec028b]/50 transition-all duration-300 group shadow-lg"
+        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+    >
         <div>
             <p className="text-gray-400 text-xs font-bold uppercase tracking-wider group-hover:text-[#ec028b] transition-colors">{label}</p>
             {loading ? (
@@ -477,7 +410,10 @@ const StatCard = ({ label, value, icon: Icon, trend, loading }: { label: string,
             {trend && !loading && <p className="text-xs text-gray-500 mt-1 font-medium">{trend}</p>}
             {loading && <div className="mt-1 h-3 w-24 bg-gray-800/60 rounded animate-pulse" />}
         </div>
-        <div className="h-12 w-12 rounded-full bg-black/40 border border-gray-700 flex items-center justify-center text-gray-500 group-hover:text-[#ec028b] group-hover:border-[#ec028b]/30 transition-all">
+        <div 
+            className="h-12 w-12 bg-black/40 border border-gray-700 flex items-center justify-center text-gray-500 group-hover:text-[#ec028b] group-hover:border-[#ec028b]/30 transition-all"
+            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+        >
             <Icon className="h-6 w-6" />
         </div>
     </div>
@@ -566,8 +502,8 @@ const StormAlertWidget = () => {
     return (
         <div
             className={hasStorm
-                ? 'rounded-xl p-4 flex items-center justify-between backdrop-blur-sm shadow-[0_0_20px_rgba(249,115,22,0.15)]'
-                : 'rounded-xl p-4 flex items-center justify-between backdrop-blur-sm'
+                ? 'p-4 flex items-center justify-between backdrop-blur-sm shadow-[0_0_20px_rgba(249,115,22,0.15)]'
+                : 'p-4 flex items-center justify-between backdrop-blur-sm'
             }
             style={{
                 background: hasStorm
@@ -577,6 +513,7 @@ const StormAlertWidget = () => {
                     ? '1px solid rgba(251,146,60,0.5)'
                     : '1px solid rgba(255,255,255,0.08)',
                 transition: 'all 0.4s ease',
+                clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)'
             }}
         >
             {/* Icon box */}
@@ -644,8 +581,14 @@ const StormAlertWidget = () => {
 
 const EmployeeHomepage: React.FC = () => {
     const page = PAGE_GROUPS.flatMap(g => g.pages).find(p => p.id === 'E-01');
-    const { setActivePageId } = useNavigation();
-    const { currentUser } = useMockDB();
+    const { 
+        setActivePageId, 
+        setSelectedContactId, 
+        setSelectedAccountId, 
+        setSelectedPropertyId, 
+        setSelectedProjectId 
+    } = useNavigation();
+    const { currentUser, users, projects, setCurrentProjectId, properties } = useMockDB();
 
     const [activity, setActivity] = useState<{ user: string; action: string; target: string; time: string }[]>([]);
     const [activityLoading, setActivityLoading] = useState(true);
@@ -667,9 +610,16 @@ const EmployeeHomepage: React.FC = () => {
         return `$${val.toLocaleString()}`;
     };
 
-    const timeAgo = (dateString: string) => {
-        if (!dateString) return 'Just now';
-        const diff = Date.now() - new Date(dateString).getTime();
+    const timeAgo = (dateVal: any) => {
+        if (!dateVal) return 'Just now';
+        let ms: number;
+        if (typeof dateVal === 'object' && typeof dateVal.seconds === 'number') {
+            ms = dateVal.seconds * 1000;
+        } else {
+            ms = new Date(dateVal).getTime();
+            if (isNaN(ms)) return 'Just now';
+        }
+        const diff = Date.now() - ms;
         const minutes = Math.floor(diff / 60000);
         if (minutes < 1) return 'Just now';
         if (minutes < 60) return `${minutes}m ago`;
@@ -679,20 +629,68 @@ const EmployeeHomepage: React.FC = () => {
     };
 
     useEffect(() => {
-        const unsubscribe = projectService.subscribeToRecentActivity((projects: any[]) => {
-            const sorted = [...projects].sort((a, b) =>
-                new Date(b.updated_at || b.created_at || 0).getTime() -
-                new Date(a.updated_at || a.created_at || 0).getTime()
-            ).slice(0, 5);
+        const unsubscribe = projectService.subscribeToRecentActivity((firebaseProjects: any[]) => {
+            const activeProjects = (firebaseProjects && firebaseProjects.length > 0) ? firebaseProjects : projects;
 
-            const mapped = sorted.map((p: any) => ({
-                user: 'New Lead',
-                action: 'submitted project',
-                target: p.name || 'Unnamed Project',
-                time: timeAgo(p.updated_at || p.created_at),
-            }));
+            // Map project/lead/deal activities — store .projectId for reliable click navigation
+            const projectActivities = activeProjects.map((p: any) => {
+                const owner = users.find(u => u.id === (p.account_id || p.owner_id));
+                const displayName =
+                    p.customer_name ||
+                    p.contact_name ||
+                    owner?.name ||
+                    'Unknown';
+                const projectName = p.name || p.Deal_Name || p.deal_name || 'Unnamed Project';
+                return {
+                    user: displayName,
+                    action: 'submitted project',
+                    target: projectName,
+                    projectId: p.id,                 // Firestore doc ID for navigation
+                    stage: p.current_stage || 'Lead',
+                    time: timeAgo(p.updated_at || p.created_at || p._importedAt),
+                    timestamp: p.updated_at || p.created_at || p._importedAt || '',
+                };
+            });
 
-            setActivity(mapped);
+            // Map property registration activities — only in-memory props have _id and address_full
+            const propertyActivities = properties
+                .filter((prop: any) => prop._id && prop.address_full)
+                .map((prop: any) => {
+                    const idParts = prop._id.split('-');
+                    const tsStr = idParts[1];
+                    let timestamp = 0;
+                    if (tsStr && /^\d{10,}$/.test(tsStr)) {
+                        timestamp = parseInt(tsStr, 10);
+                    } else {
+                        if (prop._id === 'PROP-1') timestamp = Date.now() - 3600000 * 2;
+                        else if (prop._id === 'PROP-2') timestamp = Date.now() - 3600000 * 5;
+                        else if (prop._id === 'PROP-3') timestamp = Date.now() - 3600000 * 12;
+                        else timestamp = Date.now() - 3600000 * 24;
+                    }
+                    const owner = users.find(u => u.id === prop.owner_id);
+                    return {
+                        user: owner?.name || 'System Operator',
+                        action: 'registered property',
+                        target: prop.address_full || 'Unnamed Property',
+                        propertyId: prop._id,
+                        stage: null,
+                        time: timeAgo(new Date(timestamp).toISOString()),
+                        timestamp: new Date(timestamp).toISOString(),
+                    };
+                });
+
+            const combined = [...projectActivities, ...propertyActivities]
+                .sort((a: any, b: any) => {
+                    const toMs = (v: any) => {
+                        if (!v) return 0;
+                        if (typeof v === 'object' && typeof v.seconds === 'number') return v.seconds * 1000;
+                        const ms = new Date(v).getTime(); return isNaN(ms) ? 0 : ms;
+                    };
+                    return toMs(b.timestamp) - toMs(a.timestamp);
+                })
+                .slice(0, 5);
+
+            setActivity(combined);
             setActivityLoading(false);
         });
 
@@ -705,7 +703,7 @@ const EmployeeHomepage: React.FC = () => {
             unsubscribe();
             unsubStats();
         };
-    }, []);
+    }, [projects, properties, users, setActivePageId, setSelectedContactId, setSelectedAccountId, setSelectedPropertyId, setSelectedProjectId, setCurrentProjectId]);
 
     const schedule = [
         { time: '09:00 AM', event: 'Team Standup', type: 'Meeting' },
@@ -717,22 +715,6 @@ const EmployeeHomepage: React.FC = () => {
         <PageContainer
             title={page?.name || 'Employee Homepage'}
             description="Welcome back. Here is your daily command center."
-            headerAction={
-                <div className="flex items-center space-x-3">
-                    {/* 7-Day Weather Strip */}
-                    {/* Weather strip removed */}
-                    {/* Divider */}
-                    <div className="h-6 w-[1px] bg-gray-700/60" />
-                    <button
-                        onClick={() => setActivePageId('E-SIM-GUIDE')}
-                        className="flex items-center px-4 py-2 bg-gray-900/50 border border-gray-700 text-gray-400 rounded-full hover:bg-[#ec028b]/10 hover:text-[#ec028b] hover:border-[#ec028b]/50 transition-all text-sm font-medium"
-                    >
-                        <BoltIcon className="w-5 h-5 mr-2" />
-                        Simulation Guide
-                    </button>
-                    <GlobalDispatchSearch />
-                </div>
-            }
         >
             {/* --- STATS OVERVIEW --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -776,10 +758,10 @@ const EmployeeHomepage: React.FC = () => {
                             <Button
                                 variant="secondary"
                                 className="flex-col h-24 hover:bg-gray-900 hover:border-[#ec028b]/50 hover:shadow-[0_0_15px_rgba(236,2,139,0.15)] transition-all bg-black/40 border-gray-700"
-                                onClick={() => setActivePageId('E-02a')}
+                                onClick={() => window.dispatchEvent(new CustomEvent('open-customer-lookup'))}
                             >
                                 <UserIcon className="w-6 h-6 mb-2 text-[#ec028b]" />
-                                <span className="text-xs uppercase font-bold tracking-wide">New Intake</span>
+                                <span className="text-xs uppercase font-bold tracking-wide">New Project</span>
                             </Button>
                             <Button
                                 variant="secondary"
@@ -821,15 +803,45 @@ const EmployeeHomepage: React.FC = () => {
                                 <p className="text-sm text-gray-500 italic text-center py-6">No recent activity found.</p>
                             ) : (
                                 <ul className="space-y-4">
-                                    {activity.map((item, index) => (
-                                        <li key={index} className="flex items-start text-sm border-b border-gray-800 pb-3 last:border-0 last:pb-0">
-                                            <div className="w-2 h-2 rounded-full bg-[#ec028b] mt-1.5 mr-3 flex-shrink-0 shadow-[0_0_5px_#ec028b]"></div>
-                                            <div>
+                                    {activity.map((item: any, index) => (
+                                        <li key={index} className="flex items-start text-sm border-b border-gray-800 pb-3 last:border-0 last:pb-0 cursor-pointer group/row hover:bg-white/5 -mx-2 px-2 rounded-sm transition-colors"
+                                            onClick={() => {
+                                                if (item.projectId) {
+                                                    // Navigate directly using Firestore ID + correct stage page
+                                                    setSelectedProjectId(item.projectId);
+                                                    const stageKey = (item.stage || '').toLowerCase();
+                                                    let pageId = 'E-26';
+                                                    if (stageKey.includes('estimate')) pageId = 'E-27';
+                                                    else if (stageKey.includes('quote'))    pageId = 'E-28';
+                                                    else if (stageKey.includes('sign'))     pageId = 'E-29';
+                                                    else if (stageKey.includes('schedule')) pageId = 'E-30';
+                                                    else if (stageKey.includes('install'))  pageId = 'E-31';
+                                                    else if (stageKey.includes('invoic'))   pageId = 'E-32';
+                                                    else if (stageKey.includes('complet') || stageKey.includes('past')) pageId = 'E-33';
+                                                    setActivePageId(pageId);
+                                                } else if (item.propertyId) {
+                                                    setSelectedPropertyId(item.propertyId);
+                                                    setActivePageId('E-12');
+                                                } else {
+                                                    setActivePageId('E-05');
+                                                }
+                                            }}
+                                            title={item.projectId ? `View ${item.target} record` : item.target}
+                                        >
+                                            <div className="w-2 h-2 rounded-full bg-[#ec028b] mt-1.5 mr-3 flex-shrink-0 shadow-[0_0_5px_#ec028b] group-hover/row:scale-125 transition-transform"></div>
+                                            <div className="flex-1 min-w-0">
                                                 <p className="text-gray-300">
-                                                    <span className="font-semibold text-white">{item.user}</span> {item.action} <span className="text-[#ec028b] font-medium">{item.target}</span>.
+                                                    <span className="font-semibold text-white">{item.user}</span>
+                                                    {' '}{item.action}{' '}
+                                                    <span className="text-[#ec028b] font-medium hover:underline">
+                                                        {item.target}
+                                                    </span>.
                                                 </p>
                                                 <p className="text-xs text-gray-500 mt-1">{item.time}</p>
                                             </div>
+                                            <svg className="w-3.5 h-3.5 text-gray-700 group-hover/row:text-rhive-pink shrink-0 mt-1 ml-2 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                            </svg>
                                         </li>
                                     ))}
                                 </ul>
@@ -867,32 +879,6 @@ const EmployeeHomepage: React.FC = () => {
                     )}
 
                     {/* Agenda */}
-                    <Card title="Today's Schedule">
-                        <div className="space-y-4">
-                            {schedule.map((item, i) => (
-                                <div key={i} className="flex items-start">
-                                    <div className="w-16 text-xs font-mono text-gray-500 pt-1">{item.time}</div>
-                                    <div className="flex-1 pb-4 border-l border-gray-800 pl-4 relative">
-                                        <div className={`absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full ${item.type === 'Meeting' ? 'bg-white' : item.type === 'Site' ? 'bg-[#ec028b]' : 'bg-gray-600'}`}></div>
-                                        <p className="text-sm font-bold text-white">{item.event}</p>
-                                        <p className="text-xs text-gray-500 uppercase">{item.type}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            className="w-full mt-2 flex items-center justify-center gap-2"
-                            onClick={() => setActivePageId('E-04')}
-                        >
-                            <CalendarDaysIcon className="w-4 h-4" />
-                            View Full Calendar
-                        </Button>
-                    </Card>
-
-                    {/* Pinned/Weather Widget (Dynamic) */}
-                    <StormAlertWidget />
                 </div>
             </div>
         </PageContainer>
