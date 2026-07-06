@@ -12,6 +12,7 @@ import { pageComponentMap } from './pageRegistry';
 import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
 import { DevNavigator } from './components/DevNavigator';
+import { FloatingBackButton } from './components/FloatingBackButton';
 import { cn } from './lib/utils';
 import { session } from './lib/session';
 
@@ -43,31 +44,23 @@ const AppContentAuthenticated: React.FC = () => {
         if (activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3') {
             sessionStorage.setItem('lastHomepageId', activePageId);
         }
+        
+        // Sync to URL
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('page') !== activePageId) {
+            params.set('page', activePageId);
+            const newUrl = window.location.pathname + '?' + params.toString();
+            window.history.replaceState({ ...window.history.state, path: newUrl }, '', newUrl);
+        }
     }, [activePageId]);
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const pageCode = params.get('page');
-        if (pageCode) {
-            setActivePageId(pageCode);
-        }
-
         const handleCustomNav = (e: any) => {
             if (e.detail) setActivePageId(e.detail);
         };
         window.addEventListener('nav-page', handleCustomNav);
         return () => window.removeEventListener('nav-page', handleCustomNav);
-    }, []); // Run only on mount
-
-    useEffect(() => {
-        if (activePageId) {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('page') !== activePageId) {
-                const newUrl = `${window.location.pathname}?page=${activePageId}`;
-                window.history.pushState({ path: newUrl }, '', newUrl);
-            }
-        }
-    }, [activePageId]);
+    }, [setActivePageId]);
 
     useEffect(() => {
         if (currentUser && !activePageId) {
@@ -112,6 +105,7 @@ const AppContentAuthenticated: React.FC = () => {
                 </main>
             </div>
             <FloatingEstimator />
+            <FloatingBackButton />
             {window.location.hostname === 'localhost' && <DevNavigator />}
         </div>
     );
@@ -201,6 +195,7 @@ const LoginBridge: React.FC = () => {
                         <CurrentPublicPage />
                     </main>
                     <FloatingEstimator />
+                    <FloatingBackButton />
                     {window.location.hostname === 'localhost' && <DevNavigator />}
                 </div>
             );

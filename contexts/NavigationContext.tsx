@@ -40,7 +40,13 @@ interface NavigationContextType {
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
 
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [activePageId, setActivePageId] = useState<string>('P-00-V3');
+    const [activePageId, setActivePageId] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('page') || 'P-00-V3';
+        }
+        return 'P-00-V3';
+    });
     const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [selectedContactId, setSelectedContactId] = useState<string | null>(null);

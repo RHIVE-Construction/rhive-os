@@ -97,7 +97,7 @@ const Placeholder = ({ name }: { name: string }) => (
 
 export const pageComponentMap: Record<string, React.FC> = {
   // Public
-  'P-00': PublicHomepage,
+  'P-00': PublicHomepageV3,
   'P-00-V2': PublicHomepageV2,
   'P-00-V3': PublicHomepageV3,
   'P-00a': CurrentWebsitePage,
