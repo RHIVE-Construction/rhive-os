@@ -99,10 +99,11 @@ const AppContentAuthenticated: React.FC = () => {
     }, [activePageId, setActivePageId, currentUser]);
 
     useEffect(() => {
-        if (currentUser && (!activePageId || activePageId === 'P-06')) {
+        // Redirect to role dashboard after login from ANY public page (P-xx) or no page
+        if (currentUser && (!activePageId || activePageId.startsWith('P-'))) {
             switch (currentUser.role) {
                 case 'Super Admin': setActivePageId('SA-01'); break;
-                case 'Admin': setActivePageId('E-01'); break; // Unified entry point
+                case 'Admin': setActivePageId('E-01'); break;
                 case 'Employee': setActivePageId('E-01'); break;
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
@@ -160,6 +161,17 @@ const LoginBridge: React.FC = () => {
     const isDark = theme === 'dark';
     const mainRef = React.useRef<HTMLElement>(null);
 
+    // Derive the public page target — computed unconditionally so useMemo is always at top level
+    const isPagePublic = !!(activePageId && activePageId.startsWith('P-'));
+    const targetPageId = isPagePublic ? activePageId : 'P-00';
+
+    // Stable component reference — only recreated when the target page actually changes
+    // MUST be at the top level (not inside an if-block) to satisfy Rules of Hooks
+    const PublicCurrentPage = React.useMemo(
+        () => pageComponentMap[targetPageId] || pageComponentMap['P-00'],
+        [targetPageId]
+    );
+
     // Parse URL parameter on mount/popstate so direct links work
     useEffect(() => {
         const handleUrlChange = () => {
@@ -184,10 +196,10 @@ const LoginBridge: React.FC = () => {
         };
     }, [setActivePageId]);
 
-    // Force non-public pages back to login/empty if logged out
+    // Force non-public pages back to home if logged out
     useEffect(() => {
         if (!currentUser) {
-            if (activePageId && !(activePageId || '').startsWith('P-')) {
+            if (activePageId && !activePageId.startsWith('P-')) {
                 setActivePageId('P-00-V3');
             }
         }
@@ -198,7 +210,6 @@ const LoginBridge: React.FC = () => {
         if (!currentUser && activePageId) {
             const isHomePage = activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3';
             if (isHomePage) {
-                // Clean URL for the home page — no ?page= param
                 if (window.location.search) {
                     window.history.replaceState({}, '', window.location.pathname);
                 }
@@ -215,7 +226,6 @@ const LoginBridge: React.FC = () => {
     // Scroll to top when activePageId changes for public layout
     useEffect(() => {
         if (!currentUser) {
-            console.log('LoginBridge: activePageId changed to:', activePageId);
             if (mainRef.current) {
                 mainRef.current.scrollTop = 0;
             }
@@ -227,15 +237,8 @@ const LoginBridge: React.FC = () => {
 
     if (!currentUser) {
         const isLoginPage = activePageId === 'P-06';
-        const hasOwnHeader = activePageId === 'P-00' || activePageId === 'P-00a' || activePageId === 'P-00b' || !activePageId;
-        const isPagePublic = activePageId && activePageId.startsWith('P-');
-        const targetPageId = isPagePublic ? activePageId : 'P-00';
-        const CurrentPage = React.useMemo(
-            () => pageComponentMap[targetPageId] || pageComponentMap['P-00'],
-            [targetPageId]
-        );
 
-        if (isPagePublic && !isLoginPage && CurrentPage) {
+        if (isPagePublic && !isLoginPage && PublicCurrentPage) {
             return (
                 <div className={cn(
                     "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
@@ -247,7 +250,7 @@ const LoginBridge: React.FC = () => {
                         lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
                     />
                     <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto relative">
-                        <CurrentPage />
+                        <PublicCurrentPage />
                     </main>
                     <FloatingEstimator />
                     <FloatingBackButton />
