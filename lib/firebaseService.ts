@@ -539,10 +539,40 @@ export const estimateService = {
 export const userService = {
     getAll: () => firestoreService.getAllDocuments('users'),
     subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('users', callback),
-    create: (data: any) => firestoreService.addDocument('users', data),
-    // Write a Firestore user doc using a specific ID (e.g. Firebase Auth UID)
+
+    // Create a new user — rejects if an account with the same email already exists
+    create: async (data: any) => {
+        try {
+            if (data.email) {
+                const normalizedEmail = data.email.toLowerCase().trim();
+                const dupCheck = query(collection(db, 'users'), where('email', '==', normalizedEmail));
+                const dupSnap = await getDocs(dupCheck);
+                if (!dupSnap.empty) {
+                    return { success: false, error: `An account with the email "${normalizedEmail}" already exists.` };
+                }
+                data = { ...data, email: normalizedEmail };
+            }
+            return firestoreService.addDocument('users', data);
+        } catch (error: any) {
+            console.error('Error creating user:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    // Write a Firestore user doc using a specific ID (e.g. Firebase Auth UID) — rejects duplicates
     createWithId: async (id: string, data: any) => {
         try {
+            if (data.email) {
+                const normalizedEmail = data.email.toLowerCase().trim();
+                const dupCheck = query(collection(db, 'users'), where('email', '==', normalizedEmail));
+                const dupSnap = await getDocs(dupCheck);
+                // Allow update if the only match is the same document (same id)
+                const otherDup = dupSnap.docs.find(d => d.id !== id);
+                if (otherDup) {
+                    return { success: false, error: `An account with the email "${normalizedEmail}" already exists.` };
+                }
+                data = { ...data, email: normalizedEmail };
+            }
             const cleanData = JSON.parse(JSON.stringify(data));
             const docRef = doc(db, 'users', id);
             await setDoc(docRef, {
@@ -553,10 +583,10 @@ export const userService = {
             return { success: true, id, data: { id, ...cleanData } };
         } catch (error: any) {
             console.error('Error creating user with ID:', error);
-
             return { success: false, error: error.message };
         }
     },
+
     update: (id: string, data: any) => firestoreService.updateDocument('users', id, data),
     delete: (id: string) => firestoreService.deleteDocument('users', id),
     getByEmail: async (email: string) => {
