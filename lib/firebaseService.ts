@@ -11,6 +11,7 @@ import {
     collection,
     addDoc,
     getDocs,
+    getDocsFromServer,
     doc,
     getDoc,
     setDoc,
@@ -598,8 +599,25 @@ export const userService = {
         } catch (error: any) {
             return { success: false, error: error.message };
         }
+    },
+    /**
+     * SYSTEM RULE: Always use this method for password verification and any
+     * security-sensitive lookup. It bypasses the Firestore SDK cache and fetches
+     * directly from the server, ensuring the latest password_hash and user data
+     * are always used — even immediately after a password reset or profile update.
+     */
+    getByEmailFromServer: async (email: string) => {
+        try {
+            const q = query(collection(db, 'users'), where('email', '==', email.toLowerCase().trim()));
+            const snapshot = await getDocsFromServer(q);
+            if (snapshot.empty) return { success: false, error: 'No user found with this email' };
+            return { success: true, data: snapshot.docs.map(mapDoc)[0] };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
     }
 };
+
 
 export const passwordResetService = {
     /**

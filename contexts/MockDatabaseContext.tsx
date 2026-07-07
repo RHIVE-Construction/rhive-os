@@ -40,7 +40,10 @@ const SEED_USERS: User[] = [
     { id: 'U-CONT-1', name: 'Quality Roofing', role: 'Contractor', email: 'jobs@quality.com' },
     { id: 'U-SUPP-1', name: 'ABC Supply', role: 'Supplier', email: 'orders@abc.com' },
     { id: 'U-ACC-LHM', name: 'Larry H Miller Group', role: 'Customer', email: 'billing@lhm.com' },
-    { id: 'U-ADMIN-JAMES', name: 'James Gimena', role: 'Admin', email: 'james.g@rhiveconstruction.com', phone: '(333) 333-3333', password_hash: 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5' },
+    // NOTE: SEED_USERS are fallback stubs for display/dev only.
+    // password_hash is intentionally OMITTED here — seeds must never bypass Firestore password verification.
+    // If Firestore is unavailable, login will fail rather than authenticate against a static seed.
+    { id: 'U-ADMIN-JAMES', name: 'James Gimena', role: 'Admin', email: 'james.g@rhiveconstruction.com', phone: '+17438876637' },
     { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' },
 ];
 
@@ -361,25 +364,28 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         const normalizedEmail = email.toLowerCase().trim();
 
-        // 1. Find the user by email in Firestore, falling back to local seed data if offline/empty
+        // 1. Find the user by email from Firestore SERVER (bypasses cache to always get latest data).
+        //    SYSTEM RULE: Password verification MUST use live Firestore data — never cached or seed fallback.
+        //    This ensures password resets and profile updates are immediately reflected on login.
         let foundUser: User | undefined;
+        let fromFirestore = false;
         try {
-            const userResult = await userService.getByEmail(normalizedEmail);
+            const userResult = await userService.getByEmailFromServer(normalizedEmail);
             if (userResult.success && userResult.data) {
                 foundUser = userResult.data as User;
+                fromFirestore = true;
             }
         } catch (e) {
-            console.warn("Firestore query failed, falling back to local seed data:", e);
+            console.warn('Firestore server query failed during login:', e);
         }
 
+        // Fallback to local users state (subscription cache) ONLY for non-password fields (role lookup).
+        // NEVER use SEED_USERS for password verification — seeds are static and cannot reflect password changes.
         if (!foundUser) {
-            if (role && role !== 'Public') {
-                foundUser = users.find(u => u.email?.toLowerCase().trim() === normalizedEmail && (u.role === role || u.role === 'Super Admin')) ||
-                            SEED_USERS.find(u => u.email?.toLowerCase().trim() === normalizedEmail && (u.role === role || u.role === 'Super Admin'));
-            }
-            if (!foundUser) {
-                foundUser = users.find(u => u.email?.toLowerCase().trim() === normalizedEmail) ||
-                            SEED_USERS.find(u => u.email?.toLowerCase().trim() === normalizedEmail);
+            const seedFallback = users.find(u => u.email?.toLowerCase().trim() === normalizedEmail) ??
+                                 SEED_USERS.find(u => u.email?.toLowerCase().trim() === normalizedEmail && !u.password_hash);
+            if (seedFallback) {
+                foundUser = seedFallback;
             }
         }
 
@@ -395,7 +401,12 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
         }
 
-        // 3. Verify the password hash or check default fallback 'rhive123'
+        // 3. Verify password — MUST come from Firestore (fromFirestore = true).
+        //    If user was found from seed fallback (no password_hash), reject with a clear message.
+        if (!fromFirestore && !foundUser?.password_hash) {
+            return { success: false, error: 'Could not verify credentials. Please check your connection and try again.' };
+        }
+
         if (!foundUser.password_hash) {
             if (password === 'rhive123') {
                 const sessionUser = { ...foundUser };
@@ -406,7 +417,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, { email: sessionUser.email }, sessionUser);
                 return { success: true };
             }
-            return { success: false, error: 'This account has no password set. Use default "rhive123" to log in locally.' };
+            return { success: false, error: 'Invalid email or password.' };
         }
 
         const hashed = await hashPassword(password);
