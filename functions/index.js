@@ -694,9 +694,48 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
 
             // 4. Update password in Firebase Auth
             await admin.auth().updateUser(firebaseUid, { password: newPassword });
-            console.log(`[completePasswordReset] Password updated for UID: ${firebaseUid} (email: ${email})`);
+            console.log(`[completePasswordReset] Password updated in Firebase Auth for UID: ${firebaseUid} (email: ${email})`);
 
-            // 5. Log the action to Firestore
+            // 5. Also update password_hash in Firestore user doc
+            //    (The app login checks Firestore password_hash via SHA-256, NOT Firebase Auth)
+            try {
+                const db = admin.firestore();
+                const sha256Hash = crypto.createHash('sha256').update(newPassword).digest('hex');
+
+                // Find the Firestore user doc by UID (doc ID matches Firebase Auth UID)
+                const userDocRef = db.collection('users').doc(firebaseUid);
+                const userDocSnap = await userDocRef.get();
+
+                if (userDocSnap.exists) {
+                    await userDocRef.update({
+                        password_hash: sha256Hash,
+                        updated_at: new Date().toISOString()
+                    });
+                    console.log(`[completePasswordReset] password_hash updated in Firestore for UID: ${firebaseUid}`);
+                } else {
+                    // Fallback: find by email or phone
+                    let userQuery = null;
+                    if (email) {
+                        userQuery = await db.collection('users').where('email', '==', email).limit(1).get();
+                    }
+                    if ((!userQuery || userQuery.empty) && phone) {
+                        userQuery = await db.collection('users').where('phone', '==', phone).limit(1).get();
+                    }
+                    if (userQuery && !userQuery.empty) {
+                        await userQuery.docs[0].ref.update({
+                            password_hash: sha256Hash,
+                            updated_at: new Date().toISOString()
+                        });
+                        console.log(`[completePasswordReset] password_hash updated in Firestore (fallback lookup) for: ${email || phone}`);
+                    } else {
+                        console.warn(`[completePasswordReset] Could not find Firestore user doc to update password_hash for UID: ${firebaseUid}`);
+                    }
+                }
+            } catch (hashErr) {
+                console.warn('[completePasswordReset] Failed to update Firestore password_hash:', hashErr.message);
+            }
+
+            // 6. Log the action to Firestore
             try {
                 await admin.firestore().collection('user_log').add({
                     actionType: 'USER_PASSWORD_RESET',
