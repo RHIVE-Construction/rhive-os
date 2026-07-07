@@ -168,7 +168,10 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
     useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
 
     useEffect(() => {
-        localStorage.setItem('rhive_db_users', JSON.stringify(users));
+        // SECURITY: Strip password_hash before caching in localStorage.
+        // Passwords must ALWAYS come from Firestore server, never from browser cache.
+        const safeUsers = users.map(({ password_hash, ...u }) => u);
+        localStorage.setItem('rhive_db_users', JSON.stringify(safeUsers));
     }, [users]);
 
     useEffect(() => {
