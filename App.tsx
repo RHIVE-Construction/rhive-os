@@ -112,7 +112,10 @@ const AppContentAuthenticated: React.FC = () => {
         }
     }, [currentUser, setActivePageId, activePageId]);
 
-    const CurrentPage = pageComponentMap[activePageId] || (() => <div className="p-10 text-gray-400">Select a page from the menu.</div>);
+    const CurrentPage = React.useMemo(
+        () => pageComponentMap[activePageId] || (() => <div className="p-10 text-gray-400">Select a page from the menu.</div>),
+        [activePageId]
+    );
 
     const isPublicRoute = activePageId?.startsWith('P-') ?? false;
 
@@ -227,7 +230,10 @@ const LoginBridge: React.FC = () => {
         const hasOwnHeader = activePageId === 'P-00' || activePageId === 'P-00a' || activePageId === 'P-00b' || !activePageId;
         const isPagePublic = activePageId && activePageId.startsWith('P-');
         const targetPageId = isPagePublic ? activePageId : 'P-00';
-        const CurrentPage = pageComponentMap[targetPageId] || pageComponentMap['P-00'];
+        const CurrentPage = React.useMemo(
+            () => pageComponentMap[targetPageId] || pageComponentMap['P-00'],
+            [targetPageId]
+        );
 
         if (isPagePublic && !isLoginPage && CurrentPage) {
             return (
