@@ -216,7 +216,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // NOTE: Admin profiles (James, Michael) are managed in Firestore only.
     // Auto-seeding of password_hash has been removed — it was overwriting password resets on every page load.
-    // To reset a user's password, use the Forgot Password flow or UserManagementPage.    const login = async (role?: string, password?: string, email?: string) => {
+    // To reset a user's password, use the Forgot Password flow or UserManagementPage.
+
+    const login = async (role?: string, password?: string, email?: string) => {
         const { hashPassword } = await import('../lib/utils');
 
         const setSessionUser = (user: User) => {
