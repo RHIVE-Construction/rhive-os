@@ -298,7 +298,7 @@ const PasswordResetPage: React.FC = () => {
                             </label>
                             <Input
                                 id="recovery-phone"
-                                placeholder="+63 956 021 3304"
+                                placeholder="+1 1234 567"
                                 type="tel"
                                 value={phone}
                                 onChange={e => setPhone(e.target.value)}
