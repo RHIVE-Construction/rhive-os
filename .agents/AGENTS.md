@@ -38,4 +38,11 @@ Utilize the following agents when doing research and generating responses and co
 * **Veo 3.1 Lite (veo-3.1-lite-generate-preview)**: Cost-efficient video generation model.
 * **Veo 2 (veo-2.0-generate-001)**: Video generation model.
 * **Gemma 4 26B A4B IT (gemma-4-26b-a4b-it)**: MoE open weights model.
-* **Gemma 4 31B IT (gemma-4-31b-it)**: Flagship open weight dense model.
+
+## JustCall Integration Maintenance
+
+- **API Versioning**: Always use the latest JustCall API version (currently v2.1). Before implementing any JustCall-related changes, check for API updates.
+- **MCP Synchronization**: Ensure the JustCall MCP server (https://mcp.justcall.host/mcp) is correctly configured in `mcp.json`. Use the API Key and Secret from `functions/.env` to authenticate.
+- **Deployment Protocol**: Any changes to `functions/index.js` involving JustCall must be deployed to Firebase (`firebase deploy --only functions`) immediately to ensure live consistency.
+- **Robustness**: Always implement multi-format phone number variations (`getPhoneVariations`) for any JustCall lookup to handle different international and local formats.
+- **Dependency Updates**: Keep `axios` and other communication-related dependencies in `functions/package.json` updated to their latest stable versions.

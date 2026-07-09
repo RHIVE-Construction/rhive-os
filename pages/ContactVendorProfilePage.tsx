@@ -191,250 +191,164 @@ const ContactVendorProfilePage: React.FC = () => {
         : null;
 
     useEffect(() => {
-        if (contractor.phone && !loading && contactData) {
-            const cleanPhone = String(contractor.phone).replace(/\D/g, '');
-            if (!cleanPhone) {
-                setCommunications({
-                    texts: [],
-                    calls: [],
-                    loading: false,
-                    error: null
-                });
-                return;
-            }
-            setCommunications(prev => ({ ...prev, loading: true }));
-            
-            const variations = [cleanPhone];
-            if (cleanPhone.length === 10) {
-                variations.push(`+1${cleanPhone}`);
-                variations.push(`1${cleanPhone}`);
-                variations.push(`+${cleanPhone}`);
-                variations.push(`(${cleanPhone.slice(0, 3)}) ${cleanPhone.slice(3, 6)}-${cleanPhone.slice(6)}`);
-                variations.push(`${cleanPhone.slice(0, 3)}-${cleanPhone.slice(3, 6)}-${cleanPhone.slice(6)}`);
-            } else if (cleanPhone.length === 11 && cleanPhone.startsWith('1')) {
-                const short = cleanPhone.substring(1);
-                variations.push(short);
-                variations.push(`+${cleanPhone}`);
-                variations.push(`(${short.slice(0, 3)}) ${short.slice(3, 6)}-${short.slice(6)}`);
-                variations.push(`${short.slice(0, 3)}-${short.slice(3, 6)}-${short.slice(6)}`);
-            }
-            const uniqueVariations = Array.from(new Set(variations));
+        if (!contractor.phone || loading || !contactData) {
+            return;
+        }
 
-            const getMockHistory = () => {
-                const contactFirstName = contactData.first_name || contactData.name?.split(' ')[0] || 'Client';
-                const mockTexts = [
-                    {
-                        id: 'mock_t1',
-                        direction: 'inbound',
-                        created_at: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-                        body: `Hi, this is ${contactFirstName}. Just wanted to confirm if you received the paperwork for our property roofing project?`
-                    },
-                    {
-                        id: 'mock_t2',
-                        direction: 'outbound',
-                        created_at: new Date(Date.now() - 2.9 * 24 * 3600 * 1000).toISOString(),
-                        body: `Hi ${contactFirstName}! Yes, we received the paperwork and everything looks correct. We are scheduling the crew for next Tuesday.`
-                    },
-                    {
-                        id: 'mock_t3',
-                        direction: 'inbound',
-                        created_at: new Date(Date.now() - 2.8 * 24 * 3600 * 1000).toISOString(),
-                        body: 'Perfect, thank you so much! Let me know if you need anything else from our end.'
-                    },
-                    {
-                        id: 'mock_t4',
-                        direction: 'outbound',
-                        created_at: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
-                        body: 'Will do. I will send over the contract link shortly.'
-                    }
-                ];
+        const cleanPhone = String(contractor.phone).replace(/\D/g, '');
+        if (!cleanPhone) {
+            setCommunications({ texts: [], calls: [], loading: false, error: null });
+            return;
+        }
 
-                const mockCalls = [
-                    {
-                        id: 'mock_c1',
-                        direction: 'inbound',
-                        created_at: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-                        status: 'completed',
-                        duration: 185,
-                        recording_url: 'https://justcall.io/recording/mock_rec_1'
-                    },
-                    {
-                        id: 'mock_c2',
-                        direction: 'outbound',
-                        created_at: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
-                        status: 'no-answer',
-                        duration: 0
-                    },
-                    {
-                        id: 'mock_c3',
-                        direction: 'inbound',
-                        created_at: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
-                        status: 'completed',
-                        duration: 320,
-                        recording_url: 'https://justcall.io/recording/mock_rec_3'
-                    }
-                ];
+        setCommunications(prev => ({ ...prev, loading: true }));
 
-                return { texts: mockTexts, calls: mockCalls };
-            };
+        // Exhaustive variations for Firestore 'in' query
+        const variations = new Set<string>();
+        variations.add(cleanPhone);
+        if (cleanPhone.length === 10) {
+            variations.add(`+1${cleanPhone}`);
+            variations.add(`1${cleanPhone}`);
+            variations.add(`+${cleanPhone}`);
+            variations.add(`(${cleanPhone.slice(0, 3)}) ${cleanPhone.slice(3, 6)}-${cleanPhone.slice(6)}`);
+            variations.add(`${cleanPhone.slice(0, 3)}-${cleanPhone.slice(3, 6)}-${cleanPhone.slice(6)}`);
+        } else if (cleanPhone.length === 11 && cleanPhone.startsWith('1')) {
+            const short = cleanPhone.substring(1);
+            variations.add(short);
+            variations.add(`+${cleanPhone}`);
+            variations.add(`+1${short}`);
+            variations.add(`(${short.slice(0, 3)}) ${short.slice(3, 6)}-${short.slice(6)}`);
+            variations.add(`${short.slice(0, 3)}-${short.slice(3, 6)}-${short.slice(6)}`);
+        }
+        const uniqueVariations = Array.from(variations).slice(0, 10);
 
-            const apiPromise = fetch(`https://us-central1-rhive-os.cloudfunctions.net/getJustCallCommunications?phone=${encodeURIComponent(contractor.phone)}`)
-                .then(async (res) => {
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! status: ${res.status}`);
-                    }
-                    return res.json();
-                })
-                .then(data => ({
-                    texts: data.texts || [],
-                    calls: data.calls || []
-                }))
-                .catch(err => {
-                    console.warn("JustCall API fetch failed:", err);
-                    return { texts: [], calls: [] };
-                });
+        let apiTexts: any[] = [];
+        let apiCalls: any[] = [];
+        let dbTexts: any[] = [];
+        let dbCalls: any[] = [];
+        let apiFinished = false;
+        let dbSmsFinished = false;
+        let dbCallsFinished = false;
 
-            const smsQuery = query(
-                collection(db, 'sms_logs'),
-                where('contact_number', 'in', uniqueVariations)
-            );
-            const callsQuery = query(
-                collection(db, 'call_logs'),
-                where('contact_number', 'in', uniqueVariations)
-            );
-
-            const dbPromise = Promise.all([
-                getDocs(smsQuery),
-                getDocs(callsQuery)
-            ])
-            .then(([smsSnap, callsSnap]) => {
-                const dbTexts = smsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const dbCalls = callsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                return { texts: dbTexts, calls: dbCalls };
-            })
-            .catch(err => {
-                console.warn("Direct Firestore retrieval failed:", err);
-                return { texts: [], calls: [] };
+        // Helper to merge and update state
+        const mergeAndSet = () => {
+            // Merge and de-duplicate texts
+            const textMap = new Map();
+            [...apiTexts, ...dbTexts].forEach(text => {
+                const body = (text.sms_info?.body || text.body || text.content || text.message || '').trim();
+                const timestampVal = text.timestamp?.toDate 
+                    ? text.timestamp.toDate() 
+                    : (text.timestamp?.seconds 
+                        ? new Date(text.timestamp.seconds * 1000) 
+                        : (text.timestamp ? new Date(text.timestamp) : null));
+                const dateStr = text.created_at || text.date || (text.sms_date ? `${text.sms_date}T${text.sms_time || '00:00:00'}` : null) || timestampVal?.toISOString() || '';
+                
+                // Use a combination of ID and content hash for deduplication
+                const textId = text.sms_id || text.id || `${body}_${dateStr}`;
+                
+                if (!textMap.has(textId)) {
+                    textMap.set(textId, text);
+                } else {
+                    const existing = textMap.get(textId);
+                    // Merge properties, prioritizing API data for things like status
+                    textMap.set(textId, { ...existing, ...text });
+                }
             });
 
-            Promise.all([apiPromise, dbPromise])
-                .then(([apiRes, dbRes]) => {
-                    // Merge and de-duplicate texts
-                    const allTexts = [...apiRes.texts, ...dbRes.texts];
-                    const textMap = new Map();
-                    allTexts.forEach(text => {
-                        const body = text.sms_info?.body || text.body || text.content || text.message || '';
-                        const timestampVal = text.timestamp?.toDate 
-                            ? text.timestamp.toDate() 
-                            : (text.timestamp?.seconds 
-                                ? new Date(text.timestamp.seconds * 1000) 
-                                : (text.timestamp ? new Date(text.timestamp) : null));
-                        const date = text.created_at || text.date || (text.sms_date ? `${text.sms_date}T${text.sms_time || '00:00:00'}` : null) || timestampVal?.toISOString() || '';
-                        const textId = text.sms_id || text.id || `${body}_${date}`;
-                        
-                        if (!textMap.has(textId)) {
-                            textMap.set(textId, text);
-                        } else {
-                            const existing = textMap.get(textId);
-                            textMap.set(textId, { ...existing, ...text });
-                        }
-                    });
-                    const mergedTexts = Array.from(textMap.values());
+            // Merge and de-duplicate calls
+            const callMap = new Map();
+            [...apiCalls, ...dbCalls].forEach(call => {
+                const timestampVal = call.timestamp?.toDate 
+                    ? call.timestamp.toDate() 
+                    : (call.timestamp?.seconds 
+                        ? new Date(call.timestamp.seconds * 1000) 
+                        : (call.timestamp ? new Date(call.timestamp) : null));
+                const dateStr = call.created_at || call.call_date || (call.call_date ? `${call.call_date}T${call.call_time || '00:00:00'}` : null) || timestampVal?.toISOString() || '';
+                const callId = call.call_id || call.id || `${dateStr}`;
+                
+                if (!callMap.has(callId)) {
+                    callMap.set(callId, call);
+                } else {
+                    const existing = callMap.get(callId);
+                    callMap.set(callId, { ...existing, ...call });
+                }
+            });
 
-                    // Merge and de-duplicate calls
-                    const allCalls = [...apiRes.calls, ...dbRes.calls];
-                    const callMap = new Map();
-                    allCalls.forEach(call => {
-                        const timestampVal = call.timestamp?.toDate 
-                            ? call.timestamp.toDate() 
-                            : (call.timestamp?.seconds 
-                                ? new Date(call.timestamp.seconds * 1000) 
-                                : (call.timestamp ? new Date(call.timestamp) : null));
-                        const date = call.created_at || call.call_date || (call.call_date ? `${call.call_date}T${call.call_time || '00:00:00'}` : null) || timestampVal?.toISOString() || '';
-                        const callId = call.call_id || call.id || `${date}`;
-                        
-                        if (!callMap.has(callId)) {
-                            callMap.set(callId, call);
-                        } else {
-                            const existing = callMap.get(callId);
-                            callMap.set(callId, { ...existing, ...call });
-                        }
-                    });
-                    const mergedCalls = Array.from(callMap.values());
+            const getMillis = (item: any) => {
+                try {
+                    if (item.timestamp?.toMillis) return item.timestamp.toMillis();
+                    if (item.timestamp?.toDate) return item.timestamp.toDate().getTime();
+                    if (item.timestamp?.seconds) return item.timestamp.seconds * 1000;
+                    if (item.created_at) return new Date(item.created_at).getTime();
+                    if (item.date) return new Date(item.date).getTime();
+                    if (item.call_date) return new Date(`${item.call_date}T${item.call_time || '00:00:00'}`).getTime();
+                    if (item.sms_date) return new Date(`${item.sms_date}T${item.sms_time || '00:00:00'}`).getTime();
+                    if (item.timestamp) return new Date(item.timestamp).getTime();
+                } catch (e) {}
+                return 0;
+            };
 
-                    const getMillis = (item: any) => {
-                        try {
-                            if (item.timestamp?.toMillis) {
-                                const m = item.timestamp.toMillis();
-                                if (!isNaN(m)) return m;
-                            }
-                            if (item.timestamp?.toDate) {
-                                const m = item.timestamp.toDate().getTime();
-                                if (!isNaN(m)) return m;
-                            }
-                            if (item.timestamp?.seconds) {
-                                const m = item.timestamp.seconds * 1000 + (item.timestamp.nanoseconds || 0) / 1000000;
-                                if (!isNaN(m)) return m;
-                            }
-                            if (item.created_at) {
-                                const d = new Date(item.created_at);
-                                if (!isNaN(d.getTime())) return d.getTime();
-                            }
-                            if (item.date) {
-                                const d = new Date(item.date);
-                                if (!isNaN(d.getTime())) return d.getTime();
-                            }
-                            if (item.call_date) {
-                                const time = item.call_time || '00:00:00';
-                                const d = new Date(`${item.call_date}T${time}`);
-                                if (!isNaN(d.getTime())) return d.getTime();
-                            }
-                            if (item.sms_date) {
-                                const time = item.sms_time || '00:00:00';
-                                const d = new Date(`${item.sms_date}T${time}`);
-                                if (!isNaN(d.getTime())) return d.getTime();
-                            }
-                            if (item.timestamp) {
-                                const d = new Date(item.timestamp);
-                                if (!isNaN(d.getTime())) return d.getTime();
-                            }
-                        } catch (e) {
-                            console.warn("Failed to parse time for item", item, e);
-                        }
-                        return 0;
-                    };
+            const sortedTexts = Array.from(textMap.values()).sort((a, b) => getMillis(b) - getMillis(a));
+            const sortedCalls = Array.from(callMap.values()).sort((a, b) => getMillis(b) - getMillis(a));
 
-                    mergedTexts.sort((a, b) => getMillis(b) - getMillis(a));
-                    mergedCalls.sort((a, b) => getMillis(b) - getMillis(a));
+            // Only clear loading state once all initial data sources have reported back
+            const isInitialLoadFinished = apiFinished && dbSmsFinished && dbCallsFinished;
 
-                    if (mergedTexts.length > 0 || mergedCalls.length > 0) {
-                        setCommunications({
-                            texts: mergedTexts,
-                            calls: mergedCalls,
-                            loading: false,
-                            error: null
-                        });
-                    } else {
-                        const mocks = getMockHistory();
-                        setCommunications({
-                            texts: mocks.texts,
-                            calls: mocks.calls,
-                            loading: false,
-                            error: null
-                        });
-                    }
-                })
-                .catch(err => {
-                    console.error("Error processing merged communications:", err);
-                    const mocks = getMockHistory();
-                    setCommunications({
-                        texts: mocks.texts,
-                        calls: mocks.calls,
-                        loading: false,
-                        error: null
-                    });
-                });
-        }
+            setCommunications({
+                texts: sortedTexts,
+                calls: sortedCalls,
+                loading: !isInitialLoadFinished,
+                error: null
+            });
+        };
+
+        // 1. Fetch from Cloud Function (History)
+        const fetchApi = async () => {
+            try {
+                const res = await fetch(`https://us-central1-rhive-os.cloudfunctions.net/getJustCallCommunications?phone=${encodeURIComponent(contractor.phone)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    apiTexts = data.texts || [];
+                    apiCalls = data.calls || [];
+                }
+            } catch (err) {
+                console.warn("JustCall API fetch failed:", err);
+            } finally {
+                apiFinished = true;
+                mergeAndSet();
+            }
+        };
+
+        // 3. Set up Listeners
+        const smsQuery = query(collection(db, 'sms_logs'), where('contact_number', 'in', uniqueVariations));
+        const callsQuery = query(collection(db, 'call_logs'), where('contact_number', 'in', uniqueVariations));
+
+        const unsubSms = onSnapshot(smsQuery, (snap) => {
+            dbTexts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            dbSmsFinished = true;
+            mergeAndSet();
+        }, (err) => {
+            console.warn("SMS Snapshot error:", err);
+            dbSmsFinished = true;
+            mergeAndSet();
+        });
+
+        const unsubCalls = onSnapshot(callsQuery, (snap) => {
+            dbCalls = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            dbCallsFinished = true;
+            mergeAndSet();
+        }, (err) => {
+            console.warn("Calls Snapshot error:", err);
+            dbCallsFinished = true;
+            mergeAndSet();
+        });
+
+        fetchApi();
+
+        return () => {
+            unsubSms();
+            unsubCalls();
+        };
     }, [contractor.phone, loading, contactData]);
 
     useEffect(() => {

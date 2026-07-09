@@ -743,65 +743,62 @@ exports.getJustCallCommunications = functions.https.onRequest((req, res) => {
         const phone = req.query.phone || req.body.phone;
         if (!phone) return res.status(400).json({ error: "No phone number provided" });
 
-        const cleanPhone = String(phone).replace(/\D/g, '');
-        // JustCall often searches by exact number format, trying standard + format
-        const searchPhone = cleanPhone.length === 10 ? `+1${cleanPhone}` : `+${cleanPhone}`;
-
         if (!JUSTCALL_API_KEY || !JUSTCALL_API_SECRET) {
             return res.status(500).json({ error: "Missing JustCall API credentials in Cloud Functions environment" });
         }
 
-        try {
-            // Fetch Texts from JustCall v2.1 API
-            const textsResponse = await axios.get('https://api.justcall.io/v2.1/texts', {
-                params: { contact_number: searchPhone },
-                headers: {
-                    'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
-                    'Accept': 'application/json'
-                }
-            });
+        const variations = getPhoneVariations(phone);
+        let texts = [];
+        let calls = [];
 
-            // Fetch Calls from JustCall v2.1 API
-            let callsData = [];
-            try {
-                const callsResponse = await axios.get('https://api.justcall.io/v2.1/calls', {
-                    params: { contact_number: searchPhone },
-                    headers: {
-                        'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
-                        'Accept': 'application/json'
+        try {
+            // Try variations until we find something, or just try them all and merge?
+            // JustCall API usually matches one format. Let's try them sequentially or concurrently.
+            // For efficiency, we'll try variations until we get a non-empty response.
+            
+            for (const searchPhone of variations) {
+                console.log(`Searching JustCall for: ${searchPhone}`);
+                try {
+                    const textsResponse = await axios.get('https://api.justcall.io/v2.1/texts', {
+                        params: { contact_number: searchPhone },
+                        headers: {
+                            'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const foundTexts = textsResponse.data.data || [];
+                    
+                    const callsResponse = await axios.get('https://api.justcall.io/v2.1/calls', {
+                        params: { contact_number: searchPhone },
+                        headers: {
+                            'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const foundCalls = callsResponse.data.data || [];
+
+                    if (foundTexts.length > 0 || foundCalls.length > 0) {
+                        texts = foundTexts;
+                        calls = foundCalls;
+                        console.log(`Found ${foundTexts.length} texts and ${foundCalls.length} calls for ${searchPhone}`);
+                        break; // Stop at first format that returns data
                     }
-                });
-                callsData = callsResponse.data.data || [];
-            } catch (err) {
-                console.error("Error fetching JustCall calls:", err.message);
-                // Non-blocking error for calls if they happen to fail due to some scope reason
+                } catch (err) {
+                    console.error(`Error searching JustCall for variation ${searchPhone}:`, err.message);
+                    // Continue to next variation
+                }
             }
 
             return res.status(200).json({
                 success: true,
-                texts: textsResponse.data.data || [],
-                calls: callsData
+                texts: texts,
+                calls: calls
             });
 
         } catch (error) {
-            console.error("Error fetching JustCall communications:", error.response?.data || error.message);
-            // Fallback to searching without + prefix if it fails
-            try {
-                 const textsFallback = await axios.get('https://api.justcall.io/v2.1/texts', {
-                    params: { contact_number: cleanPhone },
-                    headers: {
-                        'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                return res.status(200).json({
-                    success: true,
-                    texts: textsFallback.data.data || [],
-                    calls: []
-                });
-            } catch (e) {
-                return res.status(500).json({ error: error.message });
-            }
+            console.error("Error in getJustCallCommunications:", error.message);
+            return res.status(500).json({ error: error.message });
         }
     });
 });
