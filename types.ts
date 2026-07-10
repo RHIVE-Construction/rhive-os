@@ -25,6 +25,11 @@ export interface Building {
   id: string;
   facets: RoofFacet[];
   totalAreaMeters: number;
+  lat?: number;
+  lng?: number;
+  polygonVertices?: { lat: number; lng: number }[];
+  isOverridden?: boolean;
+  overrideSq?: number;
 }
 
 export interface BuildingData {
@@ -119,6 +124,17 @@ export interface CalculationResult {
   flatRoofingUpgrades: Record<FlatRoofingType, number>;
   flatRoofColorAddonCost: number;
   liveTotal: number;
+  linearMeasurements: {
+    ridges: number;
+    hips: number;
+    valleys: number;
+    eaves: number;
+    rakes: number;
+    wallFlashing?: number;
+    stepFlashing?: number;
+    unspecified?: number;
+    transitions?: number;
+  };
 }
 
 export interface Pricing {

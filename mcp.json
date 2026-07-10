@@ -10,6 +10,12 @@
                 "GOOGLE_APPLICATION_CREDENTIALS": "./firebase-service-account.json",
                 "FIREBASE_STORAGE_BUCKET": "rhive-os.firebasestorage.app"
             }
+        },
+        "justcall": {
+            "url": "https://mcp.justcall.host/mcp",
+            "headers": {
+                "Authorization": "Bearer YOUR_JUSTCALL_TOKEN"
+            }
         }
     }
 }

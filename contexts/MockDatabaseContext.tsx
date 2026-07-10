@@ -162,11 +162,6 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
     const [currentProjectId, setCurrentProjectId] = useState<string | null>(localStorage.getItem('rhive_project_id'));
 
-    // Use a ref so the subscription callback always has the latest currentUser
-    // without re-subscribing every time it changes (which causes race conditions)
-    const currentUserRef = React.useRef<User | null>(currentUser);
-    useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
-
     useEffect(() => {
         // SECURITY: Strip password_hash before caching in localStorage.
         // Passwords must ALWAYS come from Firestore server, never from browser cache.
@@ -195,19 +190,24 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 }
             }
             setLoading(false);
-            // Sync currentUser if their Firestore record changed
-            const cu = currentUserRef.current;
-            if (cu) {
-                const updated = ((data || []) as User[]).find(u => u.id === cu.id) || SEED_USERS.find(u => u.id === cu.id);
-                if (updated && JSON.stringify(updated) !== JSON.stringify(cu)) {
+            
+            // Sync current user if role/data changed in DB
+            const saved = localStorage.getItem('rhive_user');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                const updated = (data as User[]).find(u => u.id === parsed.id);
+                if (updated && JSON.stringify(updated) !== saved) {
                     setCurrentUser(updated);
-                    session.write(updated);
                 }
             }
         });
         return () => unsub();
-    }, []); // Only subscribe once — ref keeps currentUser fresh
+    }, []);
 
+    useEffect(() => {
+        if (currentUser) localStorage.setItem('rhive_user', JSON.stringify(currentUser));
+        else localStorage.removeItem('rhive_user');
+    }, [currentUser]);
 
     useEffect(() => {
         if (currentProjectId) localStorage.setItem('rhive_project_id', currentProjectId);
@@ -226,17 +226,6 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             setCurrentUser(user);
         };
 
-        // -------------------------------------------------------
-        // PUBLIC / GUEST — no credentials needed
-        // -------------------------------------------------------
-        if (role === 'Public') {
-            const guestUser: User = { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' };
-            setSessionUser(guestUser);
-            userLogService.logAction('LOGIN', 'Public Guest logged in', { role: 'Public' }, guestUser);
-            return { success: true };
-        }
-
-        // -------------------------------------------------------
         // DUMMY BYPASS FOR LOCAL TESTING / QUICK SWITCH
         // -------------------------------------------------------
         if (password === 'bypass' || !password) {
@@ -269,18 +258,79 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         // -------------------------------------------------------
-        // ALL AUTHENTICATED ROLES — look up in Firestore users collection
-        // Works for: Admin, Super Admin, Employee, Customer, Contractor, Supplier
+        // PORTAL LOGIN: Customer, Contractor, Supplier
+        // Authenticated via email + password against contacts/users
         // -------------------------------------------------------
-        if (!email || !password) {
-            return { success: false, error: 'Email and password are required.' };
+        if (role === 'Customer' || role === 'Contractor' || role === 'Supplier') {
+            if (!email || !password) {
+                return { success: false, error: 'Email and password are required.' };
+            }
+
+            const normalizedEmail = email.toLowerCase().trim();
+
+            // 1. Look up by email in the `users` Firestore collection
+            const userResult = await userService.getByEmail(normalizedEmail);
+            if (userResult.success && userResult.data) {
+                const foundUser = userResult.data as User;
+                // Validate role matches
+                if (foundUser.role !== role) {
+                    return { success: false, error: `No ${role} account found with this email.` };
+                }
+                // Validate password hash
+                if (!foundUser.password_hash) {
+                    return { success: false, error: 'This account has no password set. Please contact your administrator.' };
+                }
+                const hashed = await hashPassword(password);
+                if (foundUser.password_hash !== hashed) {
+                    return { success: false, error: 'Invalid email or password.' };
+                }
+                setSessionUser(foundUser);
+                return { success: true };
+            }
+
+            // 2. Fallback: check the `contacts` collection for email match
+            const contactResult = await contactService.getByEmail(normalizedEmail);
+            if (contactResult.success && contactResult.data) {
+                // Contact exists in DB — but they need a user account to have a password.
+                // Create a synthetic user so they can log in (read-only portal access)
+                // If in the future contacts have passwords added, validate here.
+                return { success: false, error: 'Your email was found in our system, but no portal account exists yet. Please contact your administrator.' };
+            }
+
+            return { success: false, error: 'No account found with this email address.' };
+        }
+
+        // -------------------------------------------------------
+        // PUBLIC / GUEST LOGIN — no credentials needed
+        // -------------------------------------------------------
+        if (role === 'Public') {
+            const guestUser: User = { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' };
+            setSessionUser(guestUser);
+            return { success: true };
+        }
+
+        // -------------------------------------------------------
+        // INTERNAL LOGIN: Admin, Super Admin, Employee
+        // Authenticated via email + password against `users` collection
+        // -------------------------------------------------------
+        // -------------------------------------------------------
+        if (!email) {
+            // Legacy fallback: password-only search across all users of that role
+            const candidates = users.filter(u => u.role === role);
+            if (candidates.length === 0) return { success: false, error: 'Role not found in system.' };
+            if (password !== undefined) {
+                const hashed = await hashPassword(password);
+                const validUser = candidates.find(u => u.password_hash === hashed);
+                if (validUser) { setSessionUser(validUser); return { success: true }; }
+                return { success: false, error: 'Invalid security key.' };
+            }
+            const user = candidates[0];
+            if (user) { setSessionUser(user); return { success: true }; }
+            return { success: false, error: 'Login failed.' };
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-
-        // 1. Find the user by email from Firestore SERVER (bypasses cache to always get latest data).
-        //    SYSTEM RULE: Password verification MUST use live Firestore data — never cached or seed fallback.
-        //    This ensures password resets and profile updates are immediately reflected on login.
+        // 1. Find the user by email in Firestore, falling back to local seed data if offline/empty
         let foundUser: User | undefined;
         let fromFirestore = false;
         try {
@@ -309,7 +359,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         // 2. Verify the role matches what the user selected (if role selection is supplied)
         if (role && role !== 'Public') {
-            const isRoleAllowed = foundUser.role === role || foundUser.role === 'Super Admin';
+            const isRoleAllowed = foundUser.role === role || 
+                                  foundUser.role === 'Super Admin' ||
+                                  (role === 'Admin' && foundUser.role === 'Super Admin');
             if (!isRoleAllowed) {
                 return { success: false, error: `No ${role} account found with this email.` };
             }
@@ -333,12 +385,10 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
             return { success: false, error: 'Invalid email or password.' };
         }
-
-        const hashed = await hashPassword(password);
+        const hashed = await hashPassword(password!);
         if (foundUser.password_hash !== hashed) {
             return { success: false, error: 'Invalid email or password.' };
         }
-
         // 4. Success — write session and set current user
         const sessionUser = { ...foundUser };
         if (foundUser.role === 'Super Admin' && role && role !== 'Super Admin') {

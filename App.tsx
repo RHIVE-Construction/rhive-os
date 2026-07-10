@@ -8,11 +8,13 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { Sidebar } from './components/Sidebar';
 import LoginPage from './pages/LoginPage';
+import PasswordResetPage from './pages/PasswordResetPage';
 import { GlobalHeader } from './components/GlobalHeader';
 import RhiveHeader from './components/website/RhiveHeader';
 import { pageComponentMap } from './pageRegistry';
 import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
+import { GlobalChatWidget } from './components/chat/GlobalChatWidget';
 import HunniChatWidget from './components/website/HunniChatWidget';
 import { DevNavigator } from './components/DevNavigator';
 import { FloatingBackButton } from './components/FloatingBackButton';
@@ -20,6 +22,14 @@ import { GlobalCustomerLookupModal } from './components/GlobalCustomerLookupModa
 import { GlobalWeatherModal } from './components/GlobalWeatherModal';
 import { cn } from './lib/utils';
 import { session } from './lib/session';
+
+// Check if the current URL is a password reset link (Firebase Auth or Firestore-based)
+const isPasswordResetFlow = (): boolean => {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    return (mode === 'resetPassword' && !!params.get('oobCode')) ||
+           (mode === 'firestoreReset' && !!params.get('token'));
+};
 
 const AppContentAuthenticated: React.FC = () => {
     const { activePageId, setActivePageId, showEditorMenu } = useNavigation();
@@ -145,6 +155,7 @@ const AppContentAuthenticated: React.FC = () => {
                 </main>
             </div>
             <FloatingEstimator />
+            <GlobalChatWidget />
             <FloatingBackButton />
             <HunniChatWidget />
             <GlobalCustomerLookupModal />
@@ -205,6 +216,27 @@ const LoginBridge: React.FC = () => {
         }
     }, [currentUser, activePageId, setActivePageId]);
 
+    // ── Password reset link interceptor ──────────────────────────────────────
+    // Firebase email links arrive as /?mode=resetPassword&oobCode=xxx
+    // Render the reset page immediately, regardless of auth state.
+    if (isPasswordResetFlow()) {
+        return (
+            <div className={cn(
+                "fixed inset-0 w-screen h-screen overflow-auto transition-colors duration-500",
+                isDark ? "bg-black text-white" : "bg-[#F8F9FA] text-black"
+            )}>
+                <CircuitryBackground
+                    backgroundColor={isDark ? "#000000" : "#F8F9FA"}
+                    dotColor={isDark ? "#ec028b" : "#ec028b"}
+                    lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
+                />
+                <GlobalHeader />
+                <main className="relative z-10 w-full min-h-full pt-12 flex items-center justify-center px-4 py-8">
+                    <PasswordResetPage />
+                </main>
+            </div>
+        );
+    }
     // Sync browser URL bar with activePageId for unauthenticated users
     useEffect(() => {
         if (!currentUser && activePageId) {

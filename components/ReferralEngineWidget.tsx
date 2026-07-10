@@ -1,6 +1,6 @@
 import React from 'react';
 import Card from './Card';
-import { GiftIcon, ShareIcon, ChatBubbleLeftRightIcon, EnvelopeIcon } from './icons';
+import { StarIcon, ShareIcon, ChatBubbleLeftRightIcon, EnvelopeIcon } from './icons';
 
 const ReferralEngineWidget: React.FC = () => {
     return (
@@ -11,7 +11,7 @@ const ReferralEngineWidget: React.FC = () => {
             <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
                 <div className="flex-shrink-0 bg-black/40 p-4 rounded-xl border border-white/10 relative">
                     <div className="absolute inset-0 bg-[#ec028b]/20 blur-xl rounded-full"></div>
-                    <GiftIcon className="w-12 h-12 text-[#ec028b] relative z-10" />
+                    <StarIcon className="w-12 h-12 text-[#ec028b] relative z-10" />
                 </div>
                 
                 <div className="flex-grow text-center md:text-left">

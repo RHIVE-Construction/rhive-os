@@ -31,6 +31,7 @@ import {
     TrashIcon,
     SparklesIcon,
     GutterIcon,
+    ClipboardDocumentCheckIcon,
     HeatTraceIcon,
     ArrowRightIcon
 } from '../components/icons';
@@ -44,7 +45,11 @@ import { calculateEstimate } from '../lib/calculations';
 import { INITIAL_SURVEY_STATE } from '../lib/constants';
 import { WeatherReport } from '../components/WeatherReport';
 import CircuitryCard from '../components/CircuitryCard';
+import { Card, CardContent } from '../components/ui/card';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, Property, EaveOverhang, ProjectStage } from '../types';
+import { createProject as createProjectApi } from '../lib/api';
+import { getMapsApiKey } from '../lib/mapsConfig';
+import { firestoreService } from '../lib/firebaseService';
 
 // Mock Data for Utah Companies
 const MOCK_UTAH_COMPANIES = [
@@ -1594,6 +1599,222 @@ const CompanyLookup: React.FC<{
     );
 };
 
+const FunctionChip = ({ label, icon: Icon, active, onClick }: any) => (
+    <button type="button" onClick={onClick} className={cn("flex items-center justify-center gap-3 p-4 border-2 transition-all duration-300 backdrop-blur-md", active ? "bg-white/10 border-white/50 text-white shadow-xl" : "bg-black/30 border-gray-800 text-gray-500 hover:border-gray-700 hover:text-gray-300")} style={{ clipPath: "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)" }}>
+        <Icon className={cn("w-5 h-5", active ? "text-white" : "text-gray-700")} />
+        <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
+    </button>
+);
+
+const MethodButton: React.FC<{ label: string, active: boolean, onClick: () => void }> = ({ label, active, onClick }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+            "px-6 py-2 border text-[10px] font-black uppercase tracking-widest transition-all duration-300 backdrop-blur-sm",
+            active
+                ? "bg-white/10 border-white/50 text-white shadow-xl"
+                : "bg-transparent border-gray-800 text-gray-500 hover:text-white hover:border-gray-600"
+        )}
+        style={{ clipPath: "polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)" }}
+    >
+        {label}
+    </button>
+);
+
+const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, propertyName?: string, onSave: (c: Contact) => void, onCancel: () => void, isPrimary: boolean, projectCategory: string, existingContacts?: any[] }> = ({ initialData, companyName, propertyName, onSave, onCancel, isPrimary, projectCategory, existingContacts = [] }) => {
+    const { users } = useMockDB();
+    const [data, setData] = useState<Partial<Contact>>(initialData || {
+        firstName: '', lastName: '', phone: '', email: '', role: projectCategory === 'Residential' ? 'Property Owner' : 'Property Manager', preferredContactMethod: 'Text', responsibilities: [], affiliations: []
+    });
+    const [activeRoleCategory, setActiveRoleCategory] = useState<'Residential' | 'Commercial' | 'Government'>((projectCategory as any) || 'Residential');
+
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let v = e.target.value.replace(/\D/g, '');
+        if (v.length > 0) v = '(' + v.substring(0, 3) + (v.length > 3 ? ') ' + v.substring(3, 6) : '') + (v.length > 6 ? '-' + v.substring(6, 10) : '');
+        setData({ ...data, phone: v });
+    };
+
+    const handleNameChange = (field: 'firstName' | 'lastName', value: string) => {
+        const capitalized = value.charAt(0).toUpperCase() + value.slice(1);
+        setData({ ...data, [field]: capitalized });
+    };
+
+    const toggleAffiliation = (aff: string) => {
+        const current = data.affiliations || [];
+        const exists = current.includes(aff);
+        setData({ ...data, affiliations: exists ? current.filter(a => a !== aff) : [...current, aff] });
+    };
+
+    const toggleResponsibility = (opt: string) => {
+        const current = data.responsibilities || [];
+        const exists = current.includes(opt);
+        setData({ ...data, responsibilities: exists ? current.filter(r => r !== opt) : [...current, opt] });
+    };
+
+    const roleCategories = {
+        'Residential': ['Property Owner', 'Landlord', 'Tenant', 'Neighbor', 'Relative', 'Other'],
+        'Commercial': ['Property Manager', 'Building Owner', 'Maintenance Supervisor', 'HOA Board Member', 'Other'],
+        'Government': ['Contracting Officer', 'Site Representative', 'Facility Manager', 'Other']
+    };
+
+    const matchByName = existingContacts.find(c => {
+        if (c.id === data.id) return false;
+        const cFirst = (c.first_name || c.firstName || '').toLowerCase().trim();
+        const cLast = (c.last_name || c.lastName || '').toLowerCase().trim();
+        const inputFirst = (data.firstName || '').toLowerCase().trim();
+        const inputLast = (data.lastName || '').toLowerCase().trim();
+        return inputFirst && inputLast && cFirst === inputFirst && cLast === inputLast;
+    });
+
+    const matchByPhone = existingContacts.find(c => {
+        if (c.id === data.id) return false;
+        const inputPhone = String(data.phone || '').replace(/\D/g, '');
+        if (!inputPhone || inputPhone.length < 7) return false;
+
+        const phones = [c.phone, c.mobile, c.homePhone, c.otherPhone]
+            .map(p => String(p || '').replace(/\D/g, ''))
+            .filter(p => p.length >= 7);
+
+        return phones.some(p => p.includes(inputPhone) || inputPhone.includes(p));
+    });
+
+    const isDuplicate = !!(matchByName || matchByPhone);
+
+    return (
+        <Card className="animate-fade-in shadow-2xl relative overflow-hidden isolate">
+            <CardContent className="p-10 space-y-10">
+                <div className="flex items-center justify-between">
+                    <h4 className="text-white/70 font-black text-xs uppercase tracking-[0.4em]">{isPrimary ? 'PRIMARY CONTACT' : 'STAKEHOLDER NODE'}</h4>
+                    {isPrimary && <div className="w-2 h-2 rounded-full bg-white shadow-xl" />}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div className="space-y-2"><QuestionLabel required>First Name</QuestionLabel><InputField value={data.firstName} onChange={e => handleNameChange('firstName', e.target.value)} /></div>
+                    <div className="space-y-2"><QuestionLabel required>Last Name</QuestionLabel><InputField value={data.lastName} onChange={e => handleNameChange('lastName', e.target.value)} /></div>
+                    <div className="space-y-2"><QuestionLabel required>Phone Number</QuestionLabel><InputField placeholder="(000) 000-0000" value={data.phone} onChange={handlePhoneChange} /></div>
+                    <div className="space-y-2"><QuestionLabel required>Email Address</QuestionLabel><InputField type="email" placeholder="example@domain.com" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} /></div>
+                </div>
+
+                {isDuplicate && (
+                    <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-400 text-xs font-mono space-y-1.5 animate-pulse" style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}>
+                        <p className="font-bold uppercase tracking-widest flex items-center gap-1.5 text-yellow-500">
+                            ⚠️ Warning: Duplicate Contact
+                        </p>
+                        <p>
+                            {matchByName && `A contact named "${matchByName.first_name || matchByName.firstName} ${matchByName.last_name || matchByName.lastName}" already exists.`}
+                            {matchByName && matchByPhone && " And "}
+                            {matchByPhone && `A contact with phone/mobile number "${matchByPhone.phone || matchByPhone.mobile}" already exists.`}
+                        </p>
+                    </div>
+                )}
+
+                <div className="space-y-4">
+                    <QuestionLabel required isPink>Preferred Contact Method</QuestionLabel>
+                    <div className="flex flex-wrap gap-4">
+                        {(['Phone', 'Text', 'Email'] as const).map(m => (
+                            <MethodButton
+                                key={m}
+                                label={m}
+                                active={data.preferredContactMethod === m}
+                                onClick={() => setData({ ...data, preferredContactMethod: m })}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {projectCategory !== 'Residential' && (companyName || propertyName) && (
+                    <div className="space-y-4">
+                        <QuestionLabel>Affiliation (Select all that apply)</QuestionLabel>
+                        <div className="flex flex-wrap gap-4">
+                            {companyName && (
+                                <button type="button" onClick={() => toggleAffiliation('Company')} className={cn("px-6 py-3 border text-[11px] font-black uppercase tracking-widest transition-all backdrop-blur-md", data.affiliations?.includes('Company') ? "bg-white/10 border-white/50 text-white shadow-xl" : "bg-transparent border-gray-800 text-gray-300 hover:text-gray-300")} style={{ clipPath: "polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)" }}>
+                                    {companyName}
+                                </button>
+                            )}
+                            {propertyName && (
+                                <button type="button" onClick={() => toggleAffiliation('Property')} className={cn("px-6 py-3 border text-[11px] font-black uppercase tracking-widest transition-all backdrop-blur-md", data.affiliations?.includes('Property') ? "bg-white/10 border-white/50 text-white shadow-xl" : "bg-transparent border-gray-800 text-gray-500 hover:text-gray-300")} style={{ clipPath: "polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)" }}>
+                                    {propertyName}
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-[10px] text-gray-600 font-bold italic ml-1">Link this contact to the Company, the Property, or both.</p>
+                    </div>
+                )}
+
+                <div className="space-y-4">
+                    <QuestionLabel>Contact Functions (Select all that apply)</QuestionLabel>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FunctionChip label="Bid / Quote" icon={DocumentTextIcon} active={data.responsibilities?.includes('Bid')} onClick={() => toggleResponsibility('Bid')} />
+                        <FunctionChip label="Billing / Invoice" icon={CurrencyDollarIcon} active={data.responsibilities?.includes('Billing')} onClick={() => toggleResponsibility('Billing')} />
+                        <FunctionChip label="Site Access" icon={RhiveGeopinIcon} active={data.responsibilities?.includes('Access')} onClick={() => toggleResponsibility('Access')} />
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2 mb-2"><ClipboardDocumentCheckIcon className="w-5 h-5 text-gray-400" /><span className="text-[11px] font-black uppercase tracking-widest text-[#ec028b]">Certified Quote Intent Verified</span></div>
+                    <div className="flex items-center justify-between">
+                        <QuestionLabel>Project Role</QuestionLabel>
+                        <div className="flex gap-4">
+                            {(['Residential', 'Commercial', 'Government'] as const).map(cat => (
+                                <button key={cat} type="button" onClick={() => setActiveRoleCategory(cat)} className={cn("text-[10px] font-black uppercase tracking-widest transition-all", activeRoleCategory === cat ? "text-white" : "text-gray-700 hover:text-gray-500")}>{cat}</button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {roleCategories[activeRoleCategory].map(role => (
+                            <button key={role} type="button" onClick={() => setData({ ...data, role })} className={cn("px-4 py-2 border text-[10px] font-black uppercase tracking-tighter transition-all", data.role === role ? "bg-white/10 border-white/30 text-white" : "bg-transparent border-gray-800 text-gray-500 hover:border-gray-600 hover:text-gray-400")} style={{ clipPath: "polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)" }}>{role}</button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-4 pt-8 border-t border-gray-800/50">
+                    <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+                    <button type="button" onClick={() => onSave({ id: data.id || String(Date.now()), ...data, isPrimary } as Contact)} className="px-12 py-4 bg-white/10 border border-white/30 text-white font-black text-[11px] uppercase tracking-[0.3em] rounded-xl hover:bg-white/20 transition-all shadow-xl" style={{ clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)" }}>Save Contact</button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+const SuccessModal = ({ onNavigate }: { onNavigate: () => void }) => {
+    useEffect(() => {
+        const timer = setTimeout(onNavigate, 3000);
+        return () => clearTimeout(timer);
+    }, [onNavigate]);
+
+    return createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 animate-in fade-in duration-500">
+            <div className="relative max-w-lg w-full bg-black border border-[#ec028b]/30 shadow-[0_0_100px_rgba(236,2,139,0.2)] p-12 text-center overflow-hidden"
+                style={{ clipPath: "polygon(40px 0, 100% 0, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%, 0 40px)" }}>
+
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(236,2,139,0.1)_0%,transparent_70%)]" />
+
+                <div className="relative z-10 flex flex-col items-center gap-6">
+                    <div className="w-24 h-24 rounded-full border-2 border-[#ec028b] flex items-center justify-center shadow-[0_0_30px_rgba(236,2,139,0.4)] animate-pulse">
+                        <Check className="w-12 h-12 text-[#ec028b]" />
+                    </div>
+
+                    <div className="space-y-2">
+                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">System Locked</h2>
+                        <p className="text-gray-400 font-medium tracking-wide">Lead entry successfully</p>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-[#ec028b] text-xs font-black uppercase tracking-widest animate-pulse">
+                        <span className="w-2 h-2 bg-[#ec028b] rounded-full" />
+                        Redirecting to Dashboard...
+                    </div>
+
+                    <Button onClick={onNavigate} className="w-full mt-4 bg-[#ec028b]/10 border border-[#ec028b]/50 text-[#ec028b] hover:bg-[#ec028b] hover:text-white transition-all uppercase tracking-widest font-black py-4">
+                        Access Dashboard Now
+                    </Button>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+};
+
 const ProjectDetailsInput: React.FC<{ value: string, onChange: (val: string) => void, onOptimize: () => void, aiBannerText?: string | null }> = ({ value, onChange, onOptimize, aiBannerText }) => (
     <div className="mb-4">
         <div className="flex items-end justify-between mb-2">
@@ -1812,7 +2033,16 @@ const CustomerInputPage: React.FC = () => {
     const [repairDetails, setRepairDetails] = useState({ isOld: false, activeLeak: false, hasPhotos: false, emergencyTarp: false });
     const [purchaseIntent, setPurchaseIntent] = useState<'Ready' | 'Exploring' | ''>('');
     const [isIntentCollapsed, setIsIntentCollapsed] = useState(false);
+    const [scheduledDetails, setScheduledDetails] = useState<string | null>(null);
+    const [existingContacts, setExistingContacts] = useState<any[]>([]);
     const [aiExtractBannerText, setAiExtractBannerText] = useState<string | null>(null);
+
+    useEffect(() => {
+        const unsub = firestoreService.subscribeToDocuments('contacts', (data) => {
+            setExistingContacts(data);
+        });
+        return () => unsub();
+    }, []);
 
     // Session Restore from sessionStorage telemetry states on mount
     useEffect(() => {
@@ -2068,7 +2298,7 @@ const CustomerInputPage: React.FC = () => {
             }
             // Check if user already exists in DB by phone, email, or name
             const match = users.find(u => 
-                (u.phone && contact.phone && u.phone.replace(/\D/g, '') === contact.phone.replace(/\D/g, '')) ||
+                (u.phone && contact.phone && String(u.phone).replace(/\D/g, '') === String(contact.phone).replace(/\D/g, '')) ||
                 (u.email && contact.email && u.email.toLowerCase().trim() === contact.email.toLowerCase().trim()) ||
                 (u.name && u.name.toLowerCase().trim() === `${contact.firstName} ${contact.lastName}`.toLowerCase().trim())
             );
@@ -2553,7 +2783,17 @@ const CustomerInputPage: React.FC = () => {
                             <div className="space-y-3">
                                 {contacts.map(c => (
                                     editingContactId === c.id ? 
-                                    <ContactForm key={c.id} initialData={c} onSave={(upd) => { setContacts(prev => prev.map(ex => ex.id === upd.id ? upd : ex)); setEditingContactId(null); }} onCancel={() => setEditingContactId(null)} isPrimary={c.isPrimary} isCommercial={requiresOrganization} companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} /> :
+                                    <ContactForm 
+                                        key={c.id} 
+                                        initialData={c} 
+                                        onSave={(upd) => { setContacts(prev => prev.map(ex => ex.id === upd.id ? upd : ex)); setEditingContactId(null); }} 
+                                        onCancel={() => setEditingContactId(null)} 
+                                        isPrimary={c.isPrimary} 
+                                        projectCategory={projectCategory}
+                                        companyName={companyData.parentCompany}
+                                        propertyName={companyData.propertyName}
+                                        existingContacts={existingContacts} 
+                                    /> :
                                     <ContactCard key={c.id} contact={c} onEdit={() => setEditingContactId(c.id)} onDelete={() => setContacts(prev => prev.filter(x => x.id !== c.id))} />
                                 ))}
                             </div>
@@ -2565,8 +2805,10 @@ const CustomerInputPage: React.FC = () => {
                                     onSave={(c) => { setContacts(prev => [...prev, c]); setIsAddingContact(false); }} 
                                     onCancel={() => setIsAddingContact(false)} 
                                     isPrimary={contacts.length === 0} 
-                                    isCommercial={requiresOrganization} 
-                                    companyOptions={requiresOrganization ? [companyData.parentCompany, companyData.propertyName].filter((s): s is string => !!s) : []} 
+                                    projectCategory={projectCategory}
+                                    companyName={companyData.parentCompany}
+                                    propertyName={companyData.propertyName}
+                                    existingContacts={existingContacts}
                                 />
                             )}
 
@@ -3554,358 +3796,6 @@ const RenderCollapsedSection = ({
 const AssessmentQuestion: React.FC<React.PropsWithChildren<{ label: string }>> = ({ label, children }) => (
     <div className="bg-gray-800/30 p-4 rounded-lg border border-gray-700/50"><QuestionLabel>{label}</QuestionLabel>{children}</div>
 );
-
-interface ContactFormProps {
-    initialData?: Partial<Contact>;
-    onSave: (c: Contact) => void;
-    onCancel: () => void;
-    isPrimary: boolean;
-    isCommercial: boolean;
-    companyOptions?: string[];
-}
-
-const ContactForm: React.FC<ContactFormProps> = ({ 
-    initialData, 
-    onSave, 
-    onCancel, 
-    isPrimary, 
-    isCommercial, 
-    companyOptions 
-}) => {
-    const { users } = useMockDB();
-    const [data, setData] = useState<Contact>({
-        id: initialData?.id || `temp-${Date.now()}`,
-        firstName: initialData?.firstName || '',
-        lastName: initialData?.lastName || '',
-        phone: initialData?.phone || '',
-        email: initialData?.email || '',
-        role: initialData?.role || 'Property Owner',
-        isPrimary: isPrimary,
-        existingUserId: initialData?.existingUserId,
-        affiliations: initialData?.affiliations || [],
-        responsibilities: initialData?.responsibilities || [],
-        preferredContactMethod: initialData?.preferredContactMethod || 'Phone'
-    });
-    
-    const [isCustomRole, setIsCustomRole] = useState(false);
-    const [customRole, setCustomRole] = useState('');
-    const [foundMatch, setFoundMatch] = useState<User | null>(null);
-    const [activeRoleCategory, setActiveRoleCategory] = useState<'Residential' | 'Commercial' | 'Government'>('Residential');
-
-    // Refs for keyboard navigation
-    const firstNameRef = useRef<HTMLInputElement>(null);
-    const lastNameRef = useRef<HTMLInputElement>(null);
-    const phoneRef = useRef<HTMLInputElement>(null);
-    const emailRef = useRef<HTMLInputElement>(null);
-    const customRoleRef = useRef<HTMLInputElement>(null);
-
-    const handleEnter = (e: React.KeyboardEvent, nextRef: React.RefObject<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            nextRef.current?.focus();
-        }
-    };
-
-    const roleCategories = {
-        'Residential': ['Property Owner', 'Landlord', 'Tenant', 'Neighbor', 'Relative'],
-        'Commercial': ['Property Manager', 'Building Owner', 'Maintenance Supervisor', 'HOA Board Member'],
-        'Government': ['Contracting Officer', 'Site Representative', 'Facility Manager']
-    };
-
-    useEffect(() => {
-        const role = initialData?.role;
-        if (role) {
-            if (roleCategories.Residential.includes(role)) setActiveRoleCategory('Residential');
-            else if (roleCategories.Commercial.includes(role)) setActiveRoleCategory('Commercial');
-            else if (roleCategories.Government.includes(role)) setActiveRoleCategory('Government');
-            else if (role !== 'Other') {
-                 setIsCustomRole(true);
-                 setCustomRole(role);
-            }
-        } else if (isCommercial) {
-            setActiveRoleCategory('Commercial');
-        }
-    }, [initialData?.role, isCommercial]);
-
-    useEffect(() => {
-        if (data.existingUserId) return; 
-        
-        const searchTerm = data.email || data.phone || (data.firstName.length > 2 ? data.firstName : '');
-        if (!searchTerm) {
-            setFoundMatch(null);
-            return;
-        }
-
-        const match = users.find(u => 
-            (u.email && u.email.toLowerCase() === data.email.toLowerCase()) ||
-            (u.phone && u.phone === data.phone) ||
-            (data.firstName.length > 2 && data.lastName.length > 2 && u.name.toLowerCase().includes(`${data.firstName} ${data.lastName}`.toLowerCase()))
-        );
-        
-        setFoundMatch(match || null);
-    }, [data.email, data.phone, data.firstName, data.lastName, users, data.existingUserId]);
-
-    const handleUseExisting = () => {
-        if (foundMatch) {
-            const [first, ...last] = foundMatch.name.split(' ');
-            setData({
-                ...data,
-                firstName: first,
-                lastName: last.join(' '),
-                email: foundMatch.email || data.email,
-                phone: foundMatch.phone || data.phone,
-                existingUserId: foundMatch.id
-            });
-            setFoundMatch(null);
-        }
-    };
-
-    const handleSave = () => {
-        if (!data.firstName || !data.lastName) return alert("Name is required");
-        if (!data.preferredContactMethod) return alert("Preferred Contact Method is required");
-        onSave({
-            ...data,
-            role: isCustomRole ? customRole : data.role
-        });
-    };
-
-    const capitalize = (str: string) => str.replace(/\b\w/g, char => char.toUpperCase());
-
-    const handleNameChange = (field: 'firstName' | 'lastName', value: string) => {
-        setData(prev => ({
-            ...prev,
-            [field]: capitalize(value)
-        }));
-    };
-
-    const toggleAffiliation = (option: string) => {
-        setData(prev => {
-            const exists = prev.affiliations.includes(option);
-            return {
-                ...prev,
-                affiliations: exists 
-                    ? prev.affiliations.filter(a => a !== option)
-                    : [...prev.affiliations, option]
-            };
-        });
-    };
-
-    const toggleResponsibility = (opt: string) => {
-        setData(prev => {
-            const exists = prev.responsibilities.includes(opt);
-            return {
-                ...prev,
-                responsibilities: exists 
-                    ? prev.responsibilities.filter(r => r !== opt)
-                    : [...prev.responsibilities, opt]
-            };
-        });
-    };
-
-    return (
-        <CircuitryCard
-            title={isPrimary ? "Primary Contact" : "Contact Details"}
-            icon={<UserIcon className="w-5 h-5" />}
-            className="w-full animate-fade-in"
-        >
-            <div className="space-y-4 relative">
-            
-            {foundMatch && !data.existingUserId && (
-                <div className="absolute -top-3 left-0 right-0 mx-4 bg-blue-900/90 border border-blue-500 text-white p-3 rounded-lg shadow-lg flex justify-between items-center z-10 backdrop-blur-md animate-bounce-in">
-                    <div className="flex items-center">
-                        <FingerPrintIcon className="w-5 h-5 mr-2 text-blue-300" />
-                        <span className="text-sm">Found existing user: <strong>{foundMatch.name}</strong></span>
-                    </div>
-                    <Button size="sm" variant="secondary" onClick={handleUseExisting} type="button">Link User</Button>
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <QuestionLabel required>First Name</QuestionLabel>
-                    <InputField 
-                        ref={firstNameRef}
-                        value={data.firstName} 
-                        onChange={e => handleNameChange('firstName', e.target.value)} 
-                        placeholder="Jane"
-                        onKeyDown={(e) => handleEnter(e, lastNameRef)}
-                    />
-                </div>
-                <div>
-                    <QuestionLabel required>Last Name</QuestionLabel>
-                    <InputField 
-                        ref={lastNameRef}
-                        value={data.lastName} 
-                        onChange={e => handleNameChange('lastName', e.target.value)} 
-                        placeholder="Doe"
-                        onKeyDown={(e) => handleEnter(e, phoneRef)}
-                    />
-                </div>
-                <div>
-                    <QuestionLabel required>Phone Number</QuestionLabel>
-                    <InputField 
-                        ref={phoneRef}
-                        value={data.phone} 
-                        onChange={e => {
-                            const formatted = formatPhoneNumber(e.target.value);
-                            setData({...data, phone: formatted});
-                        }}
-                        type="tel" 
-                        placeholder="(000) 000-0000"
-                        onKeyDown={(e) => handleEnter(e, emailRef)}
-                        maxLength={14}
-                    />
-                </div>
-                <div>
-                    <QuestionLabel required>Email Address</QuestionLabel>
-                    <InputField 
-                        ref={emailRef}
-                        value={data.email} 
-                        onChange={e => setData({...data, email: e.target.value})} 
-                        type="email" 
-                        placeholder="jane@example.com"
-                        onKeyDown={(e) => isCustomRole ? handleEnter(e, customRoleRef) : undefined}
-                    />
-                </div>
-            </div>
-
-            <div className="mt-2">
-                <QuestionLabel required>Preferred Contact Method</QuestionLabel>
-                <ToggleGroup 
-                    options={['Phone', 'Text', 'Email']} 
-                    value={data.preferredContactMethod} 
-                    onChange={(v) => setData({...data, preferredContactMethod: v as any})} 
-                    idPrefix="preferred-contact"
-                />
-            </div>
-
-            {/* Commercial Logic: Affiliation - Only if companies exist */}
-            {isCommercial && companyOptions && companyOptions.length > 0 && (
-                <div className="mt-4">
-                    <QuestionLabel>Affiliation (Select all that apply)</QuestionLabel>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {companyOptions.map(opt => {
-                            const isSelected = data.affiliations.includes(opt);
-                            return (
-                                <div 
-                                    key={opt}
-                                    onClick={() => toggleAffiliation(opt)}
-                                    className={cn(
-                                        "cursor-pointer px-3 py-2 rounded-lg border text-sm transition-all flex items-center justify-center text-center",
-                                        isSelected 
-                                            ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]" 
-                                            : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
-                                    )}
-                                >
-                                    <span className="truncate">{opt}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <HelperText>Link this contact to the Company, the Property, or both.</HelperText>
-                </div>
-            )}
-
-            <div className="mt-4">
-                <QuestionLabel>Contact Functions (Select all that apply)</QuestionLabel>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <ResponsibilityToggle 
-                        label="Bid / Quote" 
-                        icon={DocumentTextIcon} 
-                        selected={data.responsibilities.includes('Bid')} 
-                        onClick={() => toggleResponsibility('Bid')} 
-                    />
-                    <ResponsibilityToggle 
-                        label="Billing / Invoice" 
-                        icon={CurrencyDollarIcon} 
-                        selected={data.responsibilities.includes('Billing')} 
-                        onClick={() => toggleResponsibility('Billing')} 
-                    />
-                    <ResponsibilityToggle 
-                        label="Site Access" 
-                        icon={KeyIcon} 
-                        selected={data.responsibilities.includes('Access')} 
-                        onClick={() => toggleResponsibility('Access')} 
-                    />
-                </div>
-            </div>
-
-            <div className="mt-4">
-                <div className="flex justify-between items-end mb-2">
-                    <QuestionLabel>Project Role</QuestionLabel>
-                    <div className="flex space-x-1 text-[10px]">
-                        {['Residential', 'Commercial', 'Government'].map((cat) => (
-                            <button 
-                                key={cat}
-                                type="button" 
-                                onClick={() => setActiveRoleCategory(cat as any)}
-                                className={cn(
-                                    "px-2 py-1 rounded border transition-colors",
-                                    activeRoleCategory === cat ? "bg-gray-700 border-gray-500 text-white" : "text-gray-500 border-transparent hover:text-gray-300"
-                                )}
-                            >
-                                {cat}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                {!isCustomRole ? (
-                    <div className="flex flex-wrap gap-2">
-                        {[...roleCategories[activeRoleCategory], 'Other'].map((roleOption) => (
-                            <div 
-                                key={roleOption}
-                                onClick={() => {
-                                    if (roleOption === 'Other') {
-                                        setCustomRole('');
-                                        setIsCustomRole(true);
-                                    } else {
-                                        setData({...data, role: roleOption});
-                                    }
-                                }}
-                                className={cn(
-                                    "cursor-pointer py-0.5 px-1.5 rounded border text-[10px] font-medium transition-all flex items-center justify-center text-center min-w-[50px]",
-                                    data.role === roleOption 
-                                        ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_5px_rgba(236,2,139,0.2)]" 
-                                        : "bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800"
-                                )}
-                            >
-                                {roleOption}
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="relative mt-2">
-                         <InputField 
-                            ref={customRoleRef}
-                            value={customRole} 
-                            onChange={e => {
-                                setCustomRole(e.target.value);
-                                setData({...data, role: e.target.value});
-                            }} 
-                            placeholder="Enter custom role (e.g. Executor, Neighbor)"
-                            autoFocus
-                            className="pr-10"
-                        />
-                         <button 
-                            onClick={() => { setIsCustomRole(false); setData({...data, role: 'Property Owner'}); setCustomRole(''); }} 
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-800"
-                            type="button"
-                            title="Back to list"
-                        >
-                            <XIcon className="w-4 h-4" />
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
-                {!isPrimary && <Button variant="secondary" onClick={onCancel} type="button">Cancel</Button>}
-                <Button onClick={handleSave} type="button">{data.existingUserId ? 'Link & Save' : 'Save Contact'}</Button>
-            </div>
-            </div>
-        </CircuitryCard>
-    );
-};
 
 const ContactCard: React.FC<{ contact: Contact; onEdit: () => void; onDelete: () => void }> = ({ contact, onEdit, onDelete }) => {
     const initial = contact.firstName ? contact.firstName[0].toUpperCase() : 'C';

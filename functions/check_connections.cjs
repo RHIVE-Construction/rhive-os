@@ -65,6 +65,17 @@ async function checkConnections() {
         console.error("Firestore Connection: FAILED");
         console.error("Error Detail:", error.message);
     }
+
+    console.log("\n--- Checking Firebase Storage connection ---");
+    try {
+        const bucket = admin.storage().bucket();
+        const [files] = await bucket.getFiles({ prefix: 'call_recordings/', maxResults: 1 });
+        console.log(`Storage Bucket '${bucket.name}': SUCCESS`);
+        console.log(`Found ${files.length} sample file(s) in 'call_recordings/' prefix.`);
+    } catch (error) {
+        console.error("Firebase Storage Connection: FAILED");
+        console.error("Error Detail:", error.message);
+    }
 }
 
 checkConnections();

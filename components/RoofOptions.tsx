@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import type { BuildingData, SurveyState, RoofLayers } from '../types';
 import { CircuitryBackground } from './CircuitryBackground';
 import { Button } from './ui/button';
-import { RhiveLogo, RoofIcon, Info, Check } from './icons';
+import { RhiveLogo, RoofIcon, Info, Check, PlusIcon, TrashIcon } from './icons';
 import { SQ_FEET_PER_SQUARE, SQ_METERS_TO_SQ_FEET } from '../lib/constants';
 import { cn } from '../lib/utils';
 import { Modal } from './ui/modal';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from './ui/tooltip';
-
-
 interface RoofOptionsProps {
     buildingData: BuildingData;
+    setBuildingData: React.Dispatch<React.SetStateAction<BuildingData | null>>;
     surveyState: SurveyState;
     onSurveyChange: React.Dispatch<React.SetStateAction<SurveyState>>;
     onContinue: () => void;
     onStartOver: () => void;
+    onBack: () => void;
 }
 
 const roofFeatures: (keyof SurveyState['roofFeatures'])[] = ['chimneys', 'swampCoolers', 'skylights'];
@@ -90,12 +90,32 @@ const LayerSelector: React.FC<{ value: RoofLayers; onChange: (newValue: RoofLaye
 
 export const RoofOptions: React.FC<RoofOptionsProps> = ({
     buildingData,
+    setBuildingData,
     surveyState,
     onSurveyChange,
     onContinue,
-    onStartOver
+    onStartOver,
+    onBack
 }) => {
     const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+
+    const handleDeleteBuilding = (buildingId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!buildingData) return;
+
+        setBuildingData(prev => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                buildings: prev.buildings.filter(b => b.id !== buildingId)
+            };
+        });
+
+        onSurveyChange(prev => ({
+            ...prev,
+            includedBuildingIds: prev.includedBuildingIds.filter(id => id !== buildingId)
+        }));
+    };
 
     const handleBuildingToggle = (buildingId: string) => {
         onSurveyChange(prev => {
@@ -125,19 +145,25 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                 <header className="relative z-10 w-full bg-black/50 backdrop-blur-sm border-b border-gray-800">
                     <div className="container mx-auto px-4 h-16 flex justify-between items-center">
                         <RhiveLogo className="h-7" />
-                        <Button variant="ghost" onClick={onStartOver}>Start New Estimate</Button>
+                        <div className="flex gap-2">
+                            <Button variant="ghost" onClick={onBack}>Back to Map</Button>
+                            <Button variant="ghost" onClick={onStartOver}>Start New Estimate</Button>
+                        </div>
                     </div>
                 </header>
                 <main className="relative z-10 flex-grow overflow-y-auto p-4 md:p-8 flex justify-center">
                     <div className="w-full max-w-xl text-white">
                         <div className="space-y-8">
                             <div>
-                                <h2 className="text-lg font-medium text-gray-300 mb-3">Select buildings to include in estimate:</h2>
+                                <div className="mb-3">
+                                    <h2 className="text-lg font-medium text-gray-300">Select buildings to include in estimate:</h2>
+                                </div>
                                 <div className="flex flex-wrap gap-4">
-                                    {buildingData.buildings.map(building => {
+                                    {buildingData.buildings.map((building, idx) => {
                                         const sqValue = (building.totalAreaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE).toFixed(2);
                                         const areaSqFt = (building.totalAreaMeters * SQ_METERS_TO_SQ_FEET).toFixed(0);
                                         const isSelected = surveyState.includedBuildingIds.includes(building.id);
+                                        const isCustom = building.id.startsWith('BLD_') && building.id !== 'BLD_1'; // allow deleting added ones
                                         return (
                                             <Tooltip key={building.id}>
                                                 <TooltipTrigger asChild>
@@ -148,17 +174,29 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                                                         tabIndex={0}
                                                         onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && handleBuildingToggle(building.id)}
                                                         className={cn(
-                                                            "flex items-center justify-between p-3 rounded-xl bg-black/50 border cursor-pointer transition-all focus:outline-none min-w-[180px]",
+                                                            "flex items-center justify-between p-3 rounded-xl bg-black/50 border cursor-pointer transition-all focus:outline-none min-w-[200px] select-none",
                                                             isSelected
-                                                                ? 'border-pink-500/70 bg-pink-900/20'
+                                                                ? 'border-pink-500/70 bg-pink-900/20 shadow-[0_0_10px_rgba(236,2,139,0.15)]'
                                                                 : 'border-gray-700 hover:bg-gray-500/10'
                                                         )}
                                                     >
-                                                        <span className="capitalize font-medium text-white whitespace-nowrap">{building.id.replace(/_/g, ' ')}</span>
-                                                        <span className="font-mono whitespace-nowrap">
-                                                            <span className="text-white">{sqValue}</span>
-                                                            <span className="text-white/70 ml-1">SQ</span>
-                                                        </span>
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className="font-semibold text-white whitespace-nowrap truncate">
+                                                                BLDG {idx + 1} {idx === 0 && <span className="text-[10px] text-pink-400 font-normal ml-1">(Primary)</span>}
+                                                            </span>
+                                                            <span className="font-mono text-xs text-white/70">
+                                                                <span className="text-white">{sqValue}</span> SQ
+                                                            </span>
+                                                        </div>
+                                                        {isCustom && (
+                                                            <button
+                                                                onClick={(e) => handleDeleteBuilding(building.id, e)}
+                                                                className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors ml-2"
+                                                                aria-label="Delete building"
+                                                            >
+                                                                <TrashIcon className="h-4 w-4" />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
@@ -169,7 +207,7 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                                         )
                                     })}
                                 </div>
-                            </div>
+                                </div>
 
                             <div className="p-6 rounded-lg bg-black/50 border border-gray-800">
                                 <div className="flex items-center text-2xl font-bold mb-6">

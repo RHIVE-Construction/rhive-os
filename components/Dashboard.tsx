@@ -14,6 +14,7 @@ import { LiveEstimateBreakdown } from './LiveEstimateBreakdown';
 import { formatCurrency } from '../lib/utils';
 import { Modal } from './ui/modal';
 import { EstimateReport } from './EstimateReport';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface DashboardProps {
   place: Place;
@@ -222,12 +223,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </main>
         
         <Modal open={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} title="" className="max-w-5xl" contentClassName="p-0">
-            <EstimateReport
-                place={place}
-                buildingData={buildingData}
-                surveyState={surveyState}
-                calcResult={calcResult}
-            />
+            <ErrorBoundary>
+                <EstimateReport
+                    place={place}
+                    buildingData={buildingData}
+                    surveyState={surveyState}
+                    calcResult={calcResult}
+                />
+            </ErrorBoundary>
         </Modal>
       </div>
     </div>

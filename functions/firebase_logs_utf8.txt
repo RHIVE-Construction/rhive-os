@@ -1,0 +1,39 @@
+﻿
+> logs
+> firebase functions:log
+
+2026-04-06T15:04:19.819720Z ? saveCallRecordingToStorage: [dotenv@17.3.1] injecting env (0) from .env -- tip: ≡ƒ¢í∩╕Å auth for agents: https://vestauth.com
+2026-04-06T15:04:20.462572355Z D processCallLogForLead: Function execution started
+2026-04-06T15:04:20.491240326Z D processCallLogForLead: Function execution took 28 ms, finished with status: 'ok'
+2026-04-06T15:04:20.614273102Z D saveCallRecordingToStorage: Function execution started
+2026-04-06T15:04:20.653495446Z D saveCallRecordingToStorage: Function execution took 39 ms, finished with status: 'ok'
+2026-04-06T15:45:48.744993Z ? justCallWebhook: [dotenv@17.3.1] injecting env (0) from .env -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
+2026-04-06T15:45:49.329866334Z D justCallWebhook: Function execution started
+2026-04-06T15:45:49.358316Z ? justCallWebhook: No x-justcall-signature-version header. Proceeding without verification.
+2026-04-06T15:45:50.004355Z ? justCallWebhook: Call event 'call.completed' logged/updated to Firestore.
+2026-04-06T15:45:50.006615854Z D justCallWebhook: Function execution took 676 ms, finished with status code: 200
+2026-04-06T15:45:51.105495Z ? processCallLogForLead: [dotenv@17.3.1] injecting env (0) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+2026-04-06T15:45:51.415615Z ? saveCallRecordingToStorage: [dotenv@17.3.1] injecting env (0) from .env -- tip: ΓÜÖ∩╕Å  write to custom object with { processEnv: myObject }
+2026-04-06T15:45:51.675349001Z D processCallLogForLead: Function execution started
+2026-04-06T15:45:52.372513Z ? processCallLogForLead: New caller detected: 4321115566. Extracting lead info...
+2026-04-06T15:45:52.396031494Z D saveCallRecordingToStorage: Function execution started
+2026-04-06T15:45:52.475826Z ? processCallLogForLead: Gemini Extraction Error: {"error":{"code":404,"message":"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.","status":"NOT_FOUND"}}
+2026-04-06T15:45:52.507932244Z D saveCallRecordingToStorage: Function execution took 111 ms, finished with status: 'ok'
+2026-04-06T15:45:52.780728Z ? processCallLogForLead: Successfully auto-created Lead (j0Baom8q4arasQ626UDY) for new caller: 4321115566.
+2026-04-06T15:45:52.783215605Z D processCallLogForLead: Function execution took 1107 ms, finished with status: 'ok'
+2026-04-06T15:45:53.292128486Z D processCallLogForLead: Function execution started
+2026-04-06T15:45:53.296967176Z D processCallLogForLead: Function execution took 4 ms, finished with status: 'ok'
+2026-04-06T15:45:53.410331243Z D saveCallRecordingToStorage: Function execution started
+2026-04-06T15:45:53.418429456Z D saveCallRecordingToStorage: Function execution took 8 ms, finished with status: 'ok'
+2026-04-06T15:45:54.503127Z ? onContactCreatedSyncToJustCall: [dotenv@17.3.1] injecting env (0) from .env -- tip: ΓÜÖ∩╕Å  enable debug logging with { debug: true }
+2026-04-06T15:45:55.582199096Z D onContactCreatedSyncToJustCall: Function execution started
+2026-04-06T15:45:56.017832Z ? onContactCreatedSyncToJustCall: Error syncing to JustCall: <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+2026-04-06T15:45:56.017847Z ? onContactCreatedSyncToJustCall: <html><head>
+2026-04-06T15:45:56.017853Z ? onContactCreatedSyncToJustCall: <title>403 Forbidden</title>
+2026-04-06T15:45:56.017857Z ? onContactCreatedSyncToJustCall: </head><body>
+2026-04-06T15:45:56.017861Z ? onContactCreatedSyncToJustCall: <h1>Forbidden</h1>
+2026-04-06T15:45:56.017865Z ? onContactCreatedSyncToJustCall: <p>You don't have permission to access this resource.</p>
+2026-04-06T15:45:56.017869Z ? onContactCreatedSyncToJustCall: <p>Additionally, a 403 Forbidden
+2026-04-06T15:45:56.017877Z ? onContactCreatedSyncToJustCall: error was encountered while trying to use an ErrorDocument to handle the request.</p>
+2026-04-06T15:45:56.017880Z ? onContactCreatedSyncToJustCall: </body></html>
+2026-04-06T15:45:56.036147375Z D onContactCreatedSyncToJustCall: Function execution took 453 ms, finished with status: 'ok'

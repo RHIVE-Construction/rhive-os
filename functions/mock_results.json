@@ -1,0 +1,59 @@
+{
+  "contact": {
+    "is_primary": true,
+    "phone": "4321118889",
+    "property_id": "AMZTw84rOMoGIjRXB2lB",
+    "first_name": "Missus",
+    "updated_at": {
+      "type": "firestore/timestamp/1.0",
+      "seconds": 1775492385,
+      "nanoseconds": 779000000
+    },
+    "created_at": {
+      "type": "firestore/timestamp/1.0",
+      "seconds": 1775492385,
+      "nanoseconds": 779000000
+    },
+    "project_id": "Ah6R4ED3350TwpbPdXGV",
+    "last_name": "Yoso",
+    "role": "Client",
+    "email": "missusyoso2@gmail.com"
+  },
+  "lead": {
+    "details": "Missus Yoso is the property owner at 5500 S Garnet Dr, Saint George, UT 84790. She is looking for a Residential project and needs some work done, explicitly stating it is not an insurance claim.",
+    "project_type": "Residential project",
+    "property_id": "AMZTw84rOMoGIjRXB2lB",
+    "name": "Missus Yoso",
+    "property_address": "5500 S Garnet Dr",
+    "created_at": {
+      "type": "firestore/timestamp/1.0",
+      "seconds": 1775492385,
+      "nanoseconds": 714000000
+    },
+    "status": "Active",
+    "updated_at": {
+      "type": "firestore/timestamp/1.0",
+      "seconds": 1775492385,
+      "nanoseconds": 714000000
+    },
+    "current_stage": "Lead"
+  },
+  "property": {
+    "property_address": "5500 S Garnet Dr",
+    "zip": "84790",
+    "address_full": "5500 S Garnet Dr Saint George UT 84790",
+    "city": "Saint George",
+    "state": "UT",
+    "updated_at": {
+      "type": "firestore/timestamp/1.0",
+      "seconds": 1775492385,
+      "nanoseconds": 612000000
+    },
+    "type": "Residential project",
+    "created_at": {
+      "type": "firestore/timestamp/1.0",
+      "seconds": 1775492385,
+      "nanoseconds": 612000000
+    }
+  }
+}

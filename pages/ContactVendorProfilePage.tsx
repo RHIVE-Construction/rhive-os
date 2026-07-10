@@ -1,26 +1,149 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
 import CollapsibleSection from '../components/CollapsibleSection';
 import StatusBadge from '../components/StatusBadge';
 import Button from '../components/Button';
-import { DocumentTextIcon, ArrowPathIcon, ShareIcon } from '../components/icons';
+import { DocumentTextIcon, ArrowPathIcon, ShareIcon, PencilSquareIcon, CheckIcon, XIcon, TrashIcon } from '../components/icons';
 import { PAGE_GROUPS } from '../constants';
 import { useNavigation } from '../contexts/NavigationContext';
 import { firestoreService } from '../lib/firebaseService';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { MapPinIcon } from '../components/icons';
 import ContactsListPage from './ContactsListPage';
 import { getMapsApiKey } from '../lib/mapsConfig';
+import { AddressInput } from '../components/AddressInput';
+import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 
 const ContactVendorProfilePage: React.FC = () => {
     const page = PAGE_GROUPS.flatMap(g => g.pages).find(p => p.id === 'E-10');
-    const { selectedContactId } = useNavigation();
+    const { selectedContactId, setSelectedContactId, setActivePageId } = useNavigation();
 
     const [contactData, setContactData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [communications, setCommunications] = useState<any>({ texts: [], calls: [], loading: false, error: null });
+    const [emails, setEmails] = useState<any[]>([]);
+    const [emailsLoading, setEmailsLoading] = useState(true);
     const [mapsKey, setMapsKey] = useState('');
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState<any>({});
+    const [isSaving, setIsSaving] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDeleteContact = async () => {
+        if (!selectedContactId) return;
+        setIsDeleting(true);
+        try {
+            const { deleteDoc, doc } = await import('firebase/firestore');
+            await deleteDoc(doc(db, 'contacts', selectedContactId));
+            setShowDeleteModal(false);
+            setSelectedContactId(null);
+            setActivePageId('E-10');
+        } catch (err) {
+            console.error("Error deleting contact:", err);
+            alert("Failed to delete contact.");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+    
+    const isApiReady = useGoogleMapsApi();
+    const mapRef = useRef<HTMLDivElement>(null);
+    const mapInstanceRef = useRef<any>(null);
+    const markerRef = useRef<any>(null);
+
+    // Map initialization
+    useEffect(() => {
+        if (isEditing && isApiReady && mapRef.current && !mapInstanceRef.current) {
+            const defaultLoc = { lat: editForm.lat || 40.7128, lng: editForm.lng || -74.0060 };
+            
+            const map = new window.google.maps.Map(mapRef.current, {
+                center: defaultLoc,
+                zoom: editForm.lat ? 18 : 12,
+                mapTypeId: 'satellite',
+                disableDefaultUI: true,
+                zoomControl: true,
+            });
+            
+            mapInstanceRef.current = map;
+
+            const marker = new window.google.maps.Marker({
+                position: defaultLoc,
+                map: map,
+                draggable: true,
+                animation: window.google.maps.Animation.DROP,
+            });
+            
+            markerRef.current = marker;
+
+            const updateLocation = (pos: any) => {
+                const geocoder = new window.google.maps.Geocoder();
+                geocoder.geocode({ location: pos }, (results: any, status: any) => {
+                    if (status === 'OK' && results[0]) {
+                        setEditForm((prev: any) => ({
+                            ...prev,
+                            address: results[0].formatted_address,
+                            lat: pos.lat(),
+                            lng: pos.lng()
+                        }));
+                    }
+                });
+            };
+
+            window.google.maps.event.addListener(marker, 'dragend', () => {
+                updateLocation(marker.getPosition());
+            });
+
+            window.google.maps.event.addListener(map, 'click', (event: any) => {
+                marker.setPosition(event.latLng);
+                updateLocation(event.latLng);
+            });
+        }
+        
+        if (!isEditing) {
+            mapInstanceRef.current = null;
+            markerRef.current = null;
+        }
+    }, [isEditing, isApiReady]);
+
+    // Update map when address input changes the coords
+    useEffect(() => {
+        if (mapInstanceRef.current && markerRef.current && editForm.lat && editForm.lng) {
+            const loc = { lat: editForm.lat, lng: editForm.lng };
+            mapInstanceRef.current.panTo(loc);
+            mapInstanceRef.current.setZoom(18);
+            markerRef.current.setPosition(loc);
+        }
+    }, [editForm.lat, editForm.lng]);
+
+    const handleEditClick = () => {
+        setEditForm({ ...contactData });
+        setIsEditing(true);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditForm({});
+        mapInstanceRef.current = null;
+        markerRef.current = null;
+    };
+
+    const handleSave = async () => {
+        if (!selectedContactId) return;
+        setIsSaving(true);
+        try {
+            await updateDoc(doc(db, 'contacts', selectedContactId), editForm);
+            setIsEditing(false);
+        } catch (err) {
+            console.error("Error updating record:", err);
+            alert("Failed to save updates.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     useEffect(() => {
         getMapsApiKey().then(setMapsKey);
@@ -56,7 +179,7 @@ const ContactVendorProfilePage: React.FC = () => {
         name: contactData ? (contactData.first_name || contactData.last_name ? `${contactData.first_name || ''} ${contactData.last_name || ''}`.trim() : contactData.name || 'Unknown Contact') : 'Unknown Contact',
         type: contactData?.role || 'Contact',
         address: contactData?.address || '',
-        phone: contactData?.phone || '',
+        phone: contactData?.phone ? String(contactData.phone) : '',
         email: contactData?.email || '',
         contacts: contactData?.contacts || [],
         documents: contactData?.documents || [],
@@ -66,6 +189,192 @@ const ContactVendorProfilePage: React.FC = () => {
     const satUrl = mapsKey && contractor.address
         ? `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(contractor.address)}&zoom=18&size=800x400&maptype=satellite&markers=color:red%7C${encodeURIComponent(contractor.address)}&key=${mapsKey}`
         : null;
+
+    useEffect(() => {
+        if (!contractor.phone || loading || !contactData) {
+            return;
+        }
+
+        const cleanPhone = String(contractor.phone).replace(/\D/g, '');
+        if (!cleanPhone) {
+            setCommunications({ texts: [], calls: [], loading: false, error: null });
+            return;
+        }
+
+        setCommunications(prev => ({ ...prev, loading: true }));
+
+        // Exhaustive variations for Firestore 'in' query
+        const variations = new Set<string>();
+        variations.add(cleanPhone);
+        if (cleanPhone.length === 10) {
+            variations.add(`+1${cleanPhone}`);
+            variations.add(`1${cleanPhone}`);
+            variations.add(`+${cleanPhone}`);
+            variations.add(`(${cleanPhone.slice(0, 3)}) ${cleanPhone.slice(3, 6)}-${cleanPhone.slice(6)}`);
+            variations.add(`${cleanPhone.slice(0, 3)}-${cleanPhone.slice(3, 6)}-${cleanPhone.slice(6)}`);
+        } else if (cleanPhone.length === 11 && cleanPhone.startsWith('1')) {
+            const short = cleanPhone.substring(1);
+            variations.add(short);
+            variations.add(`+${cleanPhone}`);
+            variations.add(`+1${short}`);
+            variations.add(`(${short.slice(0, 3)}) ${short.slice(3, 6)}-${short.slice(6)}`);
+            variations.add(`${short.slice(0, 3)}-${short.slice(3, 6)}-${short.slice(6)}`);
+        }
+        const uniqueVariations = Array.from(variations).slice(0, 10);
+
+        let apiTexts: any[] = [];
+        let apiCalls: any[] = [];
+        let dbTexts: any[] = [];
+        let dbCalls: any[] = [];
+        let apiFinished = false;
+        let dbSmsFinished = false;
+        let dbCallsFinished = false;
+
+        // Helper to merge and update state
+        const mergeAndSet = () => {
+            // Merge and de-duplicate texts
+            const textMap = new Map();
+            [...apiTexts, ...dbTexts].forEach(text => {
+                const body = (text.sms_info?.body || text.body || text.content || text.message || '').trim();
+                const timestampVal = text.timestamp?.toDate 
+                    ? text.timestamp.toDate() 
+                    : (text.timestamp?.seconds 
+                        ? new Date(text.timestamp.seconds * 1000) 
+                        : (text.timestamp ? new Date(text.timestamp) : null));
+                const dateStr = text.created_at || text.date || (text.sms_date ? `${text.sms_date}T${text.sms_time || '00:00:00'}` : null) || timestampVal?.toISOString() || '';
+                
+                // Use a combination of ID and content hash for deduplication
+                const textId = text.sms_id || text.id || `${body}_${dateStr}`;
+                
+                if (!textMap.has(textId)) {
+                    textMap.set(textId, text);
+                } else {
+                    const existing = textMap.get(textId);
+                    // Merge properties, prioritizing API data for things like status
+                    textMap.set(textId, { ...existing, ...text });
+                }
+            });
+
+            // Merge and de-duplicate calls
+            const callMap = new Map();
+            [...apiCalls, ...dbCalls].forEach(call => {
+                const timestampVal = call.timestamp?.toDate 
+                    ? call.timestamp.toDate() 
+                    : (call.timestamp?.seconds 
+                        ? new Date(call.timestamp.seconds * 1000) 
+                        : (call.timestamp ? new Date(call.timestamp) : null));
+                const dateStr = call.created_at || call.call_date || (call.call_date ? `${call.call_date}T${call.call_time || '00:00:00'}` : null) || timestampVal?.toISOString() || '';
+                const callId = call.call_id || call.id || `${dateStr}`;
+                
+                if (!callMap.has(callId)) {
+                    callMap.set(callId, call);
+                } else {
+                    const existing = callMap.get(callId);
+                    callMap.set(callId, { ...existing, ...call });
+                }
+            });
+
+            const getMillis = (item: any) => {
+                try {
+                    if (item.timestamp?.toMillis) return item.timestamp.toMillis();
+                    if (item.timestamp?.toDate) return item.timestamp.toDate().getTime();
+                    if (item.timestamp?.seconds) return item.timestamp.seconds * 1000;
+                    if (item.created_at) return new Date(item.created_at).getTime();
+                    if (item.date) return new Date(item.date).getTime();
+                    if (item.call_date) return new Date(`${item.call_date}T${item.call_time || '00:00:00'}`).getTime();
+                    if (item.sms_date) return new Date(`${item.sms_date}T${item.sms_time || '00:00:00'}`).getTime();
+                    if (item.timestamp) return new Date(item.timestamp).getTime();
+                } catch (e) {}
+                return 0;
+            };
+
+            const sortedTexts = Array.from(textMap.values()).sort((a, b) => getMillis(b) - getMillis(a));
+            const sortedCalls = Array.from(callMap.values()).sort((a, b) => getMillis(b) - getMillis(a));
+
+            // Only clear loading state once all initial data sources have reported back
+            const isInitialLoadFinished = apiFinished && dbSmsFinished && dbCallsFinished;
+
+            setCommunications({
+                texts: sortedTexts,
+                calls: sortedCalls,
+                loading: !isInitialLoadFinished,
+                error: null
+            });
+        };
+
+        // 1. Fetch from Cloud Function (History)
+        const fetchApi = async () => {
+            try {
+                const res = await fetch(`https://us-central1-rhive-os.cloudfunctions.net/getJustCallCommunications?phone=${encodeURIComponent(contractor.phone)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    apiTexts = data.texts || [];
+                    apiCalls = data.calls || [];
+                }
+            } catch (err) {
+                console.warn("JustCall API fetch failed:", err);
+            } finally {
+                apiFinished = true;
+                mergeAndSet();
+            }
+        };
+
+        // 3. Set up Listeners
+        const smsQuery = query(collection(db, 'sms_logs'), where('contact_number', 'in', uniqueVariations));
+        const callsQuery = query(collection(db, 'call_logs'), where('contact_number', 'in', uniqueVariations));
+
+        const unsubSms = onSnapshot(smsQuery, (snap) => {
+            dbTexts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            dbSmsFinished = true;
+            mergeAndSet();
+        }, (err) => {
+            console.warn("SMS Snapshot error:", err);
+            dbSmsFinished = true;
+            mergeAndSet();
+        });
+
+        const unsubCalls = onSnapshot(callsQuery, (snap) => {
+            dbCalls = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            dbCallsFinished = true;
+            mergeAndSet();
+        }, (err) => {
+            console.warn("Calls Snapshot error:", err);
+            dbCallsFinished = true;
+            mergeAndSet();
+        });
+
+        fetchApi();
+
+        return () => {
+            unsubSms();
+            unsubCalls();
+        };
+    }, [contractor.phone, loading, contactData]);
+
+    useEffect(() => {
+        if (!selectedContactId || !contractor.email) {
+            setEmailsLoading(false);
+            return;
+        }
+        
+        const q = query(
+            collection(db, 'emails'), 
+            where('contact_email', '==', contractor.email)
+        );
+        
+        const unsub = onSnapshot(q, (snap) => {
+            const ems = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            ems.sort((a: any, b: any) => {
+                const dA = a.timestamp?.toMillis ? a.timestamp.toMillis() : new Date(a.date || a.timestamp || 0).getTime();
+                const dB = b.timestamp?.toMillis ? b.timestamp.toMillis() : new Date(b.date || b.timestamp || 0).getTime();
+                return dB - dA;
+            });
+            setEmails(ems);
+            setEmailsLoading(false);
+        });
+
+        return () => unsub();
+    }, [selectedContactId, contractor.email]);
 
     if (!selectedContactId) {
         return <ContactsListPage />;
@@ -82,23 +391,40 @@ const ContactVendorProfilePage: React.FC = () => {
     }
 
     return (
-         <PageContainer title={contractor.name} description={contractor.type}>
+          <PageContainer 
+              title={contractor.name} 
+              description={contractor.type}
+              headerAction={
+                  <button 
+                      onClick={() => setShowDeleteModal(true)} 
+                      className="text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 p-2 rounded-lg border border-red-500/20 transition-all cursor-pointer flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                      title="Delete Contact"
+                  >
+                      <TrashIcon className="w-5 h-5" />
+                  </button>
+              }
+          >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Contact Info Column */}
                 <div className="md:col-span-1 space-y-8">
                     <Card title="Contact Information">
-                        <div className="space-y-3 text-gray-300">
+                        <div className="flex justify-end mb-4 border-b border-gray-800/50 pb-3">
+                            <button onClick={handleEditClick} className="text-[#ec028b] hover:text-white transition-colors flex items-center text-xs font-bold uppercase tracking-widest">
+                                <PencilSquareIcon className="w-3.5 h-3.5 mr-1" /> Edit
+                            </button>
+                        </div>
+                        <div className="space-y-4 text-gray-300">
                             <div>
                                 <p className="text-sm text-gray-400">Payment Address</p>
-                                <p>{contractor.address}</p>
+                                <p>{contractor.address || 'N/A'}</p>
                             </div>
                             <div>
                                 <p className="text-sm text-gray-400">Phone</p>
-                                <p>{contractor.phone}</p>
+                                <p>{contractor.phone || 'N/A'}</p>
                             </div>
                             <div>
                                 <p className="text-sm text-gray-400">Email</p>
-                                <p className="text-[#ec028b] break-all">{contractor.email}</p>
+                                <p className="text-[#ec028b] break-all">{contractor.email || 'N/A'}</p>
                             </div>
                         </div>
                     </Card>
@@ -141,6 +467,113 @@ const ContactVendorProfilePage: React.FC = () => {
             </div>
 
             <div className="mt-8 space-y-8">
+                <CollapsibleSection title="Communication History (Texts & Calls)">
+                    {communications.loading ? (
+                        <div className="text-gray-400">Loading history...</div>
+                    ) : communications.error ? (
+                        <div className="text-red-400">Error: {communications.error}</div>
+                    ) : (
+                        <div className="space-y-4">
+                            <h4 className="text-white font-semibold">Text Messages</h4>
+                             {Array.isArray(communications.texts) && communications.texts.length > 0 ? communications.texts.map((text: any, i: number) => {
+                                const direction = text.direction || text.sms_info?.direction || (text.event_type === 'sms.received' ? 'inbound' : (text.event_type === 'sms.sent' ? 'outbound' : 'unknown'));
+                                const isIncoming = direction.toLowerCase() === 'inbound' || direction.toLowerCase() === 'incoming';
+                                const timestampVal = text.timestamp?.toDate ? text.timestamp.toDate() : (text.timestamp?.seconds ? new Date(text.timestamp.seconds * 1000) : (text.timestamp ? new Date(text.timestamp) : null));
+                                const dateStr = text.created_at || text.date || (text.sms_date ? `${text.sms_date}T${text.sms_time || '00:00:00'}` : null) || timestampVal?.toISOString();
+                                const displayDate = (() => {
+                                    if (!dateStr) return new Date().toLocaleString();
+                                    const d = new Date(dateStr);
+                                    return isNaN(d.getTime()) ? new Date().toLocaleString() : d.toLocaleString();
+                                })();
+                                const content = text.sms_info?.body || text.body || text.content || text.message || '';
+                                return (
+                                <div key={text.id || i} className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <p className="text-sm font-semibold text-gray-300">{isIncoming ? '↓ Received' : '↑ Sent'}</p>
+                                        <p className="text-xs text-gray-400">{displayDate}</p>
+                                    </div>
+                                    <p className="text-white whitespace-pre-wrap">{content}</p>
+                                </div>
+                                );
+                            }) : <p className="text-gray-500 text-sm">No text messages found.</p>}
+                            
+                            <h4 className="text-white font-semibold mt-6">Call Logs</h4>
+                            {Array.isArray(communications.calls) && communications.calls.length > 0 ? communications.calls.map((call: any, i: number) => {
+                                const direction = call.direction || call.call_info?.direction || (call.event_type === 'call.completed' && call.justcall_number && call.contact_number ? 'inbound' : 'unknown'); 
+                                const isIncoming = direction.toLowerCase() === 'inbound' || direction.toLowerCase() === 'incoming';
+                                const timestampVal = call.timestamp?.toDate ? call.timestamp.toDate() : (call.timestamp?.seconds ? new Date(call.timestamp.seconds * 1000) : (call.timestamp ? new Date(call.timestamp) : null));
+                                const dateStr = call.created_at || call.call_date || (call.call_date ? `${call.call_date}T${call.call_time || '00:00:00'}` : null) || timestampVal?.toISOString();
+                                const displayDate = (() => {
+                                    if (!dateStr) return new Date().toLocaleString();
+                                    const d = new Date(dateStr);
+                                    return isNaN(d.getTime()) ? new Date().toLocaleString() : d.toLocaleString();
+                                })();
+                                const status = call.status || call.call_info?.type || call.call_type || 'completed';
+                                const duration = call.duration || call.call_duration?.total_duration || call.call_duration?.conversation_time || 0;
+                                const recording = call.recording_url || call.recording || call.call_info?.recording;
+                                return (
+                                <div key={call.id || i} className="bg-gray-900/50 p-3 rounded-lg border border-gray-700">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <p className="text-sm font-semibold text-gray-300">{isIncoming ? '↓ Inbound Call' : '↑ Outbound Call'}</p>
+                                        <p className="text-xs text-gray-400">{displayDate}</p>
+                                    </div>
+                                    <p className="text-white">Status: <span className="capitalize">{status}</span> • Duration: {duration}s</p>
+                                    {recording && (
+                                        <a href={recording} target="_blank" rel="noreferrer" className="text-xs text-[#ec028b] hover:underline mt-2 inline-block">
+                                            Listen to Recording
+                                        </a>
+                                    )}
+                                </div>
+                                );
+                            }) : <p className="text-gray-500 text-sm">No call logs found.</p>}
+                        </div>
+                    )}
+                </CollapsibleSection>
+
+                <CollapsibleSection title="Email Exchanges">
+                    {emailsLoading ? (
+                        <div className="text-gray-400">Loading emails...</div>
+                    ) : emails.length > 0 ? (
+                        <div className="space-y-4">
+                            {emails.map((email: any, i: number) => {
+                                const isIncoming = email.direction === 'inbound' || email.direction === 'incoming';
+                                const dateStr = email.timestamp?.toDate ? email.timestamp.toDate().toLocaleString() : new Date(email.date || email.timestamp || Date.now()).toLocaleString();
+                                const sender = isIncoming ? contractor.email : email.agent_email || email.agent_name || 'RHIVE Staff';
+                                
+                                return (
+                                <div key={email.id || i} className="bg-gray-900/50 p-4 rounded-lg border border-gray-700 shadow-md">
+                                    <div className="flex justify-between items-start mb-3 border-b border-gray-700/50 pb-3">
+                                        <div>
+                                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isIncoming ? 'bg-blue-500/20 text-blue-400' : 'bg-[#ec028b]/20 text-[#ec028b]'}`}>
+                                                    {isIncoming ? '↓ Received' : '↑ Sent'}
+                                                </span>
+                                                <span className="text-sm text-gray-300">
+                                                    {isIncoming ? 'from ' : 'by '}
+                                                    <span className="font-semibold text-white">{sender}</span>
+                                                </span>
+                                            </div>
+                                            <p className="text-white font-medium">{email.subject || 'No Subject'}</p>
+                                        </div>
+                                        <p className="text-xs text-gray-400 whitespace-nowrap ml-4">{dateStr}</p>
+                                    </div>
+                                    <div className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">
+                                        {email.body || email.content || email.message}
+                                    </div>
+                                </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center p-6 bg-gray-900/30 rounded-lg border border-gray-800">
+                            <p className="text-gray-500 text-sm mb-2">No email exchanges found for this contact.</p>
+                            {contractor.email && (
+                                <p className="text-xs text-gray-600 font-mono">{contractor.email}</p>
+                            )}
+                        </div>
+                    )}
+                </CollapsibleSection>
+
                 <CollapsibleSection title="Required Documents">
                     <ul className="space-y-3">
                         {contractor.documents.map(doc => (
@@ -192,6 +625,137 @@ const ContactVendorProfilePage: React.FC = () => {
                     <p className="text-gray-400">This section will contain details about the services offered by this vendor and their pricing structure.</p>
                 </CollapsibleSection>
             </div>
+
+            {isEditing && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-[0_0_40px_rgba(236,2,139,0.15)] max-w-2xl w-full overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                        <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-black/40 flex-shrink-0">
+                            <h3 className="text-white font-bold tracking-widest uppercase text-sm flex items-center">
+                                <PencilSquareIcon className="w-4 h-4 mr-2 text-[#ec028b]" /> Edit Contact Info
+                            </h3>
+                            <button onClick={handleCancelEdit} disabled={isSaving} className="text-gray-500 hover:text-white transition-colors">
+                                <XIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-grow">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex flex-col">
+                                    <label className="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-wider">First Name</label>
+                                    <input 
+                                        value={editForm.first_name || ''} 
+                                        onChange={e => setEditForm({...editForm, first_name: e.target.value})}
+                                        className="bg-black/50 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:border-[#ec028b] outline-none transition-colors"
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <label className="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-wider">Last Name</label>
+                                    <input 
+                                        value={editForm.last_name || ''} 
+                                        onChange={e => setEditForm({...editForm, last_name: e.target.value})}
+                                        className="bg-black/50 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:border-[#ec028b] outline-none transition-colors"
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <label className="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-wider">Phone</label>
+                                    <input 
+                                        value={editForm.phone || ''} 
+                                        onChange={e => setEditForm({...editForm, phone: e.target.value})}
+                                        className="bg-black/50 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:border-[#ec028b] outline-none transition-colors"
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <label className="text-[10px] text-gray-500 mb-1 uppercase font-bold tracking-wider">Email</label>
+                                    <input 
+                                        value={editForm.email || ''} 
+                                        onChange={e => setEditForm({...editForm, email: e.target.value})}
+                                        className="bg-black/50 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:border-[#ec028b] outline-none transition-colors"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-col mt-4 pt-4 border-t border-gray-800">
+                                <label className="text-[10px] text-[#ec028b] mb-2 uppercase font-black tracking-wider flex items-center">
+                                    <MapPinIcon className="w-3 h-3 mr-1" /> Address & Location
+                                </label>
+                                <AddressInput 
+                                    initialValue={editForm.address || ''}
+                                    onPlaceSelected={(place) => setEditForm({
+                                        ...editForm, 
+                                        address: place.address,
+                                        lat: place.latitude,
+                                        lng: place.longitude
+                                    })}
+                                    onInputChange={(e) => setEditForm({...editForm, address: e.target.value})}
+                                    placeholder="Search via Google Maps..."
+                                    containerClassName="group relative flex w-full items-center rounded-lg border bg-black/50 border-gray-700 transition-all duration-300 ease-in-out focus-within:border-[#ec028b] mb-3"
+                                    inputClassName="py-2 px-3 text-sm rounded-lg"
+                                />
+                                
+                                {isApiReady ? (
+                                    <div 
+                                        ref={mapRef} 
+                                        className="w-full h-56 bg-gray-800 rounded-lg border border-gray-700 shadow-inner overflow-hidden"
+                                    />
+                                ) : (
+                                    <div className="w-full h-56 bg-gray-800/50 rounded-lg border border-gray-700 flex flex-col items-center justify-center text-gray-500">
+                                        <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                                        <p className="text-xs uppercase tracking-widest font-bold">Loading Maps Engine...</p>
+                                    </div>
+                                )}
+                                <p className="text-[9px] text-gray-500 uppercase tracking-widest mt-2 text-center">
+                                    Drag the pin or click on the map to manually set the exact location.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-4 border-t border-gray-800 bg-black/40 flex justify-end gap-3 flex-shrink-0 rounded-b-xl">
+                            <button onClick={handleCancelEdit} disabled={isSaving} className="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors">
+                                Cancel
+                            </button>
+                            <button onClick={handleSave} disabled={isSaving} className="px-5 py-2 bg-[#ec028b] hover:bg-pink-600 text-white text-xs font-bold rounded-lg uppercase tracking-widest transition-colors flex items-center shadow-[0_0_15px_rgba(236,2,139,0.3)]">
+                                <CheckIcon className="w-4 h-4 mr-2" />
+                                {isSaving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-[0_0_40px_rgba(236,2,139,0.15)] max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                        <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-black/40 flex-shrink-0">
+                            <h3 className="text-white font-bold tracking-widest uppercase text-sm flex items-center">
+                                <TrashIcon className="w-4 h-4 mr-2 text-red-500" /> Delete Contact
+                            </h3>
+                            <button onClick={() => setShowDeleteModal(false)} disabled={isDeleting} className="text-gray-500 hover:text-white transition-colors">
+                                <XIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 text-gray-300">
+                            <p className="text-sm leading-relaxed">
+                                Are you sure you want to delete this contact?
+                            </p>
+                        </div>
+                        <div className="p-4 border-t border-gray-800 bg-black/40 flex justify-end gap-3 flex-shrink-0 rounded-b-xl">
+                            <button 
+                                onClick={() => setShowDeleteModal(false)} 
+                                disabled={isDeleting} 
+                                className="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleDeleteContact} 
+                                disabled={isDeleting} 
+                                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg uppercase tracking-widest transition-colors flex items-center shadow-[0_0_15px_rgba(220,38,38,0.3)]"
+                            >
+                                <TrashIcon className="w-4 h-4 mr-2" />
+                                {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </PageContainer>
     );
 };

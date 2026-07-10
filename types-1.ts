@@ -14,6 +14,8 @@ export interface Building {
   id: string;
   facets: RoofFacet[];
   totalAreaMeters: number;
+  isOverridden?: boolean;
+  overrideSq?: number;
 }
 
 export interface BuildingData {

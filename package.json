@@ -7,12 +7,13 @@
     "node": "20"
   },
   "scripts": {
-    "start": "serve -s dist -p $PORT",
+    "start": "serve -s dist -l tcp://0.0.0.0:$PORT",
     "dev": "vite --port 3000",
     "build": "vite build",
     "preview": "vite preview --port 8002"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@google-cloud/firestore": "^8.5.0",
     "@google/genai": "^1.50.1",
     "@protobufjs/aspromise": "^1.1.2",
@@ -23,19 +24,17 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
-    "eastasianwidth": "^0.3.0",
-    "emoji-regex": "^10.6.0",
     "firebase": "^12.9.0",
     "framer-motion": "^12.34.3",
     "googleapis": "^171.4.0",
     "gsap": "^3.14.2",
     "lucide-react": "^0.575.0",
+    "nanoid": "3.3.12",
     "matter-js": "^0.20.0",
     "protobufjs": "^8.4.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "serve": "^13.0.4",
-    "strip-ansi": "^7.2.0",
+    "serve": "^14.2.4",
     "tailwind-merge": "^3.3.1",
     "xlsx": "^0.18.5"
   },
@@ -43,20 +42,13 @@
     "@playwright/test": "^1.58.2",
     "@types/matter-js": "^0.20.2",
     "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^5.2.0",
     "esbuild": "^0.28.0",
-    "firebase-admin": "^13.10.0",
     "firebase-tools": "^15.7.0",
-    "jwa": "^2.0.1",
-    "nanoid": "^3.3.12",
     "playwright": "^1.58.0",
-    "postcss": "^8.5.14",
-    "source-map-js": "^1.2.1",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.4.2"
   },
-  "optionalDependencies": {
-    "@esbuild/win32-x64": "^0.28.0"
-  }
+  "optionalDependencies": {}
 }
