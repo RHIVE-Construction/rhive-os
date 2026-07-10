@@ -335,6 +335,7 @@ const getStaticMapUrl = (
   const upgradeCost = calcResult?.roofEstimate?.upgrades?.[surveyState?.roofUpgrade as keyof typeof calcResult.roofEstimate.upgrades] || 0;
 
   const includedBuildings = (buildingData?.buildings || []).filter(b => surveyState?.includedBuildingIds?.includes(b.id));
+  const overallScalingFactor = calcResult && calcResult.baseSq > 0 ? calcResult.finalSq / calcResult.baseSq : 1;
   const buildingCalcs = includedBuildings.map(building => {
       const singleBldgData: BuildingData = {
           buildings: [building],
@@ -346,6 +347,11 @@ const getStaticMapUrl = (
           totalSq: 0 // force raw API measurements
       } as SurveyState;
       const res = calculateEstimate({ buildingData: singleBldgData, surveyState: singleSurveyState }, pricing);
+      if (overallScalingFactor !== 1) {
+          res.finalSq *= overallScalingFactor;
+          res.asphaltSq *= overallScalingFactor;
+          res.flatRoofSq *= overallScalingFactor;
+      }
       return {
           building,
           res
