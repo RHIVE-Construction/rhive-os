@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Profile list pages — navigating to these clears the matched selectedId
 const PROFILE_LIST_CLEAR_MAP: Record<string, string[]> = {
@@ -41,8 +41,30 @@ interface NavigationContextType {
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
 
+const SESSION_KEY = 'rhive_active_page';
+
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [activePageId, setActivePageId] = useState<string>('P-00');
+    // Restore last active page from URL first, then sessionStorage, then default
+    const [activePageId, setActivePageIdRaw] = useState<string>(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const urlPage = params.get('page');
+            if (urlPage) return urlPage;
+        }
+        try {
+            return sessionStorage.getItem(SESSION_KEY) || 'P-00-V3';
+        } catch {
+            return 'P-00-V3';
+        }
+    });
+
+    // Wrap setter to also persist to sessionStorage
+    const setActivePageId = React.useCallback((id: string) => {
+        try {
+            sessionStorage.setItem(SESSION_KEY, id);
+        } catch { /* ignore quota errors */ }
+        setActivePageIdRaw(id);
+    }, []);
     const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [selectedContactId, setSelectedContactId] = useState<string | null>(null);

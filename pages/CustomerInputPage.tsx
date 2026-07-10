@@ -39,7 +39,7 @@ import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { usePricing } from '../contexts/PricingContext';
 import { cn } from '../lib/utils';
-import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
+import { useGoogleMapsApi, useGoogleMapsApiStatus } from '../hooks/useGoogleMapsApi';
 import { generateMockBuildingData } from '../lib/mockData';
 import { calculateEstimate } from '../lib/calculations';
 import { INITIAL_SURVEY_STATE } from '../lib/constants';
@@ -108,11 +108,83 @@ interface AddressData {
 }
 
 const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) => {
-    const isApiReady = useGoogleMapsApi();
-    const mapRef = useRef<HTMLDivElement>(null);
+    const { isReady: isApiReady, failed: mapsFailed } = useGoogleMapsApiStatus();
+    // Use a callback ref so initMap fires as soon as the div is in the DOM,
+    // regardless of whether isApiReady was already true before the modal mounted.
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const [map, setMap] = useState<any>(null);
     const markerRef = useRef<any>(null);
     const [isLocating, setIsLocating] = useState(false);
+    const mapInitializedRef = useRef(false);
+
+    const initMap = React.useCallback((container: HTMLDivElement) => {
+        if (!container || !isApiReady || !window.google || mapInitializedRef.current) return;
+        mapInitializedRef.current = true;
+
+        const defaultCenter = { lat: 40.7608, lng: -111.8910 }; // Salt Lake City
+        const mapInstance = new window.google.maps.Map(container, {
+            center: defaultCenter,
+            zoom: 12,
+            mapTypeId: 'satellite',
+            clickableIcons: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            zoomControl: true,
+            tilt: 0,
+        });
+
+        setMap(mapInstance);
+
+        mapInstance.addListener("click", (e: any) => {
+            const latLng = e.latLng;
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode({ location: latLng }, (results: any, status: any) => {
+                if (status === "OK" && results[0]) {
+                    const place = results[0];
+                    const addressComponents = place.address_components;
+                    let streetNumber = '', route = '', city = '', state = '', zip = '';
+                    if (addressComponents) {
+                        for (const component of addressComponents) {
+                            const componentType = component.types[0];
+                            switch (componentType) {
+                                case 'street_number': streetNumber = component.long_name; break;
+                                case 'route': route = component.short_name; break;
+                                case 'locality': city = component.long_name; break;
+                                case 'administrative_area_level_1': state = component.short_name; break;
+                                case 'postal_code': zip = component.short_name; break;
+                            }
+                        }
+                    }
+                    const placeName = place.name !== place.formatted_address ? place.name : undefined;
+                    const addressData = {
+                        address: streetNumber && route ? `${streetNumber} ${route}` : (place.formatted_address ? place.formatted_address.split(',')[0] : ''),
+                        city, state, zip,
+                        latitude: latLng.lat(),
+                        longitude: latLng.lng(),
+                        placeName
+                    };
+                    onSelect(addressData);
+                } else {
+                    alert("Could not determine address for this location.");
+                }
+            });
+        });
+    }, [isApiReady, onSelect]);
+
+    // Callback ref: called whenever the div mounts/unmounts
+    const setMapContainer = React.useCallback((node: HTMLDivElement | null) => {
+        mapContainerRef.current = node;
+        if (node && isApiReady) {
+            initMap(node);
+        }
+    }, [isApiReady, initMap]);
+
+    // If the API becomes ready AFTER the container is already in the DOM, init then
+    useEffect(() => {
+        if (isApiReady && mapContainerRef.current && !mapInitializedRef.current) {
+            initMap(mapContainerRef.current);
+        }
+    }, [isApiReady, initMap]);
 
     const centerOnUser = (showError = false) => {
         if (!navigator.geolocation) {
@@ -174,69 +246,6 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
         }
     }, [map]);
 
-    useEffect(() => {
-        if (!isApiReady || !mapRef.current || map) return;
-
-        const initMap = async () => {
-            const defaultCenter = { lat: 40.7608, lng: -111.8910 }; // Salt Lake City
-            
-            const mapInstance = new window.google.maps.Map(mapRef.current, {
-                center: defaultCenter,
-                zoom: 12, // Start at City View
-                mapTypeId: 'satellite', 
-                clickableIcons: false,
-                streetViewControl: false,
-                fullscreenControl: false,
-                zoomControl: true,
-                tilt: 0, 
-            });
-
-            setMap(mapInstance);
-
-            mapInstance.addListener("click", (e: any) => {
-                const latLng = e.latLng;
-                const geocoder = new window.google.maps.Geocoder();
-                
-                geocoder.geocode({ location: latLng }, (results: any, status: any) => {
-                    if (status === "OK" && results[0]) {
-                        const place = results[0];
-                        const addressComponents = place.address_components;
-                        let streetNumber = '';
-                        let route = '';
-                        let city = '';
-                        let state = '';
-                        let zip = '';
-
-                        if (addressComponents) {
-                            for (const component of addressComponents) {
-                                const componentType = component.types[0];
-                                switch (componentType) {
-                                    case 'street_number': streetNumber = component.long_name; break;
-                                    case 'route': route = component.short_name; break;
-                                    case 'locality': city = component.long_name; break;
-                                    case 'administrative_area_level_1': state = component.short_name; break;
-                                    case 'postal_code': zip = component.short_name; break;
-                                }
-                            }
-                        }
-                        const placeName = place.name !== place.formatted_address ? place.name : undefined;
-                        const addressData = {
-                            address: streetNumber && route ? `${streetNumber} ${route}` : (place.formatted_address ? place.formatted_address.split(',')[0] : ''),
-                            city, state, zip,
-                            latitude: latLng.lat(),
-                            longitude: latLng.lng(),
-                            placeName
-                        };
-                        onSelect(addressData);
-                    } else {
-                        alert("Could not determine address for this location.");
-                    }
-                });
-            });
-        };
-        initMap();
-    }, [isApiReady, map, onSelect]);
-
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
             <div 
@@ -256,7 +265,31 @@ const MapPickerModal: React.FC<MapPickerModalProps> = ({ onClose, onSelect }) =>
                     </button>
                 </div>
                 <div className="flex-1 relative">
-                    <div ref={mapRef} className="absolute inset-0 w-full h-full" />
+                    {mapsFailed && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10 gap-4 p-6 text-center">
+                            <div className="text-5xl">🗺️</div>
+                            <div>
+                                <p className="text-white font-bold text-base mb-1">Google Maps failed to load</p>
+                                <p className="text-gray-400 text-xs max-w-xs">The API key may be invalid, expired, or billing is not enabled in Google Cloud Console.</p>
+                            </div>
+                            <a
+                                href="https://console.cloud.google.com/apis/credentials"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 bg-[#ec028b] text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-pink-600 transition-colors"
+                            >
+                                Open GCP Console
+                            </a>
+                            <p className="text-gray-600 text-xs">Check that the Maps JavaScript API is enabled and the key has no HTTP-referrer restrictions blocking localhost.</p>
+                        </div>
+                    )}
+                    {!isApiReady && !mapsFailed && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10 gap-3">
+                            <div className="w-8 h-8 border-2 border-[#ec028b] border-t-transparent rounded-full animate-spin" />
+                            <p className="text-gray-400 text-sm">Loading map...</p>
+                        </div>
+                    )}
+                    <div ref={setMapContainer} className="absolute inset-0 w-full h-full" />
                     <button onClick={() => centerOnUser(true)} className={cn("absolute bottom-8 right-4 p-4 rounded-full bg-[#ec028b] text-white shadow-2xl hover:bg-pink-600 transition-all z-[10000] flex items-center justify-center border-2 border-white/20", isLocating && "animate-pulse")} title="Center on my location">
                         <RhiveGeopinIcon className="w-6 h-6" />
                     </button>
@@ -320,7 +353,7 @@ const parseAddressString = (fullStr: string): Partial<AddressData> => {
 };
 
 const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass }: { data: AddressData, onConfirm: (buildings: any[], updatedAddress?: Partial<AddressData>) => void, onStartOver: () => void, isAdminBypass: boolean }) => {
-    const isApiReady = useGoogleMapsApi();
+    const { isReady: isApiReady } = useGoogleMapsApiStatus();
     const [view, setView] = useState<'satellite' | 'street'>('satellite');
     const [buildings, setBuildings] = useState<{ id: string; name: string; lat: number; lng: number }[]>(() => {
         return [{
@@ -333,6 +366,7 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass 
     const [editableAddress, setEditableAddress] = useState(() => {
         return `${data.address || ''}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''}${data.zip ? ` ${data.zip}` : ''}`;
     });
+    const [propertyName, setPropertyName] = useState(data.name || '');
     
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const streetViewRef = useRef<HTMLDivElement>(null);
@@ -472,22 +506,28 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass 
                 }}
               >
                 
-                {/* Modal Header: Editable Address Title */}
-                <div className="p-4 bg-gray-950 border-b border-gray-800 flex justify-between items-center shrink-0">
-                    <div className="flex-1 mr-4">
-                        <label className="text-[9px] text-gray-500 font-black tracking-widest uppercase block mb-1">Verify and Edit Property Address</label>
+                {/* Modal Header: Property Name + Address Reference */}
+                <div className="p-4 bg-gray-950 border-b border-gray-800 flex justify-between items-center shrink-0 gap-4">
+                    <div className="flex-1 min-w-0">
+                        <label className="text-[9px] text-[#ec028b] font-black tracking-widest uppercase block mb-1">Property Name / Nickname</label>
                         <input
                             type="text"
-                            value={editableAddress}
-                            onChange={(e) => setEditableAddress(e.target.value)}
-                            className="bg-black/40 border border-gray-800 focus:border-[#ec028b] text-white font-bold text-base px-3 py-1.5 w-full max-w-2xl outline-none transition-all rounded"
-                            placeholder="Address, City, State Zip"
+                            value={propertyName}
+                            onChange={(e) => setPropertyName(e.target.value)}
+                            autoFocus
+                            className="bg-black/60 border border-[#ec028b]/40 focus:border-[#ec028b] text-white font-bold text-base px-3 py-1.5 w-full max-w-xs outline-none transition-all"
+                            placeholder="e.g. Smith Residence, Warehouse A..."
+                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                         />
+                    </div>
+                    <div className="flex-1 min-w-0 hidden sm:block">
+                        <label className="text-[9px] text-gray-500 font-black tracking-widest uppercase block mb-1">Confirmed Address</label>
+                        <p className="text-sm text-gray-300 font-mono truncate">{editableAddress}</p>
                     </div>
                     <button
                         type="button"
                         onClick={onStartOver}
-                        className="text-gray-400 hover:text-white transition-colors"
+                        className="text-gray-400 hover:text-white transition-colors shrink-0"
                         title="Cancel"
                     >
                         <XIcon className="w-6 h-6" />
@@ -626,7 +666,7 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass 
                             type="button"
                             onClick={() => {
                                 const updatedAddr = parseAddressString(editableAddress);
-                                const mergedAddr = { ...data, ...updatedAddr };
+                                const mergedAddr = { ...data, ...updatedAddr, name: propertyName || undefined };
                                 if (checkAddressOutOfBounds(mergedAddr) && !isAdminBypass) {
                                     alert("Out of Service Boundary: Scheduling blocked for out of state address.");
                                     return;
@@ -634,7 +674,7 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass 
                                 const finalBldgs = buildings.length > 0 
                                     ? buildings.map(b => ({ id: b.id, name: b.name, coordinates: { lat: b.lat, lng: b.lng } })) 
                                     : [{ id: 'BLDG-DEFAULT', name: 'BLD-1', coordinates: { lat: data.latitude, lng: data.longitude } }];
-                                onConfirm(finalBldgs, updatedAddr);
+                                onConfirm(finalBldgs, mergedAddr);
                             }} 
                             className="px-5 py-2 bg-[#ec028b] hover:bg-pink-600 text-xs font-black uppercase tracking-widest text-white shadow-pink-glow transition-all rounded-none"
                             style={{
@@ -1115,16 +1155,54 @@ const AddressSection: React.FC<{
     useEffect(() => {
         if (!isApiReady || !inputRef.current || !window.google || isCollapsed || readOnly) return;
         
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-            fields: ['address_components', 'geometry', 'formatted_address', 'name'],
-            componentRestrictions: { country: 'us' }
-        });
+        // Only attach a new Autocomplete instance if one doesn't already exist
+        if (!autocompleteRef.current) {
+            try {
+                if (!window.google?.maps?.places?.Autocomplete) {
+                    console.warn('[RHIVE] Places API not available — autocomplete disabled. Enable Places API in GCP Console.');
+                    return;
+                }
+                autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+                    fields: ['address_components', 'geometry', 'formatted_address', 'name'],
+                    componentRestrictions: { country: 'us' }
+                });
+                autocompleteRef.current.addListener('place_changed', () => {
+                    const place = autocompleteRef.current.getPlace();
+                    handlePlaceSelected(place);
+                });
+            } catch (err) {
+                console.warn('[RHIVE] Places Autocomplete initialization failed:', err);
+            }
+        }
 
-        autocompleteRef.current.addListener('place_changed', () => {
-            const place = autocompleteRef.current.getPlace();
-            handlePlaceSelected(place);
-        });
+        // Focus the input now that autocomplete is ready
+        const focusTimer = setTimeout(() => inputRef.current?.focus(), 50);
+        return () => clearTimeout(focusTimer);
     }, [isApiReady, isCollapsed, readOnly]);
+
+    // Auto-focus on expand (even before API is ready, so it feels snappy)
+    useEffect(() => {
+        if (!isCollapsed && !readOnly && inputRef.current && !isApiReady) {
+            const timer = setTimeout(() => inputRef.current?.focus(), 50);
+            return () => clearTimeout(timer);
+        }
+    }, [isCollapsed, readOnly, isApiReady]);
+
+    // Sync pre-filled address value to the native input when the section is open
+    // (Google Autocomplete can take over the DOM element, so we force-sync the value)
+    useEffect(() => {
+        if (!isCollapsed && inputRef.current && data.address) {
+            const nativeInput = inputRef.current;
+            if (nativeInput.value !== data.address) {
+                // Use native setter to bypass React's synthetic event system
+                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+                if (nativeSetter) {
+                    nativeSetter.call(nativeInput, data.address);
+                    nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        }
+    }, [data.address, isCollapsed]);
 
     const handlePlaceSelected = (place: any) => {
         if (!place || !place.geometry) return;
@@ -1157,18 +1235,48 @@ const AddressSection: React.FC<{
         };
 
         // Attempt to calculate street view heading using StreetViewService
-        const svService = new window.google.maps.StreetViewService();
-        svService.getPanorama({ location: place.geometry.location, radius: 50 }, (data: any, status: any) => {
-            if (status === 'OK' && data.location) {
-                const heading = window.google.maps.geometry.spherical.computeHeading(
-                    data.location.latLng,
-                    place.geometry.location
-                );
-                newAddressData.streetViewHeading = heading;
+        const dispatchLookup = () => {
+            const fullAddress = [
+                newAddressData.address,
+                newAddressData.city,
+                newAddressData.state,
+                newAddressData.zip
+            ].filter(Boolean).join(', ');
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('open-customer-lookup', {
+                    detail: { prefill: fullAddress }
+                }));
+            }, 200);
+        };
+
+        try {
+            if (window.google?.maps?.StreetViewService) {
+                const svService = new window.google.maps.StreetViewService();
+                svService.getPanorama({ location: place.geometry.location, radius: 50 }, (svData: any, status: any) => {
+                    try {
+                        if (status === 'OK' && svData.location && window.google?.maps?.geometry?.spherical) {
+                            const heading = window.google.maps.geometry.spherical.computeHeading(
+                                svData.location.latLng,
+                                place.geometry.location
+                            );
+                            newAddressData.streetViewHeading = heading;
+                        }
+                    } catch {}
+                    onChange(newAddressData);
+                    setIsCollapsed(true);
+                    dispatchLookup();
+                });
+            } else {
+                onChange(newAddressData);
+                setIsCollapsed(true);
+                dispatchLookup();
             }
+        } catch (err) {
+            console.warn('[RHIVE] StreetView unavailable:', err);
             onChange(newAddressData);
             setIsCollapsed(true);
-        });
+            dispatchLookup();
+        }
     };
 
     const triggerGeocoding = (typedAddress: string) => {
@@ -1289,22 +1397,21 @@ const AddressSection: React.FC<{
                             className="bg-transparent border-b border-gray-800 focus:border-[#ec028b] focus:outline-none text-xs text-white font-black uppercase tracking-wider w-32 mr-2 px-1 py-0.5"
                         />
                         <span className="text-xs text-gray-500 mr-2">—</span>
-                        <div className="text-xs text-gray-400 font-medium truncate flex items-center gap-2">
+                        <div className="text-xs text-gray-400 font-medium truncate">
                             <span>{`${data.address || 'No Address'}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''} ${data.zip || ''}`}</span>
-                            {pinnedBuildings && pinnedBuildings.length > 0 && (
-                                <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] bg-[#ec028b]/15 text-[#ec028b] border border-[#ec028b]/30 font-mono font-bold uppercase tracking-wider">
-                                    🏠 {pinnedBuildings.length} {pinnedBuildings.length === 1 ? 'Building' : 'Buildings'}
-                                </span>
-                            )}
                         </div>
                     </div>
                     
                     <div className="flex items-center space-x-3 shrink-0">
-                        {/* Extraneous icons removed per user request */}
+                        {pinnedBuildings && pinnedBuildings.length > 0 && (
+                            <span className="text-xs text-gray-400 font-medium">
+                                🏠 {pinnedBuildings.length} {pinnedBuildings.length === 1 ? 'Building' : 'Buildings'}
+                            </span>
+                        )}
                     </div>
                 </div>
             ) : (
-                <CircuitryCard title={`${data.name || (label === "Billing Address" ? "Billing Address" : "Property Address")} Details`} icon={<MapPinIcon className="w-5 h-5" />}>
+                <CircuitryCard title={`${label === "Billing Address" ? "Billing Address" : "Property Address"} Details`} icon={<MapPinIcon className="w-5 h-5" />}>
                     <div className="space-y-4">
                         {label !== "Billing Address" && (
                             <div>
@@ -1329,7 +1436,6 @@ const AddressSection: React.FC<{
                                     placeholder={placeholder} 
                                     value={data.address} 
                                     onChange={handleFieldChange} 
-                                    autoFocus 
                                     disabled={readOnly} 
                                     className="pr-12" 
                                     onKeyDown={(e) => {
@@ -1774,22 +1880,7 @@ const CustomerInputPage: React.FC = () => {
     useEffect(() => {
         const query = sessionStorage.getItem('globalSearchQuery');
         const qType = sessionStorage.getItem('globalSearchQueryType');
-        const cachedAddressDataStr = sessionStorage.getItem('globalSearchAddressData');
         
-        if (qType === 'Address' && cachedAddressDataStr) {
-            sessionStorage.removeItem('globalSearchQuery');
-            sessionStorage.removeItem('globalSearchQueryType');
-            sessionStorage.removeItem('globalSearchAddressData');
-            try {
-                const cachedData = JSON.parse(cachedAddressDataStr);
-                setPropertyData(cachedData);
-                setIsVerificationOpen(true);
-            } catch (e) {
-                console.error("Failed to parse cached address data:", e);
-            }
-            return;
-        }
-
         if (query) {
             if ((qType === 'Address' || !qType) && (!isApiReady || !window.google)) {
                 return; // Wait for Google Maps API to be ready before consuming Address query
@@ -1816,24 +1907,26 @@ const CustomerInputPage: React.FC = () => {
                     email: ''
                 });
             } else if (qType === 'Address' || !qType) {
-                if (!window.google || !window.google.maps) {
-                    setPropertyData(prev => ({
-                        ...prev,
-                        address: query,
-                        latitude: 40.7608,
-                        longitude: -111.8910,
-                        city: 'Salt Lake City',
-                        state: 'UT',
-                        zip: '84101'
-                    }));
-                    return;
-                }
-                const geocoder = new window.google.maps.Geocoder();
-                let geocodeCompleted = false;
+                // Retry loop: wait up to 600ms for GlobalCustomerLookupModal's async pre-geocode to arrive
+                const attemptGeocode = (attempt: number) => {
+                    const lateArrivalData = sessionStorage.getItem('globalSearchAddressData');
+                    if (lateArrivalData) {
+                        sessionStorage.removeItem('globalSearchAddressData');
+                        sessionStorage.removeItem('globalSearchQueryType');
+                        try {
+                            const parsed = JSON.parse(lateArrivalData);
+                            setPropertyData(parsed);
+                            setIsVerificationOpen(true);
+                        } catch {}
+                        return;
+                    }
+                    if (attempt > 0) {
+                        setTimeout(() => attemptGeocode(attempt - 1), 200);
+                        return;
+                    }
 
-                const mountGeocodeTimeout = setTimeout(() => {
-                    if (!geocodeCompleted) {
-                        geocodeCompleted = true;
+                    // Fallback: geocode the raw query ourselves
+                    if (!window.google || !window.google.maps) {
                         setPropertyData(prev => ({
                             ...prev,
                             address: query,
@@ -1843,52 +1936,73 @@ const CustomerInputPage: React.FC = () => {
                             state: 'UT',
                             zip: '84101'
                         }));
+                        return;
                     }
-                }, 3000);
+                    const geocoder = new window.google.maps.Geocoder();
+                    let geocodeCompleted = false;
 
-                geocoder.geocode({ address: query }, (results: any, status: string) => {
-                    if (geocodeCompleted) return;
-                    geocodeCompleted = true;
-                    clearTimeout(mountGeocodeTimeout);
+                    const mountGeocodeTimeout = setTimeout(() => {
+                        if (!geocodeCompleted) {
+                            geocodeCompleted = true;
+                            setPropertyData(prev => ({
+                                ...prev,
+                                address: query,
+                                latitude: 40.7608,
+                                longitude: -111.8910,
+                                city: 'Salt Lake City',
+                                state: 'UT',
+                                zip: '84101'
+                            }));
+                        }
+                    }, 3000);
 
-                    if (status === 'OK' && results && results[0]) {
-                        const place = results[0];
-                        const addressComponents = place.address_components;
-                        let streetNumber = '', route = '', city = '', state = '', zip = '';
-                        if (addressComponents) {
-                            for (const component of addressComponents) {
-                                const componentType = component.types[0];
-                                switch (componentType) {
-                                    case 'street_number': streetNumber = component.long_name; break;
-                                    case 'route': route = component.short_name; break;
-                                    case 'locality': city = component.long_name; break;
-                                    case 'administrative_area_level_1': state = component.short_name; break;
-                                    case 'postal_code': zip = component.short_name; break;
+                    geocoder.geocode({ address: query }, (results: any, status: string) => {
+                        if (geocodeCompleted) return;
+                        geocodeCompleted = true;
+                        clearTimeout(mountGeocodeTimeout);
+
+                        if (status === 'OK' && results && results[0]) {
+                            const place = results[0];
+                            const addressComponents = place.address_components;
+                            let streetNumber = '', route = '', city = '', state = '', zip = '';
+                            if (addressComponents) {
+                                for (const component of addressComponents) {
+                                    const componentType = component.types[0];
+                                    switch (componentType) {
+                                        case 'street_number': streetNumber = component.long_name; break;
+                                        case 'route': route = component.short_name; break;
+                                        case 'locality': city = component.long_name; break;
+                                        case 'administrative_area_level_1': state = component.short_name; break;
+                                        case 'postal_code': zip = component.short_name; break;
+                                    }
                                 }
                             }
+                            setPropertyData({
+                                address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
+                                city,
+                                state,
+                                zip,
+                                latitude: place.geometry.location.lat(),
+                                longitude: place.geometry.location.lng(),
+                                streetViewHeading: 0
+                            });
+                            setIsVerificationOpen(true);
+                        } else {
+                            setPropertyData(prev => ({
+                                ...prev,
+                                address: query,
+                                latitude: 40.7608,
+                                longitude: -111.8910,
+                                city: 'Salt Lake City',
+                                state: 'UT',
+                                zip: '84101'
+                            }));
                         }
-                        setPropertyData({
-                            address: streetNumber && route ? `${streetNumber} ${route}` : place.formatted_address.split(',')[0],
-                            city,
-                            state,
-                            zip,
-                            latitude: place.geometry.location.lat(),
-                            longitude: place.geometry.location.lng(),
-                            streetViewHeading: 0
-                        });
-                        setIsVerificationOpen(true);
-                    } else {
-                        setPropertyData(prev => ({
-                            ...prev,
-                            address: query,
-                            latitude: 40.7608,
-                            longitude: -111.8910,
-                            city: 'Salt Lake City',
-                            state: 'UT',
-                            zip: '84101'
-                        }));
-                    }
-                });
+                    });
+                };
+
+                // Allow up to 600ms for pre-geocode from GlobalCustomerLookupModal to arrive
+                attemptGeocode(3);
             }
         }
     }, [isApiReady]);
@@ -2382,8 +2496,20 @@ const CustomerInputPage: React.FC = () => {
             setSubmissionSummary({ type: 'Project Merged', name: projectName });
             setIsSuccessModalOpen(true);
         } else {
-            // Create new project
-            const newProjId = createProject(projectName, projectCategory, targetPropertyId, ownerId);
+            // Determine the correct pipeline stage based on form selections:
+            // - Insurance claim → Quote (needs a quote built from claim)
+            // - Ready to buy → Quote (skip estimate, go straight to quote)
+            // - Exploring / estimate needed → Estimate
+            // - Default → Lead
+            let initialStage: string = 'Lead';
+            if (isInsurance || purchaseIntent === 'Ready') {
+                initialStage = 'Quote';
+            } else if (purchaseIntent === 'Exploring') {
+                initialStage = 'Estimate';
+            }
+
+            // Create new project at the correct stage
+            const newProjId = createProject(projectName, projectCategory, targetPropertyId, ownerId, initialStage);
             setCurrentProjectId(newProjId);
             setSubmissionSummary({ type: 'Project Created', name: projectName });
             setIsSuccessModalOpen(true);
@@ -2508,7 +2634,17 @@ const CustomerInputPage: React.FC = () => {
                             if (updatedAddr) {
                                 setPropertyData(prev => ({ ...prev, ...updatedAddr }));
                             }
-                            setIsPropertyCollapsed(true);
+                            // Keep expanded so user sees the pre-filled address, then focus the input
+                            setIsPropertyCollapsed(false);
+                            setTimeout(() => {
+                                const input = document.getElementById('property-address-input') as HTMLInputElement;
+                                if (input) {
+                                    input.focus();
+                                    // Move cursor to end
+                                    const len = input.value.length;
+                                    input.setSelectionRange(len, len);
+                                }
+                            }, 150);
                         } else {
                             const updated = [...additionalProperties];
                             updated[currentVerifyingIndex - 1].pinnedBuildings = bldgs;
@@ -2518,7 +2654,7 @@ const CustomerInputPage: React.FC = () => {
                                     ...updatedAddr
                                 };
                             }
-                            updated[currentVerifyingIndex - 1].isCollapsed = true;
+                            updated[currentVerifyingIndex - 1].isCollapsed = false;
                             setAdditionalProperties(updated);
                         }
                         setIsVerificationOpen(false);
@@ -2529,6 +2665,10 @@ const CustomerInputPage: React.FC = () => {
                             setPropertyData({ address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 });
                             setPinnedBuildings([]);
                             setIsPropertyCollapsed(false);
+                            setTimeout(() => {
+                                const input = document.getElementById('property-address-input') as HTMLInputElement;
+                                input?.focus();
+                            }, 150);
                         } else {
                             const updated = [...additionalProperties];
                             updated[currentVerifyingIndex - 1].propertyData = { address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 };

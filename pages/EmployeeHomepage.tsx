@@ -18,7 +18,6 @@ import {
     ArrowRightIcon,
     ChartPieIcon,
     ShieldCheckIcon,
-    BellIcon,
 } from '../components/icons';
 import { PAGE_GROUPS } from '../constants';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -27,82 +26,6 @@ import { projectService, dashboardService, firestoreService } from '../lib/fireb
 import WeatherForecastStrip from '../components/WeatherForecastStrip';
 import { getStagePageId, cn } from '../lib/utils';
 
-// Stateful Notification Bell Widget
-const NotificationBell: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [notifications, setNotifications] = useState([
-        { id: '1', title: 'Emergency Tarping Required', message: 'Tarping request detected for property 4505 Industrial Parkway.', time: '5m ago', read: false },
-        { id: '2', title: 'Address Collision Detected', message: 'Linda Hansen and Tyler Hansen duplicated record merge needed.', time: '20m ago', read: false },
-        { id: '3', title: 'Boise Lead Routed', message: 'Lead from Boise region automatically flagged and held.', time: '1h ago', read: true }
-    ]);
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    const toggleOpen = () => setIsOpen(!isOpen);
-    const markAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    };
-
-    return (
-        <div className="relative">
-            <button 
-                id="btn-notification-bell"
-                onClick={toggleOpen} 
-                className="relative p-2 text-gray-400 hover:text-white bg-black/40 border border-gray-850 hover:border-rhive-pink transition-all flex items-center justify-center rounded-xl shadow-[0_0_10px_rgba(236,2,139,0.05)] hover:shadow-pink-glow-sm cursor-pointer outline-none"
-            >
-                <BellIcon className="w-5 h-5" />
-                {unreadCount > 0 && (
-                    <span 
-                        id="notification-badge"
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-rhive-pink text-white font-mono text-[9px] font-black flex items-center justify-center rounded-full border border-black shadow-[0_0_5px_rgba(236,2,139,0.8)] animate-pulse"
-                    >
-                        {unreadCount}
-                    </span>
-                )}
-            </button>
-
-            {isOpen && (
-                <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                    <div 
-                        id="notification-dropdown"
-                        className="absolute right-0 mt-2.5 w-80 bg-[#050505] border border-gray-800 shadow-2xl p-4 space-y-3 z-50 animate-fade-in"
-                        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
-                    >
-                        <div className="flex justify-between items-center border-b border-gray-850 pb-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">System Alerts</span>
-                            {unreadCount > 0 && (
-                                <button 
-                                    onClick={markAllRead} 
-                                    className="text-[9px] font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-colors cursor-pointer"
-                                >
-                                    Mark all read
-                                </button>
-                            )}
-                        </div>
-                        <div className="space-y-2.5 max-h-64 overflow-y-auto">
-                            {notifications.map(n => (
-                                <div 
-                                    key={n.id} 
-                                    className={cn(
-                                        "p-2.5 border transition-colors flex flex-col gap-1",
-                                        n.read ? "bg-black/20 border-gray-905 text-gray-400" : "bg-rhive-pink/5 border-[#ec028b]/20 text-white"
-                                    )}
-                                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
-                                >
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-black uppercase tracking-wider truncate mr-2">{n.title}</span>
-                                        <span className="text-[8px] font-mono text-gray-500 whitespace-nowrap">{n.time}</span>
-                                    </div>
-                                    <p className="text-[10px] leading-relaxed text-gray-400 font-medium">{n.message}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </>
-            )}
-        </div>
-    );
-};
 
 // Task Item Component
 const TaskItem = ({ label, initialStatus, badge }: { label: string; initialStatus: boolean; badge?: string }) => {
@@ -687,9 +610,16 @@ const EmployeeHomepage: React.FC = () => {
         return `$${val.toLocaleString()}`;
     };
 
-    const timeAgo = (dateString: string) => {
-        if (!dateString) return 'Just now';
-        const diff = Date.now() - new Date(dateString).getTime();
+    const timeAgo = (dateVal: any) => {
+        if (!dateVal) return 'Just now';
+        let ms: number;
+        if (typeof dateVal === 'object' && typeof dateVal.seconds === 'number') {
+            ms = dateVal.seconds * 1000;
+        } else {
+            ms = new Date(dateVal).getTime();
+            if (isNaN(ms)) return 'Just now';
+        }
+        const diff = Date.now() - ms;
         const minutes = Math.floor(diff / 60000);
         if (minutes < 1) return 'Just now';
         if (minutes < 60) return `${minutes}m ago`;
@@ -701,47 +631,63 @@ const EmployeeHomepage: React.FC = () => {
     useEffect(() => {
         const unsubscribe = projectService.subscribeToRecentActivity((firebaseProjects: any[]) => {
             const activeProjects = (firebaseProjects && firebaseProjects.length > 0) ? firebaseProjects : projects;
-            
-            // Map project activities
-            const projectActivities = activeProjects.map((p: any, idx: number) => {
+
+            // Map project/lead/deal activities — store .projectId for reliable click navigation
+            const projectActivities = activeProjects.map((p: any) => {
                 const owner = users.find(u => u.id === (p.account_id || p.owner_id));
-                const timestamp = new Date(p.updated_at || p.created_at || p.last_updated || Date.now()).getTime();
-                const mockNames = ['Rick Vance', 'Jenny Miller', 'Robert Chen', 'Thomas Henderson', 'Arthur Pendleton'];
+                const displayName =
+                    p.customer_name ||
+                    p.contact_name ||
+                    owner?.name ||
+                    'Unknown';
+                const projectName = p.name || p.Deal_Name || p.deal_name || 'Unnamed Project';
                 return {
-                    user: p.customer_name || p.contact_name || owner?.name || mockNames[idx % mockNames.length],
+                    user: displayName,
                     action: 'submitted project',
-                    target: p.name || 'Unnamed Project',
-                    timestamp,
-                    time: timeAgo(p.updated_at || p.created_at || p.last_updated),
+                    target: projectName,
+                    projectId: p.id,                 // Firestore doc ID for navigation
+                    stage: p.current_stage || 'Lead',
+                    time: timeAgo(p.updated_at || p.created_at || p._importedAt),
+                    timestamp: p.updated_at || p.created_at || p._importedAt || '',
                 };
             });
 
-            // Map property registration activities
-            const propertyActivities = properties.map((prop: any) => {
-                const idParts = prop._id.split('-');
-                const tsStr = idParts[1];
-                let timestamp = 0;
-                if (tsStr && /^\d{10,}$/.test(tsStr)) {
-                    timestamp = parseInt(tsStr, 10);
-                } else {
-                    if (prop._id === 'PROP-1') timestamp = Date.now() - 3600000 * 2;
-                    else if (prop._id === 'PROP-2') timestamp = Date.now() - 3600000 * 5;
-                    else if (prop._id === 'PROP-3') timestamp = Date.now() - 3600000 * 12;
-                    else timestamp = Date.now() - 3600000 * 24;
-                }
-                const owner = users.find(u => u.id === prop.owner_id);
-                return {
-                    user: owner?.name || 'System Operator',
-                    action: 'registered property',
-                    target: prop.address_full || 'Unnamed Property',
-                    timestamp,
-                    time: timeAgo(new Date(timestamp).toISOString()),
-                };
-            });
+            // Map property registration activities — only in-memory props have _id and address_full
+            const propertyActivities = properties
+                .filter((prop: any) => prop._id && prop.address_full)
+                .map((prop: any) => {
+                    const idParts = prop._id.split('-');
+                    const tsStr = idParts[1];
+                    let timestamp = 0;
+                    if (tsStr && /^\d{10,}$/.test(tsStr)) {
+                        timestamp = parseInt(tsStr, 10);
+                    } else {
+                        if (prop._id === 'PROP-1') timestamp = Date.now() - 3600000 * 2;
+                        else if (prop._id === 'PROP-2') timestamp = Date.now() - 3600000 * 5;
+                        else if (prop._id === 'PROP-3') timestamp = Date.now() - 3600000 * 12;
+                        else timestamp = Date.now() - 3600000 * 24;
+                    }
+                    const owner = users.find(u => u.id === prop.owner_id);
+                    return {
+                        user: owner?.name || 'System Operator',
+                        action: 'registered property',
+                        target: prop.address_full || 'Unnamed Property',
+                        propertyId: prop._id,
+                        stage: null,
+                        time: timeAgo(new Date(timestamp).toISOString()),
+                        timestamp: new Date(timestamp).toISOString(),
+                    };
+                });
 
-            // Merge, sort desc by timestamp, and take top 5
             const combined = [...projectActivities, ...propertyActivities]
-                .sort((a, b) => b.timestamp - a.timestamp)
+                .sort((a: any, b: any) => {
+                    const toMs = (v: any) => {
+                        if (!v) return 0;
+                        if (typeof v === 'object' && typeof v.seconds === 'number') return v.seconds * 1000;
+                        const ms = new Date(v).getTime(); return isNaN(ms) ? 0 : ms;
+                    };
+                    return toMs(b.timestamp) - toMs(a.timestamp);
+                })
                 .slice(0, 5);
 
             setActivity(combined);
@@ -769,7 +715,6 @@ const EmployeeHomepage: React.FC = () => {
         <PageContainer
             title={page?.name || 'Employee Homepage'}
             description="Welcome back. Here is your daily command center."
-            headerAction={<NotificationBell />}
         >
             {/* --- STATS OVERVIEW --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -809,7 +754,7 @@ const EmployeeHomepage: React.FC = () => {
 
                     {/* Quick Actions */}
                     <Card title="Quick Actions">
-                        <div className={`grid grid-cols-2 ${currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin' ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-4`}>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <Button
                                 variant="secondary"
                                 className="flex-col h-24 hover:bg-gray-900 hover:border-[#ec028b]/50 hover:shadow-[0_0_15px_rgba(236,2,139,0.15)] transition-all bg-black/40 border-gray-700"
@@ -843,16 +788,6 @@ const EmployeeHomepage: React.FC = () => {
                                 <ChartPieIcon className="w-6 h-6 mb-2 text-[#ec028b]" />
                                 <span className="text-xs uppercase font-bold tracking-wide">Reports</span>
                             </Button>
-                            {(currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin') && (
-                                <Button
-                                    variant="secondary"
-                                    className="flex-col h-24 hover:bg-gray-900 hover:border-[#ec028b]/50 hover:shadow-[0_0_15px_rgba(236,2,139,0.15)] transition-all bg-black/40 border-gray-700"
-                                    onClick={() => setActivePageId('A-01')}
-                                >
-                                    <ShieldCheckIcon className="w-6 h-6 mb-2 text-[#ec028b]" />
-                                    <span className="text-xs uppercase font-bold tracking-wide">Settings</span>
-                                </Button>
-                            )}
                         </div>
                     </Card>
 
@@ -868,66 +803,45 @@ const EmployeeHomepage: React.FC = () => {
                                 <p className="text-sm text-gray-500 italic text-center py-6">No recent activity found.</p>
                             ) : (
                                 <ul className="space-y-4">
-                                    {activity.map((item, index) => (
-                                        <li key={index} className="flex items-start text-sm border-b border-gray-800 pb-3 last:border-0 last:pb-0">
-                                            <div className="w-2 h-2 rounded-full bg-[#ec028b] mt-1.5 mr-3 flex-shrink-0 shadow-[0_0_5px_#ec028b]"></div>
-                                            <div>
+                                    {activity.map((item: any, index) => (
+                                        <li key={index} className="flex items-start text-sm border-b border-gray-800 pb-3 last:border-0 last:pb-0 cursor-pointer group/row hover:bg-white/5 -mx-2 px-2 rounded-sm transition-colors"
+                                            onClick={() => {
+                                                if (item.projectId) {
+                                                    // Navigate directly using Firestore ID + correct stage page
+                                                    setSelectedProjectId(item.projectId);
+                                                    const stageKey = (item.stage || '').toLowerCase();
+                                                    let pageId = 'E-26';
+                                                    if (stageKey.includes('estimate')) pageId = 'E-27';
+                                                    else if (stageKey.includes('quote'))    pageId = 'E-28';
+                                                    else if (stageKey.includes('sign'))     pageId = 'E-29';
+                                                    else if (stageKey.includes('schedule')) pageId = 'E-30';
+                                                    else if (stageKey.includes('install'))  pageId = 'E-31';
+                                                    else if (stageKey.includes('invoic'))   pageId = 'E-32';
+                                                    else if (stageKey.includes('complet') || stageKey.includes('past')) pageId = 'E-33';
+                                                    setActivePageId(pageId);
+                                                } else if (item.propertyId) {
+                                                    setSelectedPropertyId(item.propertyId);
+                                                    setActivePageId('E-12');
+                                                } else {
+                                                    setActivePageId('E-05');
+                                                }
+                                            }}
+                                            title={item.projectId ? `View ${item.target} record` : item.target}
+                                        >
+                                            <div className="w-2 h-2 rounded-full bg-[#ec028b] mt-1.5 mr-3 flex-shrink-0 shadow-[0_0_5px_#ec028b] group-hover/row:scale-125 transition-transform"></div>
+                                            <div className="flex-1 min-w-0">
                                                 <p className="text-gray-300">
-                                                    <span 
-                                                        className="font-semibold text-white hover:text-rhive-pink cursor-pointer hover:underline transition-colors"
-                                                        onClick={() => {
-                                                            const foundUser = users.find(u => u.name.toLowerCase() === item.user.toLowerCase());
-                                                            if (foundUser) {
-                                                                const isCommercial = foundUser.name.includes('HOA') || 
-                                                                                     foundUser.name.includes('Group') || 
-                                                                                     foundUser.name.includes('Corp') || 
-                                                                                     foundUser.name.includes('Supply') || 
-                                                                                     foundUser.name.includes('Summit') || 
-                                                                                     foundUser.name.includes('Apex') || 
-                                                                                     foundUser.name.includes('Vanguard') || 
-                                                                                     foundUser.name.includes('BuildWest');
-                                                                if (isCommercial) {
-                                                                    setSelectedAccountId(foundUser.id);
-                                                                    setActivePageId('E-08');
-                                                                } else {
-                                                                    setSelectedContactId(foundUser.id);
-                                                                    setActivePageId('E-10');
-                                                                }
-                                                            } else {
-                                                                setActivePageId('E-24');
-                                                            }
-                                                        }}
-                                                        title="View user profile"
-                                                    >
-                                                        {item.user}
-                                                    </span> {item.action}{' '}
-                                                    <span 
-                                                        className="text-[#ec028b] font-medium hover:underline cursor-pointer"
-                                                        onClick={() => {
-                                                            const foundProject = projects.find(p => p.name.toLowerCase() === item.target.toLowerCase());
-                                                            const foundProperty = properties.find(p => p.address_full.toLowerCase() === item.target.toLowerCase());
-                                                            if (foundProject) {
-                                                                setCurrentProjectId(foundProject._id);
-                                                                if (foundProject.current_stage === 'Quote') {
-                                                                    setActivePageId('E-28');
-                                                                } else if (foundProject.current_stage === 'Estimate') {
-                                                                    setActivePageId('E-27');
-                                                                } else {
-                                                                    setActivePageId('E-15');
-                                                                }
-                                                            } else if (foundProperty) {
-                                                                setSelectedPropertyId(foundProperty._id);
-                                                                setActivePageId('E-12');
-                                                            } else {
-                                                                setActivePageId('E-05');
-                                                            }
-                                                        }}
-                                                    >
+                                                    <span className="font-semibold text-white">{item.user}</span>
+                                                    {' '}{item.action}{' '}
+                                                    <span className="text-[#ec028b] font-medium hover:underline">
                                                         {item.target}
                                                     </span>.
                                                 </p>
                                                 <p className="text-xs text-gray-500 mt-1">{item.time}</p>
                                             </div>
+                                            <svg className="w-3.5 h-3.5 text-gray-700 group-hover/row:text-rhive-pink shrink-0 mt-1 ml-2 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                            </svg>
                                         </li>
                                     ))}
                                 </ul>

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Project, Property, User, ProjectStage, PROJECT_STAGES_ORDER } from '../types';
-import { contactService, userService, userLogService } from '../lib/firebaseService';
+import { contactService, userService, userLogService, firestoreService } from '../lib/firebaseService';
 import { session, initialUser } from '../lib/session';
 
 interface MockDatabaseContextType {
@@ -15,7 +15,7 @@ interface MockDatabaseContextType {
     logout: () => void;
 
     // Actions
-    createProject: (name: string, type: any, propertyId: string, accountId: string) => string;
+    createProject: (name: string, type: any, propertyId: string, accountId: string, initialStage?: string) => string;
     addUser: (user: Partial<User>) => void;
     addProperty: (property: Partial<Property>) => string;
     updateProperty: (propertyId: string, updates: Partial<Property>) => void;
@@ -40,7 +40,10 @@ const SEED_USERS: User[] = [
     { id: 'U-CONT-1', name: 'Quality Roofing', role: 'Contractor', email: 'jobs@quality.com' },
     { id: 'U-SUPP-1', name: 'ABC Supply', role: 'Supplier', email: 'orders@abc.com' },
     { id: 'U-ACC-LHM', name: 'Larry H Miller Group', role: 'Customer', email: 'billing@lhm.com' },
-    { id: 'U-ADMIN-JAMES', name: 'James Gimena', role: 'Admin', email: 'james.g@rhiveconstruction.com', phone: '(333) 333-3333', password_hash: 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5' },
+    // NOTE: SEED_USERS are fallback stubs for display/dev only.
+    // password_hash is intentionally OMITTED here — seeds must never bypass Firestore password verification.
+    // If Firestore is unavailable, login will fail rather than authenticate against a static seed.
+    { id: 'U-ADMIN-JAMES', name: 'James Gimena', role: 'Admin', email: 'james.g@rhiveconstruction.com', phone: '+17438876637' },
     { id: 'U-GUEST', name: 'Public Guest', role: 'Public', email: 'guest@rhive.com' },
 ];
 
@@ -160,7 +163,10 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const [currentProjectId, setCurrentProjectId] = useState<string | null>(localStorage.getItem('rhive_project_id'));
 
     useEffect(() => {
-        localStorage.setItem('rhive_db_users', JSON.stringify(users));
+        // SECURITY: Strip password_hash before caching in localStorage.
+        // Passwords must ALWAYS come from Firestore server, never from browser cache.
+        const safeUsers = users.map(({ password_hash, ...u }) => u);
+        localStorage.setItem('rhive_db_users', JSON.stringify(safeUsers));
     }, [users]);
 
     useEffect(() => {
@@ -208,100 +214,11 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         else localStorage.removeItem('rhive_project_id');
     }, [currentProjectId]);
 
-    // Ensure James Gimena and Michael Robinson admin profiles are correctly seeded/updated in the live Firestore users collection
-    useEffect(() => {
-        const seedJamesIfNeeded = async () => {
-            try {
-                const email = 'james.g@rhiveconstruction.com';
-                const correctHash = 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5'; // SHA-256 of 'qwerty123'
-                const correctRole = 'Admin';
-                const correctId = 'U-ADMIN-JAMES';
+    // NOTE: Admin profiles (James, Michael) are managed in Firestore only.
+    // Auto-seeding of password_hash has been removed — it was overwriting password resets on every page load.
+    // To reset a user's password, use the Forgot Password flow or UserManagementPage.
 
-                const res = await userService.getByEmail(email);
-
-                if (!res.success || !res.data) {
-                    console.log("Seeding James Gimena admin profile to Firestore...");
-                    await userService.createWithId(correctId, {
-                        id: correctId,
-                        name: 'James Gimena',
-                        role: correctRole,
-                        email: email,
-                        phone: '(333) 333-3333',
-                        password_hash: correctHash,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
-                } else {
-                    const userDoc = res.data as any;
-                    const needsUpdate =
-                        userDoc.password_hash !== correctHash ||
-                        userDoc.role !== correctRole ||
-                        !!userDoc.avatarUrl;
-
-                    if (needsUpdate) {
-                        console.log("Updating James Gimena Firestore profile to Admin role with correct password hash...");
-                        await userService.update(userDoc.id, {
-                            role: correctRole,
-                            password_hash: correctHash,
-                            avatarUrl: null,
-                            updated_at: new Date().toISOString()
-                        });
-                    }
-                }
-            } catch (err) {
-                console.warn("Failed to automatically seed/sync James Gimena admin doc in Firestore:", err);
-            }
-        };
-
-        const seedMichaelIfNeeded = async () => {
-            try {
-                const email = 'michael@rhiveconstruction.com';
-                const correctHash = 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5'; // SHA-256 of 'qwerty123'
-                const correctRole = 'Admin';
-                const correctId = 'U-ADMIN-MICHAEL';
-
-                const res = await userService.getByEmail(email);
-
-                if (!res.success || !res.data) {
-                    console.log("Seeding Michael Robinson admin profile to Firestore...");
-                    await userService.createWithId(correctId, {
-                        id: correctId,
-                        name: 'Michael Robinson',
-                        role: correctRole,
-                        email: email,
-                        phone: '(801) 555-0192',
-                        password_hash: correctHash,
-                        avatarUrl: 'https://i.pravatar.cc/150?u=michael',
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    });
-                } else {
-                    const userDoc = res.data as any;
-                    const needsUpdate =
-                        userDoc.password_hash !== correctHash ||
-                        userDoc.role !== correctRole;
-
-                    if (needsUpdate) {
-                        console.log("Updating Michael Robinson Firestore profile to Admin role with correct password hash...");
-                        await userService.update(userDoc.id, {
-                            role: correctRole,
-                            password_hash: correctHash,
-                            updated_at: new Date().toISOString()
-                        });
-                    }
-                }
-            } catch (err) {
-                console.warn("Failed to automatically seed/sync Michael Robinson admin doc in Firestore:", err);
-            }
-        };
-
-        const timer = setTimeout(() => {
-            seedJamesIfNeeded();
-            seedMichaelIfNeeded();
-        }, 1500);
-
-        return () => clearTimeout(timer);
-    }, []);    const login = async (role?: string, password?: string, email?: string) => {
+    const login = async (role?: string, password?: string, email?: string) => {
         const { hashPassword } = await import('../lib/utils');
 
         const setSessionUser = (user: User) => {
@@ -415,23 +332,24 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const normalizedEmail = email.toLowerCase().trim();
         // 1. Find the user by email in Firestore, falling back to local seed data if offline/empty
         let foundUser: User | undefined;
+        let fromFirestore = false;
         try {
-            const userResult = await userService.getByEmail(normalizedEmail);
+            const userResult = await userService.getByEmailFromServer(normalizedEmail);
             if (userResult.success && userResult.data) {
                 foundUser = userResult.data as User;
+                fromFirestore = true;
             }
         } catch (e) {
-            console.warn("Firestore query failed, falling back to local seed data:", e);
+            console.warn('Firestore server query failed during login:', e);
         }
 
+        // Fallback to local users state (subscription cache) ONLY for non-password fields (role lookup).
+        // NEVER use SEED_USERS for password verification — seeds are static and cannot reflect password changes.
         if (!foundUser) {
-            if (role && role !== 'Public') {
-                foundUser = users.find(u => u.email?.toLowerCase().trim() === normalizedEmail && (u.role === role || u.role === 'Super Admin')) ||
-                            SEED_USERS.find(u => u.email?.toLowerCase().trim() === normalizedEmail && (u.role === role || u.role === 'Super Admin'));
-            }
-            if (!foundUser) {
-                foundUser = users.find(u => u.email?.toLowerCase().trim() === normalizedEmail) ||
-                            SEED_USERS.find(u => u.email?.toLowerCase().trim() === normalizedEmail);
+            const seedFallback = users.find(u => u.email?.toLowerCase().trim() === normalizedEmail) ??
+                                 SEED_USERS.find(u => u.email?.toLowerCase().trim() === normalizedEmail && !u.password_hash);
+            if (seedFallback) {
+                foundUser = seedFallback;
             }
         }
 
@@ -448,6 +366,13 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 return { success: false, error: `No ${role} account found with this email.` };
             }
         }
+
+        // 3. Verify password — MUST come from Firestore (fromFirestore = true).
+        //    If user was found from seed fallback (no password_hash), reject with a clear message.
+        if (!fromFirestore && !foundUser?.password_hash) {
+            return { success: false, error: 'Could not verify credentials. Please check your connection and try again.' };
+        }
+
         if (!foundUser.password_hash) {
             if (password === 'rhive123') {
                 const sessionUser = { ...foundUser };
@@ -458,7 +383,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, { email: sessionUser.email }, sessionUser);
                 return { success: true };
             }
-            return { success: false, error: 'This account has no password set. Use default "rhive123" to log in locally.' };
+            return { success: false, error: 'Invalid email or password.' };
         }
         const hashed = await hashPassword(password!);
         if (foundUser.password_hash !== hashed) {
@@ -511,15 +436,31 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             address_full: property.address_full || 'Unknown Address',
             type: property.type || 'Residential',
             owner_id: property.owner_id || 'Unknown',
-            coordinates: { lat: 0, lng: 0 },
+            coordinates: property.coordinates || { lat: 0, lng: 0 },
             features: property.features || [],
             buildings: property.buildings || [],
             escrow_note: property.escrow_note
         };
         setProperties(prev => [...prev, newProperty]);
-        userLogService.logAction('ADD_PROPERTY', `Property added: ${newProperty.address_full} (ID: ${newId})`, { propertyId: newId, property: newProperty });
+
+        // Persist to Firestore so property records survive page refreshes
+        firestoreService.addDocument('properties', {
+            address_full: newProperty.address_full,
+            type: newProperty.type,
+            owner_id: newProperty.owner_id,
+            coordinates: newProperty.coordinates,
+            features: newProperty.features,
+            buildings: newProperty.buildings,
+            escrow_note: newProperty.escrow_note,
+        }).then(result => {
+            userLogService.logAction('ADD_PROPERTY', `Property added: ${newProperty.address_full}`, { propertyId: result.id || newId, property: newProperty });
+        }).catch(() => {
+            userLogService.logAction('ADD_PROPERTY', `Property added: ${newProperty.address_full} (ID: ${newId})`, { propertyId: newId, property: newProperty });
+        });
+
         return newId;
     };
+
 
     const updateProperty = (propertyId: string, updates: Partial<Property>) => {
         setProperties(prev => prev.map(p =>
@@ -533,21 +474,50 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         userLogService.logAction('ADD_COMMUNICATION', `Communication logged to ${targetId} (${type})`, { type, targetId, content });
     };
 
-    const createProject = (name: string, type: any, propertyId: string, accountId: string) => {
-        const newId = `PROJ-${projects.length + 1}`;
-        const newProject: Project = {
-            _id: newId,
+    const createProject = (name: string, type: any, propertyId: string, accountId: string, initialStage: string = 'Lead') => {
+        // Build a document that the Firestore-backed pipeline (projectService.subscribe) can read
+        const projectDoc: Record<string, any> = {
             name,
             project_type: type,
             property_id: propertyId,
             account_id: accountId,
-            current_stage: 'Estimate',
+            current_stage: initialStage,   // Honour the stage chosen by the form
             status: 'Active',
-            last_updated: new Date().toISOString().split('T')[0]
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
         };
-        setProjects([...projects, newProject]);
-        userLogService.logAction('CREATE_PROJECT', `Project "${name}" created (ID: ${newId})`, { projectId: newId, name, type, propertyId, accountId });
-        return newId;
+
+        // Persist to Firestore so the real-time pipeline subscription sees it immediately
+        let resolvedId = `PROJ-${Date.now()}`;
+        firestoreService.addDocument('projects', projectDoc).then((result) => {
+            if (result.success && result.id) {
+                resolvedId = result.id;
+            }
+            // Log activity AFTER Firestore write so notification includes the real Firestore ID
+            // Include stage in payload so notification click resolves to correct stage page
+            userLogService.logAction(
+                'CREATE_PROJECT',
+                `Project "${name}" created and added to ${initialStage} pipeline`,
+                { projectId: result.id || resolvedId, name, type, propertyId, accountId, stage: initialStage, newStage: initialStage }
+            );
+        }).catch((err) => {
+            console.warn('[MockDB] Firestore createProject error, falling back to local state:', err);
+        });
+
+        // Also update local mock state for immediate in-session consistency
+        const newProject: Project = {
+            _id: resolvedId,
+            name,
+            project_type: type,
+            property_id: propertyId,
+            account_id: accountId,
+            current_stage: initialStage as any,
+            status: 'Active',
+            last_updated: new Date().toISOString()
+        };
+        setProjects(prev => [...prev, newProject]);
+
+        return resolvedId;
     };
 
     const updateProjectStage = (projectId: string, stage: ProjectStage) => {

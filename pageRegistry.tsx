@@ -5,6 +5,7 @@ import React from 'react';
 import LoginPage from './pages/LoginPage';
 import PublicHomepage from './pages/PublicHomepage'; // P-00
 import PublicHomepageV2 from './pages/PublicHomepageV2'; // P-00-V2
+import PublicHomepageV3 from './pages/PublicHomepageV3'; // P-00-V3
 import CurrentWebsitePage from './pages/CurrentWebsitePage'; // P-00a
 import Web2Page from './pages/Web2Page'; // P-00b
 import AboutUsPage from './pages/AboutUsPage'; // P-01
@@ -94,8 +95,9 @@ const Placeholder = ({ name }: { name: string }) => (
 
 export const pageComponentMap: Record<string, React.FC> = {
   // Public
-  'P-00': PublicHomepage,
+  'P-00': PublicHomepageV3,
   'P-00-V2': PublicHomepageV2,
+  'P-00-V3': PublicHomepageV3,
   'P-00a': CurrentWebsitePage,
   'P-00b': Web2Page,
   'P-01': AboutUsPage,

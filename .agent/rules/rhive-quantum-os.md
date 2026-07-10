@@ -202,3 +202,32 @@ When I ask you to build a feature:
   * **Primary:** Use **Screenshots** for design review (so the user can easily export them to external analysis tools).
   * **Secondary:** Use **Video (.webp)** strictly to demonstrate interactive elements, cool animations, or complex state changes. 
 * **Efficiency:** Avoid taking an excessive or wasteful number of repeated screenshots. Scroll efficiently and capture exactly what is needed for complete coverage.
+
+
+## 9. FIRESTORE USER SYNC RULE (MANDATORY — SYSTEM RULE)
+
+**Every change to a user or user profile MUST be written to Firestore immediately and atomically.**
+
+This applies to ALL of the following operations without exception:
+- Password change or reset (`password_hash`)
+- Phone number update (`phone`)
+- Email update (`email`)
+- Name or avatar update (`name`, `avatarUrl`)
+- Role change (`role`)
+- Any other field on the `users` collection document
+
+### Implementation Requirements
+
+1. **`userService.update(id, payload)`** MUST be called with the full delta on every user change.
+2. **Always include `updated_at: new Date().toISOString()`** in every update payload.
+3. **Password changes** (`password_hash`) MUST update BOTH:
+   - Firebase Auth (via `admin.auth().updateUser(uid, { password })`)
+   - Firestore `users` doc (via `userService.update(id, { password_hash: sha256(newPassword) })`)
+4. **Login MUST use `userService.getByEmailFromServer`** (not `getByEmail`) for password verification to bypass Firestore cache.
+5. **SEED_USERS** in `MockDatabaseContext.tsx` must NEVER contain `password_hash` — they are display stubs only and must never bypass live Firestore password verification.
+6. **No local-state-only mutations** — updating React state without writing to Firestore is a bug.
+
+### Why This Rule Exists
+The app uses a custom login system that checks `password_hash` stored in Firestore (SHA-256).
+If any user change is only made in local React state or Firebase Auth without syncing Firestore,
+the change will be invisible to the login system and will not persist across page refreshes.
