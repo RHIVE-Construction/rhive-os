@@ -817,8 +817,14 @@ const UserManagementPage: React.FC = () => {
 
                                     {/* Error */}
                                     {calSyncError && (
-                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
-                                            <p className="text-red-400 text-xs font-bold">✕ {calSyncError}</p>
+                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 space-y-1.5">
+                                            <p className="text-red-400 text-xs font-bold">✕ {calSyncError.split('\n')[0]}</p>
+                                            {calSyncError.includes('not configured in Firestore') && (
+                                                <p className="text-[10px] text-red-400/70">
+                                                    An admin must configure this in{' '}
+                                                    <span className="font-mono text-red-300">Admin Settings → Google OAuth</span>.
+                                                </p>
+                                            )}
                                         </div>
                                     )}
 
