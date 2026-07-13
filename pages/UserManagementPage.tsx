@@ -89,18 +89,11 @@ const UserManagementPage: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
-    const openCalendarSync = useCallback(async (user: User) => {
+    const openCalendarSync = useCallback((user: User) => {
         setCalSyncUser(user);
         setCalSyncResult(null);
         setCalSyncError('');
-        setOauthReady(false);
-        // Silently pre-warm: verify client_id exists before user clicks
-        const clientId = await getGoogleClientIdFromFirestore();
-        if (!clientId) {
-            setCalSyncError('Google Calendar integration is not yet configured. Please contact your administrator.');
-        } else {
-            setOauthReady(true);
-        }
+        setOauthReady(true); // Firebase Auth handles OAuth — always ready
     }, []);
 
     const handleCalendarSync = useCallback(async () => {
@@ -285,6 +278,7 @@ const UserManagementPage: React.FC = () => {
     const isInternal = INTERNAL_ROLES.includes(formData.role as UserType);
 
     return (
+        <>
         <PageContainer
             title="User Management"
             description="Manage organizational access, security roles, and user credentials from a centralized protocol."
@@ -608,6 +602,8 @@ const UserManagementPage: React.FC = () => {
                 </div>
             )}
 
+        </PageContainer>
+
             {/* ── Change Password Modal ───────────────────────────────── */}
             {pwUser && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -853,18 +849,13 @@ const UserManagementPage: React.FC = () => {
                                             id="connect-google-calendar-btn"
                                             type="button"
                                             onClick={handleCalendarSync}
-                                            disabled={calSyncing || !calSyncUser.email || !gisReady || !oauthReady}
+                                            disabled={calSyncing || !calSyncUser.email || !oauthReady}
                                             className="flex-[2] bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 flex items-center justify-center gap-2"
                                         >
                                             {calSyncing ? (
                                                 <>
                                                     <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                                     Syncing Calendar...
-                                                </>
-                                            ) : !oauthReady && !calSyncError ? (
-                                                <>
-                                                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                    Preparing...
                                                 </>
                                             ) : (
                                                 <>
@@ -886,7 +877,7 @@ const UserManagementPage: React.FC = () => {
                     </div>
                 </div>
             )}
-        </PageContainer>
+        </>
     );
 };
 
