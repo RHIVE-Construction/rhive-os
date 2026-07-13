@@ -24,6 +24,7 @@ import { cn, hashPassword } from '../lib/utils';
 import {
     syncUserGoogleCalendar,
     isGISLoaded,
+    getGoogleClientIdFromFirestore,
     type CalendarSyncResult,
     type RhiveCalendarEvent,
 } from '../services/googleCalendarService';
@@ -55,6 +56,8 @@ const UserManagementPage: React.FC = () => {
     const [calSyncResult, setCalSyncResult] = useState<CalendarSyncResult | null>(null);
     const [calSyncError, setCalSyncError] = useState('');
     const [gisReady, setGisReady] = useState(false);
+    // Silently pre-warmed: true once we confirm client_id exists in Firestore
+    const [oauthReady, setOauthReady] = useState(false);
 
 
     // Form state
@@ -86,10 +89,18 @@ const UserManagementPage: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
-    const openCalendarSync = useCallback((user: User) => {
+    const openCalendarSync = useCallback(async (user: User) => {
         setCalSyncUser(user);
         setCalSyncResult(null);
         setCalSyncError('');
+        setOauthReady(false);
+        // Silently pre-warm: verify client_id exists before user clicks
+        const clientId = await getGoogleClientIdFromFirestore();
+        if (!clientId) {
+            setCalSyncError('Google Calendar integration is not yet configured. Please contact your administrator.');
+        } else {
+            setOauthReady(true);
+        }
     }, []);
 
     const handleCalendarSync = useCallback(async () => {
@@ -817,14 +828,8 @@ const UserManagementPage: React.FC = () => {
 
                                     {/* Error */}
                                     {calSyncError && (
-                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 space-y-1.5">
-                                            <p className="text-red-400 text-xs font-bold">✕ {calSyncError.split('\n')[0]}</p>
-                                            {calSyncError.includes('not configured in Firestore') && (
-                                                <p className="text-[10px] text-red-400/70">
-                                                    An admin must configure this in{' '}
-                                                    <span className="font-mono text-red-300">Admin Settings → Google OAuth</span>.
-                                                </p>
-                                            )}
+                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+                                            <p className="text-red-400 text-xs font-bold">✕ {calSyncError}</p>
                                         </div>
                                     )}
 
@@ -848,13 +853,18 @@ const UserManagementPage: React.FC = () => {
                                             id="connect-google-calendar-btn"
                                             type="button"
                                             onClick={handleCalendarSync}
-                                            disabled={calSyncing || !calSyncUser.email || !gisReady}
+                                            disabled={calSyncing || !calSyncUser.email || !gisReady || !oauthReady}
                                             className="flex-[2] bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 flex items-center justify-center gap-2"
                                         >
                                             {calSyncing ? (
                                                 <>
                                                     <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                                     Syncing Calendar...
+                                                </>
+                                            ) : !oauthReady && !calSyncError ? (
+                                                <>
+                                                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    Preparing...
                                                 </>
                                             ) : (
                                                 <>
