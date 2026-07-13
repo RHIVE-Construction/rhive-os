@@ -109,8 +109,9 @@ const AppContentAuthenticated: React.FC = () => {
     }, [activePageId, setActivePageId, currentUser]);
 
     useEffect(() => {
-        // Redirect to role dashboard after login from ANY public page (P-xx) or no page
-        if (currentUser && (!activePageId || activePageId.startsWith('P-'))) {
+        // Only redirect to role dashboard from the login page (P-06) or when no page is set.
+        // Do NOT redirect from other public pages like Estimate Tool (P-12).
+        if (currentUser && (!activePageId || activePageId === 'P-06')) {
             switch (currentUser.role) {
                 case 'Super Admin': setActivePageId('SA-01'); break;
                 case 'Admin': setActivePageId('E-01'); break;
@@ -118,7 +119,7 @@ const AppContentAuthenticated: React.FC = () => {
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
                 case 'Supplier': setActivePageId('S-01'); break;
-                case 'Public': setActivePageId('P-00-V3'); break;
+                default: setActivePageId('P-00'); break;
             }
         }
     }, [currentUser, setActivePageId, activePageId]);
