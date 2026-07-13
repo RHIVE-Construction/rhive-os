@@ -52,7 +52,6 @@ const AppContentAuthenticated: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        console.log('App: activePageId changed to:', activePageId);
         if (mainRef.current) {
             mainRef.current.scrollTop = 0;
         }
