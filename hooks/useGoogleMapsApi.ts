@@ -11,11 +11,6 @@ declare global {
 
 let isLoadingScript = false;
 
-export function useGoogleMapsApi() {
-  const [isApiReady, setIsApiReady] = useState(!!window.googleMapsApiLoaded || !!window.google);
-    googleMapsApiFailed?: boolean;
-  }
-}
 
 /**
  * Returns { isReady, failed }
