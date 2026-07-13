@@ -190,6 +190,11 @@ export interface User {
     phone?: string;
     avatarUrl?: string;
     password_hash?: string;
+    // Google Calendar sync metadata
+    googleCalendarLinked?: boolean;
+    googleCalendarEmail?: string;
+    lastCalendarSync?: string;  // ISO datetime string
+    calendarEventCount?: number;
 }
 
 export interface Project {
@@ -324,6 +329,27 @@ export interface RoofReport {
     pitch: number;
     areaSqFt: number;
   }[];
+}
+
+// ─── Google Calendar Types ───────────────────────────────────────────────────
+
+export interface CalendarEvent {
+    id: string;
+    userId: string;
+    userEmail: string;
+    googleEventId: string;
+    title: string;
+    description: string;
+    location: string;
+    startDateTime: string;  // ISO datetime
+    endDateTime: string;    // ISO datetime
+    isAllDay: boolean;
+    status: 'confirmed' | 'tentative' | 'cancelled';
+    googleLink: string;
+    organizer: string;
+    syncedAt: string;       // ISO datetime of last sync
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Contact {

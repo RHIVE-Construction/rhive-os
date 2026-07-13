@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
 import { Button } from '../components/ui/button';
@@ -14,11 +14,18 @@ import {
     BriefcaseIcon,
     EnvelopeIcon,
     PhoneIcon,
-    LockIcon
+    LockIcon,
+    CalendarIcon
 } from '../components/icons';
 import { userService, userLogService } from '../lib/firebaseService';
 import { User, UserType } from '../types';
 import { cn, hashPassword } from '../lib/utils';
+import {
+    syncUserGoogleCalendar,
+    isGISLoaded,
+    type CalendarSyncResult,
+    type RhiveCalendarEvent,
+} from '../services/googleCalendarService';
 
 // Internal roles that must register via Firebase Auth
 const INTERNAL_ROLES: UserType[] = ['Admin', 'Super Admin', 'Employee'];
@@ -40,6 +47,13 @@ const UserManagementPage: React.FC = () => {
     const [pwSuccess, setPwSuccess] = useState(false);
     const [pwSubmitting, setPwSubmitting] = useState(false);
 
+    // Calendar Sync modal state
+    const [calSyncUser, setCalSyncUser] = useState<User | null>(null);
+    const [calSyncing, setCalSyncing] = useState(false);
+    const [calSyncResult, setCalSyncResult] = useState<CalendarSyncResult | null>(null);
+    const [calSyncError, setCalSyncError] = useState('');
+    const [gisReady, setGisReady] = useState(false);
+
 
     // Form state
     const [formData, setFormData] = useState({
@@ -57,6 +71,48 @@ const UserManagementPage: React.FC = () => {
         });
         return () => unsub();
     }, []);
+
+    // Poll for GIS library readiness (loaded async via CDN)
+    useEffect(() => {
+        if (isGISLoaded()) { setGisReady(true); return; }
+        const interval = setInterval(() => {
+            if (isGISLoaded()) {
+                setGisReady(true);
+                clearInterval(interval);
+            }
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
+
+    const openCalendarSync = useCallback((user: User) => {
+        setCalSyncUser(user);
+        setCalSyncResult(null);
+        setCalSyncError('');
+    }, []);
+
+    const handleCalendarSync = useCallback(async () => {
+        if (!calSyncUser?.email) {
+            setCalSyncError('This user has no email address registered. Please add one first.');
+            return;
+        }
+        setCalSyncing(true);
+        setCalSyncError('');
+        setCalSyncResult(null);
+
+        const result = await syncUserGoogleCalendar(calSyncUser.id, calSyncUser.email);
+
+        if (result.success) {
+            setCalSyncResult(result);
+            userLogService.logAction(
+                'CALENDAR_SYNCED',
+                `Google Calendar synced for user "${calSyncUser.name}" — ${result.eventsCount} events imported`,
+                { targetUserId: calSyncUser.id, targetUserEmail: calSyncUser.email, eventsCount: result.eventsCount }
+            );
+        } else {
+            setCalSyncError(result.error || 'Calendar sync failed. Please try again.');
+        }
+        setCalSyncing(false);
+    }, [calSyncUser]);
 
     const filteredUsers = users.filter(u =>
         u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -277,6 +333,20 @@ const UserManagementPage: React.FC = () => {
                                 >
                                     <LockIcon className="w-4 h-4" />
                                 </button>
+                                {/* ── Google Calendar Sync Button ─────────── */}
+                                <button
+                                    id={`cal-sync-btn-${user.id}`}
+                                    onClick={() => openCalendarSync(user)}
+                                    className={cn(
+                                        "p-2 rounded-lg transition-all",
+                                        user.googleCalendarLinked
+                                            ? "bg-green-900/20 text-green-500/80 hover:text-green-400 hover:bg-green-900/40"
+                                            : "bg-blue-900/10 text-blue-400/60 hover:text-blue-400 hover:bg-blue-900/20"
+                                    )}
+                                    title={user.googleCalendarLinked ? `Calendar linked (${user.calendarEventCount ?? 0} events)` : 'Sync Google Calendar'}
+                                >
+                                    <CalendarIcon className="w-4 h-4" />
+                                </button>
                                 <button
                                     onClick={() => handleDelete(user.id)}
                                     className="p-2 bg-red-900/20 rounded-lg text-red-500/70 hover:text-red-500 hover:bg-red-900/40 transition-all"
@@ -315,16 +385,25 @@ const UserManagementPage: React.FC = () => {
 
                             <div className="mt-6 pt-4 border-t border-gray-800 flex items-center justify-between">
                                 <span className="text-[9px] text-gray-600 font-mono italic">ID: {user.id.slice(-8)}</span>
-                                <div className="flex items-center gap-1.5">
-                                    <div className={cn(
-                                        "w-1.5 h-1.5 rounded-full",
-                                        INTERNAL_ROLES.includes(user.role as UserType)
-                                            ? "bg-[#ec028b] shadow-[0_0_8px_#ec028b]"
-                                            : "bg-green-500 shadow-[0_0_8px_#22c55e]"
-                                    )} />
-                                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">
-                                        {INTERNAL_ROLES.includes(user.role as UserType) ? 'Auth Linked' : 'Verified Link'}
-                                    </span>
+                                <div className="flex items-center gap-2">
+                                    {/* Google Calendar linked badge */}
+                                    {user.googleCalendarLinked && (
+                                        <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-900/20 border border-green-500/20">
+                                            <CalendarIcon className="w-2.5 h-2.5 text-green-400" />
+                                            <span className="text-[8px] font-bold text-green-400 uppercase tracking-tighter">Cal Linked</span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-1.5">
+                                        <div className={cn(
+                                            "w-1.5 h-1.5 rounded-full",
+                                            INTERNAL_ROLES.includes(user.role as UserType)
+                                                ? "bg-[#ec028b] shadow-[0_0_8px_#ec028b]"
+                                                : "bg-green-500 shadow-[0_0_8px_#22c55e]"
+                                        )} />
+                                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">
+                                            {INTERNAL_ROLES.includes(user.role as UserType) ? 'Auth Linked' : 'Verified Link'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -579,6 +658,197 @@ const UserManagementPage: React.FC = () => {
                                                 </span>
                                             ) : (
                                                 <span className="flex items-center gap-2"><LockIcon className="w-4 h-4" />Save Password</span>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* ── Google Calendar Sync Modal ───────────────────────────── */}
+            {calSyncUser && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !calSyncing && setCalSyncUser(null)} />
+                    <div className="relative w-full max-w-lg bg-[#0c0c0e] border border-gray-800 rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
+
+                        {/* Header */}
+                        <div className="p-6 border-b border-gray-800 bg-black/40 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                                    <CalendarIcon className="w-5 h-5 text-blue-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-white uppercase tracking-widest leading-none mb-0.5">Sync Google Calendar</h3>
+                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Google Calendar API v3 — OAuth 2.0</p>
+                                </div>
+                            </div>
+                            <button onClick={() => !calSyncing && setCalSyncUser(null)} className="text-gray-500 hover:text-white transition-colors">
+                                <XMarkIcon className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-5">
+                            {/* Target user preview */}
+                            <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl p-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-800 to-black border border-gray-700 flex items-center justify-center font-black text-[#ec028b] text-lg uppercase">
+                                    {calSyncUser.name.charAt(0)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white font-bold text-sm leading-none truncate">{calSyncUser.name}</p>
+                                    <p className="text-gray-400 text-xs mt-0.5 truncate">{calSyncUser.email || 'No email — cannot sync'}</p>
+                                </div>
+                                {calSyncUser.googleCalendarLinked && (
+                                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-900/20 border border-green-500/30">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_6px_#4ade80]" />
+                                        <span className="text-[9px] font-black text-green-400 uppercase tracking-widest">Previously synced</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {calSyncResult?.success ? (
+                                /* ── Success State ── */
+                                <div className="space-y-4">
+                                    <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center space-y-2">
+                                        <div className="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto">
+                                            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                        <p className="text-green-400 font-black text-sm uppercase tracking-wide">Sync Successful!</p>
+                                        <p className="text-gray-300 text-sm">
+                                            <span className="text-green-400 font-bold text-xl">{calSyncResult.eventsCount}</span> events imported from Google Calendar
+                                        </p>
+                                        <p className="text-[9px] text-gray-500 font-mono">Saved to Firestore · calendar_events collection</p>
+                                    </div>
+
+                                    {/* Preview first 5 events */}
+                                    {calSyncResult.events.length > 0 && (
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Recent Events Preview</p>
+                                            <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                                                {calSyncResult.events.slice(0, 5).map((ev: RhiveCalendarEvent) => (
+                                                    <div key={ev.googleEventId} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-gray-900/60 border border-gray-800">
+                                                        <div className={cn(
+                                                            "w-1.5 h-1.5 rounded-full mt-1.5 shrink-0",
+                                                            ev.status === 'confirmed' ? 'bg-green-400' :
+                                                            ev.status === 'tentative' ? 'bg-yellow-400' : 'bg-gray-500'
+                                                        )} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-white text-xs font-semibold truncate">{ev.title}</p>
+                                                            <p className="text-gray-500 text-[10px]">
+                                                                {ev.isAllDay ? 'All day' : new Date(ev.startDateTime).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {calSyncResult.events.length > 5 && (
+                                                    <p className="text-center text-[10px] text-gray-600 py-1">+{calSyncResult.events.length - 5} more events saved</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        type="button"
+                                        onClick={() => setCalSyncUser(null)}
+                                        className="w-full bg-green-600 hover:bg-green-500 text-white"
+                                    >
+                                        Done
+                                    </Button>
+                                </div>
+                            ) : (
+                                /* ── Initial / Error State ── */
+                                <>
+                                    {/* Info box */}
+                                    <div className="bg-blue-500/5 border border-blue-500/15 rounded-xl p-4 space-y-2">
+                                        <p className="text-blue-300 text-xs font-bold flex items-center gap-2">
+                                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            How it works
+                                        </p>
+                                        <ol className="text-[11px] text-gray-400 space-y-1 ml-6 list-decimal">
+                                            <li>A Google sign-in popup will open</li>
+                                            <li>Sign in with <span className="text-white font-semibold">{calSyncUser.email || 'the user\'s Gmail'}</span></li>
+                                            <li>Grant calendar read-only access</li>
+                                            <li>Events are fetched and saved to Firestore</li>
+                                        </ol>
+                                    </div>
+
+                                    {/* Previous sync info */}
+                                    {calSyncUser.lastCalendarSync && (
+                                        <div className="flex items-center gap-2 text-[10px] text-gray-500 font-mono">
+                                            <CalendarIcon className="w-3 h-3 text-green-400" />
+                                            Last synced: {new Date(calSyncUser.lastCalendarSync).toLocaleString()}
+                                            {calSyncUser.calendarEventCount !== undefined && (
+                                                <span className="text-gray-600">· {calSyncUser.calendarEventCount} events</span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* GIS not loaded warning */}
+                                    {!gisReady && (
+                                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3">
+                                            <p className="text-yellow-400 text-xs font-bold">⚠ Google Identity Services is loading… please wait a moment and try again.</p>
+                                        </div>
+                                    )}
+
+                                    {/* No client ID warning */}
+                                    {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+                                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3 space-y-1">
+                                            <p className="text-yellow-400 text-xs font-bold">⚠ VITE_GOOGLE_CLIENT_ID not set</p>
+                                            <p className="text-yellow-300/70 text-[10px]">Add your OAuth Client ID to .env to enable live sync. Visit <span className="font-mono">console.cloud.google.com</span> to create one.</p>
+                                        </div>
+                                    )}
+
+                                    {/* Error */}
+                                    {calSyncError && (
+                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+                                            <p className="text-red-400 text-xs font-bold">✕ {calSyncError}</p>
+                                        </div>
+                                    )}
+
+                                    {/* No email warning */}
+                                    {!calSyncUser.email && (
+                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+                                            <p className="text-red-400 text-xs font-bold">✕ No email registered for this user. Please add one before syncing.</p>
+                                        </div>
+                                    )}
+
+                                    <div className="flex gap-4 pt-1">
+                                        <Button
+                                            type="button"
+                                            onClick={() => setCalSyncUser(null)}
+                                            disabled={calSyncing}
+                                            className="flex-1 bg-gray-900 border-gray-800 text-gray-500 hover:text-white disabled:opacity-40"
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            id="connect-google-calendar-btn"
+                                            type="button"
+                                            onClick={handleCalendarSync}
+                                            disabled={calSyncing || !calSyncUser.email || !gisReady}
+                                            className="flex-[2] bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                                        >
+                                            {calSyncing ? (
+                                                <>
+                                                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    Syncing Calendar...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {/* Google "G" logo */}
+                                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                                    </svg>
+                                                    Connect Google Calendar
+                                                </>
                                             )}
                                         </Button>
                                     </div>
