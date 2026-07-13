@@ -5,7 +5,7 @@
  * fetching, and Firestore persistence of synced events under `calendar_events`.
  *
  * Uses the Google Identity Services (GIS) library loaded via CDN in index.html.
- * Requires: VITE_GOOGLE_CLIENT_ID in .env
+ * Client ID is stored in Firestore: settings/google_oauth → { client_id }
  */
 
 import { db } from '../lib/firebase';
@@ -13,6 +13,7 @@ import {
     collection,
     addDoc,
     getDocs,
+    getDoc,
     query,
     where,
     deleteDoc,
@@ -91,18 +92,33 @@ declare global {
 const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3';
 const FIRESTORE_COLLECTION = 'calendar_events';
+const SETTINGS_COLLECTION = 'settings';
+const OAUTH_SETTINGS_DOC = 'google_oauth';
 
-// Look ahead/back window for events (90 days)
+// Look ahead/back window for events
 const SYNC_DAYS_PAST = 30;
 const SYNC_DAYS_FUTURE = 90;
 
-// ─── Helper: get Client ID ────────────────────────────────────────────────────
+// ─── Firestore: Get Google Client ID ─────────────────────────────────────────
 
-const getClientId = (): string | null => {
-    const safeEnv = typeof import.meta !== 'undefined' && import.meta.env
-        ? import.meta.env
-        : {} as Record<string, string>;
-    return safeEnv.VITE_GOOGLE_CLIENT_ID || null;
+/**
+ * Fetches the Google OAuth Client ID from Firestore settings.
+ * Stored at: settings/google_oauth → { client_id: string }
+ * This allows any user's calendar to be synced without env variables.
+ */
+export const getGoogleClientIdFromFirestore = async (): Promise<string | null> => {
+    try {
+        const settingsRef = doc(db, SETTINGS_COLLECTION, OAUTH_SETTINGS_DOC);
+        const snap = await getDoc(settingsRef);
+        if (snap.exists()) {
+            const data = snap.data();
+            return data?.client_id || null;
+        }
+        return null;
+    } catch (error: any) {
+        console.warn('[GoogleCalendarService] Could not fetch client_id from Firestore:', error.message);
+        return null;
+    }
 };
 
 // ─── Core Functions ───────────────────────────────────────────────────────────
@@ -115,20 +131,21 @@ export const isGISLoaded = (): boolean =>
 
 /**
  * Requests a Google OAuth2 access token using the GIS Token model.
- * Shows a popup for the user to authenticate with their Google account.
+ * Client ID is read from Firestore settings/google_oauth.
+ * Shows a Google popup for the user to authenticate.
  *
  * @param emailHint - Pre-fill the account picker with this email address
- * @returns Promise with the access token or throws an error
+ * @returns Promise resolving to the access token
  */
 export const requestGoogleAccessToken = (emailHint?: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const clientId = getClientId();
+    return new Promise(async (resolve, reject) => {
+        // Fetch client ID from Firestore
+        const clientId = await getGoogleClientIdFromFirestore();
 
         if (!clientId) {
             reject(new Error(
-                'Google Client ID is not configured.\n' +
-                'Please add VITE_GOOGLE_CLIENT_ID to your .env file.\n' +
-                'Get one from: console.cloud.google.com → APIs & Services → Credentials'
+                'Google OAuth Client ID is not configured in Firestore.\n' +
+                'An admin must save it at: Firestore → settings/google_oauth → { client_id }'
             ));
             return;
         }
@@ -159,7 +176,7 @@ export const requestGoogleAccessToken = (emailHint?: string): Promise<string> =>
         });
 
         tokenClient.requestAccessToken({
-            prompt: emailHint ? '' : 'consent',
+            prompt: '',
             hint: emailHint,
         });
     });
@@ -167,9 +184,6 @@ export const requestGoogleAccessToken = (emailHint?: string): Promise<string> =>
 
 /**
  * Fetches calendar events from the Google Calendar API.
- *
- * @param accessToken - Valid OAuth2 access token
- * @returns Array of raw Google Calendar events
  */
 export const fetchGoogleCalendarEvents = async (
     accessToken: string
@@ -241,20 +255,15 @@ const normalizeEvent = (
 };
 
 /**
- * Saves synced calendar events to Firestore under `calendar_events` collection.
- * Clears the user's existing events before writing fresh ones.
- *
- * @param userId - Firestore user document ID
- * @param userEmail - Gmail address of the user
- * @param googleEvents - Raw events from Google Calendar API
- * @returns Array of saved RhiveCalendarEvent objects
+ * Saves synced calendar events to Firestore.
+ * Clears existing events for the user before writing fresh ones.
  */
 export const saveCalendarEventsToFirestore = async (
     userId: string,
     userEmail: string,
     googleEvents: GoogleCalendarEvent[]
 ): Promise<RhiveCalendarEvent[]> => {
-    // 1. Delete existing events for this user
+    // Delete existing events for this user
     const existingQuery = query(
         collection(db, FIRESTORE_COLLECTION),
         where('userId', '==', userId)
@@ -263,7 +272,7 @@ export const saveCalendarEventsToFirestore = async (
     const deletions = existingSnap.docs.map((d) => deleteDoc(doc(db, FIRESTORE_COLLECTION, d.id)));
     await Promise.all(deletions);
 
-    // 2. Write new events
+    // Write new events
     const savedEvents: RhiveCalendarEvent[] = [];
     for (const event of googleEvents) {
         const normalized = normalizeEvent(event, userId, userEmail);
@@ -276,10 +285,6 @@ export const saveCalendarEventsToFirestore = async (
 
 /**
  * Updates the user document with calendar sync metadata.
- *
- * @param userId - Firestore user document ID
- * @param userEmail - Gmail address used for syncing
- * @param eventsCount - Number of events synced
  */
 export const updateUserCalendarMeta = async (
     userId: string,
@@ -298,10 +303,7 @@ export const updateUserCalendarMeta = async (
 
 /**
  * Full sync pipeline: OAuth → Fetch → Save to Firestore → Update user meta.
- *
- * @param userId - RHIVE user document ID
- * @param userEmail - Gmail address to sync from
- * @returns CalendarSyncResult
+ * Client ID is fetched from Firestore settings/google_oauth.
  */
 export const syncUserGoogleCalendar = async (
     userId: string,
@@ -339,9 +341,6 @@ export const syncUserGoogleCalendar = async (
 
 /**
  * Fetches a user's synced calendar events from Firestore.
- *
- * @param userId - RHIVE user document ID
- * @returns Array of RhiveCalendarEvent objects
  */
 export const getUserCalendarEvents = async (userId: string): Promise<RhiveCalendarEvent[]> => {
     try {
