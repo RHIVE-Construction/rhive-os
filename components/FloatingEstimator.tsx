@@ -86,7 +86,7 @@ export const FloatingEstimator: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (!isApiReady || !inputRef.current || !window.google || !window.google.maps.places) return;
+        if (!isApiReady || !inputRef.current || !window.google?.maps?.places) return;
         if (autocompleteRef.current) return;
 
         const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
@@ -108,7 +108,7 @@ export const FloatingEstimator: React.FC = () => {
 
         return () => {
             if (autocompleteRef.current) {
-                window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+                window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current);
                 autocompleteRef.current = null;
             }
             // Remove pac-containers only if they persist
