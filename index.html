@@ -285,7 +285,7 @@
         var s = document.createElement('script');
         s.async = true;
         s.onerror = onGoogleMapsApiError;
-        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&v=weekly&libraries=places,geometry&callback=onGoogleMapsApiReady&loading=async';
+        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady';
         document.head.appendChild(s);
       }
 
