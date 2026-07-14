@@ -72,8 +72,10 @@ env:
       - BUILD
       - RUNTIME
 
+  # Maps JS API key is a public browser key (visible in bundle) — safe as plaintext.
+  # Secret Manager injection was silently failing at BUILD time, leaving %VITE_GOOGLE_MAPS_API_KEY% unreplaced.
   - variable: VITE_GOOGLE_MAPS_API_KEY
-    secret: google-maps-api-key
+    value: AIzaSyAKE58hL99Sl5AATLEt-B3h9NQGxf778cY
     availability:
       - BUILD
       - RUNTIME
