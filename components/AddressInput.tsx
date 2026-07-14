@@ -31,7 +31,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   }, [initialValue]);
 
   useEffect(() => {
-    if (!isApiReady || !inputRef.current || !window.google?.maps?.places) {
+    if (!isApiReady || !inputRef.current || !window.google || !window.google.maps.places) {
       return;
     }
 
@@ -61,7 +61,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
 
     return () => {
         if (autocompleteRef.current) {
-            window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current);
+            window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
             autocompleteRef.current = null; 
         }
         const pacContainers = document.querySelectorAll('.pac-container');
