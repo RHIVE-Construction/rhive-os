@@ -314,6 +314,30 @@ const LoginBridge: React.FC = () => {
         );
     }
 
+    // ── Authenticated users on Estimate Tool ──────────────────────────────────
+    // Render P-12 in the public layout when logged in to prevent the double
+    // CircuitryBackground conflict that causes a black screen in AppContentAuthenticated.
+    if (currentUser && activePageId === 'P-12') {
+        const EstimatePageComponent = pageComponentMap['P-12'];
+        return (
+            <div className={cn(
+                "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
+                isDark ? "bg-black text-white" : "bg-[#F8F9FA] text-black"
+            )}>
+                <CircuitryBackground
+                    backgroundColor={isDark ? "#000000" : "#F8F9FA"}
+                    dotColor={isDark ? "#ec028b" : "#ec028b"}
+                    lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
+                />
+                <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto">
+                    {EstimatePageComponent && <EstimatePageComponent />}
+                </main>
+                <FloatingBackButton />
+                {window.location.hostname === 'localhost' && <DevNavigator />}
+            </div>
+        );
+    }
+
     return <AppContentAuthenticated />;
 };
 
