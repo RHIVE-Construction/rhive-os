@@ -798,6 +798,10 @@ exports.getJustCallCommunications = functions.https.onRequest((req, res) => {
 
         } catch (error) {
             console.error("Error in getJustCallCommunications:", error.message);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SMS OTP — Forgot Password (ported from smsotp repo)
@@ -1289,6 +1293,7 @@ exports.syncJustCallContactsAndHistory = functions.https.onRequest((req, res) =>
 });
 
 
+/**
  * completePasswordReset
  * POST body: { resetToken, newPassword }
  * - Validates the JWT reset token (issued by verifySmsOtp)
@@ -1409,7 +1414,7 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
             try {
                 await admin.firestore().collection('user_log').add({
                     actionType: 'USER_PASSWORD_RESET',
-                    description: `Password reset via SMS OTP for phone: ${phone}`,
+                    description: 'Password reset via SMS OTP for phone: ' + phone,
                     userId: firebaseUid,
                     userName: email || phone || 'Unknown',
                     userRole: 'User',
@@ -1418,6 +1423,82 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
                 });
             } catch (logErr) {
                 console.warn('[completePasswordReset] Failed to write log:', logErr.message);
+            }
+
+            // 7. Send password-change notification email (non-blocking)
+            if (email) {
+                try {
+                    var now = new Date();
+                    var dateStr = now.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    var timeStr = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+                    var htmlParts = [
+                        '<!DOCTYPE html><html><head>',
+                        '<meta charset="utf-8" />',
+                        '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
+                        '<title>Password Changed - RHIVE Construction</title>',
+                        '</head>',
+                        '<body style="margin:0;padding:0;background:#050505;font-family:Rubik,Arial,sans-serif;color:#f3f4f6;">',
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;">',
+                        '<tr><td align="center">',
+                        '<table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;border-radius:4px;overflow:hidden;max-width:560px;">',
+                        '<tr><td style="background:#ec028b;padding:4px 0;"></td></tr>',
+                        '<tr><td style="padding:32px 36px 20px;">',
+                        '<h1 style="margin:0 0 4px;font-size:22px;font-weight:800;color:#ffffff;">RHIVE <span style="color:#ec028b;">Construction</span></h1>',
+                        '<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Security Notification</p>',
+                        '</td></tr>',
+                        '<tr><td style="padding:0 36px 32px;">',
+                        '<h2 style="margin:0 0 20px;font-size:18px;font-weight:700;color:#ffffff;">Your Password Has Been Changed</h2>',
+                        '<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#d1d5db;">Your RHIVE Construction account password was successfully changed.</p>',
+                        '<p style="margin:0 0 28px;font-size:14px;line-height:1.6;color:#9ca3af;">This change occurred on <strong style="color:#f3f4f6;">' + dateStr + '</strong> at <strong style="color:#f3f4f6;">' + timeStr + '</strong>.</p>',
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #ec028b;border-radius:0 4px 4px 0;margin-bottom:32px;">',
+                        '<tr><td style="padding:14px 16px;">',
+                        '<p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">&#128274; <strong style="color:#f3f4f6;">If you did not make this change</strong>, please contact us immediately at <a href="mailto:support@rhiveconstruction.com" style="color:#ec028b;text-decoration:none;">support@rhiveconstruction.com</a> or call our support line.</p>',
+                        '</td></tr>',
+                        '</table>',
+                        '<table cellpadding="0" cellspacing="0" style="margin-bottom:8px;">',
+                        '<tr><td style="background:#ec028b;border-radius:3px;">',
+                        '<a href="https://rhive-os.web.app" style="display:inline-block;padding:14px 28px;color:#ffffff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">Login to Your Account &#x2192;</a>',
+                        '</td></tr>',
+                        '</table>',
+                        '</td></tr>',
+                        '<tr><td style="padding:20px 36px;border-top:1px solid #1f2937;">',
+                        '<p style="margin:0;font-size:11px;color:#4b5563;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia<br/><a href="mailto:support@rhiveconstruction.com" style="color:#6b7280;text-decoration:none;">support@rhiveconstruction.com</a></p>',
+                        '</td></tr>',
+                        '<tr><td style="background:#ec028b;padding:2px 0;"></td></tr>',
+                        '</table>',
+                        '</td></tr>',
+                        '</table>',
+                        '</body></html>'
+                    ];
+                    var fullBrandedHtmlEmail = htmlParts.join('');
+                    var plainTextVersion = [
+                        'RHIVE Construction - Security Notification',
+                        '',
+                        'Your Password Has Been Changed',
+                        '',
+                        'Your RHIVE Construction account password was successfully changed.',
+                        'This change occurred on ' + dateStr + ' at ' + timeStr + '.',
+                        '',
+                        'If you did not make this change, please contact us immediately:',
+                        'Email: support@rhiveconstruction.com',
+                        '',
+                        'Login to your account: https://rhive-os.web.app',
+                        '',
+                        '- RHIVE Construction - Brisbane, QLD - Australia'
+                    ].join('\n');
+                    await admin.firestore().collection('mail').add({
+                        to: email,
+                        from: 'RHIVE Construction <support@rhiveconstruction.com>',
+                        message: {
+                            subject: 'Your Password Has Been Successfully Changed - RHIVE Construction',
+                            text: plainTextVersion,
+                            html: fullBrandedHtmlEmail
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (emailErr) {
+                    console.warn('[completePasswordReset] Failed to send password-change notification email:', emailErr.message);
+                }
             }
 
             return res.status(200).json({ success: true, message: 'Password updated successfully.' });
