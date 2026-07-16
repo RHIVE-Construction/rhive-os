@@ -7,6 +7,27 @@ service cloud.firestore {
     // Firebase Auth is not used for session management, so auth token is not available.
     // All access is controlled at the application layer.
 
+    // OTP codes — server-only (Admin SDK bypasses these rules)
+    match /otp_codes/{docId} {
+      allow read, write: if false;
+    }
+
+    // OTP rate limits — server-only
+    match /otp_rate_limits/{docId} {
+      allow read, write: if false;
+    }
+
+    // Mail queue — server-only (Trigger Email extension uses Admin SDK)
+    match /mail/{docId} {
+      allow read, write: if false;
+    }
+
+    // Password reset tokens — server-only
+    match /passwordResets/{docId} {
+      allow read, write: if false;
+    }
+
+    // Existing open catch-all (maintained for app-layer auth compatibility)
     match /{document=**} {
       allow read: if true;
       allow write: if true;

@@ -11,8 +11,15 @@ import {
     ExclamationTriangleIcon,
     CheckCircleIcon,
     ClockIcon,
+    EnvelopeIcon,
+    LockIcon,
+    CheckIcon,
 } from '../components/icons';
 import { cn } from '../lib/utils';
+
+// Suppress unused-import warnings for services kept for future use
+void passwordResetService;
+void authService;
 
 // ─── Floating label input ─────────────────────────────────────────────────────
 const FloatingInput: React.FC<{
@@ -93,8 +100,6 @@ const PasswordStrength: React.FC<{ password: string }> = ({ password }) => {
     );
 };
 
-
-
 // ─── Phone Icon (inline SVG) ────────────────────────────────────────────────
 const PhoneIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -110,7 +115,6 @@ const OtpInput: React.FC<{
     onChange: (v: string) => void;
     disabled?: boolean;
 }> = ({ value, onChange, disabled }) => {
-    // Must declare refs individually at top level — React hooks cannot be called inside Array.from()
     const ref0 = useRef<HTMLInputElement>(null);
     const ref1 = useRef<HTMLInputElement>(null);
     const ref2 = useRef<HTMLInputElement>(null);
@@ -214,15 +218,46 @@ const PasswordResetPage: React.FC = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false);
-    const [countdown, setCountdown] = useState(3);
+    const [countdown, setCountdown] = useState(5);
     const [devCode, setDevCode] = useState<string | undefined>(undefined);
     const [otpExpired, setOtpExpired] = useState(false);
-    const [otpTimerKey, setOtpTimerKey] = useState(0); // reset timer on resend
+    const [otpTimerKey, setOtpTimerKey] = useState(0);
 
+    // ── Helpers ────────────────────────────────────────────────────────────
     const showError = (msg: string) => {
         setErrorMessage(msg);
         setTimeout(() => setErrorMessage(''), 5000);
     };
+
+    const maskEmail = (email: string): string => {
+        if (!email) return 'your registered email';
+        const [user, domain] = email.split('@');
+        if (!domain) return email;
+        return `${user[0]}${'*'.repeat(Math.min(user.length - 1, 4))}@${domain}`;
+    };
+
+    const maskPhone = (p: string): string => {
+        const digits = p.replace(/\D/g, '');
+        if (digits.length < 4) return p;
+        return `(***) ***-${digits.slice(-4)}`;
+    };
+
+    // ── Auto-redirect countdown on success ────────────────────────────────
+    useEffect(() => {
+        if (step !== 'success') return;
+        setCountdown(5);
+        const interval = setInterval(() => {
+            setCountdown(c => {
+                if (c <= 1) {
+                    clearInterval(interval);
+                    setActivePageId('login');
+                    return 0;
+                }
+                return c - 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [step, setActivePageId]);
 
     // ── Step 1: Send OTP ───────────────────────────────────────────────────
     const handleSendOtp = async (e: React.FormEvent) => {
@@ -235,7 +270,7 @@ const PasswordResetPage: React.FC = () => {
         setLoading(false);
 
         if (res.success) {
-            setDevCode(res.devCode); // Only in dev/simulation mode
+            setDevCode(res.devCode);
             setOtpExpired(false);
             setOtpTimerKey(k => k + 1);
             setOtp('');
@@ -261,33 +296,79 @@ const PasswordResetPage: React.FC = () => {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // ── Step 2: Verify OTP ─────────────────────────────────────────────────
+    const handleVerifyOtp = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (password !== confirm) { setErrorMsg('Passwords do not match.'); return; }
-        if (password.length < 6) { setErrorMsg('Password must be at least 6 characters.'); return; }
-        setErrorMsg('');
+        if (otp.length !== 6) { showError('Please enter the 6-digit code.'); return; }
+        if (otpExpired) { showError('This code has expired. Please request a new one.'); return; }
         setLoading(true);
+        setErrorMessage('');
 
-        const result = isFirestoreReset
-            ? await passwordResetService.applyNewPassword(token, password)
-            : await authService.confirmPasswordReset(oobCode, password);
-
+        const res = await smsOtpService.verifyOtp(phone.trim(), otp);
         setLoading(false);
-        if (result.success) setStage('success');
-        else setErrorMsg(result.error || 'Failed to reset password.');
+
+        if (res.success && res.resetToken) {
+            setResetToken(res.resetToken);
+            setVerifiedEmail(res.email ?? null);
+            setNewPassword('');
+            setConfirmPassword('');
+            setStep('password');
+        } else {
+            showError(res.error || 'Invalid or expired code. Please try again.');
+        }
     };
 
-    const goToLogin = () => { window.location.href = window.location.origin; };
+    // ── Step 3: Set new password ───────────────────────────────────────────
+    const handleSetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newPassword !== confirmPassword) { showError('Passwords do not match.'); return; }
+        if (newPassword.length < 8) { showError('Password must be at least 8 characters.'); return; }
+        setLoading(true);
+        setErrorMessage('');
 
-    // Chamfer value for main card
+        try {
+            const FUNCTIONS_BASE_URL = `https://us-central1-rhive-os.cloudfunctions.net`;
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/completePasswordReset`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resetToken, newPassword })
+            });
+            const data = await res.json() as { error?: string };
+            setLoading(false);
+            if (res.ok) {
+                setStep('success');
+            } else {
+                showError(data.error || 'Failed to reset password. Please try again.');
+            }
+        } catch {
+            setLoading(false);
+            showError('Network error. Could not reach the password service.');
+        }
+    };
+
+    const goToLogin = () => setActivePageId('login');
+
+    // ── Step progress metadata ─────────────────────────────────────────────
+    const stepOrder: Step[] = ['phone', 'otp', 'password', 'success'];
+    const stepIndex = stepOrder.indexOf(step);
+    const stepLabels = ['Phone', 'Code', 'Password', 'Done'];
+
+    // ── Card chamfer geometry ─────────────────────────────────────────────
     const C = 32;
     const cardClip = `polygon(${C}px 0, calc(100% - ${C}px) 0, 100% ${C}px, 100% calc(100% - ${C}px), calc(100% - ${C}px) 100%, ${C}px 100%, 0 calc(100% - ${C}px), 0 ${C}px)`;
+    const btnClip: React.CSSProperties = { clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' };
+    const badgeClip: React.CSSProperties = { clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' };
+    const iconClip: React.CSSProperties = { clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' };
 
     return (
         <div className="w-full min-h-screen flex flex-col items-center justify-center py-12 px-4 font-sans">
 
             {/* Logo */}
-            <RhiveLogo className="h-16 w-auto mb-10 opacity-90 hover:opacity-100 transition-opacity" />
+            <img
+                src="https://i.imgur.com/t0VcSgJ.png"
+                alt="RHIVE"
+                className="h-16 w-auto mb-10 opacity-90 hover:opacity-100 transition-opacity"
+            />
 
             {/* Card */}
             <div className="w-full max-w-lg relative">
@@ -320,144 +401,309 @@ const PasswordResetPage: React.FC = () => {
 
                     <div className="p-8 md:p-10">
 
-                        {/* ── VERIFYING ── */}
-                        {stage === 'verifying' && (
-                            <div className="flex flex-col items-center gap-6 py-12 animate-fade-in">
-                                <div className="relative w-20 h-20">
-                                    <div className="absolute inset-0 rounded-full border-2 border-rhive-pink/20" />
-                                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-rhive-pink animate-spin" />
-                                    <div className="absolute inset-4 flex items-center justify-center">
-                                        <ShieldCheckIcon className="w-8 h-8 text-rhive-pink opacity-60" />
-                                    </div>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-white font-black uppercase tracking-[0.25em] text-sm mb-1">Verifying Link</p>
-                                    <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest">Authenticating security token…</p>
-                                </div>
-                            </div>
-                        )}
+                        {/* ── Step Progress Indicator ── */}
+                        <div className="flex items-center justify-center mb-8 select-none">
+                            {stepLabels.map((label, i) => {
+                                const isCompleted = i < stepIndex;
+                                const isActive = i === stepIndex;
+                                return (
+                                    <React.Fragment key={label}>
+                                        <div className="flex flex-col items-center gap-1.5">
+                                            <div
+                                                className={cn(
+                                                    'w-8 h-8 flex items-center justify-center text-xs font-black transition-all duration-300',
+                                                    isCompleted
+                                                        ? 'bg-rhive-pink text-white shadow-[0_0_12px_rgba(236,2,139,0.5)]'
+                                                        : isActive
+                                                            ? 'bg-rhive-pink text-white shadow-[0_0_20px_rgba(236,2,139,0.6)] ring-2 ring-rhive-pink/30'
+                                                            : 'bg-gray-900 text-gray-600 border border-gray-700'
+                                                )}
+                                                style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                                            >
+                                                {isCompleted
+                                                    ? <CheckIcon className="w-3.5 h-3.5" />
+                                                    : <span>{i + 1}</span>}
+                                            </div>
+                                            <span className={cn(
+                                                'text-[9px] font-bold uppercase tracking-widest transition-colors',
+                                                isActive ? 'text-rhive-pink' : isCompleted ? 'text-gray-500' : 'text-gray-700'
+                                            )}>{label}</span>
+                                        </div>
+                                        {i < stepLabels.length - 1 && (
+                                            <div className={cn(
+                                                'h-[1px] flex-1 mx-2 mb-5 transition-colors duration-500',
+                                                i < stepIndex ? 'bg-rhive-pink/60' : 'bg-gray-800'
+                                            )} />
+                                        )}
+                                    </React.Fragment>
+                                );
+                            })}
+                        </div>
 
-                        {/* ── EXPIRED / INVALID ── */}
-                        {stage === 'expired' && (
-                            <div className="animate-fade-in">
-                                {/* Header */}
-                                <div className="text-center mb-8">
+                        {/* ── STEP 1: PHONE ── */}
+                        {step === 'phone' && (
+                            <form onSubmit={handleSendOtp} className="animate-fade-in space-y-6">
+                                <div className="text-center mb-6">
                                     <div
-                                        className="w-16 h-16 mx-auto mb-5 flex items-center justify-center bg-red-500/10 border border-red-500/30"
-                                        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+                                        className="w-14 h-14 mx-auto mb-4 flex items-center justify-center bg-rhive-pink/10 border border-rhive-pink/30 shadow-[0_0_20px_rgba(236,2,139,0.15)]"
+                                        style={iconClip}
                                     >
-                                        <XIcon className="w-7 h-7 text-red-400" />
+                                        <PhoneIcon className="w-6 h-6 text-rhive-pink" />
                                     </div>
-                                    <h1 className="text-2xl font-black text-white uppercase tracking-[0.2em] mb-1">Link Expired</h1>
-                                    <p className="text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">Secure Reset Protocol</p>
+                                    <h1 className="text-2xl font-black text-white uppercase tracking-[0.2em] mb-1">Reset Password</h1>
+                                    <p className="text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">Secure SMS Verification</p>
                                 </div>
-                                <p className="text-gray-400 text-xs leading-relaxed text-center mb-8 px-2">
-                                    {errorMsg || 'This password reset link is invalid or has expired. Reset links are valid for 1 hour and can only be used once.'}
+
+                                <p className="text-gray-500 text-xs text-center leading-relaxed px-2">
+                                    Enter your registered mobile number. We'll send a one-time verification code to confirm your identity.
                                 </p>
+
+                                <FloatingInput
+                                    id="phone-input"
+                                    type="tel"
+                                    label="Mobile Number"
+                                    value={phone}
+                                    onChange={setPhone}
+                                    icon={<PhoneIcon className="w-4 h-4" />}
+                                    autoFocus
+                                />
+
+                                {errorMessage && (
+                                    <div className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/30">
+                                        <ExclamationTriangleIcon className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                                        <p className="text-red-400 text-[10px] font-bold uppercase tracking-wider">{errorMessage}</p>
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    id="send-code-btn"
+                                    disabled={!phone.trim() || loading}
+                                    className="w-full h-12 bg-rhive-pink hover:bg-[#ff039a] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-[10px] uppercase tracking-[0.25em] transition-all shadow-[0_0_25px_rgba(236,2,139,0.3)] hover:shadow-[0_0_40px_rgba(236,2,139,0.5)] flex items-center justify-center gap-2"
+                                    style={btnClip}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Sending…
+                                        </>
+                                    ) : (
+                                        <>Send Code <ArrowRightIcon className="w-4 h-4" /></>
+                                    )}
+                                </button>
+
                                 <button
                                     type="button"
+                                    id="back-to-login-phone"
                                     onClick={goToLogin}
-                                    className="w-full h-12 bg-rhive-pink hover:bg-[#ff039a] text-white font-black text-[10px] uppercase tracking-[0.25em] transition-all shadow-[0_0_25px_rgba(236,2,139,0.3)] hover:shadow-[0_0_35px_rgba(236,2,139,0.5)] flex items-center justify-center gap-2"
-                                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                                    className="w-full text-center text-[10px] text-gray-600 hover:text-gray-400 font-bold uppercase tracking-widest transition-colors py-1"
                                 >
                                     Back to Login
-                                    <ArrowRightIcon className="w-4 h-4" />
                                 </button>
-                            </div>
-                        )}
-
-                        {/* ── READY — set new password ── */}
-                        {stage === 'ready' && (
-                            <form onSubmit={handleSubmit} className="animate-fade-in">
-                                {/* Header */}
-                                <div className="text-center mb-8">
-                                    <h1 className="text-2xl font-black text-white uppercase tracking-[0.2em] mb-1">Set New Password</h1>
-                                    <p className="text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">Secure access restoration</p>
-                                </div>
-
-                                {/* Account badge */}
-                                <div
-                                    className="flex items-center gap-3 px-4 py-3 mb-6 bg-rhive-pink/5 border border-rhive-pink/20"
-                                    style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}
-                                >
-                                    <EnvelopeIcon className="w-4 h-4 text-rhive-pink flex-shrink-0" />
-                                    <div className="min-w-0">
-                                        <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-0.5">Resetting access for</p>
-                                        <p className="text-white text-xs font-bold font-mono truncate">{verifiedEmail}</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {/* New password */}
-                                    <FloatingInput
-                                        id="new-password"
-                                        type={showPwd ? 'text' : 'password'}
-                                        label="New Password"
-                                        value={password}
-                                        onChange={setPassword}
-                                        icon={<LockIcon className="w-4 h-4" />}
-                                        autoFocus
-                                        rightEl={
-                                            <button type="button" onClick={() => setShowPwd(p => !p)} className="text-gray-600 hover:text-rhive-pink transition-colors p-1">
-                                                {showPwd ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-                                            </button>
-                                        }
-                                    />
-
-                                    {/* Strength meter */}
-                                    <PasswordStrength password={password} />
-
-                                    {/* Confirm password */}
-                                    <FloatingInput
-                                        id="confirm-password"
-                                        type={showConfirm ? 'text' : 'password'}
-                                        label="Confirm Password"
-                                        value={confirm}
-                                        onChange={setConfirm}
-                                        icon={<KeyIcon className="w-4 h-4" />}
-                                        rightEl={
-                                            <button type="button" onClick={() => setShowConfirm(p => !p)} className="text-gray-600 hover:text-rhive-pink transition-colors p-1">
-                                                {showConfirm ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-                                            </button>
-                                        }
-                                    />
-
-                                    {/* Match indicator */}
-                                    {confirm.length > 0 && (
-                                        <p className={cn('text-[10px] font-bold uppercase tracking-widest px-1 flex items-center gap-1.5', password === confirm ? 'text-green-400' : 'text-red-400')}>
-                                            {password === confirm
-                                                ? <><CheckIcon className="w-3 h-3" /> Passwords match</>
-                                                : <><XIcon className="w-3 h-3" /> Passwords do not match</>}
-                                        </p>
-                                    )}
-
-                                    {/* Error */}
-                                    {errorMsg && (
-                                        <p className="text-rhive-pink text-[10px] font-bold uppercase tracking-widest text-center px-1 animate-pulse">{errorMsg}</p>
-                                    )}
-
-                                    {/* Submit */}
-                                    <button
-                                        type="submit"
-                                        disabled={!password || !confirm || password !== confirm || loading}
-                                        className="w-full h-12 mt-2 bg-rhive-pink hover:bg-[#ff039a] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-[10px] uppercase tracking-[0.25em] transition-all shadow-[0_0_25px_rgba(236,2,139,0.3)] hover:shadow-[0_0_40px_rgba(236,2,139,0.5)] flex items-center justify-center gap-2"
-                                        style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
-                                    >
-                                        {loading ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                Updating…
-                                            </>
-                                        ) : (
-                                            <>Set New Password <ArrowRightIcon className="w-4 h-4" /></>
-                                        )}
-                                    </button>
-                                </div>
                             </form>
                         )}
 
-                        {/* ── SUCCESS ── */}
-                        {stage === 'success' && (
+                        {/* ── STEP 2: OTP ── */}
+                        {step === 'otp' && (
+                            <form onSubmit={handleVerifyOtp} className="animate-fade-in space-y-6">
+                                <div className="text-center mb-6">
+                                    <div
+                                        className="w-14 h-14 mx-auto mb-4 flex items-center justify-center bg-rhive-pink/10 border border-rhive-pink/30 shadow-[0_0_20px_rgba(236,2,139,0.15)]"
+                                        style={iconClip}
+                                    >
+                                        <ShieldCheckIcon className="w-6 h-6 text-rhive-pink" />
+                                    </div>
+                                    <h1 className="text-2xl font-black text-white uppercase tracking-[0.2em] mb-1">Enter Code</h1>
+                                    <p className="text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">SMS Verification</p>
+                                </div>
+
+                                <p className="text-gray-500 text-xs text-center leading-relaxed">
+                                    A 6-digit code was sent to{' '}
+                                    <span className="text-white font-mono font-bold">{maskPhone(phone)}</span>
+                                </p>
+
+                                {/* Dev mode hint */}
+                                {devCode && (
+                                    <div className="flex items-center gap-2 px-3 py-2 bg-rhive-gold/10 border border-rhive-gold/30" style={badgeClip}>
+                                        <ExclamationTriangleIcon className="w-3 h-3 text-rhive-gold flex-shrink-0" />
+                                        <p className="text-rhive-gold text-[9px] font-bold uppercase tracking-wider">
+                                            Dev mode — Code: <span className="font-mono text-white">{devCode}</span>
+                                        </p>
+                                    </div>
+                                )}
+
+                                <OtpInput value={otp} onChange={setOtp} disabled={otpExpired || loading} />
+
+                                {/* Timer + Resend row */}
+                                <div className="flex items-center justify-between px-1">
+                                    <div className="flex items-center gap-1.5 text-gray-600">
+                                        <ClockIcon className="w-3 h-3" />
+                                        <span className="text-[9px] font-bold uppercase tracking-widest">Expires in</span>
+                                        <CountdownTimer
+                                            key={otpTimerKey}
+                                            seconds={300}
+                                            onExpired={() => setOtpExpired(true)}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        id="resend-code-btn"
+                                        onClick={handleResendOtp}
+                                        disabled={loading}
+                                        className="text-[10px] font-bold uppercase tracking-widest text-rhive-pink hover:text-white disabled:opacity-40 transition-colors"
+                                    >
+                                        {loading ? 'Sending…' : 'Resend Code'}
+                                    </button>
+                                </div>
+
+                                {errorMessage && (
+                                    <div className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/30">
+                                        <ExclamationTriangleIcon className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                                        <p className="text-red-400 text-[10px] font-bold uppercase tracking-wider">{errorMessage}</p>
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    id="verify-code-btn"
+                                    disabled={otp.length !== 6 || otpExpired || loading}
+                                    className="w-full h-12 bg-rhive-pink hover:bg-[#ff039a] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-[10px] uppercase tracking-[0.25em] transition-all shadow-[0_0_25px_rgba(236,2,139,0.3)] hover:shadow-[0_0_40px_rgba(236,2,139,0.5)] flex items-center justify-center gap-2"
+                                    style={btnClip}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Verifying…
+                                        </>
+                                    ) : (
+                                        <>Verify Code <ArrowRightIcon className="w-4 h-4" /></>
+                                    )}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    id="back-to-phone-btn"
+                                    onClick={() => { setStep('phone'); setOtp(''); setErrorMessage(''); }}
+                                    className="w-full flex items-center justify-center gap-1.5 text-[10px] text-gray-600 hover:text-gray-400 font-bold uppercase tracking-widest transition-colors py-1"
+                                >
+                                    <ArrowLeftIcon className="w-3 h-3" /> Back
+                                </button>
+                            </form>
+                        )}
+
+                        {/* ── STEP 3: PASSWORD ── */}
+                        {step === 'password' && (
+                            <form onSubmit={handleSetPassword} className="animate-fade-in space-y-4">
+                                <div className="text-center mb-6">
+                                    <div
+                                        className="w-14 h-14 mx-auto mb-4 flex items-center justify-center bg-rhive-pink/10 border border-rhive-pink/30 shadow-[0_0_20px_rgba(236,2,139,0.15)]"
+                                        style={iconClip}
+                                    >
+                                        <KeyIcon className="w-6 h-6 text-rhive-pink" />
+                                    </div>
+                                    <h1 className="text-2xl font-black text-white uppercase tracking-[0.2em] mb-1">Set New Password</h1>
+                                    <p className="text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">Secure Access Restoration</p>
+                                </div>
+
+                                {/* Account email badge */}
+                                {verifiedEmail && (
+                                    <div
+                                        className="flex items-center gap-3 px-4 py-3 bg-rhive-pink/5 border border-rhive-pink/20"
+                                        style={badgeClip}
+                                    >
+                                        <EnvelopeIcon className="w-4 h-4 text-rhive-pink flex-shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-0.5">Resetting access for</p>
+                                            <p className="text-white text-xs font-bold font-mono truncate">{maskEmail(verifiedEmail)}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* New password */}
+                                <FloatingInput
+                                    id="new-password"
+                                    type={showNewPassword ? 'text' : 'password'}
+                                    label="New Password"
+                                    value={newPassword}
+                                    onChange={setNewPassword}
+                                    icon={<LockIcon className="w-4 h-4" />}
+                                    autoFocus
+                                    rightEl={
+                                        <button
+                                            type="button"
+                                            id="toggle-new-password"
+                                            aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                                            onClick={() => setShowNewPassword(p => !p)}
+                                            className="text-gray-600 hover:text-rhive-pink transition-colors p-1"
+                                        >
+                                            {showNewPassword ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                                        </button>
+                                    }
+                                />
+
+                                <PasswordStrength password={newPassword} />
+
+                                {/* Confirm password */}
+                                <FloatingInput
+                                    id="confirm-password"
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    label="Confirm Password"
+                                    value={confirmPassword}
+                                    onChange={setConfirmPassword}
+                                    icon={<KeyIcon className="w-4 h-4" />}
+                                    rightEl={
+                                        <button
+                                            type="button"
+                                            id="toggle-confirm-password"
+                                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                                            onClick={() => setShowConfirmPassword(p => !p)}
+                                            className="text-gray-600 hover:text-rhive-pink transition-colors p-1"
+                                        >
+                                            {showConfirmPassword ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                                        </button>
+                                    }
+                                />
+
+                                {/* Match indicator */}
+                                {confirmPassword.length > 0 && (
+                                    <p className={cn(
+                                        'text-[10px] font-bold uppercase tracking-widest px-1 flex items-center gap-1.5',
+                                        newPassword === confirmPassword ? 'text-green-400' : 'text-red-400'
+                                    )}>
+                                        {newPassword === confirmPassword
+                                            ? <><CheckCircleIcon className="w-3 h-3" /> Passwords match</>
+                                            : <><ExclamationTriangleIcon className="w-3 h-3" /> Passwords do not match</>}
+                                    </p>
+                                )}
+
+                                {errorMessage && (
+                                    <div className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/30">
+                                        <ExclamationTriangleIcon className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                                        <p className="text-red-400 text-[10px] font-bold uppercase tracking-wider">{errorMessage}</p>
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    id="set-password-btn"
+                                    disabled={!newPassword || !confirmPassword || newPassword !== confirmPassword || loading}
+                                    className="w-full h-12 mt-2 bg-rhive-pink hover:bg-[#ff039a] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-[10px] uppercase tracking-[0.25em] transition-all shadow-[0_0_25px_rgba(236,2,139,0.3)] hover:shadow-[0_0_40px_rgba(236,2,139,0.5)] flex items-center justify-center gap-2"
+                                    style={btnClip}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Updating…
+                                        </>
+                                    ) : (
+                                        <>Set New Password <ArrowRightIcon className="w-4 h-4" /></>
+                                    )}
+                                </button>
+                            </form>
+                        )}
+
+                        {/* ── STEP 4: SUCCESS ── */}
+                        {step === 'success' && (
                             <div className="animate-fade-in">
                                 {/* Header */}
                                 <div className="text-center mb-8">
@@ -465,30 +711,56 @@ const PasswordResetPage: React.FC = () => {
                                         className="w-16 h-16 mx-auto mb-5 flex items-center justify-center bg-green-500/10 border border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.15)]"
                                         style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                                     >
-                                        <CheckIcon className="w-7 h-7 text-green-400" />
+                                        <CheckCircleIcon className="w-7 h-7 text-green-400" />
                                     </div>
                                     <h1 className="text-2xl font-black text-white uppercase tracking-[0.2em] mb-1">Password Updated</h1>
                                     <p className="text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">QOS Access Restored</p>
                                 </div>
 
-                                <p className="text-gray-400 text-xs leading-relaxed text-center mb-4">
+                                <p className="text-gray-400 text-xs leading-relaxed text-center mb-5">
                                     Your password has been successfully changed. You can now log in with your new credentials.
                                 </p>
 
+                                {/* Email confirmation badge */}
+                                <div
+                                    className="flex items-start gap-3 px-4 py-3 mb-4 bg-gray-900/60 border border-gray-700"
+                                    style={badgeClip}
+                                >
+                                    <EnvelopeIcon className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">Confirmation Email Sent</p>
+                                        <p className="text-gray-400 text-xs leading-relaxed">
+                                            A confirmation email has been sent to your registered email address. Please check your inbox.
+                                        </p>
+                                        {verifiedEmail && (
+                                            <p className="text-gray-600 text-[10px] font-mono mt-1">
+                                                {maskEmail(verifiedEmail)}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
                                 {/* Security note */}
                                 <div
-                                    className="flex items-center gap-3 px-4 py-3 mb-6 bg-black/40 border border-gray-800"
+                                    className="flex items-center gap-3 px-4 py-3 mb-5 bg-black/40 border border-gray-800"
                                     style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
                                 >
                                     <ShieldCheckIcon className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">This reset link is now permanently invalidated</p>
+                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">This reset session has been permanently invalidated</p>
                                 </div>
+
+                                {/* Auto-redirect notice */}
+                                <p className="text-center text-[10px] text-gray-700 font-bold uppercase tracking-widest mb-4">
+                                    Redirecting to login in{' '}
+                                    <span className="text-rhive-pink font-mono">{countdown}s</span>
+                                </p>
 
                                 <button
                                     type="button"
+                                    id="back-to-login-success"
                                     onClick={goToLogin}
                                     className="w-full h-12 bg-rhive-pink hover:bg-[#ff039a] text-white font-black text-[10px] uppercase tracking-[0.25em] transition-all shadow-[0_0_25px_rgba(236,2,139,0.3)] hover:shadow-[0_0_40px_rgba(236,2,139,0.5)] flex items-center justify-center gap-2"
-                                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                                    style={btnClip}
                                 >
                                     Back to Login
                                     <ArrowRightIcon className="w-4 h-4" />
