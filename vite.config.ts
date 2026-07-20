@@ -46,6 +46,8 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      // Enable HTML5 history API fallback so clean paths like /map serve index.html
+      historyApiFallback: true,
     },
     plugins: [
       react(),

@@ -72,6 +72,7 @@ import PreConversionRecordPage from './pages/PreConversionRecordPage'; // (Simul
 import UniversalLandingPage from './pages/UniversalLandingPage'; // P-Landing
 import MaintenancePage from './pages/MaintenancePage'; // P-14
 import FirestoreDebugPage from './pages/FirestoreDebugPage'; // DEBUG
+import InternalBpmPage from './pages/InternalBpmPage'; // INTERNAL-BPM (/map)
 
 // Specific stage pages
 import LeadPage from './pages/LeadPage'; // E-26
@@ -204,5 +205,8 @@ export const pageComponentMap: Record<string, React.FC> = {
 
   // Simulation
   'SA-01': RoleManagementPage,
+
+  // Internal (Hidden) — not in navigation, accessible via /map path only
+  'INTERNAL-BPM': InternalBpmPage,
 
 };
