@@ -62,6 +62,11 @@ export const ACTIVITY_ICONS: Record<string, string> = {
     user_created:          '🧑‍💼',
     user_role_changed:     '🛡️',
     page_visited:          '👁️',
+    // Calendar actions
+    calendar_event_created: '📅',
+    calendar_event_updated: '✏️',
+    calendar_event_deleted: '🗑️',
+    calendar_synced:        '🔄',
 };
 
 export const getActivityIcon = (actionType: string) =>
@@ -79,6 +84,8 @@ const PROJECT_ACTION_TYPES = new Set([
     'meeting_scheduled', 'meeting_updated',
     'payment_recorded', 'document_uploaded',
     'MEETING_SCHEDULED', 'APPOINTMENT_BOOKED',
+    // Calendar actions
+    'calendar_event_created', 'calendar_event_updated', 'calendar_event_deleted', 'calendar_synced',
 ]);
 
 const isProjectAction = (actionType: string) =>
