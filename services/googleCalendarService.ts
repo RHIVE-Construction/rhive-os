@@ -56,6 +56,8 @@ export interface RhiveCalendarEvent {
     syncedAt: string;
     created_at: string;
     updated_at: string;
+    source: 'google' | 'rhive';   // origin of this event
+    color?: string;                // hex color for display
 }
 
 export interface CalendarSyncResult {
@@ -66,9 +68,22 @@ export interface CalendarSyncResult {
     accessToken?: string;
 }
 
+/** Payload for creating a new calendar event */
+export interface CreateEventPayload {
+    title: string;
+    description?: string;
+    location?: string;
+    startDateTime: string;   // ISO 8601
+    endDateTime: string;     // ISO 8601
+    isAllDay?: boolean;
+    color?: string;
+    pushToGoogle?: boolean;  // if true, also creates in Google Calendar
+}
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+// Full calendar access — needed for both read (sync) and write (add events)
+const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar';
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3';
 const FIRESTORE_COLLECTION = 'calendar_events';
 
@@ -195,6 +210,8 @@ const normalizeEvent = (
         syncedAt,
         created_at: syncedAt,
         updated_at: syncedAt,
+        source: 'google' as const,
+        color: undefined,
     };
 };
 
@@ -331,5 +348,137 @@ export const getUserCalendarEvents = async (userId: string): Promise<RhiveCalend
     } catch (error: any) {
         console.error('[GoogleCalendarService] Failed to fetch events:', error);
         return [];
+    }
+};
+
+/**
+ * Creates a new event in Google Calendar (requires full calendar scope access token)
+ * and saves it to Firestore.
+ */
+export const createGoogleCalendarEvent = async (
+    accessToken: string,
+    userId: string,
+    userEmail: string,
+    payload: CreateEventPayload
+): Promise<RhiveCalendarEvent | null> => {
+    try {
+        const body: any = {
+            summary: payload.title,
+            description: payload.description || '',
+            location: payload.location || '',
+        };
+
+        if (payload.isAllDay) {
+            const dateStr = payload.startDateTime.split('T')[0];
+            const endDateStr = payload.endDateTime.split('T')[0];
+            body.start = { date: dateStr };
+            body.end = { date: endDateStr };
+        } else {
+            body.start = { dateTime: payload.startDateTime, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+            body.end = { dateTime: payload.endDateTime, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+        }
+
+        const res = await fetch(`${CALENDAR_API_BASE}/calendars/primary/events`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            console.error('[GoogleCalendarService] Create event failed:', err);
+            return null;
+        }
+
+        const googleEvent: GoogleCalendarEvent = await res.json();
+
+        // Persist to Firestore
+        const now = new Date().toISOString();
+        const normalized: Omit<RhiveCalendarEvent, 'id'> = {
+            userId,
+            userEmail,
+            googleEventId: googleEvent.id,
+            title: googleEvent.summary || payload.title,
+            description: payload.description || '',
+            location: payload.location || '',
+            startDateTime: payload.startDateTime,
+            endDateTime: payload.endDateTime,
+            isAllDay: payload.isAllDay || false,
+            status: 'confirmed',
+            googleLink: googleEvent.htmlLink || '',
+            organizer: userEmail,
+            syncedAt: now,
+            created_at: now,
+            updated_at: now,
+            source: 'google',
+            color: payload.color,
+        };
+
+        const docRef = await addDoc(collection(db, FIRESTORE_COLLECTION), normalized);
+        return { id: docRef.id, ...normalized };
+    } catch (error: any) {
+        console.error('[GoogleCalendarService] createGoogleCalendarEvent error:', error);
+        return null;
+    }
+};
+
+/**
+ * Creates a RHIVE-native event (stored only in Firestore, not pushed to Google Calendar).
+ */
+export const createRhiveEvent = async (
+    userId: string,
+    userEmail: string,
+    payload: CreateEventPayload
+): Promise<RhiveCalendarEvent | null> => {
+    try {
+        const now = new Date().toISOString();
+        const normalized: Omit<RhiveCalendarEvent, 'id'> = {
+            userId,
+            userEmail,
+            googleEventId: '',
+            title: payload.title,
+            description: payload.description || '',
+            location: payload.location || '',
+            startDateTime: payload.startDateTime,
+            endDateTime: payload.endDateTime,
+            isAllDay: payload.isAllDay || false,
+            status: 'confirmed',
+            googleLink: '',
+            organizer: userEmail,
+            syncedAt: now,
+            created_at: now,
+            updated_at: now,
+            source: 'rhive',
+            color: payload.color || '#ec028b',
+        };
+
+        const docRef = await addDoc(collection(db, FIRESTORE_COLLECTION), normalized);
+        return { id: docRef.id, ...normalized };
+    } catch (error: any) {
+        console.error('[GoogleCalendarService] createRhiveEvent error:', error);
+        return null;
+    }
+};
+
+/**
+ * Deletes a calendar event from Firestore (and optionally from Google Calendar).
+ */
+export const deleteCalendarEvent = async (
+    eventId: string,
+    googleEventId?: string,
+    accessToken?: string
+): Promise<void> => {
+    // Delete from Firestore
+    await deleteDoc(doc(db, FIRESTORE_COLLECTION, eventId));
+
+    // Optionally delete from Google Calendar
+    if (googleEventId && accessToken) {
+        await fetch(`${CALENDAR_API_BASE}/calendars/primary/events/${googleEventId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }).catch(console.warn);
     }
 };
