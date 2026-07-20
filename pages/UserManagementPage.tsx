@@ -327,6 +327,18 @@ const UserManagementPage: React.FC = () => {
                             {/* Actions Overlay */}
                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
+                                    onClick={() => openCalendarSync(user)}
+                                    className={cn(
+                                        "p-2 rounded-lg transition-all",
+                                        user.googleCalendarLinked
+                                            ? "bg-green-900/20 text-green-400/80 hover:text-green-400 hover:bg-green-900/40"
+                                            : "bg-blue-900/20 text-blue-400/60 hover:text-blue-400 hover:bg-blue-900/30"
+                                    )}
+                                    title={user.googleCalendarLinked ? 'Re-sync Google Calendar' : 'Connect Google Calendar'}
+                                >
+                                    <CalendarIcon className="w-4 h-4" />
+                                </button>
+                                <button
                                     onClick={() => handleOpenEdit(user)}
                                     className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-all"
                                     title="Edit user"
@@ -378,7 +390,13 @@ const UserManagementPage: React.FC = () => {
 
                             <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between">
                                 <span className="text-[9px] text-gray-600 font-mono italic">ID: {user.id.slice(-8)}</span>
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-2">
+                                    {user.googleCalendarLinked && (
+                                        <span className="flex items-center gap-1 text-[9px] font-bold text-green-400 uppercase tracking-tighter">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_#4ade80]" />
+                                            Cal Linked
+                                        </span>
+                                    )}
                                     <div className={cn(
                                         "w-1.5 h-1.5 rounded-full",
                                         INTERNAL_ROLES.includes(user.role as UserType)
@@ -533,8 +551,8 @@ const UserManagementPage: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* ── Google Calendar Sync (edit mode, own account only) ── */}
-                            {editingUser && currentUser && editingUser.id === currentUser.id && (
+                            {/* ── Google Calendar Sync (edit mode, available for all users) ── */}
+                            {editingUser && (
                                 <div className="pt-2 border-t border-gray-800/60">
                                     <p className="text-[9px] font-black uppercase tracking-widest text-gray-600 mb-2">Account Integrations</p>
                                     <button
@@ -580,7 +598,7 @@ const UserManagementPage: React.FC = () => {
                                     disabled={submitting}
                                     className="flex-1 bg-gray-900 border-gray-800 text-gray-500 hover:text-white disabled:opacity-40"
                                 >
-                                    Abort
+                                    Cancel
                                 </Button>
                                 <Button
                                     type="submit"
