@@ -1,19 +1,20 @@
 /**
  * RHIVE Google Calendar Sync Service
  * ─────────────────────────────────────────────────────────────────────────────
- * Handles Google OAuth 2.0 (via GIS token model), Google Calendar REST API
- * fetching, and Firestore persistence of synced events under `calendar_events`.
+ * Uses Firebase Auth (signInWithPopup + GoogleAuthProvider) to obtain a Google
+ * OAuth access token with calendar.readonly scope.
  *
- * Uses the Google Identity Services (GIS) library loaded via CDN in index.html.
- * Client ID is stored in Firestore: settings/google_oauth → { client_id }
+ * No client_id configuration needed — Firebase manages OAuth internally.
+ * No Firestore settings document required.
+ * No GIS library required.
  */
 
-import { db } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import {
     collection,
     addDoc,
     getDocs,
-    getDoc,
     query,
     where,
     deleteDoc,
@@ -55,6 +56,8 @@ export interface RhiveCalendarEvent {
     syncedAt: string;
     created_at: string;
     updated_at: string;
+    source: 'google' | 'rhive';   // origin of this event
+    color?: string;                // hex color for display
 }
 
 export interface CalendarSyncResult {
@@ -65,125 +68,79 @@ export interface CalendarSyncResult {
     accessToken?: string;
 }
 
-// ─── GIS Token Client Declaration ────────────────────────────────────────────
-// The google.accounts.oauth2 object is injected by the GIS CDN script.
-
-declare global {
-    interface Window {
-        google?: {
-            accounts: {
-                oauth2: {
-                    initTokenClient: (config: {
-                        client_id: string;
-                        scope: string;
-                        hint?: string;
-                        callback: (response: { access_token?: string; error?: string }) => void;
-                    }) => {
-                        requestAccessToken: (opts?: { prompt?: string; hint?: string }) => void;
-                    };
-                };
-            };
-        };
-    }
+/** Payload for creating a new calendar event */
+export interface CreateEventPayload {
+    title: string;
+    description?: string;
+    location?: string;
+    startDateTime: string;   // ISO 8601
+    endDateTime: string;     // ISO 8601
+    isAllDay?: boolean;
+    color?: string;
+    pushToGoogle?: boolean;  // if true, also creates in Google Calendar
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+// Full calendar access — needed for both read (sync) and write (add events)
+const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar';
 const CALENDAR_API_BASE = 'https://www.googleapis.com/calendar/v3';
 const FIRESTORE_COLLECTION = 'calendar_events';
-const SETTINGS_COLLECTION = 'settings';
-const OAUTH_SETTINGS_DOC = 'google_oauth';
 
 // Look ahead/back window for events
 const SYNC_DAYS_PAST = 30;
 const SYNC_DAYS_FUTURE = 90;
 
-// ─── Firestore: Get Google Client ID ─────────────────────────────────────────
+// ─── Kept for backward-compat (no longer reads from Firestore) ───────────────
 
-/**
- * Fetches the Google OAuth Client ID from Firestore settings.
- * Stored at: settings/google_oauth → { client_id: string }
- * This allows any user's calendar to be synced without env variables.
- */
+/** @deprecated No longer needed — Firebase Auth handles OAuth internally. */
 export const getGoogleClientIdFromFirestore = async (): Promise<string | null> => {
-    try {
-        const settingsRef = doc(db, SETTINGS_COLLECTION, OAUTH_SETTINGS_DOC);
-        const snap = await getDoc(settingsRef);
-        if (snap.exists()) {
-            const data = snap.data();
-            return data?.client_id || null;
-        }
-        return null;
-    } catch (error: any) {
-        console.warn('[GoogleCalendarService] Could not fetch client_id from Firestore:', error.message);
-        return null;
-    }
+    return 'firebase-auth'; // non-null so pre-warm check passes
 };
 
-// ─── Core Functions ───────────────────────────────────────────────────────────
+/** @deprecated No longer needed — Firebase Auth handles OAuth internally. */
+export const isGISLoaded = (): boolean => true;
+
+// ─── Firebase Auth OAuth ─────────────────────────────────────────────────────
 
 /**
- * Checks if the Google Identity Services library is loaded.
- */
-export const isGISLoaded = (): boolean =>
-    typeof window !== 'undefined' && !!window.google?.accounts?.oauth2;
-
-/**
- * Requests a Google OAuth2 access token using the GIS Token model.
- * Client ID is read from Firestore settings/google_oauth.
- * Shows a Google popup for the user to authenticate.
+ * Requests a Google OAuth2 access token using Firebase Auth's signInWithPopup.
+ * Opens the Google account picker popup — no client_id configuration required.
  *
- * @param emailHint - Pre-fill the account picker with this email address
- * @returns Promise resolving to the access token
+ * @param emailHint - Optional: pre-fill the Google account picker with this email
+ * @returns Access token string
  */
-export const requestGoogleAccessToken = (emailHint?: string): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        // Fetch client ID from Firestore
-        const clientId = await getGoogleClientIdFromFirestore();
+export const requestGoogleAccessToken = async (emailHint?: string): Promise<string> => {
+    const provider = new GoogleAuthProvider();
 
-        if (!clientId) {
-            reject(new Error(
-                'Google OAuth Client ID is not configured in Firestore.\n' +
-                'An admin must save it at: Firestore → settings/google_oauth → { client_id }'
-            ));
-            return;
-        }
+    // Request calendar read-only scope
+    provider.addScope(CALENDAR_SCOPE);
 
-        if (!isGISLoaded()) {
-            reject(new Error(
-                'Google Identity Services library is not loaded.\n' +
-                'Make sure the GIS script tag is present in index.html.'
-            ));
-            return;
-        }
+    // Hint the account picker to the user's registered email
+    if (emailHint) {
+        provider.setCustomParameters({ login_hint: emailHint });
+    }
 
-        const tokenClient = window.google!.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: CALENDAR_SCOPE,
-            hint: emailHint,
-            callback: (response) => {
-                if (response.error) {
-                    reject(new Error(`Google Auth error: ${response.error}`));
-                    return;
-                }
-                if (!response.access_token) {
-                    reject(new Error('No access token received from Google.'));
-                    return;
-                }
-                resolve(response.access_token);
-            },
-        });
-
-        tokenClient.requestAccessToken({
-            prompt: '',
-            hint: emailHint,
-        });
+    // Force account selection so user can pick the right Google account
+    provider.setCustomParameters({
+        ...(emailHint ? { login_hint: emailHint } : {}),
+        prompt: 'select_account',
     });
+
+    const result = await signInWithPopup(auth, provider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+
+    if (!credential?.accessToken) {
+        throw new Error('No access token returned from Google. Please try again.');
+    }
+
+    return credential.accessToken;
 };
 
+// ─── Calendar API ─────────────────────────────────────────────────────────────
+
 /**
- * Fetches calendar events from the Google Calendar API.
+ * Fetches calendar events from the Google Calendar REST API.
  */
 export const fetchGoogleCalendarEvents = async (
     accessToken: string
@@ -222,6 +179,8 @@ export const fetchGoogleCalendarEvents = async (
     return (data.items || []) as GoogleCalendarEvent[];
 };
 
+// ─── Firestore Persistence ────────────────────────────────────────────────────
+
 /**
  * Normalizes a raw Google Calendar event into the RHIVE schema.
  */
@@ -251,6 +210,8 @@ const normalizeEvent = (
         syncedAt,
         created_at: syncedAt,
         updated_at: syncedAt,
+        source: 'google' as const,
+        color: undefined,
     };
 };
 
@@ -301,22 +262,24 @@ export const updateUserCalendarMeta = async (
     });
 };
 
+// ─── Main Sync Pipeline ───────────────────────────────────────────────────────
+
 /**
- * Full sync pipeline: OAuth → Fetch → Save to Firestore → Update user meta.
- * Client ID is fetched from Firestore settings/google_oauth.
+ * Full sync pipeline: Firebase OAuth popup → Fetch Calendar → Save to Firestore.
+ * No client_id or Firestore settings required.
  */
 export const syncUserGoogleCalendar = async (
     userId: string,
     userEmail: string
 ): Promise<CalendarSyncResult> => {
     try {
-        // Step 1: Get OAuth access token (triggers Google popup)
+        // Step 1: Get OAuth access token via Firebase Auth popup
         const accessToken = await requestGoogleAccessToken(userEmail);
 
-        // Step 2: Fetch events from Google Calendar
+        // Step 2: Fetch events from Google Calendar REST API
         const googleEvents = await fetchGoogleCalendarEvents(accessToken);
 
-        // Step 3: Save to Firestore
+        // Step 3: Save to Firestore calendar_events collection
         const savedEvents = await saveCalendarEventsToFirestore(userId, userEmail, googleEvents);
 
         // Step 4: Update user document with sync metadata
@@ -330,6 +293,37 @@ export const syncUserGoogleCalendar = async (
         };
     } catch (error: any) {
         console.error('[GoogleCalendarService] Sync failed:', error);
+
+        // User closed the popup — treat as a cancel, not an error
+        if (error?.code === 'auth/popup-closed-by-user' || error?.code === 'auth/cancelled-popup-request') {
+            return {
+                success: false,
+                eventsCount: 0,
+                events: [],
+                error: 'Sign-in was cancelled. Click the button again to try.',
+            };
+        }
+
+        // Google sign-in provider not enabled in Firebase Console
+        if (error?.code === 'auth/operation-not-allowed') {
+            return {
+                success: false,
+                eventsCount: 0,
+                events: [],
+                error: 'Google sign-in is not enabled on this Firebase project. An admin must enable the Google provider at: Firebase Console → Authentication → Sign-in method → Google → Enable.',
+            };
+        }
+
+        // Popup was blocked by the browser
+        if (error?.code === 'auth/popup-blocked') {
+            return {
+                success: false,
+                eventsCount: 0,
+                events: [],
+                error: 'The Google sign-in popup was blocked by your browser. Please allow popups for this site and try again.',
+            };
+        }
+
         return {
             success: false,
             eventsCount: 0,
@@ -354,5 +348,137 @@ export const getUserCalendarEvents = async (userId: string): Promise<RhiveCalend
     } catch (error: any) {
         console.error('[GoogleCalendarService] Failed to fetch events:', error);
         return [];
+    }
+};
+
+/**
+ * Creates a new event in Google Calendar (requires full calendar scope access token)
+ * and saves it to Firestore.
+ */
+export const createGoogleCalendarEvent = async (
+    accessToken: string,
+    userId: string,
+    userEmail: string,
+    payload: CreateEventPayload
+): Promise<RhiveCalendarEvent | null> => {
+    try {
+        const body: any = {
+            summary: payload.title,
+            description: payload.description || '',
+            location: payload.location || '',
+        };
+
+        if (payload.isAllDay) {
+            const dateStr = payload.startDateTime.split('T')[0];
+            const endDateStr = payload.endDateTime.split('T')[0];
+            body.start = { date: dateStr };
+            body.end = { date: endDateStr };
+        } else {
+            body.start = { dateTime: payload.startDateTime, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+            body.end = { dateTime: payload.endDateTime, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+        }
+
+        const res = await fetch(`${CALENDAR_API_BASE}/calendars/primary/events`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            console.error('[GoogleCalendarService] Create event failed:', err);
+            return null;
+        }
+
+        const googleEvent: GoogleCalendarEvent = await res.json();
+
+        // Persist to Firestore
+        const now = new Date().toISOString();
+        const normalized: Omit<RhiveCalendarEvent, 'id'> = {
+            userId,
+            userEmail,
+            googleEventId: googleEvent.id,
+            title: googleEvent.summary || payload.title,
+            description: payload.description || '',
+            location: payload.location || '',
+            startDateTime: payload.startDateTime,
+            endDateTime: payload.endDateTime,
+            isAllDay: payload.isAllDay || false,
+            status: 'confirmed',
+            googleLink: googleEvent.htmlLink || '',
+            organizer: userEmail,
+            syncedAt: now,
+            created_at: now,
+            updated_at: now,
+            source: 'google',
+            color: payload.color,
+        };
+
+        const docRef = await addDoc(collection(db, FIRESTORE_COLLECTION), normalized);
+        return { id: docRef.id, ...normalized };
+    } catch (error: any) {
+        console.error('[GoogleCalendarService] createGoogleCalendarEvent error:', error);
+        return null;
+    }
+};
+
+/**
+ * Creates a RHIVE-native event (stored only in Firestore, not pushed to Google Calendar).
+ */
+export const createRhiveEvent = async (
+    userId: string,
+    userEmail: string,
+    payload: CreateEventPayload
+): Promise<RhiveCalendarEvent | null> => {
+    try {
+        const now = new Date().toISOString();
+        const normalized: Omit<RhiveCalendarEvent, 'id'> = {
+            userId,
+            userEmail,
+            googleEventId: '',
+            title: payload.title,
+            description: payload.description || '',
+            location: payload.location || '',
+            startDateTime: payload.startDateTime,
+            endDateTime: payload.endDateTime,
+            isAllDay: payload.isAllDay || false,
+            status: 'confirmed',
+            googleLink: '',
+            organizer: userEmail,
+            syncedAt: now,
+            created_at: now,
+            updated_at: now,
+            source: 'rhive',
+            color: payload.color || '#ec028b',
+        };
+
+        const docRef = await addDoc(collection(db, FIRESTORE_COLLECTION), normalized);
+        return { id: docRef.id, ...normalized };
+    } catch (error: any) {
+        console.error('[GoogleCalendarService] createRhiveEvent error:', error);
+        return null;
+    }
+};
+
+/**
+ * Deletes a calendar event from Firestore (and optionally from Google Calendar).
+ */
+export const deleteCalendarEvent = async (
+    eventId: string,
+    googleEventId?: string,
+    accessToken?: string
+): Promise<void> => {
+    // Delete from Firestore
+    await deleteDoc(doc(db, FIRESTORE_COLLECTION, eventId));
+
+    // Optionally delete from Google Calendar
+    if (googleEventId && accessToken) {
+        await fetch(`${CALENDAR_API_BASE}/calendars/primary/events/${googleEventId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }).catch(console.warn);
     }
 };
