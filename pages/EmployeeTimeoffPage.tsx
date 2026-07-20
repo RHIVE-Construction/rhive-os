@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { CalendarDaysIcon, BoltIcon, PhoneIcon, MapPinIcon, ClockIcon, XIcon, PlusIcon, ArrowPathIcon, CheckIcon, TrashIcon } from '../components/icons';
+import { CalendarDaysIcon, BoltIcon, PhoneIcon, MapPinIcon, ClockIcon, XIcon, PlusIcon, ArrowPathIcon, TrashIcon } from '../components/icons';
 import { PAGE_GROUPS } from '../constants';
 import { firestoreService } from '../lib/firebaseService';
 import { cn } from '../lib/utils';
@@ -606,62 +606,39 @@ const EmployeeTimeoffPage: React.FC = () => {
                                 );
                             })}
                         </div>
+
+                        {/* ── Inline Legend below calendar grid ── */}
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-5 pt-4 border-t border-gray-800">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-sm bg-[#ec028b] shrink-0" />
+                                <span className="text-[10px] font-bold text-gray-500">Today</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-sm bg-[#ec028b]/40 border border-[#ec028b]/50 shrink-0" />
+                                <span className="text-[10px] font-bold text-gray-500">Google Event</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-sm bg-yellow-500/40 border border-yellow-500/50 shrink-0" />
+                                <span className="text-[10px] font-bold text-gray-500">RHIVE Event</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <PhoneIcon className="w-2.5 h-2.5 text-green-400 shrink-0" />
+                                <span className="text-[10px] font-bold text-gray-500">Follow-Up Call</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <MapPinIcon className="w-2.5 h-2.5 text-purple-400 shrink-0" />
+                                <span className="text-[10px] font-bold text-gray-500">Site Visit</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <BoltIcon className="w-2.5 h-2.5 text-orange-400 shrink-0" />
+                                <span className="text-[10px] font-bold text-gray-500">Storm</span>
+                            </div>
+                        </div>
                     </Card>
                 </div>
 
                 {/* ── Sidebar ────────────────────────────────────────────── */}
                 <div className="space-y-5">
-
-                    {/* Legend */}
-                    <Card title="Calendar Legend">
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-3 p-2 bg-gray-900/50 rounded-lg border border-gray-800">
-                                <div className="w-3 h-3 rounded bg-[#ec028b] shrink-0" />
-                                <span className="text-xs text-gray-300">Today</span>
-                            </div>
-                            <div className="flex items-center gap-3 p-2 bg-[#ec028b]/5 rounded-lg border border-[#ec028b]/20">
-                                <CalendarDaysIcon className="w-3 h-3 text-[#ec028b] shrink-0" />
-                                <span className="text-xs text-gray-300">Google Calendar Event</span>
-                            </div>
-                            <div className="flex items-center gap-3 p-2 bg-yellow-900/20 rounded-lg border border-yellow-500/20">
-                                <CalendarDaysIcon className="w-3 h-3 text-yellow-400 shrink-0" />
-                                <span className="text-xs text-gray-300">RHIVE Event</span>
-                            </div>
-                            <div className="flex items-center gap-3 p-2 bg-green-900/20 rounded-lg border border-green-500/20">
-                                <PhoneIcon className="w-3 h-3 text-green-400 shrink-0" />
-                                <span className="text-xs text-gray-300">Follow-Up Call</span>
-                            </div>
-                            <div className="flex items-center gap-3 p-2 bg-purple-900/20 rounded-lg border border-purple-500/20">
-                                <MapPinIcon className="w-3 h-3 text-purple-400 shrink-0" />
-                                <span className="text-xs text-gray-300">Site Visit</span>
-                            </div>
-                            <div className="flex items-center gap-3 p-2 bg-orange-900/20 rounded-lg border border-orange-500/20">
-                                <BoltIcon className="w-3 h-3 text-orange-400 shrink-0" />
-                                <span className="text-xs text-gray-300">Storm Forecast</span>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* Sync status card */}
-                    <Card title="Google Sync Status">
-                        {isAlreadySynced ? (
-                            <div className="flex items-center gap-3 p-3 bg-green-500/5 rounded-lg border border-green-500/20">
-                                <CheckIcon className="w-5 h-5 text-green-400 shrink-0" />
-                                <div>
-                                    <p className="text-xs font-bold text-green-400">Connected</p>
-                                    <p className="text-[10px] text-gray-500 mt-0.5">{gcalEvents.filter(e => e.source === 'google').length} events synced</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg border border-gray-800">
-                                <CalendarDaysIcon className="w-5 h-5 text-gray-600 shrink-0" />
-                                <div>
-                                    <p className="text-xs font-bold text-gray-400">Not connected</p>
-                                    <p className="text-[10px] text-gray-600 mt-0.5">Click "Connect Google Calendar" above</p>
-                                </div>
-                            </div>
-                        )}
-                    </Card>
 
                     {/* Upcoming Follow-Ups */}
                     <Card title="Upcoming Follow-Ups">
@@ -698,20 +675,6 @@ const EmployeeTimeoffPage: React.FC = () => {
                                 ))}
                             </div>
                         )}
-                    </Card>
-
-                    {/* Balances */}
-                    <Card title="Your Balances">
-                        <div className="space-y-2">
-                            <div className="flex justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800">
-                                <span className="text-gray-300 text-xs">Paid Time Off (PTO)</span>
-                                <span className="font-bold text-white text-xs">80 hours</span>
-                            </div>
-                            <div className="flex justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800">
-                                <span className="text-gray-300 text-xs">Holidays</span>
-                                <span className="font-bold text-white text-xs">5 days</span>
-                            </div>
-                        </div>
                     </Card>
 
                     <Button size="lg" className="w-full bg-[#ec028b] hover:bg-[#c00270] shadow-[0_0_20px_rgba(236,2,139,0.3)]">
