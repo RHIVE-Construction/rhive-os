@@ -287,6 +287,26 @@ export const syncUserGoogleCalendar = async (
             };
         }
 
+        // Google sign-in provider not enabled in Firebase Console
+        if (error?.code === 'auth/operation-not-allowed') {
+            return {
+                success: false,
+                eventsCount: 0,
+                events: [],
+                error: 'Google sign-in is not enabled on this Firebase project. An admin must enable the Google provider at: Firebase Console → Authentication → Sign-in method → Google → Enable.',
+            };
+        }
+
+        // Popup was blocked by the browser
+        if (error?.code === 'auth/popup-blocked') {
+            return {
+                success: false,
+                eventsCount: 0,
+                events: [],
+                error: 'The Google sign-in popup was blocked by your browser. Please allow popups for this site and try again.',
+            };
+        }
+
         return {
             success: false,
             eventsCount: 0,
