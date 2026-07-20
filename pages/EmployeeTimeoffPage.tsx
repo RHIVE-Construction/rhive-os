@@ -11,6 +11,8 @@ import {
     getUserCalendarEvents,
     syncUserGoogleCalendar,
     createRhiveEvent,
+    createGoogleCalendarEvent,
+    requestGoogleAccessToken,
     deleteCalendarEvent,
     type RhiveCalendarEvent,
     type CreateEventPayload,
@@ -109,8 +111,9 @@ const FollowUpPopup: React.FC<{ items: FollowUp[]; onClose: () => void; dateLabe
 interface AddEventModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (payload: CreateEventPayload) => Promise<void>;
+    onAdd: (payload: CreateEventPayload & { pushToGoogle: boolean }) => Promise<void>;
     prefillDate?: string;
+    isGoogleSynced: boolean;
 }
 
 const toLocalInput = (d: Date) => {
@@ -118,13 +121,14 @@ const toLocalInput = (d: Date) => {
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onAdd, prefillDate }) => {
+const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onAdd, prefillDate, isGoogleSynced }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [startDT, setStartDT] = useState('');
     const [endDT, setEndDT] = useState('');
     const [isAllDay, setIsAllDay] = useState(false);
+    const [pushToGoogle, setPushToGoogle] = useState(true); // default ON when synced
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -134,8 +138,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onAdd, p
         const end = new Date(base); end.setHours(end.getHours() + 1);
         setStartDT(toLocalInput(base));
         setEndDT(toLocalInput(end));
-        setTitle(''); setDescription(''); setLocation(''); setIsAllDay(false); setError('');
-    }, [isOpen, prefillDate]);
+        setTitle(''); setDescription(''); setLocation(''); setIsAllDay(false);
+        setPushToGoogle(isGoogleSynced); // auto-enable if user is linked to Google
+        setError('');
+    }, [isOpen, prefillDate, isGoogleSynced]);
 
     const handleSubmit = async () => {
         if (!title.trim()) { setError('Title is required.'); return; }
@@ -149,6 +155,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onAdd, p
                 endDateTime: new Date(endDT).toISOString(),
                 isAllDay,
                 color: '#ec028b',
+                pushToGoogle,
             });
             onClose();
         } catch (e: any) {
@@ -172,7 +179,12 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onAdd, p
                         <div className="p-2 bg-[#ec028b]/10 rounded-lg border border-[#ec028b]/20">
                             <CalendarDaysIcon className="w-4 h-4 text-[#ec028b]" />
                         </div>
-                        <h2 className="text-base font-black uppercase tracking-widest text-white">Add Event</h2>
+                        <div>
+                            <h2 className="text-base font-black uppercase tracking-widest text-white">Add Event</h2>
+                            {isGoogleSynced && (
+                                <p className="text-[10px] text-[#ec028b] mt-0.5">⚡ Will sync to Google Calendar</p>
+                            )}
+                        </div>
                     </div>
                     <button onClick={onClose} className="text-gray-600 hover:text-white transition-colors">
                         <XIcon className="w-5 h-5" />
@@ -217,6 +229,23 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onAdd, p
                         <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Agenda, project details..." rows={2} className={`${inputCls} resize-none`} />
                     </div>
 
+                    {/* Google Calendar sync toggle — only shown when user is synced */}
+                    {isGoogleSynced && (
+                        <div className="flex items-center justify-between p-3 bg-[#ec028b]/5 rounded-lg border border-[#ec028b]/20">
+                            <div>
+                                <p className="text-xs font-bold text-white">Also add to Google Calendar</p>
+                                <p className="text-[10px] text-gray-500 mt-0.5">Event will appear in your Google Calendar</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setPushToGoogle(v => !v)}
+                                className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${pushToGoogle ? 'bg-[#ec028b]' : 'bg-gray-700'}`}
+                            >
+                                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${pushToGoogle ? 'left-5' : 'left-0.5'}`} />
+                            </button>
+                        </div>
+                    )}
+
                     {error && <p className="text-[#ec028b] text-xs font-bold">{error}</p>}
 
                     <div className="flex gap-3 pt-1">
@@ -225,7 +254,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onAdd, p
                         </button>
                         <button onClick={handleSubmit} disabled={saving} className="flex-1 h-10 text-xs font-black uppercase tracking-widest text-white bg-[#ec028b] hover:bg-pink-600 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2">
                             {saving ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <PlusIcon className="w-4 h-4" />}
-                            {saving ? 'Saving…' : 'Add Event'}
+                            {saving ? 'Saving…' : isGoogleSynced && pushToGoogle ? 'Add to Google Calendar' : 'Add Event'}
                         </button>
                     </div>
                 </div>
@@ -233,6 +262,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, onAdd, p
         </div>
     );
 };
+
 
 // ─── Event detail popup ───────────────────────────────────────────────────────
 const EventDetailPopup: React.FC<{
@@ -304,6 +334,8 @@ const EmployeeTimeoffPage: React.FC = () => {
     const [syncing, setSyncing] = useState(false);
     const [syncMsg, setSyncMsg] = useState<{ text: string; ok: boolean } | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<RhiveCalendarEvent | null>(null);
+    const [accessToken, setAccessToken] = useState<string>(''); // stored after sync for Google write-back
+
 
     // Add event modal
     const [showAddModal, setShowAddModal] = useState(false);
@@ -391,7 +423,7 @@ const EmployeeTimeoffPage: React.FC = () => {
 
     useEffect(() => { fetchForecast(); }, [fetchForecast]);
 
-    // Google Calendar sync
+    // Google Calendar sync — stores accessToken so Add Event can write back to Google
     const handleSync = async () => {
         if (!currentUser) return;
         setSyncing(true); setSyncMsg(null);
@@ -399,6 +431,7 @@ const EmployeeTimeoffPage: React.FC = () => {
             const result = await syncUserGoogleCalendar(currentUser.id, currentUser.email || '');
             if (result.success) {
                 setGcalEvents(result.events);
+                setAccessToken(result.accessToken || ''); // ← store token for write-back
                 setSyncMsg({ text: `✓ Synced ${result.eventsCount} events from Google Calendar`, ok: true });
             } else {
                 setSyncMsg({ text: result.error || 'Sync failed.', ok: false });
@@ -411,14 +444,37 @@ const EmployeeTimeoffPage: React.FC = () => {
         }
     };
 
-    // Add event (RHIVE-native, stored in Firestore)
-    const handleAddEvent = async (payload: CreateEventPayload) => {
+    // Add event — pushes to Google Calendar when synced, falls back to Firestore-only
+    const handleAddEvent = async (payload: CreateEventPayload & { pushToGoogle?: boolean }) => {
         if (!currentUser) return;
-        const newEvent = await createRhiveEvent(currentUser.id, currentUser.email || '', payload);
+        let newEvent = null;
+
+        if (payload.pushToGoogle && isAlreadySynced) {
+            // Reuse cached token; if gone (page refresh), request a fresh one silently
+            let token = accessToken;
+            if (!token) {
+                try {
+                    token = await requestGoogleAccessToken(currentUser.email || '');
+                    setAccessToken(token);
+                } catch {
+                    // Popup closed or denied — fall through to Firestore-only
+                }
+            }
+            if (token) {
+                newEvent = await createGoogleCalendarEvent(token, currentUser.id, currentUser.email || '', payload);
+            }
+        }
+
+        // Fallback: save as RHIVE-native event (Firestore only)
+        if (!newEvent) {
+            newEvent = await createRhiveEvent(currentUser.id, currentUser.email || '', payload);
+        }
+
         if (newEvent) {
-            setGcalEvents(prev => [...prev, newEvent].sort((a, b) => a.startDateTime.localeCompare(b.startDateTime)));
+            setGcalEvents(prev => [...prev, newEvent!].sort((a, b) => a.startDateTime.localeCompare(b.startDateTime)));
         }
     };
+
 
     // Delete event
     const handleDeleteEvent = async (event: RhiveCalendarEvent) => {
@@ -708,6 +764,7 @@ const EmployeeTimeoffPage: React.FC = () => {
                 onClose={() => setShowAddModal(false)}
                 onAdd={handleAddEvent}
                 prefillDate={prefillDate}
+                isGoogleSynced={isAlreadySynced}
             />
         </PageContainer>
     );
