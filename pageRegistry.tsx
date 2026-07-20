@@ -85,7 +85,6 @@ import InvoicingPage from './pages/InvoicingPage'; // E-34
 import PaymentsModularPage from './pages/PaymentsModularPage'; // E-35
 import CompletedPage from './pages/CompletedPage'; // E-36
 import PastCustomerPage from './pages/PastCustomerPage'; // E-37
-import MyCalendarPage from './pages/MyCalendarPage'; // E-40
 
 const Placeholder = ({ name }: { name: string }) => (
   <div className="p-10 text-white font-mono">
@@ -179,7 +178,6 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-37': PastCustomerPage,
   'E-38': WeatherGuideWidgetPage,
   'E-39': RHIVEBrandingPage,
-  'E-40': MyCalendarPage,
 
   // Customer
   'C-01': CustomerHomepage,
