@@ -27,7 +27,17 @@ const GOOGLE_WEATHER_API_KEY = (import.meta as any).env?.VITE_GOOGLE_WEATHER_API
 const WEATHER_BASE = 'https://weather.googleapis.com/v1';
 const DEFAULT_LAT = 39.7392;
 const DEFAULT_LON = -104.9903;
-const BIDI_POLL_MS = 5 * 60 * 1000; // 5 min bidirectional poll interval
+const BIDI_POLL_MS = 5 * 60 * 1000; // 5 min bidirectional passive poll
+
+// ─── Live "X min ago" formatter ───────────────────────────────────────────────
+const timeSince = (iso: string | null): string => {
+    if (!iso) return 'Never';
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 5) return 'Just now';
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
+};
 
 interface WeatherAlert { date: string; type: string; description: string; isStorm: boolean; }
 interface FollowUp {
@@ -213,7 +223,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, prefil
                 title: title.trim(), description, location,
                 startDateTime: isAllDay ? `${date}T00:00:00` : buildISO(startTime),
                 endDateTime: isAllDay ? `${date}T23:59:00` : buildISO(endTime),
-                isAllDay, color: '#ec028b', pushToGoogle,
+                isAllDay, color: '#ec028b', pushToGoogle: true,
             });
             onClose();
         } catch (e: any) {
@@ -287,17 +297,15 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, prefil
                         <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Agenda, project details..." rows={2} className={`${inputCls} resize-none`} />
                     </div>
 
-                    {/* Google toggle */}
+                    {/* Automatic sync indicator — no toggle needed, always syncs */}
                     {isGoogleSynced && (
-                        <div className="flex items-center justify-between p-3 bg-[#ec028b]/5 rounded-lg border border-[#ec028b]/20">
+                        <div className="flex items-center gap-2 p-3 bg-[#ec028b]/5 rounded-lg border border-[#ec028b]/20">
+                            <ArrowPathIcon className="w-3.5 h-3.5 text-[#ec028b] shrink-0" />
                             <div>
-                                <p className="text-xs font-bold text-white">{isEdit ? 'Update in Google Calendar' : 'Also add to Google Calendar'}</p>
-                                <p className="text-[10px] text-gray-500 mt-0.5">Event will sync to your Google Calendar</p>
+                                <p className="text-xs font-bold text-white">Auto-syncs with Google Calendar</p>
+                                <p className="text-[10px] text-gray-500 mt-0.5">This event will instantly sync both ways — no action needed</p>
                             </div>
-                            <button type="button" onClick={() => setPushToGoogle(v => !v)}
-                                className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${pushToGoogle ? 'bg-[#ec028b]' : 'bg-gray-700'}`}>
-                                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${pushToGoogle ? 'left-5' : 'left-0.5'}`} />
-                            </button>
+                            <span className="ml-auto text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-400 shrink-0">⚡ On</span>
                         </div>
                     )}
 
@@ -310,7 +318,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, prefil
                         <button onClick={handleSave} disabled={saving}
                             className="flex-1 h-10 text-xs font-black uppercase tracking-widest text-white bg-[#ec028b] hover:bg-pink-600 disabled:opacity-50 rounded-lg transition-colors flex items-center justify-center gap-2">
                             {saving ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : isEdit ? <PencilIcon className="w-4 h-4" /> : <PlusIcon className="w-4 h-4" />}
-                            {saving ? 'Saving…' : isGoogleSynced && pushToGoogle ? (isEdit ? 'Update in Google Calendar' : 'Add to Google Calendar') : (isEdit ? 'Save Changes' : 'Add Event')}
+                            {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Event'}
                         </button>
                     </div>
                 </div>
@@ -399,8 +407,9 @@ const EmployeeTimeoffPage: React.FC = () => {
 
     const [gcalEvents, setGcalEvents] = useState<RhiveCalendarEvent[]>([]);
     const [gcalLoading, setGcalLoading] = useState(false);
-    const [syncing, setSyncing] = useState(false);
-    const [syncMsg, setSyncMsg] = useState<{ text: string; ok: boolean } | null>(null);
+    const [isSyncing, setIsSyncing] = useState(false);       // silent background sync indicator
+    const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null); // ISO timestamp
+    const [, setTick] = useState(0);                          // forces re-render for live clock
     const [selectedEvent, setSelectedEvent] = useState<RhiveCalendarEvent | null>(null);
     const [editEvent, setEditEvent] = useState<RhiveCalendarEvent | null>(null);
     const [accessToken, setAccessToken] = useState<string>('');
@@ -434,6 +443,16 @@ const EmployeeTimeoffPage: React.FC = () => {
         getUserCalendarEvents(currentUser.id).then(evs => { setGcalEvents(evs); setGcalLoading(false); });
     }, [currentUser?.id]);
 
+    // ── Auto-sync on page mount when already linked ───────────────────────────
+    // Runs once after initial Firestore load so fresh Google events are shown immediately
+    useEffect(() => {
+        if (!currentUser?.id || !isAlreadySynced) return;
+        // Small delay so Firestore events load first
+        const t = setTimeout(() => autoSync({ skipLog: true }), 1500);
+        return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUser?.id, isAlreadySynced]);
+
     // ── Bidirectional polling (every 5 min when synced + token available) ─────
     const pollBidi = useCallback(async () => {
         if (!currentUser?.id || !accessToken || !isAlreadySynced) return;
@@ -463,12 +482,18 @@ const EmployeeTimeoffPage: React.FC = () => {
         }
     }, [accessToken, currentUser?.id, isAlreadySynced]);
 
-    // Set up polling interval
+    // ── Passive 5-min poll interval (Google→RHIVE) ────────────────────────────
     useEffect(() => {
         if (!accessToken || !isAlreadySynced) return;
         const id = setInterval(pollBidi, BIDI_POLL_MS);
         return () => clearInterval(id);
     }, [accessToken, isAlreadySynced, pollBidi]);
+
+    // ── Live clock tick for "X min ago" display ────────────────────────────────
+    useEffect(() => {
+        const id = setInterval(() => setTick(t => t + 1), 30_000); // every 30s
+        return () => clearInterval(id);
+    }, []);
 
     // ── Weather ───────────────────────────────────────────────────────────────
     const fetchForecast = useCallback(async () => {
@@ -516,26 +541,30 @@ const EmployeeTimeoffPage: React.FC = () => {
         return token;
     }, [accessToken, currentUser?.email]);
 
-    // ── SYNC ──────────────────────────────────────────────────────────────────
-    const handleSync = async () => {
-        if (!currentUser) return;
-        setSyncing(true); setSyncMsg(null);
+    // ── SILENT AUTO-SYNC: fires on mount + after every CRUD action ────────────
+    // Fully automatic — no manual button needed
+    const autoSync = useCallback(async (opts?: { skipLog?: boolean }) => {
+        if (!currentUser || isSyncing) return;
+        setIsSyncing(true);
         try {
             const result = await syncUserGoogleCalendar(currentUser.id, currentUser.email || '');
             if (result.success) {
                 setGcalEvents(result.events);
-                setAccessToken(result.accessToken || '');
-                setSyncMsg({ text: `✓ Synced ${result.eventsCount} events from Google Calendar`, ok: true });
-                await logActivity('calendar_synced', `Google Calendar synced — ${result.eventsCount} events imported`, { eventsCount: result.eventsCount });
-            } else {
-                setSyncMsg({ text: result.error || 'Sync failed.', ok: false });
+                if (result.accessToken) setAccessToken(result.accessToken);
+                setLastSyncedAt(new Date().toISOString());
+                if (!opts?.skipLog) {
+                    await logActivity('calendar_synced',
+                        `Auto-synced Google Calendar — ${result.eventsCount} events`,
+                        { eventsCount: result.eventsCount });
+                }
             }
-        } catch (e: any) {
-            setSyncMsg({ text: e.message || 'Unexpected error.', ok: false });
-        } finally {
-            setSyncing(false);
-            setTimeout(() => setSyncMsg(null), 7000);
-        }
+        } catch { /* silent — user not interrupted */ }
+        finally { setIsSyncing(false); }
+    }, [currentUser, isSyncing, logActivity]);
+
+    // Initial OAuth connect button handler (only shown when not yet linked)
+    const handleConnectGoogle = async () => {
+        await autoSync({ skipLog: false });
     };
 
     // ── CREATE / EDIT ─────────────────────────────────────────────────────────
@@ -579,6 +608,8 @@ const EmployeeTimeoffPage: React.FC = () => {
             setGcalEvents(prev => prev.map(e => e.id === editEvent.id ? { ...e, ...payload, updated_at: now } : e));
             await logActivity('calendar_event_updated', `Updated event: "${payload.title}"`, { eventId: editEvent.id, title: payload.title, source: editEvent.source });
             setEditEvent(null);
+            // Auto-sync after edit — confirms Google reflects the change
+            autoSync({ skipLog: true });
             return;
         }
 
@@ -596,6 +627,8 @@ const EmployeeTimeoffPage: React.FC = () => {
             setGcalEvents(prev => [...prev, newEvent!].sort((a, b) => a.startDateTime.localeCompare(b.startDateTime)));
             await logActivity('meeting_scheduled', `Added event: "${payload.title}"`, { title: payload.title, startDateTime: payload.startDateTime, source: newEvent.source });
         }
+        // Auto-sync after create — pulls any Google-side confirmations
+        autoSync({ skipLog: true });
     };
 
     // ── DELETE ────────────────────────────────────────────────────────────────
@@ -622,6 +655,8 @@ const EmployeeTimeoffPage: React.FC = () => {
         // 3. Update local state
         setGcalEvents(prev => prev.filter(e => e.id !== event.id));
         await logActivity('calendar_event_deleted', `Deleted event: "${event.title}"`, { eventId: event.id, title: event.title, source: event.source });
+        // Auto-sync after delete — confirms Google reflects the removal
+        autoSync({ skipLog: true });
     };
 
     const upcomingFollowUps = followUps.filter(fu => fu.date >= todayStr)
@@ -632,33 +667,51 @@ const EmployeeTimeoffPage: React.FC = () => {
     return (
         <PageContainer title={page?.name || 'Calendar'} description="Track follow-up calls, site visits, time-off, and Google Calendar events.">
 
-            {/* ── Sync Banner ──────────────────────────────────────────── */}
+            {/* ── Auto-Sync Status Bar (no manual buttons — fully automatic) ─── */}
             <div className="mb-5 p-4 bg-gray-900/50 border border-gray-800 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <CalendarDaysIcon className="w-5 h-5 text-[#ec028b] shrink-0" />
+                    {/* Animated live sync indicator */}
+                    <div className={`relative w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 transition-all duration-500 ${
+                        isSyncing
+                            ? 'border-[#ec028b]/60 bg-[#ec028b]/10'
+                            : isAlreadySynced
+                                ? 'border-green-500/40 bg-green-500/5'
+                                : 'border-gray-700 bg-gray-900/40'
+                    }`}>
+                        <CalendarDaysIcon className={`w-4 h-4 transition-colors ${
+                            isSyncing ? 'text-[#ec028b] animate-pulse' : isAlreadySynced ? 'text-green-400' : 'text-gray-500'
+                        }`} />
+                        {isSyncing && <div className="absolute inset-0 rounded-lg border border-[#ec028b]/40 animate-ping" />}
+                    </div>
                     <div>
-                        <p className="text-sm font-bold text-white">Google Calendar</p>
-                        <p className="text-[11px] text-gray-500">
+                        <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold text-white">Google Calendar</p>
+                            {isAlreadySynced && !isSyncing && (
+                                <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-400">
+                                    ⚡ Live Sync
+                                </span>
+                            )}
+                            {isSyncing && (
+                                <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-[#ec028b]/10 border border-[#ec028b]/20 text-[#ec028b] flex items-center gap-1">
+                                    <ArrowPathIcon className="w-2.5 h-2.5 animate-spin" />
+                                    Syncing…
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-0.5">
                             {isAlreadySynced
-                                ? `Synced · ${gcalEvents.filter(e => e.source === 'google').length} Google events · auto-polls every 5 min`
-                                : 'Connect your Google Calendar to enable bidirectional sync'}
+                                ? `${gcalEvents.filter(e => e.source === 'google').length} Google events · Last synced ${timeSince(lastSyncedAt)} · Every action syncs both ways automatically`
+                                : 'Connect Google Calendar once — every create, edit, and delete will sync automatically'}
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                    {syncMsg && <p className={`text-[11px] font-bold ${syncMsg.ok ? 'text-green-400' : 'text-red-400'}`}>{syncMsg.text}</p>}
+                <div className="flex items-center gap-3">
+                    {/* Only show connect button before first OAuth link */}
                     {!isAlreadySynced && (
-                        <button onClick={handleSync} disabled={syncing}
+                        <button onClick={handleConnectGoogle} disabled={isSyncing}
                             className="flex items-center gap-2 px-4 h-9 text-[11px] font-black uppercase tracking-widest border border-gray-700 text-gray-400 hover:border-[#ec028b] hover:text-[#ec028b] disabled:opacity-40 rounded-lg transition-all">
-                            <ArrowPathIcon className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-                            {syncing ? 'Connecting…' : 'Connect Google Calendar'}
-                        </button>
-                    )}
-                    {isAlreadySynced && (
-                        <button onClick={handleSync} disabled={syncing}
-                            className="flex items-center gap-2 px-3 h-8 text-[10px] font-black uppercase tracking-widest border border-gray-800 text-gray-600 hover:border-gray-600 hover:text-gray-400 disabled:opacity-40 rounded-lg transition-all">
-                            <ArrowPathIcon className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} />
-                            {syncing ? '…' : 'Re-sync'}
+                            <ArrowPathIcon className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                            {isSyncing ? 'Connecting…' : 'Connect Google Calendar'}
                         </button>
                     )}
                     <button onClick={() => { setPrefillDate(''); setEditEvent(null); setShowEventModal(true); }}
