@@ -169,18 +169,39 @@ const PublicHomepageV3: React.FC = () => {
             <StickyCTABar />
             <RhiveHeader />
 
+            {/* Background Video Layer */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                    style={{ transform: 'scale(1.12) translate(-3%, -3%)', transformOrigin: 'top left' }}
+                >
+                    <source src="/vidupload/TRADESHOW MARKETING VIDEO.mp4" type="video/mp4" />
+                </video>
+            </div>
+
+            {/* 85% Black Overlay Layer */}
+            <div className="fixed inset-0 bg-black/85 pointer-events-none z-0" />
+
             {/* Living Plexus Background Layer */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-20">
-                <PlexusShape backgroundColor="transparent" dotColor="#ffffff" lineColor="255, 255, 255" density={30} />
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-80">
+                <PlexusShape 
+                    backgroundColor="transparent" 
+                    dotColor="#ec028b" 
+                    lineColor="236, 2, 139" 
+                    density={120} 
+                />
             </div>
 
             {/* ── HERO SECTION (INTAKE) ─────────────────────────────────────── */}
             <section id="hero" className="relative min-h-[90vh] flex flex-col items-center justify-center pt-36 pb-24 overflow-hidden z-10">
                 <div className="container mx-auto px-6 text-center flex flex-col items-center max-w-5xl">
 
-
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-sans font-normal uppercase leading-[0.85] tracking-tighter mb-8">
-                        <GlitchText text="FINISH ON TOP." className="animate-text-gradient-white drop-shadow-[0_0_30px_rgba(236,2,139,0.3)]" />
+                        <GlitchText text="FINISH ON TOP" className="animate-text-gradient-white drop-shadow-[0_0_30px_rgba(236,2,139,0.3)]" />
                         <img 
                             src="https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FImages%2Frhive%20pink%20icon.png?alt=media&token=a9982468-9ba9-498c-bd49-d2f6c1b9f4d1"
                             alt="RHIVE Icon"
