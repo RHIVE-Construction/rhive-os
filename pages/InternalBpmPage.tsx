@@ -1,6 +1,17 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { CircuitryBackground } from '../components/CircuitryBackground';
+import { db } from '../lib/firebase';
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp,
+  query,
+  orderBy,
+} from 'firebase/firestore';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -18,6 +29,14 @@ interface Activity {
   badge?: { label: string; color: 'pink' | 'gold' | 'cyan' | 'indigo' | 'green' };
   variant?: 'primary' | 'secondary' | 'support' | 'system' | 'supply';
   detail_modal: ActivityDetail;
+}
+
+interface BpmNote {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: Date | null;
+  author?: string;
 }
 
 // ─── Data ────────────────────────────────────────────────────────────────────
@@ -227,12 +246,282 @@ const DetailModal: React.FC<{ detail: ActivityDetail | null; onClose: () => void
   );
 };
 
+// ─── Notes Modal ──────────────────────────────────────────────────────────────
+
+const NotesModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [notes, setNotes] = useState<BpmNote[]>([]);
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState('');
+
+  // Real-time listener for notes
+  useEffect(() => {
+    const q = query(collection(db, 'bpm_notes'), orderBy('createdAt', 'desc'));
+    const unsub = onSnapshot(q, (snap) => {
+      const fetched: BpmNote[] = snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          title: data.title ?? '',
+          body: data.body ?? '',
+          createdAt: data.createdAt?.toDate?.() ?? null,
+          author: data.author ?? '',
+        };
+      });
+      setNotes(fetched);
+    });
+    return () => unsub();
+  }, []);
+
+  // Escape key handler
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  const handleSave = async () => {
+    if (!title.trim()) { setError('Please enter a note title.'); return; }
+    if (!body.trim()) { setError('Please enter note content.'); return; }
+    setError('');
+    setSaving(true);
+    try {
+      await addDoc(collection(db, 'bpm_notes'), {
+        title: title.trim(),
+        body: body.trim(),
+        createdAt: serverTimestamp(),
+        author: 'RHIVE Team',
+      });
+      setTitle('');
+      setBody('');
+    } catch (err) {
+      setError('Failed to save note. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await deleteDoc(doc(db, 'bpm_notes', id));
+    } catch {
+      // silent
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const formatDate = (d: Date | null) => {
+    if (!d) return '';
+    return d.toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  };
+
+  return (
+    <div
+      id="bpm-notes-modal-overlay"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bpm-notes-modal-title"
+    >
+      <div
+        className="bg-[#08090f] border border-[rgba(236,2,139,0.6)] shadow-[0_0_50px_rgba(236,2,139,0.35),0_0_100px_rgba(236,2,139,0.08)] w-[90%] max-w-2xl relative flex flex-col"
+        style={{
+          clipPath: 'polygon(22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%,0 22px)',
+          maxHeight: '88vh',
+        }}
+      >
+        {/* ── Modal Header ── */}
+        <div className="flex items-center justify-between px-7 pt-6 pb-4 border-b border-[rgba(55,65,81,0.6)] flex-shrink-0">
+          <div>
+            <p className="font-[Orbitron,sans-serif] text-[9px] font-bold tracking-[3px] text-[#ec028b] uppercase mb-1 opacity-80">
+              ⬡ BPM · NOTES
+            </p>
+            <h2
+              id="bpm-notes-modal-title"
+              className="text-xl font-bold text-white leading-tight font-[Orbitron,sans-serif]"
+            >
+              Process Notes
+            </h2>
+          </div>
+          <button
+            id="bpm-notes-modal-close"
+            onClick={onClose}
+            aria-label="Close notes panel"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[14px] text-[#ec028b] border border-[rgba(236,2,139,0.3)] bg-[rgba(236,2,139,0.08)] hover:bg-[#ec028b] hover:text-white transition-all duration-200 cursor-pointer flex-shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* ── Scrollable Body ── */}
+        <div className="overflow-y-auto flex-1 px-7 py-5 space-y-6">
+
+          {/* ── Add Note Form ── */}
+          <div className="p-5 border border-[rgba(236,2,139,0.25)] bg-[rgba(236,2,139,0.04)] space-y-4"
+            style={{ clipPath: 'polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)' }}
+          >
+            <p className="font-[Orbitron,sans-serif] text-[9px] font-bold tracking-[2.5px] text-[#ec028b] uppercase opacity-80">
+              + Add Note
+            </p>
+
+            {/* Title input */}
+            <div>
+              <label
+                htmlFor="bpm-note-title"
+                className="block text-[10px] font-semibold text-[#9ca3af] uppercase tracking-[1.5px] mb-1.5"
+              >
+                Title
+              </label>
+              <input
+                id="bpm-note-title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Note title..."
+                maxLength={120}
+                className="w-full bg-[rgba(255,255,255,0.04)] border border-[rgba(55,65,81,0.9)] text-white text-sm px-3.5 py-2.5 outline-none focus:border-[#ec028b] focus:shadow-[0_0_0_2px_rgba(236,2,139,0.15)] transition-all duration-200 placeholder-[#4b5563]"
+                style={{ clipPath: 'polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)' }}
+              />
+            </div>
+
+            {/* Body textarea */}
+            <div>
+              <label
+                htmlFor="bpm-note-body"
+                className="block text-[10px] font-semibold text-[#9ca3af] uppercase tracking-[1.5px] mb-1.5"
+              >
+                Content
+              </label>
+              <textarea
+                id="bpm-note-body"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder="Write your note here..."
+                rows={4}
+                maxLength={1000}
+                className="w-full bg-[rgba(255,255,255,0.04)] border border-[rgba(55,65,81,0.9)] text-white text-sm px-3.5 py-2.5 outline-none focus:border-[#ec028b] focus:shadow-[0_0_0_2px_rgba(236,2,139,0.15)] transition-all duration-200 placeholder-[#4b5563] resize-none"
+                style={{ clipPath: 'polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)' }}
+              />
+              <p className="text-[9px] text-[#4b5563] text-right mt-1">{body.length}/1000</p>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <p className="text-[11px] text-[#ec028b] bg-[rgba(236,2,139,0.08)] border border-[rgba(236,2,139,0.2)] px-3 py-2">
+                ⚠ {error}
+              </p>
+            )}
+
+            {/* Save button */}
+            <div className="flex justify-end">
+              <button
+                id="bpm-note-save"
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[1.5px] text-white bg-[#ec028b] hover:bg-[rgba(236,2,139,0.85)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-[0_0_14px_rgba(236,2,139,0.4)]"
+                style={{ clipPath: 'polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)' }}
+              >
+                {saving ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <span>✦</span> Save
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* ── Notes List ── */}
+          <div>
+            <p className="font-[Orbitron,sans-serif] text-[9px] font-bold tracking-[2.5px] text-[#6b7280] uppercase mb-3 flex items-center gap-2">
+              <span
+                className="inline-block w-8 h-px"
+                style={{ background: 'linear-gradient(90deg,#ec028b,transparent)' }}
+              />
+              Saved Notes ({notes.length})
+            </p>
+
+            {notes.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <span className="text-3xl mb-3 opacity-30">📝</span>
+                <p className="text-[12px] text-[#4b5563]">No notes yet. Add your first note above.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {notes.map((note) => (
+                  <div
+                    key={note.id}
+                    className="p-4 border border-[rgba(55,65,81,0.7)] bg-[rgba(255,255,255,0.02)] hover:border-[rgba(236,2,139,0.3)] transition-all duration-200 group relative"
+                    style={{ clipPath: 'polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)' }}
+                  >
+                    {/* Note header */}
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[13px] font-bold text-white leading-tight truncate">
+                          {note.title}
+                        </h3>
+                        {note.createdAt && (
+                          <p className="text-[9px] text-[#4b5563] mt-0.5 font-[Orbitron,sans-serif] tracking-[0.5px]">
+                            {formatDate(note.createdAt)}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        id={`bpm-note-delete-${note.id}`}
+                        onClick={() => handleDelete(note.id)}
+                        disabled={deletingId === note.id}
+                        aria-label={`Delete note: ${note.title}`}
+                        className="flex-shrink-0 opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-[10px] text-[#6b7280] border border-[rgba(55,65,81,0.6)] bg-[rgba(10,10,20,0.8)] hover:border-[#ec028b] hover:text-[#ec028b] transition-all duration-200 cursor-pointer disabled:opacity-30"
+                        style={{ clipPath: 'polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)' }}
+                      >
+                        {deletingId === note.id ? (
+                          <span className="w-2 h-2 border border-[#ec028b]/50 border-t-[#ec028b] rounded-full animate-spin" />
+                        ) : (
+                          '✕'
+                        )}
+                      </button>
+                    </div>
+                    {/* Note body */}
+                    <p className="text-[12px] text-[#9ca3af] leading-relaxed whitespace-pre-wrap">
+                      {note.body}
+                    </p>
+                    {/* Pink accent line on left */}
+                    <div
+                      className="absolute left-0 top-2 bottom-2 w-[2px]"
+                      style={{ background: 'linear-gradient(180deg,transparent,rgba(236,2,139,0.5),transparent)' }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Page Component ──────────────────────────────────────────────────────
 
 const InternalBpmPage: React.FC = () => {
   const [modal, setModal] = useState<ActivityDetail | null>(null);
+  const [notesOpen, setNotesOpen] = useState(false);
   const openModal = useCallback((d: ActivityDetail) => setModal(d), []);
   const closeModal = useCallback(() => setModal(null), []);
+  const openNotes = useCallback(() => setNotesOpen(true), []);
+  const closeNotes = useCallback(() => setNotesOpen(false), []);
 
   return (
     <div className="relative min-h-screen bg-black text-white font-[Rubik,sans-serif] overflow-x-auto">
@@ -243,6 +532,9 @@ const InternalBpmPage: React.FC = () => {
 
       {/* Detail Modal */}
       <DetailModal detail={modal} onClose={closeModal} />
+
+      {/* Notes Modal */}
+      {notesOpen && <NotesModal onClose={closeNotes} />}
 
       {/* Page Content */}
       <div className="relative z-10 px-8 pt-7 pb-14" style={{ minWidth: '1400px' }}>
@@ -263,6 +555,26 @@ const InternalBpmPage: React.FC = () => {
             End-to-End Business Process Map
           </h1>
 
+          {/* Add Note Button — upper right */}
+          <button
+            id="bpm-add-note-btn"
+            onClick={openNotes}
+            aria-label="Open process notes"
+            className="absolute top-0 right-0 flex items-center gap-2 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[1.5px] text-[#ec028b] border border-[rgba(236,2,139,0.5)] bg-[rgba(236,2,139,0.07)] hover:bg-[#ec028b] hover:text-white transition-all duration-200 shadow-[0_0_12px_rgba(236,2,139,0.25)] hover:shadow-[0_0_20px_rgba(236,2,139,0.5)] group"
+            style={{ clipPath: 'polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)' }}
+          >
+            <svg
+              className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-90"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Note
+          </button>
         </header>
 
         {/* ── Legend ── */}
