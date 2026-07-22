@@ -31,6 +31,28 @@ const isPasswordResetFlow = (): boolean => {
            (mode === 'firestoreReset' && !!params.get('token'));
 };
 
+// Detect /map path once at module load — used to short-circuit the entire auth flow
+const IS_MAP_ROUTE = window.location.pathname === '/map';
+
+// ── /map Full-Screen Renderer ─────────────────────────────────────────────────
+// Rendered when the user navigates to /map directly (no auth, no sidebar).
+const BpmMapRenderer: React.FC = () => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    const BpmPage = pageComponentMap['INTERNAL-BPM'];
+    return (
+        <div className={cn(
+            'fixed inset-0 w-screen h-screen overflow-hidden font-sans',
+            isDark ? 'bg-black text-white' : 'bg-black text-white'
+        )}>
+            <CircuitryBackground backgroundColor="#000000" dotColor="#ec028b" lineColor="236, 2, 139" />
+            <main className="relative z-10 w-full h-full overflow-y-auto">
+                {BpmPage && <BpmPage />}
+            </main>
+        </div>
+    );
+};
+
 const AppContentAuthenticated: React.FC = () => {
     const { activePageId, setActivePageId, showEditorMenu } = useNavigation();
     const { currentUser } = useMockDB();
@@ -342,6 +364,15 @@ const LoginBridge: React.FC = () => {
 };
 
 export default function App() {
+    // /map route — render BPM page inside ThemeProvider only (no auth, no sidebar)
+    if (IS_MAP_ROUTE) {
+        return (
+            <ThemeProvider>
+                <BpmMapRenderer />
+            </ThemeProvider>
+        );
+    }
+
     return (
         <ThemeProvider>
             <LanguageProvider>
