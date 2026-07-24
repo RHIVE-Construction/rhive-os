@@ -32,10 +32,6 @@ const firebaseConfig = {
     measurementId: safeEnv.VITE_FIREBASE_MEASUREMENT_ID || "G-MOCK0000000"
 };
 
-console.log("RHIVE Debug Firebase Config:", {
-    ...firebaseConfig,
-    apiKey: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 8)}...` : 'undefined'
-});
 
 // Initialize Firebase
 const app: FirebaseApp = initializeApp(firebaseConfig);
