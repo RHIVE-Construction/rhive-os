@@ -4,34 +4,46 @@ import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 
-// Safe check for import.meta.env to prevent crashes in non-Vite environments
-const safeEnv = (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {}) as any;
+// Vite replaces import.meta.env.VITE_* at BUILD time — never at runtime.
+// Reading directly avoids the dynamic safeEnv lookup that minification can break.
+const FIREBASE_API_KEY         = import.meta.env.VITE_FIREBASE_API_KEY         as string | undefined;
+const FIREBASE_AUTH_DOMAIN     = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN     as string | undefined;
+const FIREBASE_PROJECT_ID      = import.meta.env.VITE_FIREBASE_PROJECT_ID      as string | undefined;
+const FIREBASE_STORAGE_BUCKET  = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET  as string | undefined;
+const FIREBASE_MESSAGING_ID    = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string | undefined;
+const FIREBASE_APP_ID          = import.meta.env.VITE_FIREBASE_APP_ID          as string | undefined;
+const FIREBASE_MEASUREMENT_ID  = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID  as string | undefined;
 
-// Check if Firebase environment variables are missing
-const isFirebaseConfigMissing = 
-    !safeEnv.VITE_FIREBASE_API_KEY || 
-    !safeEnv.VITE_FIREBASE_PROJECT_ID;
+// True when all required Firebase identifiers are present (i.e. real production build).
+// When false, the app is running on localhost without env vars — mock database is active.
+const isRealFirebaseConfig =
+    !!FIREBASE_API_KEY &&
+    FIREBASE_API_KEY !== "mock-api-key-for-local-testing-only" &&
+    !!FIREBASE_PROJECT_ID &&
+    !!FIREBASE_APP_ID;
 
-if (isFirebaseConfigMissing) {
+if (!isRealFirebaseConfig) {
     console.warn(
-        "⚠️ [RHIVE QOS] Firebase configuration environment variables are missing or empty!\n" +
-        "The application is falling back to dummy mock credentials. Live database sync will be offline,\n" +
-        "but the client-side seed mock database is active and fully functional on localhost."
+        "⚠️ [RHIVE QOS] Firebase env vars not found — using offline mock credentials.\n" +
+        "Live database sync is disabled. The local mock database is active and fully functional."
     );
 }
 
-// Firebase Configuration using Environment Variables
-// If variables are missing, provide mock placeholders to prevent fatal initializeApp crashes.
+// Firebase Configuration — falls back to safe mock values only on localhost.
+// On production (Firebase App Hosting), all VITE_* vars are injected at build time
+// via apphosting.yaml so the fallbacks here are never reached in production.
 const firebaseConfig = {
-    apiKey: safeEnv.VITE_FIREBASE_API_KEY || "mock-api-key-for-local-testing-only",
-    authDomain: safeEnv.VITE_FIREBASE_AUTH_DOMAIN || "rhive-os-mock.firebaseapp.com",
-    projectId: safeEnv.VITE_FIREBASE_PROJECT_ID || "rhive-os",
-    storageBucket: safeEnv.VITE_FIREBASE_STORAGE_BUCKET || "rhive-os-mock.appspot.com",
-    messagingSenderId: safeEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || "000000000000",
-    appId: safeEnv.VITE_FIREBASE_APP_ID || "1:000000000000:web:0000000000000000000000",
-    measurementId: safeEnv.VITE_FIREBASE_MEASUREMENT_ID || "G-MOCK0000000"
+    apiKey:            FIREBASE_API_KEY           || "mock-api-key-for-local-testing-only",
+    authDomain:        FIREBASE_AUTH_DOMAIN        || "rhive-os-mock.firebaseapp.com",
+    projectId:         FIREBASE_PROJECT_ID         || "rhive-os",
+    storageBucket:     FIREBASE_STORAGE_BUCKET     || "rhive-os-mock.appspot.com",
+    messagingSenderId: FIREBASE_MESSAGING_ID       || "000000000000",
+    appId:             FIREBASE_APP_ID             || "1:000000000000:web:0000000000000000000000",
+    // Only pass measurementId when it is real — prevents Analytics from
+    // making a dynamic config-fetch call with an invalid/mock ID, which
+    // causes the "[Analytics: Dynamic config fetch failed: [400] API key not valid]" error.
+    ...(FIREBASE_MEASUREMENT_ID ? { measurementId: FIREBASE_MEASUREMENT_ID } : {}),
 };
-
 
 // Initialize Firebase
 const app: FirebaseApp = initializeApp(firebaseConfig);
@@ -42,20 +54,27 @@ let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
 
-// Analytics only works in browser environment and may fail gracefully
-if (typeof window !== 'undefined') {
+// Analytics: ONLY initialize when:
+//   1. Running in a browser context.
+//   2. A real (non-mock) Firebase config is present.
+//   3. A valid measurementId was provided.
+//
+// Skipping Analytics with a mock config prevents the production error:
+//   "@firebase/analytics: Failed to fetch this Firebase app's measurement ID
+//    from the server. Falling back to the measurement ID G-MOCK0000000 ...
+//    [Analytics: Dynamic config fetch failed: [400] API key not valid.]"
+if (typeof window !== 'undefined' && isRealFirebaseConfig && !!FIREBASE_MEASUREMENT_ID) {
     try {
         analytics = getAnalytics(app);
     } catch (e) {
-        console.warn('Firebase Analytics not available:', e);
+        console.warn('[RHIVE] Firebase Analytics unavailable:', e);
     }
 }
 
 // Initialize other services
-auth = getAuth(app);
-db = getFirestore(app);
+auth    = getAuth(app);
+db      = getFirestore(app);
 storage = getStorage(app);
 
 // Export initialized services
 export { app, analytics, auth, db, storage };
-

@@ -217,7 +217,6 @@ const ContactsListPage: React.FC = () => {
                 </div>
                 <button 
                     onClick={() => {
-                        console.log("Add Contact button clicked. Opening modal...");
                         setIsModalOpen(true);
                     }}
                     className="flex items-center gap-2 px-5 py-2.5 bg-[#ec028b] text-white hover:bg-pink-600 rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(236,2,139,0.3)] hover:shadow-[0_0_25px_rgba(236,2,139,0.5)] flex-shrink-0 whitespace-nowrap active:scale-95"
