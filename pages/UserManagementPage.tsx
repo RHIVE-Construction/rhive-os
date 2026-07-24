@@ -174,9 +174,9 @@ const UserManagementPage: React.FC = () => {
         setPwError('');
         try {
             const hashed = await hashPassword(newPassword);
-            console.log('[ChangePassword] Updating user ID:', pwUser.id, '| hash preview:', hashed.slice(0, 12) + '...');
+
             const result = await userService.update(pwUser.id, { password_hash: hashed, updated_at: new Date().toISOString() });
-            console.log('[ChangePassword] Result:', result);
+
             if (result.success) {
                 setPwSuccess(true);
                 userLogService.logAction(

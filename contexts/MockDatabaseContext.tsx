@@ -470,7 +470,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
 
     const addCommunication = (type: 'email' | 'text' | 'file', targetId: string, content: string) => {
-        console.log(`[SIMULATION] Added ${type} to ${targetId}: ${content}`);
+
         userLogService.logAction('ADD_COMMUNICATION', `Communication logged to ${targetId} (${type})`, { type, targetId, content });
     };
 

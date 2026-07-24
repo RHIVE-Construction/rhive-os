@@ -1179,7 +1179,7 @@ export const userLogService = {
 
         try {
             const result = await firestoreService.addDocument('user_log', logDoc);
-            console.log(`[user_log] Successfully recorded log: ${actionType} - ${description}`, result);
+
             return result;
         } catch (error: any) {
             console.warn('🔥 Failed to write user action to Firestore user_log:', error);
