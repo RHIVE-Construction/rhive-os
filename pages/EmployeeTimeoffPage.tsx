@@ -172,7 +172,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, prefil
     const [startTime, setStartTime] = useState('09:00');
     const [endTime, setEndTime] = useState('10:00');
     const [isAllDay, setIsAllDay] = useState(false);
-    const [pushToGoogle, setPushToGoogle] = useState(true);
+    const pushToGoogle = true; // Always sync to Google Calendar
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const isEdit = !!editEvent;
@@ -189,12 +189,12 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, prefil
             setDate(editEvent.startDateTime.slice(0, 10));
             setStartTime(`${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`);
             setEndTime(`${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`);
-            setPushToGoogle(isGoogleSynced && !!editEvent.googleEventId);
+            // pushToGoogle is always true
         } else {
             const base = prefillDate || new Date().toISOString().slice(0, 10);
             setTitle(''); setDescription(''); setLocation('');
             setDate(base); setStartTime('09:00'); setEndTime('10:00');
-            setIsAllDay(false); setPushToGoogle(isGoogleSynced);
+            setIsAllDay(false);
         }
         setError('');
     }, [isOpen, editEvent, prefillDate, isGoogleSynced]);
@@ -287,17 +287,11 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, prefil
                         <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Agenda, project details..." rows={2} className={`${inputCls} resize-none`} />
                     </div>
 
-                    {/* Google toggle */}
+                    {/* Google sync indicator — always syncs when connected */}
                     {isGoogleSynced && (
-                        <div className="flex items-center justify-between p-3 bg-[#ec028b]/5 rounded-lg border border-[#ec028b]/20">
-                            <div>
-                                <p className="text-xs font-bold text-white">{isEdit ? 'Update in Google Calendar' : 'Also add to Google Calendar'}</p>
-                                <p className="text-[10px] text-gray-500 mt-0.5">Event will sync to your Google Calendar</p>
-                            </div>
-                            <button type="button" onClick={() => setPushToGoogle(v => !v)}
-                                className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${pushToGoogle ? 'bg-[#ec028b]' : 'bg-gray-700'}`}>
-                                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${pushToGoogle ? 'left-5' : 'left-0.5'}`} />
-                            </button>
+                        <div className="flex items-center gap-2 p-3 bg-[#ec028b]/5 rounded-lg border border-[#ec028b]/20">
+                            <span className="text-[#ec028b] text-sm">⚡</span>
+                            <p className="text-xs font-bold text-[#ec028b]">{isEdit ? 'Will update in Google Calendar' : 'Will sync to Google Calendar'}</p>
                         </div>
                     )}
 
@@ -416,7 +410,7 @@ const EmployeeTimeoffPage: React.FC = () => {
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const todayStr = now.toISOString().slice(0, 10);
-    const isAlreadySynced = !!(currentUser as any)?.googleCalendarLinked;
+    const isAlreadySynced = true; // Team is activated — all users have Google Calendar connected
 
     const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
     const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
@@ -630,7 +624,7 @@ const EmployeeTimeoffPage: React.FC = () => {
     const popupDateLabel = popupDate ? new Date(popupDate + 'T12:00:00').toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' }) : '';
 
     return (
-        <PageContainer title={page?.name || 'Calendar'} description="Track follow-up calls, site visits, time-off, and Google Calendar events.">
+        <PageContainer title={page?.name || 'Calendar'}>
 
             {/* ── Sync Banner ──────────────────────────────────────────── */}
             <div className="mb-5 p-4 bg-gray-900/50 border border-gray-800 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -654,13 +648,7 @@ const EmployeeTimeoffPage: React.FC = () => {
                             {syncing ? 'Connecting…' : 'Connect Google Calendar'}
                         </button>
                     )}
-                    {isAlreadySynced && (
-                        <button onClick={handleSync} disabled={syncing}
-                            className="flex items-center gap-2 px-3 h-8 text-[10px] font-black uppercase tracking-widest border border-gray-800 text-gray-600 hover:border-gray-600 hover:text-gray-400 disabled:opacity-40 rounded-lg transition-all">
-                            <ArrowPathIcon className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} />
-                            {syncing ? '…' : 'Re-sync'}
-                        </button>
-                    )}
+
                     <button onClick={() => { setPrefillDate(''); setEditEvent(null); setShowEventModal(true); }}
                         className="flex items-center gap-2 px-4 h-9 text-[11px] font-black uppercase tracking-widest bg-[#ec028b] text-white hover:bg-pink-600 rounded-lg transition-colors shadow-[0_0_12px_rgba(236,2,139,0.3)]">
                         <PlusIcon className="w-3.5 h-3.5" />
@@ -779,74 +767,43 @@ const EmployeeTimeoffPage: React.FC = () => {
 
                 {/* ── Sidebar ────────────────────────────────────────────── */}
                 <div className="space-y-5">
-                    {/* Upcoming Follow-Ups */}
-                    <Card title="Upcoming Follow-Ups">
-                        {upcomingFollowUps.length === 0 ? (
-                            <div className="text-center py-6">
-                                <CalendarDaysIcon className="w-8 h-8 mx-auto text-gray-700 mb-2" />
-                                <p className="text-gray-600 text-xs">No upcoming follow-ups.</p>
-                                <p className="text-gray-700 text-[11px] mt-1">Schedule one from any pipeline record.</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                {upcomingFollowUps.map(fu => (
-                                    <div key={fu.id} className={cn('p-3 rounded-xl border', fu.type === 'call' ? 'bg-green-500/5 border-green-500/15' : 'bg-purple-500/5 border-purple-500/15')}>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            {fu.type === 'call' ? <PhoneIcon className="w-3 h-3 text-green-400 shrink-0" /> : <MapPinIcon className="w-3 h-3 text-purple-400 shrink-0" />}
-                                            <span className={cn('text-[9px] font-black uppercase tracking-widest', fu.type === 'call' ? 'text-green-400' : 'text-purple-400')}>
-                                                {fu.type === 'call' ? 'Call' : 'Visit'}
-                                            </span>
-                                            <span className="ml-auto text-[9px] text-gray-600 font-mono flex items-center gap-0.5">
-                                                <ClockIcon className="w-2.5 h-2.5" />{fu.time}
-                                            </span>
-                                        </div>
-                                        <p className="text-white text-xs font-bold truncate">{fu.project_name}</p>
-                                        <p className="text-gray-600 text-[10px] mt-0.5">
-                                            {new Date(fu.date + 'T12:00:00').toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' })} · {fu.stage}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </Card>
-
-                    {/* Upcoming Calendar Events */}
+                    {/* Upcoming Events — within the next 5 days */}
                     <Card title="Upcoming Events">
                         {gcalLoading ? (
                             <div className="flex items-center gap-2 text-gray-600 text-xs py-4">
                                 <ArrowPathIcon className="w-4 h-4 animate-spin" /> Loading events…
                             </div>
-                        ) : gcalEvents.filter(e => e.startDateTime >= todayStr).length === 0 ? (
-                            <div className="text-center py-4">
-                                <CalendarDaysIcon className="w-7 h-7 mx-auto text-gray-700 mb-1.5" />
-                                <p className="text-gray-600 text-xs">No upcoming events.</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                                {gcalEvents
-                                    .filter(e => e.startDateTime >= todayStr)
-                                    .slice(0, 8)
-                                    .map(ev => (
-                                        <button key={ev.id} onClick={() => setSelectedEvent(ev)}
-                                            className="w-full text-left p-2.5 rounded-lg border border-gray-800 hover:border-gray-700 bg-gray-900/40 hover:bg-gray-900/70 transition-all group">
-                                            <div className="flex items-center gap-2 mb-0.5">
-                                                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${ev.source === 'google' ? 'bg-[#ec028b]' : 'bg-yellow-400'}`} />
-                                                <span className="text-xs font-bold text-white truncate">{ev.title}</span>
-                                            </div>
-                                            <p className="text-[10px] text-gray-500 ml-3.5">
-                                                {new Date(ev.startDateTime).toLocaleDateString('default', { month: 'short', day: 'numeric' })}
-                                                {!ev.isAllDay && ` · ${new Date(ev.startDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                                            </p>
-                                        </button>
-                                    ))}
-                            </div>
-                        )}
+                        ) : (() => {
+                            const fiveDaysOut = new Date(now);
+                            fiveDaysOut.setDate(fiveDaysOut.getDate() + 5);
+                            const fiveDayStr = fiveDaysOut.toISOString().slice(0, 10);
+                            const upcomingFiltered = gcalEvents.filter(e => e.startDateTime >= todayStr && e.startDateTime.slice(0, 10) <= fiveDayStr);
+                            return upcomingFiltered.length === 0 ? (
+                                <div className="text-center py-4">
+                                    <CalendarDaysIcon className="w-7 h-7 mx-auto text-gray-700 mb-1.5" />
+                                    <p className="text-gray-600 text-xs">No events in the next 5 days.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                                    {upcomingFiltered
+                                        .slice(0, 8)
+                                        .map(ev => (
+                                            <button key={ev.id} onClick={() => setSelectedEvent(ev)}
+                                                className="w-full text-left p-2.5 rounded-lg border border-gray-800 hover:border-gray-700 bg-gray-900/40 hover:bg-gray-900/70 transition-all group">
+                                                <div className="flex items-center gap-2 mb-0.5">
+                                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${ev.source === 'google' ? 'bg-[#ec028b]' : 'bg-yellow-400'}`} />
+                                                    <span className="text-xs font-bold text-white truncate">{ev.title}</span>
+                                                </div>
+                                                <p className="text-[10px] text-gray-500 ml-3.5">
+                                                    {new Date(ev.startDateTime).toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                                    {!ev.isAllDay && ` · ${new Date(ev.startDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                                                </p>
+                                            </button>
+                                        ))}
+                                </div>
+                            );
+                        })()}
                     </Card>
-
-                    <Button size="lg" className="w-full bg-[#ec028b] hover:bg-[#c00270] shadow-[0_0_20px_rgba(236,2,139,0.3)]">
-                        <CalendarDaysIcon className="w-5 h-5 mr-2" />
-                        Request Time Off
-                    </Button>
                 </div>
             </div>
 
