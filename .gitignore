@@ -21,6 +21,7 @@ setup-secrets.sh
 # Large Media
 *.m4a
 *.mp4
+!public/vidupload/compressed_tradeshow_video.mp4
 *.wav
 *.mp3
 *.mov
