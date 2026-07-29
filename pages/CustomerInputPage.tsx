@@ -46,6 +46,7 @@ import { INITIAL_SURVEY_STATE } from '../lib/constants';
 import { WeatherReport } from '../components/WeatherReport';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, ProjectStage } from '../types';
 import { createProject as createProjectApi } from '../lib/api';
+import { userLogService } from '../lib/firebaseService';
 import { getMapsApiKey } from '../lib/mapsConfig';
 
 // --- Reusable UI Components ---
@@ -836,6 +837,7 @@ const CustomerInputPage: React.FC = () => {
         if (contacts.length === 0) return alert("Please add at least one contact.");
         const primary = contacts.find(c => c.isPrimary) || contacts[0];
         const projNameStr = isCommercialOrGov ? (companyData.propertyName || propertyData.address) : `${primary.lastName} Residence`;
+        const now = new Date().toISOString();
 
         try {
             await createProjectApi({
@@ -887,10 +889,42 @@ const CustomerInputPage: React.FC = () => {
                     scheduledInspection: scheduledDetails || undefined
                 }
             });
-            console.log("✅ Project and Property successfully saved to Firebase!");
+
+            // Log new lead/project creation
+            userLogService.logAction(
+                'NEW_LEAD_CREATED',
+                `New lead "${projNameStr}" (${projectCategory}) created at ${propertyData.address || 'unknown address'}, ${propertyData.city || ''}`,
+                {
+                    page: 'New Lead Entry',
+                    action: 'Create New Lead',
+                    projectName: projNameStr,
+                    projectType: projectCategory,
+                    address: propertyData.address,
+                    city: propertyData.city,
+                    state: propertyData.state,
+                    primaryContact: `${primary.firstName} ${primary.lastName}`.trim(),
+                    primaryEmail: primary.email || undefined,
+                    primaryPhone: primary.phone || undefined,
+                    contactCount: contacts.length,
+                    isInsuranceClaim: isInsurance,
+                    carrier: isInsurance ? insuranceInfo.carrier : undefined,
+                    hasScheduledInspection: !!scheduledDetails,
+                    timestamp: now
+                }
+            );
+
             setIsSuccess(true);
         } catch (error) {
-            console.error("❌ Failed to save project to database:", error);
+            userLogService.logAction(
+                'NEW_LEAD_CREATE_FAILED',
+                `Failed to create lead "${projNameStr}" — ${error instanceof Error ? error.message : 'Unknown error'}`,
+                {
+                    page: 'New Lead Entry',
+                    projectName: projNameStr,
+                    projectType: projectCategory,
+                    address: propertyData.address
+                }
+            );
             alert(`Failed to save to Firebase: ${error instanceof Error ? error.message : 'Unknown error'}. Check browser console for details.`);
         }
     };

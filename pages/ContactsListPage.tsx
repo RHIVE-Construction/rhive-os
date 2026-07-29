@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PageContainer from '../components/PageContainer';
 import Button from '../components/Button';
 import { useNavigation } from '../contexts/NavigationContext';
-import { firestoreService } from '../lib/firebaseService';
+import { firestoreService, userLogService } from '../lib/firebaseService';
 import { UserIcon, ChevronRightIcon, PlusIcon, MailIcon, PhoneIcon, MapPinIcon } from '../components/icons';
 import { cn } from '../lib/utils';
 
@@ -38,9 +38,26 @@ const ContactsListPage: React.FC = () => {
         return () => unsub();
     }, []);
 
-    const handleSelectContact = (id: string) => {
-        setSelectedContactId(id);
+    const handleSelectContact = (contact: any) => {
+        setSelectedContactId(contact.id);
         setActivePageId('E-10');
+        const name = [contact.first_name, contact.last_name, contact.full_name, contact.name]
+            .filter(Boolean).join(' ').trim() || 'Unknown';
+        userLogService.logAction(
+            'CONTACT_VIEWED',
+            `Contact profile opened: "${name}" (${contact.email || contact.phone || 'no contact info'})`,
+            {
+                page: 'Contacts',
+                action: 'View Contact Profile',
+                contactId: contact.id,
+                contactName: name,
+                contactEmail: contact.email || undefined,
+                contactPhone: contact.phone || contact.mobile || undefined,
+                contactRole: contact.role || contact.contactType || undefined,
+                navigatedTo: 'E-10',
+                timestamp: new Date().toISOString()
+            }
+        );
     };
 
     // Build unique filter labels from role / contactType / leadSource
@@ -145,7 +162,7 @@ const ContactsListPage: React.FC = () => {
                         return (
                             <div
                                 key={contact.id}
-                                onClick={() => handleSelectContact(contact.id)}
+                                onClick={() => handleSelectContact(contact)}
                                 className="group relative bg-gray-900/40 border border-gray-800 rounded-2xl p-6 cursor-pointer hover:border-[#ec028b]/60 transition-all duration-300 hover:shadow-[0_0_30px_rgba(236,2,139,0.1)] overflow-hidden"
                             >
                                 {/* Hover top-line accent */}
