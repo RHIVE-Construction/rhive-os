@@ -23,8 +23,15 @@ import { cn, hashPassword } from '../lib/utils';
 // Internal roles that must register via Firebase Auth
 const INTERNAL_ROLES: UserType[] = ['Admin', 'Super Admin', 'Employee'];
 
+// Roles that are allowed to change another user's password
+const PASSWORD_CHANGE_ROLES: UserType[] = ['Super Admin'];
 
 const UserManagementPage: React.FC = () => {
+    const { currentUser } = useMockDB();
+
+    // Derived permission: only Super Admin can change other users' passwords
+    const canChangePasswords = PASSWORD_CHANGE_ROLES.includes(currentUser?.role as UserType);
+
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
@@ -55,6 +62,12 @@ const UserManagementPage: React.FC = () => {
             setUsers(data as User[]);
             setLoading(false);
         });
+        // Log page access
+        userLogService.logAction(
+            'PAGE_ACCESSED',
+            'User Management page was accessed',
+            { page: 'UserManagementPage' }
+        );
         return () => unsub();
     }, []);
 
@@ -70,6 +83,11 @@ const UserManagementPage: React.FC = () => {
         setSubmitError('');
         setFormData({ name: '', role: 'Employee', email: '', phone: '', password: '' });
         setIsModalOpen(true);
+        userLogService.logAction(
+            'ADD_USER_MODAL_OPENED',
+            `New user registration modal opened by ${currentUser?.name ?? 'Admin'}`,
+            { openedBy: currentUser?.id, openedByRole: currentUser?.role }
+        );
     };
 
     const handleOpenEdit = (user: User) => {
@@ -84,21 +102,60 @@ const UserManagementPage: React.FC = () => {
             password: ''
         });
         setIsModalOpen(true);
+        userLogService.logAction(
+            'EDIT_USER_MODAL_OPENED',
+            `Edit modal opened for user "${user.name}" (${user.role}) by ${currentUser?.name ?? 'Admin'}`,
+            { targetUserId: user.id, targetUserName: user.name, targetUserRole: user.role, openedBy: currentUser?.id }
+        );
     };
 
     const handleDelete = async (id: string) => {
+        const targetUser = users.find(u => u.id === id);
+        userLogService.logAction(
+            'DELETE_USER_CONFIRM_PROMPTED',
+            `Delete confirmation shown for user "${targetUser?.name ?? id}" by ${currentUser?.name ?? 'Admin'}`,
+            { targetUserId: id, targetUserName: targetUser?.name, promptedBy: currentUser?.id }
+        );
         if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-            const targetUser = users.find(u => u.id === id);
             await userService.delete(id);
             userLogService.logAction(
                 'USER_DELETED',
-                `User "${targetUser?.name ?? id}" (${targetUser?.role ?? 'Unknown'}) was deleted`,
-                { deletedUserId: id, deletedUserName: targetUser?.name, deletedUserRole: targetUser?.role, deletedUserEmail: targetUser?.email }
+                `User "${targetUser?.name ?? id}" (${targetUser?.role ?? 'Unknown'}) was permanently deleted by ${currentUser?.name ?? 'Admin'}`,
+                {
+                    deletedUserId: id,
+                    deletedUserName: targetUser?.name,
+                    deletedUserRole: targetUser?.role,
+                    deletedUserEmail: targetUser?.email,
+                    deletedBy: currentUser?.id,
+                    deletedByName: currentUser?.name,
+                    deletedByRole: currentUser?.role,
+                    deletedAt: new Date().toISOString()
+                }
+            );
+        } else {
+            userLogService.logAction(
+                'USER_DELETE_CANCELLED',
+                `Delete cancelled for user "${targetUser?.name ?? id}" by ${currentUser?.name ?? 'Admin'}`,
+                { targetUserId: id, cancelledBy: currentUser?.id }
             );
         }
     };
 
     const openChangePw = (user: User) => {
+        // Guard: only Super Admin / Owner can change passwords
+        if (!canChangePasswords) {
+            userLogService.logAction(
+                'UNAUTHORIZED_PASSWORD_CHANGE_ATTEMPT',
+                `Unauthorized attempt to change password for "${user.name}" — blocked (role: ${currentUser?.role ?? 'unknown'})`,
+                { targetUserId: user.id, targetUserName: user.name, actorRole: currentUser?.role }
+            );
+            return;
+        }
+        userLogService.logAction(
+            'PASSWORD_CHANGE_MODAL_OPENED',
+            `Password change modal opened for user "${user.name}" (${user.role})`,
+            { targetUserId: user.id, targetUserName: user.name, targetUserRole: user.role }
+        );
         setPwUser(user);
         setNewPassword('');
         setPwError('');
@@ -107,26 +164,54 @@ const UserManagementPage: React.FC = () => {
 
     const handleChangePassword = async () => {
         if (!pwUser) return;
+        // Final server-side guard — should never reach here without permission
+        if (!canChangePasswords) {
+            setPwError('Access denied. Only Super Admin can change passwords.');
+            userLogService.logAction(
+                'UNAUTHORIZED_PASSWORD_CHANGE_BLOCKED',
+                `Server-side block: unauthorized password change attempt for "${pwUser.name}"`,
+                { targetUserId: pwUser.id, actorRole: currentUser?.role }
+            );
+            return;
+        }
         if (newPassword.length < 6) { setPwError('Password must be at least 6 characters.'); return; }
         setPwSubmitting(true);
         setPwError('');
         try {
             const hashed = await hashPassword(newPassword);
-            console.log('[ChangePassword] Updating user ID:', pwUser.id, '| hash preview:', hashed.slice(0, 12) + '...');
-            const result = await userService.update(pwUser.id, { password_hash: hashed, updated_at: new Date().toISOString() });
-            console.log('[ChangePassword] Result:', result);
+            const now = new Date().toISOString();
+
+            const result = await userService.update(pwUser.id, {
+                password_hash: hashed,
+                password_updated_at: now,
+                updated_at: now
+            });
+
             if (result.success) {
                 setPwSuccess(true);
                 userLogService.logAction(
                     'USER_PASSWORD_CHANGED',
-                    `Password changed for user "${pwUser.name}" (${pwUser.role})`,
-                    { targetUserId: pwUser.id, targetUserName: pwUser.name, targetUserRole: pwUser.role, targetUserEmail: pwUser.email }
+                    `Password successfully changed for user "${pwUser.name}" (${pwUser.role}) by ${currentUser?.name ?? 'Admin'}`,
+                    {
+                        targetUserId: pwUser.id,
+                        targetUserName: pwUser.name,
+                        targetUserRole: pwUser.role,
+                        targetUserEmail: pwUser.email,
+                        changedBy: currentUser?.id,
+                        changedByName: currentUser?.name,
+                        changedByRole: currentUser?.role,
+                        passwordUpdatedAt: now
+                    }
                 );
             } else {
-                setPwError(result.error || 'Firestore update failed. Check console for details.');
+                setPwError(result.error || 'Firestore update failed. Please try again.');
+                userLogService.logAction(
+                    'USER_PASSWORD_CHANGE_FAILED',
+                    `Password change FAILED for "${pwUser.name}" — Firestore error`,
+                    { targetUserId: pwUser.id, error: result.error }
+                );
             }
         } catch (err: any) {
-            console.error('[ChangePassword] Error:', err);
             setPwError(err?.message || 'Failed to update password.');
         } finally {
             setPwSubmitting(false);
@@ -142,24 +227,25 @@ const UserManagementPage: React.FC = () => {
         try {
             if (editingUser) {
                 // ── EDIT: update Firestore profile ──────────────────────────────
+                const now = new Date().toISOString();
                 const payload: any = {
                     name: formData.name,
                     role: formData.role,
                     email: formData.email,
                     phone: formData.phone,
-                    updated_at: new Date().toISOString()
+                    updated_at: now
                 };
-                if (formData.password) {
-                    payload.password_hash = await hashPassword(formData.password);
-                }
                 await userService.update(editingUser.id, payload);
                 userLogService.logAction(
-                    'USER_UPDATED',
-                    `User "${formData.name}" (${formData.role}) profile was updated`,
+                    'USER_PROFILE_UPDATED',
+                    `Profile for "${formData.name}" (${formData.role}) was updated by ${currentUser?.name ?? 'Admin'}`,
                     {
                         targetUserId: editingUser.id,
                         updatedFields: { name: formData.name, role: formData.role, phone: formData.phone },
-                        passwordChanged: !!formData.password
+                        updatedBy: currentUser?.id,
+                        updatedByName: currentUser?.name,
+                        updatedByRole: currentUser?.role,
+                        updatedAt: now
                     }
                 );
             } else {
@@ -169,6 +255,7 @@ const UserManagementPage: React.FC = () => {
                     setSubmitting(false);
                     return;
                 }
+                const now = new Date().toISOString();
                 const passwordHash = await hashPassword(formData.password);
                 await userService.create({
                     name: formData.name,
@@ -176,12 +263,22 @@ const UserManagementPage: React.FC = () => {
                     email: formData.email.toLowerCase().trim(),
                     phone: formData.phone,
                     password_hash: passwordHash,
-                    created_at: new Date().toISOString(),
+                    created_at: now,
+                    updated_at: now,
                 });
                 userLogService.logAction(
                     'USER_CREATED',
-                    `New user "${formData.name}" registered with role "${formData.role}"`,
-                    { newUserEmail: formData.email.toLowerCase().trim(), newUserRole: formData.role, newUserName: formData.name, newUserPhone: formData.phone }
+                    `New user "${formData.name}" registered with role "${formData.role}" by ${currentUser?.name ?? 'Admin'}`,
+                    {
+                        newUserEmail: formData.email.toLowerCase().trim(),
+                        newUserRole: formData.role,
+                        newUserName: formData.name,
+                        newUserPhone: formData.phone,
+                        createdBy: currentUser?.id,
+                        createdByName: currentUser?.name,
+                        createdByRole: currentUser?.role,
+                        createdAt: now
+                    }
                 );
             }
 
@@ -212,8 +309,6 @@ const UserManagementPage: React.FC = () => {
         if (role === 'Supplier') return <BriefcaseIcon className="w-4 h-4" />;
         return <UserIcon className="w-4 h-4" />;
     };
-
-    const isInternal = INTERNAL_ROLES.includes(formData.role as UserType);
 
     return (
         <PageContainer
@@ -267,20 +362,26 @@ const UserManagementPage: React.FC = () => {
                                     onClick={() => handleOpenEdit(user)}
                                     className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-all"
                                     title="Edit user"
+                                    id={`edit-user-btn-${user.id}`}
                                 >
                                     <PencilSquareIcon className="w-4 h-4" />
                                 </button>
-                                <button
-                                    onClick={() => openChangePw(user)}
-                                    className="p-2 bg-[#ec028b]/10 rounded-lg text-[#ec028b]/60 hover:text-[#ec028b] hover:bg-[#ec028b]/20 transition-all"
-                                    title="Change password"
-                                >
-                                    <LockIcon className="w-4 h-4" />
-                                </button>
+                                {/* Change Password: only visible to Super Admin */}
+                                {canChangePasswords && (
+                                    <button
+                                        onClick={() => openChangePw(user)}
+                                        className="p-2 bg-[#ec028b]/10 rounded-lg text-[#ec028b]/60 hover:text-[#ec028b] hover:bg-[#ec028b]/20 transition-all"
+                                        title="Change password (Super Admin only)"
+                                        id={`change-pw-btn-${user.id}`}
+                                    >
+                                        <LockIcon className="w-4 h-4" />
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => handleDelete(user.id)}
                                     className="p-2 bg-red-900/20 rounded-lg text-red-500/70 hover:text-red-500 hover:bg-red-900/40 transition-all"
                                     title="Delete user"
+                                    id={`delete-user-btn-${user.id}`}
                                 >
                                     <TrashIcon className="w-4 h-4" />
                                 </button>
@@ -438,7 +539,11 @@ const UserManagementPage: React.FC = () => {
                                 )}
                             </div>
 
-                            <div className="space-y-1.5">
+                            {/* Password: only shown when registering a NEW user.
+                                Editing an existing user's password requires Super Admin
+                                and must be done via the dedicated Change Password modal. */}
+                            {!editingUser && (
+                                <div className="space-y-1.5">
                                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Password</label>
                                     <div className="relative">
                                         <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
@@ -448,17 +553,24 @@ const UserManagementPage: React.FC = () => {
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                             className="w-full bg-black/60 border border-gray-800 focus:border-[#ec028b] rounded-xl pl-12 pr-4 py-3 text-sm text-white outline-none transition-all"
                                             placeholder="••••••••••••"
-                                            required={!editingUser}
+                                            required
                                             minLength={6}
                                         />
                                     </div>
-                                    {editingUser && (
-                                        <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-1">Leave blank to keep existing password</p>
-                                    )}
-                                    {!editingUser && (
-                                        <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-1">Minimum 6 characters</p>
-                                    )}
+                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-1">Minimum 6 characters</p>
                                 </div>
+                            )}
+
+                            {/* Info banner in edit mode for Super Admins */}
+                            {editingUser && canChangePasswords && (
+                                <div className="flex items-center gap-3 bg-[#ec028b]/5 border border-[#ec028b]/20 rounded-xl px-4 py-3">
+                                    <LockIcon className="w-4 h-4 text-[#ec028b]/60 shrink-0" />
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                        To change this user's password, close this modal and use the
+                                        <span className="text-[#ec028b]"> 🔒 lock icon</span> on the user card.
+                                    </p>
+                                </div>
+                            )}
 
                             {formError && (
                                 <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
@@ -511,7 +623,7 @@ const UserManagementPage: React.FC = () => {
                         <div className="p-6 border-b border-gray-800 bg-black/40 flex justify-between items-center">
                             <div>
                                 <h3 className="text-xl font-black text-white uppercase tracking-widest leading-none mb-1">Change Password</h3>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Updates Firestore record only</p>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Super Admin — Restricted Access</p>
                             </div>
                             <button onClick={() => setPwUser(null)} className="text-gray-500 hover:text-white transition-colors">
                                 <XMarkIcon className="w-6 h-6" />
