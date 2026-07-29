@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
-import { projectService, firestoreService } from '../lib/firebaseService';
+import { projectService, firestoreService, userLogService } from '../lib/firebaseService';
 import { cn, getStagePageId } from '../lib/utils';
 import { ArrowLeftIcon, MapPinIcon, BriefcaseIcon, ArrowRightIcon, CheckCircleIcon, CalendarIcon } from './icons';
 import Button from './Button';
@@ -112,6 +111,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
             if (currentIdx < 0 || currentIdx >= PIPELINE.length - 1) return;
 
             const next = PIPELINE[currentIdx + 1];
+            const prevStage = project.current_stage || 'Unknown';
             setAdvancing(true);
 
             try {
@@ -129,10 +129,33 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                     });
                 }
 
+                userLogService.logAction(
+                    'PIPELINE_STAGE_ADVANCED',
+                    `Project "${project.name || project.id}" advanced from stage "${prevStage}" → "${next.stage}"`,
+                    {
+                        page: 'Pipeline',
+                        action: 'Advance Stage',
+                        projectId: project.id,
+                        projectName: project.name || 'Unknown',
+                        fromStage: prevStage,
+                        toStage: next.stage,
+                        timestamp: new Date().toISOString()
+                    }
+                );
+
                 // Navigate to next stage page (keep selectedProjectId intact)
                 setActivePageId(next.pageId);
             } catch (err) {
-                console.error('Stage advance error:', err);
+                userLogService.logAction(
+                    'PIPELINE_STAGE_ADVANCE_FAILED',
+                    `Failed to advance project "${project.name || project.id}" from "${prevStage}" to "${next.stage}"`,
+                    {
+                        page: 'Pipeline',
+                        projectId: project.id,
+                        fromStage: prevStage,
+                        toStage: next.stage
+                    }
+                );
             } finally {
                 setAdvancing(false);
             }
