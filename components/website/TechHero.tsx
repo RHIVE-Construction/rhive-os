@@ -107,7 +107,7 @@ const TechHero: React.FC = () => {
                     className="w-full h-full object-cover filter brightness-[0.4]"
                     style={{ transform: 'scale(1.12) translate(-3%, -3%)', transformOrigin: 'top left' }}
                 >
-                    <source src="/vidupload/TRADESHOW MARKETING VIDEO.mp4" type="video/mp4" />
+                    <source src="/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
                 </video>
             </div>
 
