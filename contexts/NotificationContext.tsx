@@ -67,16 +67,29 @@ export const ACTIVITY_ICONS: Record<string, string> = {
     calendar_event_updated: '✏️',
     calendar_event_deleted: '🗑️',
     calendar_synced:        '🔄',
+    // Record-level events (System Rules §7)
+    RECORD_CREATED:        '📋',
+    EDIT_RECORD:           '✏️',
+    DELETE_RECORD:         '🗑️',
+    RESTORE_RECORD:        '♻️',
+    PERMANENT_DELETE:      '🚫',
+    STAGE_CHANGE:          '🔄',
+    SAVE_QUOTE:            '💾',
+    MEETING_SCHEDULED:     '📅',
+    APPOINTMENT_BOOKED:    '📅',
 };
+
 
 export const getActivityIcon = (actionType: string) =>
     ACTIVITY_ICONS[actionType] || '🔔';
 
 // ─── Project-only action types (what appears in the notification feed) ──────────
-// Strictly project/pipeline events only — no user management, no property admin, no comms noise.
+// Includes all pipeline lifecycle + record-level events (edit, trash, restore).
 const PROJECT_ACTION_TYPES = new Set([
     // Project lifecycle
     'CREATE_PROJECT', 'STAGE_CHANGE', 'SAVE_QUOTE', 'APPROVE_QUOTE',
+    // Record-level events (System Rules §7)
+    'RECORD_CREATED', 'EDIT_RECORD', 'DELETE_RECORD', 'RESTORE_RECORD', 'PERMANENT_DELETE',
     // Standardized lower-case keys
     'lead_created', 'lead_updated', 'project_stage_changed',
     'estimate_created', 'estimate_updated',
@@ -92,6 +105,7 @@ const isProjectAction = (actionType: string) =>
     PROJECT_ACTION_TYPES.has(actionType) ||
     PROJECT_ACTION_TYPES.has(actionType?.toUpperCase()) ||
     PROJECT_ACTION_TYPES.has(actionType?.toLowerCase());
+
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 

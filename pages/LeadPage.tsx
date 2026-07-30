@@ -295,8 +295,14 @@ const LeadPage: React.FC = () => {
         await firestoreService.updateDocument(col, editTarget.id, updates);
         await userLogService.logAction(
             'EDIT_RECORD',
-            `Record edited (ID: ${editTarget.id}, Name: ${editTarget.name || 'Unknown'})`,
-            { recordId: editTarget.id, collection: col }
+            `${editTarget.name || 'Record'} was edited`,
+            {
+                recordId: editTarget.id,
+                recordName: editTarget.name || 'Unknown',
+                collection: col,
+                stage: editTarget.current_stage || '',
+                changes: Object.keys(updates),
+            }
         );
         setEditTarget(null);
     };
@@ -307,12 +313,17 @@ const LeadPage: React.FC = () => {
         const col = deleteTarget._source === 'leads' ? 'leads' : deleteTarget._source === 'deals' ? 'deals' : 'projects';
         await firestoreService.softDeleteDocument(col, deleteTarget.id, {
             deletion_reason: reason,
-            deleted_by: 'employee',
         });
         await userLogService.logAction(
             'DELETE_RECORD',
-            `Record moved to trash (ID: ${deleteTarget.id}, Name: ${deleteTarget.name || 'Unknown'})`,
-            { recordId: deleteTarget.id, collection: col, reason }
+            `${deleteTarget.name || 'Record'} was moved to trash`,
+            {
+                recordId: deleteTarget.id,
+                recordName: deleteTarget.name || 'Unknown',
+                collection: col,
+                stage: deleteTarget.current_stage || '',
+                reason,
+            }
         );
         setDeleteTarget(null);
     };
@@ -475,6 +486,24 @@ const LeadPage: React.FC = () => {
                                             {currentProject.current_stage || 'Unknown'}
                                         </span>
                                     </div>
+
+                                    {/* Audit trail — System Rules §7.3 */}
+                                    {currentProject.modified_by && (
+                                        <div className="mt-4 pt-3 border-t border-gray-800/50 flex items-center gap-1.5">
+                                            <PencilIcon className="w-3 h-3 text-gray-700 shrink-0" />
+                                            <p className="text-[10px] text-gray-600 font-mono">
+                                                Edited by{' '}
+                                                <span className="text-gray-500">{currentProject.modified_by}</span>
+                                                {currentProject.modified_at && (
+                                                    <> · {new Date(currentProject.modified_at).toLocaleDateString('en-US', {
+                                                        month: 'short', day: 'numeric', year: 'numeric'
+                                                    })}, {new Date(currentProject.modified_at).toLocaleTimeString('en-US', {
+                                                        hour: '2-digit', minute: '2-digit'
+                                                    })}</>
+                                                )}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </Card>
 

@@ -339,11 +339,73 @@ export const firestoreService = {
     updateDocument: async (collectionName: string, id: string, data: any) => {
         try {
             const cleanData = JSON.parse(JSON.stringify(data));
+            // Pull current user from session for audit trail (System Rules §7.3)
+            const actor = session.read();
+            const auditFields = {
+                updated_at: new Date().toISOString(),
+                modified_at: new Date().toISOString(),
+                modified_by: actor?.name || 'Unknown',
+                modified_by_id: actor?.id || 'unknown',
+            };
             const docRef = doc(db, collectionName, id);
-            await updateDoc(docRef, { ...cleanData, updated_at: new Date().toISOString() });
-            return { success: true, data: { id, ...cleanData } };
+            await updateDoc(docRef, { ...cleanData, ...auditFields });
+            return { success: true, data: { id, ...cleanData, ...auditFields } };
         } catch (error: any) {
             console.error(`Error updating ${collectionName} ${id}:`, error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Soft-delete: marks a document as deleted without removing it from Firestore.
+     * Writes deleted:true, status:'trashed', plus deletion audit fields.
+     * Per System Rules §7 — must be used instead of deleteDocument for pipeline records.
+     */
+    softDeleteDocument: async (
+        collectionName: string,
+        id: string,
+        meta?: { deletion_reason?: string; deleted_by?: string }
+    ) => {
+        try {
+            const actor = session.read();
+            const now = new Date().toISOString();
+            const docRef = doc(db, collectionName, id);
+            await updateDoc(docRef, {
+                deleted: true,
+                status: 'trashed',
+                deleted_at: now,
+                deleted_by: meta?.deleted_by || actor?.name || 'unknown',
+                deleted_by_id: actor?.id || 'unknown',
+                deletion_reason: meta?.deletion_reason || '',
+                updated_at: now,
+            });
+            return { success: true };
+        } catch (error: any) {
+            console.error(`Error soft-deleting ${collectionName} ${id}:`, error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Restore: clears the deleted flag on a soft-deleted document.
+     * Writes restored_at and restored_by audit fields.
+     */
+    restoreDocument: async (collectionName: string, id: string) => {
+        try {
+            const actor = session.read();
+            const now = new Date().toISOString();
+            const docRef = doc(db, collectionName, id);
+            await updateDoc(docRef, {
+                deleted: false,
+                status: 'active',
+                restored_at: now,
+                restored_by: actor?.name || 'unknown',
+                restored_by_id: actor?.id || 'unknown',
+                updated_at: now,
+            });
+            return { success: true };
+        } catch (error: any) {
+            console.error(`Error restoring ${collectionName} ${id}:`, error);
             return { success: false, error: error.message };
         }
     },
@@ -354,51 +416,6 @@ export const firestoreService = {
             return { success: true };
         } catch (error: any) {
             console.error(`Error deleting ${collectionName} ${id}:`, error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    /**
-     * Soft-delete a document by marking it with deleted: true.
-     * The record remains in Firestore but is hidden from pipeline views.
-     */
-    softDeleteDocument: async (
-        collectionName: string,
-        id: string,
-        metadata: { deleted_by?: string; deletion_reason?: string } = {}
-    ) => {
-        try {
-            const docRef = doc(db, collectionName, id);
-            await updateDoc(docRef, {
-                deleted: true,
-                status: 'trashed',
-                deleted_at: new Date().toISOString(),
-                deleted_by: metadata.deleted_by || 'unknown',
-                deletion_reason: metadata.deletion_reason || '',
-                updated_at: new Date().toISOString(),
-            });
-            return { success: true };
-        } catch (error: any) {
-            console.error(`Error soft-deleting ${collectionName} ${id}:`, error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    /**
-     * Restore a soft-deleted document back to active pipeline status.
-     */
-    restoreDocument: async (collectionName: string, id: string) => {
-        try {
-            const docRef = doc(db, collectionName, id);
-            await updateDoc(docRef, {
-                deleted: false,
-                status: 'Active',
-                restored_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            });
-            return { success: true };
-        } catch (error: any) {
-            console.error(`Error restoring ${collectionName} ${id}:`, error);
             return { success: false, error: error.message };
         }
     },
@@ -529,7 +546,7 @@ export const projectService = {
         let leads: any[] = [];
         let deals: any[] = [];
 
-        // Filter out soft-deleted records before emitting to pipeline views
+        // Only surface records that have not been soft-deleted (System Rules §7)
         const notify = () => callback(
             [...projects, ...leads, ...deals].filter(r => !r.deleted)
         );
@@ -551,7 +568,7 @@ export const projectService = {
                 notify();
             },
             (error) => {
-                console.warn('🔥 Firestore [deals] subscribe error:', error.code);
+                console.warn('Firestore [deals] subscribe error:', error.code);
                 notify();
             }
         );
@@ -1218,17 +1235,25 @@ export const userLogService = {
             userRole,
             actionType,
             description,
-            payload: payload || {},
+            // Ensure required payload fields per System Rules §7.2
+            payload: {
+                recordId: payload?.recordId || '',
+                recordName: payload?.recordName || payload?.name || '',
+                collection: payload?.collection || '',
+                stage: payload?.stage || '',
+                reason: payload?.reason || '',
+                changes: payload?.changes || [],
+                ...(payload || {}),
+            },
             timestamp: new Date().toISOString(),
             read: false
         };
 
         try {
             const result = await firestoreService.addDocument('user_log', logDoc);
-
             return result;
         } catch (error: any) {
-            console.warn('🔥 Failed to write user action to Firestore user_log:', error);
+            console.warn('Failed to write user action to user_log:', error);
             return { success: false, error: error.message };
         }
     }
