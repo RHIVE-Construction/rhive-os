@@ -397,10 +397,38 @@ const LeadPage: React.FC = () => {
                 title="Lead Stage Processing" 
                 description="Qualify and dispatch actions for this initial stage."
                 headerAction={
-                    <Button variant="secondary" onClick={handleClearProject}>
-                        <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                        Back to Leads List
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        {/* Edit Record */}
+                        <button
+                            id="detail-edit-btn"
+                            onClick={() => setEditTarget(currentProject)}
+                            aria-label="Edit this lead record"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black uppercase tracking-widest bg-[#ec028b]/10 border border-[#ec028b]/40 text-[#ec028b] hover:bg-[#ec028b]/20 hover:border-[#ec028b] transition-all"
+                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                        >
+                            <PencilIcon className="w-3.5 h-3.5" />
+                            Edit
+                        </button>
+
+                        {/* Move to Trash */}
+                        <button
+                            id="detail-delete-btn"
+                            onClick={() => setDeleteTarget(currentProject)}
+                            aria-label="Move this lead to trash"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black uppercase tracking-widest bg-red-900/10 border border-red-900/40 text-red-700 hover:bg-red-900/20 hover:border-red-600/60 hover:text-red-400 transition-all"
+                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                        >
+                            <TrashIcon className="w-3.5 h-3.5" />
+                            Delete
+                        </button>
+
+                        <div className="w-px h-5 bg-gray-800 mx-1" />
+
+                        <Button variant="secondary" onClick={handleClearProject}>
+                            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                            Back to Leads List
+                        </Button>
+                    </div>
                 }
             >
                 {loading ? (
@@ -517,6 +545,28 @@ const LeadPage: React.FC = () => {
                     <FollowUpModal
                         project={currentProject}
                         onClose={() => setShowFollowUp(false)}
+                    />
+                )}
+
+                {/* Edit Modal (in detail view) */}
+                {editTarget && (
+                    <EditRecordModal
+                        record={editTarget}
+                        onClose={() => setEditTarget(null)}
+                        onSave={handleEditSave}
+                    />
+                )}
+
+                {/* Delete Modal (in detail view) */}
+                {deleteTarget && (
+                    <DeleteConfirmModal
+                        recordName={deleteTarget.name || 'Unnamed Project'}
+                        onClose={() => setDeleteTarget(null)}
+                        onConfirm={async (reason) => {
+                            await handleSoftDelete(reason);
+                            // After trashing from detail view, return to list
+                            handleClearProject();
+                        }}
                     />
                 )}
             </PageContainer>
