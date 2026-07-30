@@ -412,6 +412,24 @@ const LeadPage: React.FC = () => {
                                             {currentProject.current_stage || 'Unknown'}
                                         </span>
                                     </div>
+
+                                    {/* Audit trail — System Rules §7.3 */}
+                                    {currentProject.modified_by && (
+                                        <div className="mt-4 pt-3 border-t border-gray-800/50 flex items-center gap-1.5">
+                                            <PencilIcon className="w-3 h-3 text-gray-700 shrink-0" />
+                                            <p className="text-[10px] text-gray-600 font-mono">
+                                                Edited by{' '}
+                                                <span className="text-gray-500">{currentProject.modified_by}</span>
+                                                {currentProject.modified_at && (
+                                                    <> · {new Date(currentProject.modified_at).toLocaleDateString('en-US', {
+                                                        month: 'short', day: 'numeric', year: 'numeric'
+                                                    })}, {new Date(currentProject.modified_at).toLocaleTimeString('en-US', {
+                                                        hour: '2-digit', minute: '2-digit'
+                                                    })}</>
+                                                )}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </Card>
 
