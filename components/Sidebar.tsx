@@ -328,9 +328,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                                 className={cn(
                                                     "flex items-center w-full rounded-full text-sm font-medium transition-all duration-200",
                                                     isMinimized ? "justify-center p-2.5" : "px-4 py-2",
-                                                    activePageId === page.id
-                                                        ? "bg-[#ec028b]/20 text-[#ec028b] border border-[#ec028b]/30"
-                                                        : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                                                    page.id === 'E-TRASH'
+                                                        ? activePageId === page.id
+                                                            ? "bg-red-700/30 text-red-400 border border-red-700/50"
+                                                            : "text-red-700 hover:bg-red-900/20 hover:text-red-400"
+                                                        : activePageId === page.id
+                                                            ? "bg-[#ec028b]/20 text-[#ec028b] border border-[#ec028b]/30"
+                                                            : "text-gray-400 hover:bg-gray-800 hover:text-white"
                                                 )}
                                                 title={isMinimized ? page.name : undefined}
                                             >
@@ -338,6 +342,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ pageGroups }) => {
                                                     {getIconForPage(page.id)}
                                                 </span>
                                                 {!isMinimized && <span className="truncate">{page.name}</span>}
+
                                             </button>
                                         ));
                                     }
