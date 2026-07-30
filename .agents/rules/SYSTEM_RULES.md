@@ -113,7 +113,7 @@ All branches **must** follow this format exactly:
 
 ### 4.2 Commit Message Convention
 
-Keep commit messages **short and plain**. One line. No technical jargon or long descriptions.
+Commit messages must be **one line only**. No body. No paragraph. No multi-line description.
 
 ```
 <type>: <short plain description>
@@ -122,28 +122,34 @@ Keep commit messages **short and plain**. One line. No technical jargon or long 
 **Types:** `feat` | `fix` | `ui` | `chore` | `refactor` | `docs` | `test` | `deploy`
 
 **Rules:**
+- **One line only** — no body, no multi-line block, no `-m` chaining.
 - Use **present tense** — write what the commit *does*, not what it *did*.
 - Keep the description **under 60 characters**.
 - No period at the end.
-- Avoid jargon, file paths, or implementation details in the subject line.
+- No file paths, no function names, no implementation details.
+- No conjunctions (`and`, `also`) — if you need `and`, split into two commits.
 
-**Examples (correct):**
+**✅ Correct:**
 ```
-feat: add edit and delete to lead records
-fix: correct soft delete filter on pipeline
-ui: move trash bin to admin sidebar section
+feat: add password history modal
+fix: restore address autocomplete on estimate tool
+ui: move website nav after pipeline stages
 chore: update system rules
-deploy: push to firebase hosting
+deploy: push hosting to firebase
 ```
 
-**Examples (wrong — do not do this):**
+**❌ NEVER do this:**
 ```
 feat: add edit/delete icons to lead detail view and move trash bin to admin section
 fix: correct the firestoreService.softDeleteDocument() filter not applying deleted:true
-Updated stuff
+merge: fix useMockDB missing import in UserManagementPage - caused blank screen
+Updated stuff and also fixed the nav
 WIP
-temp fix
+temp
 ```
+
+> **STRICT:** A commit message that reads like a sentence or paragraph will be rejected.
+> If it takes more than 5 seconds to read, it is too long.
 
 ### 4.3 Merge Protocol
 
@@ -308,4 +314,4 @@ When in doubt, **check this file first.**
 
 ---
 
-*Last updated: 2026-07-30 | Branch: system-rules | Maintained in `.agents/rules/SYSTEM_RULES.md`*
+*Last updated: 2026-07-31 | Branch: system-rules | Maintained in `.agents/rules/SYSTEM_RULES.md`*
