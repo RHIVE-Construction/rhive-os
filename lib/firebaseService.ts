@@ -358,6 +358,51 @@ export const firestoreService = {
         }
     },
 
+    /**
+     * Soft-delete a document by marking it with deleted: true.
+     * The record remains in Firestore but is hidden from pipeline views.
+     */
+    softDeleteDocument: async (
+        collectionName: string,
+        id: string,
+        metadata: { deleted_by?: string; deletion_reason?: string } = {}
+    ) => {
+        try {
+            const docRef = doc(db, collectionName, id);
+            await updateDoc(docRef, {
+                deleted: true,
+                status: 'trashed',
+                deleted_at: new Date().toISOString(),
+                deleted_by: metadata.deleted_by || 'unknown',
+                deletion_reason: metadata.deletion_reason || '',
+                updated_at: new Date().toISOString(),
+            });
+            return { success: true };
+        } catch (error: any) {
+            console.error(`Error soft-deleting ${collectionName} ${id}:`, error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Restore a soft-deleted document back to active pipeline status.
+     */
+    restoreDocument: async (collectionName: string, id: string) => {
+        try {
+            const docRef = doc(db, collectionName, id);
+            await updateDoc(docRef, {
+                deleted: false,
+                status: 'Active',
+                restored_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            });
+            return { success: true };
+        } catch (error: any) {
+            console.error(`Error restoring ${collectionName} ${id}:`, error);
+            return { success: false, error: error.message };
+        }
+    },
+
     createBatch: async (collectionName: string, dataArray: any[]) => {
         try {
             const batch = writeBatch(db);
@@ -484,8 +529,10 @@ export const projectService = {
         let leads: any[] = [];
         let deals: any[] = [];
 
-        const notify = () => callback([...projects, ...leads, ...deals]);
-
+        // Filter out soft-deleted records before emitting to pipeline views
+        const notify = () => callback(
+            [...projects, ...leads, ...deals].filter(r => !r.deleted)
+        );
 
         const unsubProjects = firestoreService.subscribeToDocuments('projects', (data) => {
             projects = data;
@@ -508,7 +555,6 @@ export const projectService = {
                 notify();
             }
         );
-
 
         return () => {
             unsubProjects();

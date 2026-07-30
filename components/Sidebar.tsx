@@ -31,7 +31,8 @@ import {
     Squares2x2Icon,
     IdentificationIcon,
     ChartPieIcon,
-    SparklesIcon
+    SparklesIcon,
+    TrashIcon
 } from './icons';
 import { cn } from '../lib/utils';
 import { getWeatherData } from '../lib/weather';
@@ -82,6 +83,7 @@ const getIconForPage = (id: string) => {
     if (id === 'E-27') return <CalculatorIcon className="h-5 w-5" />;
     if (id === 'E-38') return <BoltIcon className="h-5 w-5" />;
     if (id === 'E-39') return <SparklesIcon className="h-5 w-5" />;
+    if (id === 'E-TRASH') return <TrashIcon className="h-5 w-5" />;
     if (id === 'E-29') return <ShieldCheckIcon className="h-5 w-5" />;
     if (id === 'E-32') return <WrenchIcon className="h-5 w-5" />;
     if (id === 'E-34') return <CurrencyDollarIcon className="h-5 w-5" />;

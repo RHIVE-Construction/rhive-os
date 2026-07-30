@@ -91,6 +91,7 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'E-34', name: 'Stage 9: INVOICING (Balance Due)', userType: 'Employee', category: 'Stages' },
             { id: 'E-36', name: 'Stage 10: COMPLETED (Paid)', userType: 'Employee', category: 'Stages' },
             { id: 'E-37', name: 'Stage 11: PAST CUSTOMER (Referral System)', userType: 'Employee', category: 'Stages' },
+            { id: 'E-TRASH', name: 'Trash Bin', userType: 'Employee', category: 'Stages' },
         ]
     },
     {
