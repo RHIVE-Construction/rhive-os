@@ -87,6 +87,8 @@ import PaymentsModularPage from './pages/PaymentsModularPage'; // E-35
 import CompletedPage from './pages/CompletedPage'; // E-36
 import PastCustomerPage from './pages/PastCustomerPage'; // E-37
 
+import TrashBinPage from './pages/TrashBinPage'; // E-TRASH
+
 const Placeholder = ({ name }: { name: string }) => (
   <div className="p-10 text-white font-mono">
     <h1 className="text-2xl font-bold text-[#ec028b] mb-4">{name}</h1>
@@ -179,6 +181,9 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-37': PastCustomerPage,
   'E-38': WeatherGuideWidgetPage,
   'E-39': RHIVEBrandingPage,
+
+  // Trash Bin
+  'E-TRASH': TrashBinPage,
 
   // Customer
   'C-01': CustomerHomepage,

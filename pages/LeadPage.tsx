@@ -5,6 +5,8 @@ import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import FollowUpModal from '../components/FollowUpModal';
+import EditRecordModal from '../components/EditRecordModal';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import { 
     BriefcaseIcon, 
     UserIcon, 
@@ -15,7 +17,9 @@ import {
     CalculatorIcon,
     CheckCircleIcon,
     XIcon,
-    CalendarIcon
+    CalendarIcon,
+    PencilIcon,
+    TrashIcon
 } from '../components/icons';
 import { projectService, firestoreService, userLogService } from '../lib/firebaseService';
 import { cn, getStagePageId } from '../lib/utils';
@@ -180,6 +184,8 @@ const LeadPage: React.FC = () => {
     
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [editTarget, setEditTarget] = useState<any | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
     useEffect(() => {
         const unsubscribe = projectService.subscribe((data: any[]) => {
@@ -280,6 +286,35 @@ const LeadPage: React.FC = () => {
 
         setShowConvertModal(false);
         setActivePageId(targetPageId);
+    };
+
+    // --- EDIT HANDLER ---
+    const handleEditSave = async (updates: Record<string, string>) => {
+        if (!editTarget) return;
+        const col = editTarget._source === 'leads' ? 'leads' : editTarget._source === 'deals' ? 'deals' : 'projects';
+        await firestoreService.updateDocument(col, editTarget.id, updates);
+        await userLogService.logAction(
+            'EDIT_RECORD',
+            `Record edited (ID: ${editTarget.id}, Name: ${editTarget.name || 'Unknown'})`,
+            { recordId: editTarget.id, collection: col }
+        );
+        setEditTarget(null);
+    };
+
+    // --- SOFT DELETE HANDLER ---
+    const handleSoftDelete = async (reason: string) => {
+        if (!deleteTarget) return;
+        const col = deleteTarget._source === 'leads' ? 'leads' : deleteTarget._source === 'deals' ? 'deals' : 'projects';
+        await firestoreService.softDeleteDocument(col, deleteTarget.id, {
+            deletion_reason: reason,
+            deleted_by: 'employee',
+        });
+        await userLogService.logAction(
+            'DELETE_RECORD',
+            `Record moved to trash (ID: ${deleteTarget.id}, Name: ${deleteTarget.name || 'Unknown'})`,
+            { recordId: deleteTarget.id, collection: col, reason }
+        );
+        setDeleteTarget(null);
     };
 
     // --- LIST VIEW LOGIC ---
@@ -490,6 +525,7 @@ const LeadPage: React.FC = () => {
 
     // --- RENDER LIST ---
     return (
+        <>
         <PageContainer 
             title="Stage 1 — Leads"
             description="All intake leads grouped by assigned employee or sales rep. Unassigned leads appear at the bottom."
@@ -557,42 +593,68 @@ const LeadPage: React.FC = () => {
                             {/* Project Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {group.projects.map(project => (
-                                    <Card 
-                                        key={project.id} 
-                                        onClick={() => handleProjectClick(project.id, project.current_stage || 'lead')}
-                                        className="cursor-pointer hover:border-[#ec028b] hover:shadow-[0_0_20px_rgba(236,2,139,0.1)] transition-all group p-5 bg-gray-900/40"
+                                    <div
+                                        key={project.id}
+                                        className="relative group/card"
                                     >
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div className="min-w-0 pr-4">
-                                                <h3 className="text-white font-bold text-lg truncate group-hover:text-[#ec028b] transition-colors">
-                                                    {project.name || 'Unnamed Project'}
-                                                </h3>
-                                                <div className="flex items-center text-xs text-gray-500 mt-1">
-                                                    <MapPinIcon className="w-3 h-3 mr-1 shrink-0" />
-                                                    <span className="truncate">
-                                                        {project.property_address || project.property?.address || 'Location Unknown'}
-                                                    </span>
+                                        <Card 
+                                            onClick={() => handleProjectClick(project.id, project.current_stage || 'lead')}
+                                            className="cursor-pointer hover:border-[#ec028b] hover:shadow-[0_0_20px_rgba(236,2,139,0.1)] transition-all group p-5 bg-gray-900/40"
+                                        >
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="min-w-0 pr-4">
+                                                    <h3 className="text-white font-bold text-lg truncate group-hover:text-[#ec028b] transition-colors">
+                                                        {project.name || 'Unnamed Project'}
+                                                    </h3>
+                                                    <div className="flex items-center text-xs text-gray-500 mt-1">
+                                                        <MapPinIcon className="w-3 h-3 mr-1 shrink-0" />
+                                                        <span className="truncate">
+                                                            {project.property_address || project.property?.address || 'Location Unknown'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-black border border-gray-700 flex items-center justify-center group-hover:bg-[#ec028b] group-hover:border-[#ec028b] group-hover:text-white transition-all text-gray-500">
+                                                    <ArrowRightIcon className="w-4 h-4" />
                                                 </div>
                                             </div>
                                             
-                                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-black border border-gray-700 flex items-center justify-center group-hover:bg-[#ec028b] group-hover:border-[#ec028b] group-hover:text-white transition-all text-gray-500">
-                                                <ArrowRightIcon className="w-4 h-4" />
+                                            <div className="mt-4 flex items-center justify-between border-t border-gray-800 pt-3">
+                                                <span className={cn(
+                                                    'text-[10px] px-2 py-1 rounded border font-black uppercase tracking-wider',
+                                                    stageBadgeColor(project.current_stage)
+                                                )}>
+                                                    {project.current_stage || 'Lead'}
+                                                </span>
+                                                
+                                                <span className="text-[10px] text-gray-600 font-mono">
+                                                    {project.updated_at ? new Date(project.updated_at).toLocaleDateString() : 'New'}
+                                                </span>
                                             </div>
+                                        </Card>
+
+                                        {/* Edit / Delete action buttons — appear on card hover */}
+                                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 z-10">
+                                            <button
+                                                id={`lead-edit-btn-${project.id}`}
+                                                onClick={(e) => { e.stopPropagation(); setEditTarget(project); }}
+                                                aria-label={`Edit ${project.name || 'record'}`}
+                                                className="w-7 h-7 flex items-center justify-center bg-[#0a0a0a] border border-[#ec028b]/40 text-[#ec028b] hover:bg-[#ec028b]/20 hover:border-[#ec028b] transition-all shadow-lg"
+                                                style={{ clipPath: 'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)' }}
+                                            >
+                                                <PencilIcon className="w-3 h-3" />
+                                            </button>
+                                            <button
+                                                id={`lead-delete-btn-${project.id}`}
+                                                onClick={(e) => { e.stopPropagation(); setDeleteTarget(project); }}
+                                                aria-label={`Move ${project.name || 'record'} to trash`}
+                                                className="w-7 h-7 flex items-center justify-center bg-[#0a0a0a] border border-red-900/40 text-red-700 hover:bg-red-900/20 hover:border-red-600/60 hover:text-red-400 transition-all shadow-lg"
+                                                style={{ clipPath: 'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)' }}
+                                            >
+                                                <TrashIcon className="w-3 h-3" />
+                                            </button>
                                         </div>
-                                        
-                                        <div className="mt-4 flex items-center justify-between border-t border-gray-800 pt-3">
-                                            <span className={cn(
-                                                'text-[10px] px-2 py-1 rounded border font-black uppercase tracking-wider',
-                                                stageBadgeColor(project.current_stage)
-                                            )}>
-                                                {project.current_stage || 'Lead'}
-                                            </span>
-                                            
-                                            <span className="text-[10px] text-gray-600 font-mono">
-                                                {project.updated_at ? new Date(project.updated_at).toLocaleDateString() : 'New'}
-                                            </span>
-                                        </div>
-                                    </Card>
+                                    </div>
                                 ))}
                             </div>
                         </div>
@@ -601,7 +663,26 @@ const LeadPage: React.FC = () => {
                 )}
             </div>
         </PageContainer>
+
+        {/* Edit Modal */}
+        {editTarget && (
+            <EditRecordModal
+                record={editTarget}
+                onClose={() => setEditTarget(null)}
+                onSave={handleEditSave}
+            />
+        )}
+
+        {/* Delete (Trash) Confirmation Modal */}
+        {deleteTarget && (
+            <DeleteConfirmModal
+                recordName={deleteTarget.name || 'Unnamed Project'}
+                onClose={() => setDeleteTarget(null)}
+                onConfirm={handleSoftDelete}
+            />
+        )}
+        </>
     );
 };
 
-export default LeadPage;
+export default LeadPage;
