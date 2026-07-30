@@ -460,6 +460,7 @@ export function buildBuildingFromSolarData(solarData: any, clickedLat: number, c
         id: `BLD_${index}_f${j}`,
         areaMeters: seg.stats?.areaMeters2 || (area / segments.length),
         pitchDegrees: seg.pitchDegrees || 22.6,
+        azimuthDegrees: seg.azimuthDegrees ?? 0,
       }))
     : [
         { id: `BLD_${index}_f1`, areaMeters: area / 2, pitchDegrees: 18.43 },

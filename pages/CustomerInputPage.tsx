@@ -50,6 +50,7 @@ import type { User, BuildingData, CalculationResult, SurveyState, Contact, Prope
 import { createProject as createProjectApi } from '../lib/api';
 import { getMapsApiKey } from '../lib/mapsConfig';
 import { firestoreService, userLogService } from '../lib/firebaseService';
+import { analyzeLidar, type LidarResult } from '../services/lidarService';
 
 // Mock Data for Utah Companies
 const MOCK_UTAH_COMPANIES = [
@@ -2221,11 +2222,31 @@ const CustomerInputPage: React.FC = () => {
                 roofLayers: String(analysisData.layerConfig.count) as any,
             };
 
+            // Phase 1: immediate Solar-API result (no LiDAR yet)
             const result = calculateEstimate({ buildingData: building, surveyState }, pricing);
             setAnalysisData(prev => ({ ...prev, building, result }));
-            setIsRoofAnalysisCollapsed(false); 
+            setIsRoofAnalysisCollapsed(false);
+
+            // Phase 2: fire LiDAR analysis in parallel (non-blocking)
+            // When it resolves, re-run calculateEstimate with confirmed tier/facets
+            analyzeLidar(propertyData.latitude, propertyData.longitude)
+                .then((lidarResult) => {
+                    if (!lidarResult) return; // null = no coverage or timeout, keep Phase 1
+                    console.info('[LiDAR] Upgrading estimate with confirmed tier:', lidarResult.suggestedTier);
+                    const upgradedResult = calculateEstimate(
+                        { buildingData: building, surveyState },
+                        pricing,
+                        lidarResult,
+                    );
+                    setAnalysisData(prev => ({ ...prev, result: upgradedResult }));
+                })
+                .catch((err) => {
+                    // LiDAR failure is non-fatal — Phase 1 result already shown
+                    console.warn('[LiDAR] Non-fatal error, keeping Phase 1 result:', err);
+                });
         }
     }, [propertyData.latitude, propertyData.longitude, propertyData.address, pricing, estimateInputs, analysisData.layerConfig.count]);
+
 
     // Check for existing property
     useEffect(() => {

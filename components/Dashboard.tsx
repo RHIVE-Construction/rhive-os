@@ -15,6 +15,8 @@ import { formatCurrency } from '../lib/utils';
 import { Modal } from './ui/modal';
 import { EstimateReport } from './EstimateReport';
 import { ErrorBoundary } from './ErrorBoundary';
+import { MeasurementsSummary } from './MeasurementsSummary';
+import { RulerIcon as MeasureIcon } from './icons';
 
 interface DashboardProps {
   place: Place;
@@ -115,7 +117,8 @@ const QuoteSummary: React.FC<{
     surveyState: SurveyState;
     onSurveyChange: React.Dispatch<React.SetStateAction<SurveyState>>;
     onViewEstimate: () => void;
-}> = ({ buildingData, calcResult, surveyState, onSurveyChange, onViewEstimate }) => (
+    onViewSummary: () => void;
+}> = ({ buildingData, calcResult, surveyState, onSurveyChange, onViewEstimate, onViewSummary }) => (
     <div className="space-y-4 text-base">
         <div className="p-4 bg-gray-900/50 border border-gray-700 rounded-lg">
             <div className="flex items-center text-gray-300 mb-2">
@@ -130,10 +133,19 @@ const QuoteSummary: React.FC<{
             />
         </div>
         <LiveEstimateBreakdown calcResult={calcResult} surveyState={surveyState} />
-        <div className="pt-4 text-center">
+        <div className="pt-4 space-y-2 text-center">
+            <Button
+                size="lg"
+                variant="secondary"
+                className="w-full gap-2 text-rhive-pink hover:text-white"
+                onClick={onViewSummary}
+            >
+                <MeasureIcon className="h-5 w-5" />
+                Measurements Summary
+            </Button>
             <Button size="lg" className="w-full gap-2" onClick={onViewEstimate}>
                 <ShareIcon className="h-5 w-5" />
-                View & Share Estimate
+                View &amp; Share Estimate
             </Button>
         </div>
     </div>
@@ -148,6 +160,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const { pricing } = usePricing();
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   
   const calcResult = useMemo<CalculationResult>(() => {
     return calculateEstimate({ buildingData, surveyState }, pricing);
@@ -217,6 +230,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         surveyState={surveyState}
                         onSurveyChange={onSurveyChange}
                         onViewEstimate={() => setIsReportModalOpen(true)}
+                        onViewSummary={() => setIsSummaryModalOpen(true)}
                     />
                 </div>
             </div>
@@ -229,6 +243,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     buildingData={buildingData}
                     surveyState={surveyState}
                     calcResult={calcResult}
+                />
+            </ErrorBoundary>
+        </Modal>
+
+        <Modal open={isSummaryModalOpen} onClose={() => setIsSummaryModalOpen(false)} title="" className="max-w-3xl" contentClassName="p-0">
+            <ErrorBoundary>
+                <MeasurementsSummary
+                    buildingData={buildingData}
+                    surveyState={surveyState}
+                    buildingLabel="BLDG 1"
                 />
             </ErrorBoundary>
         </Modal>

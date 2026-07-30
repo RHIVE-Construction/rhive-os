@@ -56,6 +56,11 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
   const [overrideInputs, setOverrideInputs] = useState<Record<string, string>>({});
   const hasAnimatedRef = useRef<boolean>(false);
   const isAnimatingRef = useRef<boolean>(false);
+  const drawingPolylineRef = useRef<any>(null);
+  // Refs to hold latest state values inside event-listener closures (avoids stale reads)
+  const guidePolylineRef   = useRef<any>(null);
+  const buildingDataRef    = useRef(buildingData);
+  const focusedBldgIdRef   = useRef(focusedBuildingId);
 
   // Centroid calculator helper
   const getPolygonCenter = (vertices: { lat: number; lng: number }[], fallbackLat: number, fallbackLng: number) => {
@@ -85,6 +90,10 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
   useEffect(() => {
     setIsDrawingOutline(false);
   }, [focusedBuildingId]);
+
+  // Keep refs in sync so event-listener callbacks always see the freshest values
+  useEffect(() => { buildingDataRef.current  = buildingData;    }, [buildingData]);
+  useEffect(() => { focusedBldgIdRef.current = focusedBuildingId; }, [focusedBuildingId]);
 
   // Clean up polygons on unmount
   useEffect(() => {
@@ -301,85 +310,333 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
     };
   }, [map, isAddingPin, setBuildingData, onSurveyChange]);
 
-  // drawing mode map click listener
+  // Manage drawing polyline lifecycle
+  useEffect(() => {
+    if (!map) return;
+
+    if (isDrawingOutline) {
+      if (!drawingPolylineRef.current) {
+        const currentBuilding = buildingData?.buildings.find(b => b.id === focusedBuildingId);
+        const initialPath = (currentBuilding?.polygonVertices || []).map(v => new window.google.maps.LatLng(v.lat, v.lng));
+        const polyline = new window.google.maps.Polyline({
+          strokeColor:   '#ec028b',
+          strokeOpacity: 0.9,
+          strokeWeight:  3.5,
+          clickable:     false, // clicks pass through to the map canvas
+          map:           map,
+          path:          initialPath
+        });
+        drawingPolylineRef.current = polyline;
+      }
+    } else {
+      if (drawingPolylineRef.current) {
+        drawingPolylineRef.current.setMap(null);
+        drawingPolylineRef.current = null;
+      }
+    }
+
+    return () => {
+      if (drawingPolylineRef.current) {
+        drawingPolylineRef.current.setMap(null);
+        drawingPolylineRef.current = null;
+      }
+    };
+  }, [map, isDrawingOutline, focusedBuildingId, buildingData]);
+
   useEffect(() => {
     if (!map || !focusedBuildingId || !isDrawingOutline) return;
 
-    const drawClickListener = window.google.maps.event.addListener(map, 'click', (e: any) => {
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      let shouldFinish = false;
+    // ── Start-vertex snap marker ───────────────────────────────────────────────
+    // A visible pink/white circle at the first vertex. When 3+ vertices exist,
+    // clicking it (or clicking within ~20 screen-pixels of it) closes the polygon.
+    let startMarker: any = null;
+
+    // Returns the meter-distance that equates to ~20 screen pixels at current zoom
+    const snapMeters = () => {
+      const zoom = map.getZoom() ?? 20;
+      // At zoom 20 each pixel ≈ 0.15m; scale doubles per zoom-out step
+      return 20 * 0.15 * Math.pow(2, 20 - zoom);
+    };
+
+    const finishDrawing = () => {
+      const bData = buildingDataRef.current;
+      const bId   = focusedBldgIdRef.current;
+      if (!bData || !bId) return;
+      const building = bData.buildings.find(b => b.id === bId);
+      if (!building?.polygonVertices || building.polygonVertices.length < 3) return;
+      if (drawingPolylineRef.current) {
+        drawingPolylineRef.current.setMap(null);
+        drawingPolylineRef.current = null;
+      }
+      setIsDrawingOutline(false);
+      const poly = gPolygonsMapRef.current.get(bId);
+      if (poly) poly.setOptions({ editable: true, draggable: true });
+    };
+
+    const updateStartMarker = (verts: { lat: number; lng: number }[]) => {
+      if (verts.length < 1) { if (startMarker) { startMarker.setMap(null); startMarker = null; } return; }
+
+      const pos = new window.google.maps.LatLng(verts[0].lat, verts[0].lng);
+
+      if (!startMarker) {
+        startMarker = new window.google.maps.Marker({
+          position: pos,
+          map: map,
+          clickable: true,   // always clickable even during drawing
+          zIndex: 200,
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor:    '#ffffff',
+            fillOpacity:  1,
+            strokeColor:  '#ec028b',
+            strokeWeight: 3,
+          },
+          title: 'Click to close polygon',
+        });
+        startMarker.addListener('click', () => finishDrawing());
+      } else {
+        startMarker.setPosition(pos);
+      }
+
+      // Show the "snap target" ring only once 3+ vertices exist
+      startMarker.setIcon({
+        path:          window.google.maps.SymbolPath.CIRCLE,
+        scale:         verts.length >= 3 ? 10 : 7,
+        fillColor:     verts.length >= 3 ? '#ec028b' : '#ffffff',
+        fillOpacity:   verts.length >= 3 ? 0.25 : 1,
+        strokeColor:   '#ec028b',
+        strokeWeight:  3,
+      });
+    };
+
+    // ── addVertex ──────────────────────────────────────────────────────────────
+    const addVertex = (latLng: any) => {
+      const lat = latLng.lat();
+      const lng = latLng.lng();
 
       setBuildingData(prev => {
         if (!prev) return prev;
-
-        const currentBuilding = prev.buildings.find(b => b.id === focusedBuildingId);
-        if (currentBuilding && currentBuilding.polygonVertices && currentBuilding.polygonVertices.length >= 3) {
-          const firstPt = new window.google.maps.LatLng(currentBuilding.polygonVertices[0].lat, currentBuilding.polygonVertices[0].lng);
-          const dist = window.google.maps.geometry.spherical.computeDistanceBetween(e.latLng, firstPt);
-          if (dist < 4.5) {
-            shouldFinish = true;
-            return prev;
-          }
-        }
-
         return {
           ...prev,
           buildings: prev.buildings.map(b => {
-            if (b.id === focusedBuildingId) {
-              const newVertices = [...(b.polygonVertices || []), { lat, lng }];
-              
-              const poly = gPolygonsMapRef.current.get(b.id);
-              if (poly) {
-                const path = poly.getPath();
-                path.push(e.latLng);
-                
-                let newAreaMeters = 0;
-                if (newVertices.length >= 3) {
-                  newAreaMeters = window.google.maps.geometry.spherical.computeArea(path);
-                }
-                
-                const avgPitchDeg = b.facets.reduce((sum, f) => sum + f.pitchDegrees, 0) / b.facets.length || 22.6;
-                const newFacets = b.facets.map(f => ({
-                  ...f,
-                  areaMeters: newAreaMeters / b.facets.length,
-                  pitchDegrees: avgPitchDeg
-                }));
-                
-                return {
-                  ...b,
-                  totalAreaMeters: newAreaMeters,
-                  polygonVertices: newVertices,
-                  facets: newFacets
-                };
-              }
-              
-              return {
-                ...b,
-                polygonVertices: newVertices
-              };
+            if (b.id !== focusedBuildingId) return b;
+            const newVertices = [...(b.polygonVertices || []), { lat, lng }];
+            if (drawingPolylineRef.current) {
+              drawingPolylineRef.current.getPath().push(latLng);
             }
-            return b;
+            let newAreaMeters = 0;
+            if (newVertices.length >= 3) {
+              const coords = newVertices.map(v => new window.google.maps.LatLng(v.lat, v.lng));
+              newAreaMeters = window.google.maps.geometry.spherical.computeArea(coords);
+            }
+            const avgPitch = b.facets.reduce((s, f) => s + f.pitchDegrees, 0) / b.facets.length || 22.6;
+            // Update the start-vertex marker position/style after state updates
+            setTimeout(() => updateStartMarker(newVertices), 0);
+            return {
+              ...b,
+              totalAreaMeters: newAreaMeters,
+              polygonVertices: newVertices,
+              facets: b.facets.map(f => ({ ...f, areaMeters: newAreaMeters / b.facets.length, pitchDegrees: avgPitch }))
+            };
           })
         };
       });
+    };
 
-      if (shouldFinish) {
-        setIsDrawingOutline(false);
-        const poly = gPolygonsMapRef.current.get(focusedBuildingId);
-        if (poly) {
-          poly.setOptions({
-            editable: true,
-            draggable: true
-          });
+    // ── Click listener ─────────────────────────────────────────────────────────
+    const drawClickListener = window.google.maps.event.addListener(map, 'click', (e: any) => {
+      const bData = buildingDataRef.current;
+      const bId   = focusedBldgIdRef.current;
+      const verts = bData?.buildings.find(b => b.id === bId)?.polygonVertices ?? [];
+
+      // Snap-to-close: if 3+ vertices and click is near the first vertex → finish
+      if (verts.length >= 3) {
+        const firstPt = new window.google.maps.LatLng(verts[0].lat, verts[0].lng);
+        const dist = window.google.maps.geometry.spherical.computeDistanceBetween(e.latLng, firstPt);
+        if (dist <= snapMeters()) {
+          finishDrawing();
+          return;
         }
       }
+
+      addVertex(e.latLng);
+    });
+
+    // ── Double-click → remove phantom vertex, finish ───────────────────────────
+    const drawDblClickListener = window.google.maps.event.addListener(map, 'dblclick', (e: any) => {
+      e.stop();
+      if (drawingPolylineRef.current) {
+        const path = drawingPolylineRef.current.getPath();
+        if (path.getLength() > 0) path.removeAt(path.getLength() - 1);
+      }
+      setBuildingData(prev => {
+        if (!prev) return prev;
+        const b = prev.buildings.find(b => b.id === focusedBuildingId);
+        if (!b?.polygonVertices || b.polygonVertices.length < 2) return prev;
+        const trimmed = b.polygonVertices.slice(0, -1);
+        if (trimmed.length < 3) return prev;
+        setIsDrawingOutline(false);
+        const poly = gPolygonsMapRef.current.get(focusedBuildingId);
+        if (poly) poly.setOptions({ editable: true, draggable: true });
+        return {
+          ...prev,
+          buildings: prev.buildings.map(b =>
+            b.id === focusedBuildingId ? { ...b, polygonVertices: trimmed } : b
+          )
+        };
+      });
     });
 
     return () => {
+      if (startMarker) { startMarker.setMap(null); startMarker = null; }
       window.google.maps.event.removeListener(drawClickListener);
+      window.google.maps.event.removeListener(drawDblClickListener);
     };
   }, [map, isDrawingOutline, focusedBuildingId, setBuildingData]);
+
+
+  // ── Rubber-band guide line + keyboard shortcuts + map-pan lock ──────────────
+  // Creates a dashed preview polyline: [lastPoint ➡ mouseLatLng ➡ startPoint]
+  // so the user can see exactly where the next side and the closing side will land.
+  useEffect(() => {
+    if (!map || !isDrawingOutline) {
+      // Cleanup leftover guide when drawing ends or is cancelled
+      if (guidePolylineRef.current) {
+        guidePolylineRef.current.setMap(null);
+        guidePolylineRef.current = null;
+      }
+      return;
+    }
+
+    // ── Create the dashed guide polyline ──────────────────────────────────────
+    const guidePoly = new window.google.maps.Polyline({
+      strokeColor:   '#ec028b',
+      strokeOpacity: 0,          // base stroke hidden; dots handle visibility
+      strokeWeight:  2.5,
+      icons: [{
+        icon: {
+          path:          'M 0,-1 0,1',
+          strokeOpacity: 0.9,
+          strokeColor:   '#ec028b',
+          scale:         3.5,
+        },
+        offset: '0',
+        repeat: '14px',
+      }],
+      map:    map,
+      path:   [],
+      clickable:     false, // clicks pass through to the map canvas
+      zIndex:        99,
+    });
+    guidePolylineRef.current = guidePoly;
+
+    // ── Lock map: disable panning, POI clicks, and gesture interference ──────────
+    map.setOptions({
+      draggable:       false,
+      clickableIcons:  false,   // prevents map POI labels from stealing clicks
+      gestureHandling: 'none',  // disables scroll-zoom and pinch during drawing
+    });
+
+    // ── Mouse move → update guide [lastPt → mouse → startPt] ──────────────────
+    const mouseMoveListener = window.google.maps.event.addListener(map, 'mousemove', (e: any) => {
+      const bData = buildingDataRef.current;
+      const bId   = focusedBldgIdRef.current;
+      if (!bData || !bId) { guidePoly.setPath([]); return; }
+
+      const building = bData.buildings.find(b => b.id === bId);
+      const verts    = building?.polygonVertices || [];
+      if (verts.length === 0) { guidePoly.setPath([]); return; }
+
+      const lastPt  = new window.google.maps.LatLng(verts[verts.length - 1].lat, verts[verts.length - 1].lng);
+      const startPt = new window.google.maps.LatLng(verts[0].lat, verts[0].lng);
+      const mouse   = e.latLng;
+
+      // Always just [lastPt → mouse] — no closing-segment preview
+      guidePoly.setPath([lastPt, mouse]);
+
+    });
+
+    // ── Finish drawing (same logic as double-click) ────────────────────────────
+    const finishDrawing = () => {
+      const bId   = focusedBldgIdRef.current;
+      const bData = buildingDataRef.current;
+      if (!bData || !bId) return;
+
+      const building = bData.buildings.find(b => b.id === bId);
+      if (!building?.polygonVertices || building.polygonVertices.length < 3) return;
+
+      // Remove any duplicate consecutive points caused by rapid clicks
+      const verts = building.polygonVertices;
+      const clean = verts.filter((v, i) => {
+        if (i === 0) return true;
+        const p = verts[i - 1];
+        return Math.abs(v.lat - p.lat) > 0.00001 || Math.abs(v.lng - p.lng) > 0.00001;
+      });
+
+      setBuildingData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          buildings: prev.buildings.map(b =>
+            b.id === bId ? { ...b, polygonVertices: clean } : b
+          )
+        };
+      });
+
+      setIsDrawingOutline(false);
+      const poly = gPolygonsMapRef.current.get(bId);
+      if (poly) poly.setOptions({ editable: true, draggable: true });
+    };
+
+    // ── Cancel / discard drawing ───────────────────────────────────────────────
+    const cancelDrawing = () => {
+      const bId = focusedBldgIdRef.current;
+
+      // Remove the committed polyline that was being built
+      if (drawingPolylineRef.current) {
+        drawingPolylineRef.current.setMap(null);
+        drawingPolylineRef.current = null;
+      }
+
+      // Reset the building's vertices back to empty
+      if (bId) {
+        setBuildingData(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            buildings: prev.buildings.map(b =>
+              b.id === bId ? { ...b, polygonVertices: [], totalAreaMeters: 0 } : b
+            )
+          };
+        });
+      }
+
+      setIsDrawingOutline(false);
+    };
+
+    // ── Keyboard: Enter = finish, Escape = cancel ──────────────────────────────
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter')  { e.preventDefault(); finishDrawing(); }
+      if (e.key === 'Escape') { e.preventDefault(); cancelDrawing();  }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    // ── Cleanup ────────────────────────────────────────────────────────────────
+    return () => {
+      guidePoly.setMap(null);
+      guidePolylineRef.current = null;
+      window.google.maps.event.removeListener(mouseMoveListener);
+      window.removeEventListener('keydown', handleKeyDown);
+      map.setOptions({ draggable: true, clickableIcons: true, gestureHandling: 'auto' }); // restore all
+    };
+  }, [map, isDrawingOutline, focusedBuildingId, setBuildingData]);
+
+  // Make markers non-clickable during drawing so pins don't eat vertex clicks
+  useEffect(() => {
+    if (!markersRef.current.length) return;
+    markersRef.current.forEach(m => m.setClickable(!isDrawingOutline));
+  }, [isDrawingOutline]);
 
   // 4. Render Markers for All Buildings (Included/Excluded styled accordingly)
   useEffect(() => {
@@ -451,9 +708,17 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
       }
 
       const isFocused = building.id === focusedBuildingId;
-      
       let poly = gPolygonsMapRef.current.get(building.id);
+      
+      if (isFocused && isDrawingOutline) {
+        if (poly) {
+          poly.setMap(null);
+        }
+        return;
+      }
+      
       const vertices = building.polygonVertices || [];
+
       const pathCoords = vertices.map(v => new window.google.maps.LatLng(v.lat, v.lng));
 
       // Skip updating if this building is currently animating
@@ -593,7 +858,9 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
         }
       } else {
         // Update styling, editable, and draggable state
+        poly.setMap(map);
         poly.setOptions({
+
           strokeOpacity: isFocused ? 0.9 : 0.5,
           strokeWeight: isFocused ? 3.5 : 2,
           fillOpacity: isFocused ? 0.25 : 0.08,

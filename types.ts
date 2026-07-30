@@ -19,6 +19,7 @@ export interface RoofFacet {
   id: string;
   areaMeters: number;
   pitchDegrees: number;
+  azimuthDegrees?: number;
 }
 
 export interface Building {

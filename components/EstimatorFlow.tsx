@@ -83,12 +83,39 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
               if (!prev) return prev;
               const updatedBuildings = [...prev.buildings];
               if (updatedBuildings.length > 0) {
-                const oldId = updatedBuildings[0].id;
-                updatedBuildings[0] = snapped;
+                const oldBuilding = updatedBuildings[0];
+                const oldId = oldBuilding.id;
+                const wasOverridden = oldBuilding.isOverridden;
+                const overrideSq = oldBuilding.overrideSq;
+                
+                let finalSnapped = snapped;
+                if (wasOverridden && overrideSq !== undefined) {
+                  const newTotalAreaMeters = overrideSq * 100 / 10.7639;
+                  const numFacets = snapped.facets.length || 1;
+                  const newFacets = snapped.facets.map(f => {
+                    let newFacetArea = f.areaMeters;
+                    if (snapped.totalAreaMeters > 0) {
+                      const ratio = newTotalAreaMeters / snapped.totalAreaMeters;
+                      newFacetArea = f.areaMeters * ratio;
+                    } else {
+                      newFacetArea = newTotalAreaMeters / numFacets;
+                    }
+                    return { ...f, areaMeters: newFacetArea };
+                  });
+                  finalSnapped = {
+                    ...snapped,
+                    isOverridden: true,
+                    overrideSq,
+                    totalAreaMeters: newTotalAreaMeters,
+                    facets: newFacets
+                  };
+                }
+                
+                updatedBuildings[0] = finalSnapped;
                 setSurveyState(survey => {
-                  const newIds = survey.includedBuildingIds.map(id => id === oldId ? snapped.id : id);
-                  if (!newIds.includes(snapped.id)) {
-                    newIds.push(snapped.id);
+                  const newIds = survey.includedBuildingIds.map(id => id === oldId ? finalSnapped.id : id);
+                  if (!newIds.includes(finalSnapped.id)) {
+                    newIds.push(finalSnapped.id);
                   }
                   return { ...survey, includedBuildingIds: newIds };
                 });
@@ -117,12 +144,39 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
                 if (!prev) return prev;
                 const updatedBuildings = [...prev.buildings];
                 if (updatedBuildings.length > 0) {
-                  const oldId = updatedBuildings[0].id;
-                  updatedBuildings[0] = snapped;
+                  const oldBuilding = updatedBuildings[0];
+                  const oldId = oldBuilding.id;
+                  const wasOverridden = oldBuilding.isOverridden;
+                  const overrideSq = oldBuilding.overrideSq;
+                  
+                  let finalSnapped = snapped;
+                  if (wasOverridden && overrideSq !== undefined) {
+                    const newTotalAreaMeters = overrideSq * 100 / 10.7639;
+                    const numFacets = snapped.facets.length || 1;
+                    const newFacets = snapped.facets.map(f => {
+                      let newFacetArea = f.areaMeters;
+                      if (snapped.totalAreaMeters > 0) {
+                        const ratio = newTotalAreaMeters / snapped.totalAreaMeters;
+                        newFacetArea = f.areaMeters * ratio;
+                      } else {
+                        newFacetArea = newTotalAreaMeters / numFacets;
+                      }
+                      return { ...f, areaMeters: newFacetArea };
+                    });
+                    finalSnapped = {
+                      ...snapped,
+                      isOverridden: true,
+                      overrideSq,
+                      totalAreaMeters: newTotalAreaMeters,
+                      facets: newFacets
+                    };
+                  }
+                  
+                  updatedBuildings[0] = finalSnapped;
                   setSurveyState(survey => {
-                    const newIds = survey.includedBuildingIds.map(id => id === oldId ? snapped.id : id);
-                    if (!newIds.includes(snapped.id)) {
-                      newIds.push(snapped.id);
+                    const newIds = survey.includedBuildingIds.map(id => id === oldId ? finalSnapped.id : id);
+                    if (!newIds.includes(finalSnapped.id)) {
+                      newIds.push(finalSnapped.id);
                     }
                     return { ...survey, includedBuildingIds: newIds };
                   });
