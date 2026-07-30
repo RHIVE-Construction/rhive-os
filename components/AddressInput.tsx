@@ -41,7 +41,6 @@ export const AddressInput: React.FC<AddressInputProps> = ({ onPlaceSelected, onI
 
     autocompleteRef.current = autocomplete;
 
-    // Cleanup function
     return () => {
         if (autocompleteRef.current) {
             window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
@@ -49,9 +48,9 @@ export const AddressInput: React.FC<AddressInputProps> = ({ onPlaceSelected, onI
             // but listeners are cleared to prevent leaks/errors.
             autocompleteRef.current = null; 
         }
-        // Helper to remove the pac-container if it persists (optional, but keeps DOM clean)
-        const pacContainers = document.querySelectorAll('.pac-container');
-        pacContainers.forEach((el) => el.remove());
+        // Note: do NOT remove .pac-container elements here.
+        // Google appends them to <body> and manages their own lifecycle.
+        // Removing them globally breaks other autocomplete instances on the same page.
     };
   }, [isApiReady, onPlaceSelected]);
 
