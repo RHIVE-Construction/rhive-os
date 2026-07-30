@@ -17,7 +17,6 @@ import {
     LockIcon
 } from '../components/icons';
 import { userService, userLogService } from '../lib/firebaseService';
-import { useMockDB } from '../contexts/MockDatabaseContext';
 import { User, UserType } from '../types';
 import { cn, hashPassword } from '../lib/utils';
 
