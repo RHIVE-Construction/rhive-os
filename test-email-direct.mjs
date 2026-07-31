@@ -137,31 +137,44 @@ async function sendTestEmail(type) {
     console.log(`   ✓ Queued in Firestore (id: ${ref.id})`);
     console.log(`   ⏳ Waiting for extension delivery status...`);
 
-    // Watch the document for delivery status update
+    // Watch the document for delivery status update.
+    // Note: processMailQueue (our function) sets delivery.state = 'SUCCESS' with messageId.
+    // The old Firebase extension may race and overwrite with ERROR — we detect real
+    // delivery by the presence of delivery.messageId set by processMailQueue.
     return new Promise((resolve) => {
+        let resolved = false;
         const unsubscribe = onSnapshot(doc(db, 'mail', ref.id), (snap) => {
+            if (resolved) return;
             const data = snap.data();
             const delivery = data?.delivery;
             if (!delivery) return;
 
-            console.log(`   📬 Status: ${delivery.state}`);
-            if (delivery.state === 'SUCCESS') {
-                console.log(`   ✅ EMAIL DELIVERED SUCCESSFULLY!`);
+            console.log(`   📬 Status: ${delivery.state}${delivery.messageId ? ' ✅ (messageId confirmed)' : ''}`);
+
+            // Our processMailQueue function sets messageId on success — this is the ground truth
+            if (delivery.messageId) {
+                console.log(`   ✅ EMAIL DELIVERED SUCCESSFULLY! MessageId: ${delivery.messageId}`);
+                resolved = true;
                 unsubscribe();
                 resolve('success');
-            } else if (delivery.state === 'ERROR') {
+            } else if (delivery.state === 'ERROR' && !delivery.messageId) {
+                // Only treat as error if no messageId was ever set (true failure)
                 console.error(`   ❌ EMAIL DELIVERY FAILED:`, delivery.error);
+                resolved = true;
                 unsubscribe();
                 resolve('error');
             }
         });
 
-        // Timeout after 30s
+        // Timeout after 45s (Cloud Function cold start can be slow)
         setTimeout(() => {
-            unsubscribe();
-            console.log(`   ⚠️  Timed out waiting for delivery. Check Firestore manually.`);
-            resolve('timeout');
-        }, 30000);
+            if (!resolved) {
+                resolved = true;
+                unsubscribe();
+                console.log(`   ⚠️  Timed out. Check Cloud Function logs & james.g@ inbox.`);
+                resolve('timeout');
+            }
+        }, 45000);
     });
 }
 

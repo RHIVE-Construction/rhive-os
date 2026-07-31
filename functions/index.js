@@ -1747,15 +1747,6 @@ exports.processMailQueue = functions
             return null;
         }
 
-        // Mark as processing
-        await db.collection('mail').doc(docId).update({
-            delivery: {
-                state: 'PROCESSING',
-                startTime: admin.firestore.FieldValue.serverTimestamp(),
-                attempts: 1,
-            }
-        });
-
         const transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 465,
@@ -1783,7 +1774,10 @@ exports.processMailQueue = functions
             const info = await transporter.sendMail(mailOptions);
             console.log(`[processMailQueue] ✅ Sent to ${mailOptions.to} — MessageId: ${info.messageId}`);
 
-            await db.collection('mail').doc(docId).update({
+            // Write SUCCESS atomically with messageId — this is the authoritative delivery record.
+            // The old Firebase extension may race and overwrite, but the test script detects
+            // real delivery by the presence of messageId in the delivery field.
+            await db.collection('mail').doc(docId).set({
                 delivery: {
                     state: 'SUCCESS',
                     endTime: admin.firestore.FieldValue.serverTimestamp(),
@@ -1791,7 +1785,7 @@ exports.processMailQueue = functions
                     messageId: info.messageId,
                     info: { accepted: info.accepted, rejected: info.rejected },
                 }
-            });
+            }, { merge: true });
         } catch (error) {
             console.error(`[processMailQueue] ❌ Failed to send to ${mailOptions.to}:`, error.message);
 
