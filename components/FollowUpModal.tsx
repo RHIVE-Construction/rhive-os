@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { firestoreService, userLogService } from '../lib/firebaseService';
+import { leadService } from '../lib/firebaseService';
 import { PhoneIcon, MapPinIcon, CalendarIcon, ClockIcon, XIcon, CheckCircleIcon } from './icons';
 import { cn } from '../lib/utils';
 
@@ -52,45 +52,37 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
     const handleSave = async () => {
         if (!date || saving) return;
         setSaving(true);
-        const event: FollowUpEvent = {
-            project_id: project.id,
-            project_name: project.name || 'Unnamed Project',
-            type,
-            date,
-            time,
-            notes,
-            stage: project.current_stage || 'Unknown',
-            created_at: new Date().toISOString(),
-        };
         try {
-            await firestoreService.addDocument('followups', event);
-            userLogService.logAction(
-                type === 'call' ? 'FOLLOW_UP_CALL_SCHEDULED' : 'FOLLOW_UP_VISIT_SCHEDULED',
-                `${type === 'call' ? 'Phone call' : 'Site visit'} follow-up scheduled for project "${event.project_name}" on ${date} at ${time}`,
-                {
-                    page: 'FollowUpModal',
-                    action: type === 'call' ? 'Schedule Phone Call' : 'Schedule Site Visit',
-                    projectId: project.id,
-                    projectName: event.project_name,
-                    projectStage: event.stage,
-                    followUpType: type,
-                    scheduledDate: date,
-                    scheduledTime: time,
-                    notes: notes || undefined,
-                    timestamp: event.created_at
-                }
-            );
-            setSaved(true);
-            onSaved?.(event);
-            setTimeout(() => {
-                onClose();
-            }, 1200);
+            const result = await leadService.scheduleFollowUp({
+                projectId: project.id,
+                projectName: project.name || 'Unnamed Project',
+                type,
+                date,
+                time,
+                notes,
+                stage: project.current_stage || 'Lead',
+                // assigneeEmail is picked up from session inside scheduleFollowUp
+            });
+            if (result.success) {
+                setSaved(true);
+                const event: FollowUpEvent = {
+                    project_id: project.id,
+                    project_name: project.name || 'Unnamed Project',
+                    type,
+                    date,
+                    time,
+                    notes,
+                    stage: project.current_stage || 'Lead',
+                };
+                onSaved?.(event);
+                setTimeout(() => {
+                    onClose();
+                }, 1200);
+            } else {
+                console.error('Failed to save follow-up:', result.error);
+            }
         } catch (err) {
-            userLogService.logAction(
-                'FOLLOW_UP_SCHEDULE_FAILED',
-                `Failed to schedule follow-up for project "${event.project_name}"`,
-                { page: 'FollowUpModal', projectId: project.id, followUpType: type, scheduledDate: date }
-            );
+            console.error('Failed to save follow-up:', err);
         } finally {
             setSaving(false);
         }

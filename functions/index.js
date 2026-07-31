@@ -1510,3 +1510,199 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
     });
 });
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHEDULED: sendDailyFollowUpReminders
+// Runs every day at 8:00 AM UTC (4:00 PM AEST / 6:00 PM AEDT).
+// Queries `followups` collection for entries due the next calendar day and
+// writes a reminder email document to the `mail` collection so the
+// Firebase "Trigger Email from Firestore" extension dispatches it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TEMP_TEST_RECIPIENT = 'james.g@rhiveconstruction.com';
+
+/**
+ * Resolves the actual recipient.
+ * During testing, always routes to TEMP_TEST_RECIPIENT.
+ */
+function resolveEmailRecipient(intended) {
+    return TEMP_TEST_RECIPIENT || intended;
+}
+
+/**
+ * Builds the branded RHIVE email HTML shell.
+ */
+function buildRhiveEmailHtml(opts) {
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${opts.title} — RHIVE Construction</title>
+</head>
+<body style="margin:0;padding:0;background:#050505;font-family:'Rubik',Arial,sans-serif;color:#f3f4f6;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;border-radius:4px;overflow:hidden;max-width:560px;">
+          <tr><td style="background:#ec028b;padding:4px 0;"></td></tr>
+          <tr>
+            <td style="padding:32px 36px 20px;">
+              <h1 style="margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#ffffff;">
+                RHIVE <span style="color:#ec028b;">Construction</span>
+              </h1>
+              <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">
+                ${opts.subtitle || '24-Hour Advance Notice'}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 36px 32px;">
+              ${opts.bodyHtml}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 36px;border-top:1px solid #1f2937;">
+              <p style="margin:0;font-size:11px;color:#4b5563;">
+                RHIVE Construction · Brisbane, QLD · Australia<br/>
+                <a href="mailto:support@rhiveconstruction.com" style="color:#6b7280;text-decoration:none;">
+                  support@rhiveconstruction.com
+                </a>
+              </p>
+            </td>
+          </tr>
+          <tr><td style="background:#ec028b;padding:2px 0;"></td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim();
+}
+
+exports.sendDailyFollowUpReminders = functions.pubsub
+    .schedule('0 8 * * *')         // 08:00 UTC daily
+    .timeZone('UTC')
+    .onRun(async (context) => {
+        const db = admin.firestore();
+
+        // Calculate tomorrow's date in YYYY-MM-DD
+        const tomorrow = new Date();
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+
+        console.log(`[sendDailyFollowUpReminders] Checking for follow-ups on: ${tomorrowStr}`);
+
+        try {
+            const snapshot = await db.collection('followups')
+                .where('date', '==', tomorrowStr)
+                .get();
+
+            if (snapshot.empty) {
+                console.log('[sendDailyFollowUpReminders] No follow-ups due tomorrow.');
+                return null;
+            }
+
+            const batch = [];
+
+            snapshot.forEach(doc => {
+                const fu = doc.data();
+                const assigneeEmail = fu.assigned_to_email || TEMP_TEST_RECIPIENT;
+                const assigneeName = fu.assigned_to_name || 'Team Member';
+                const leadName = fu.project_name || 'Unnamed Lead';
+                const typeLabel = fu.type === 'visit' ? 'Site Visit' : 'Phone Call';
+                const timeDisplay = fu.time
+                    ? new Date(`1970-01-01T${fu.time}`).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })
+                    : '';
+
+                const bodyHtml = `
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#d1d5db;">
+  Hi ${assigneeName},
+</p>
+<p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#d1d5db;">
+  This is a reminder — you have an upcoming follow-up <strong style="color:#ffffff;">tomorrow</strong>.
+</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f1621;border:1px solid #1f2937;border-radius:6px;margin:24px 0 28px;overflow:hidden;">
+  <tr><td style="background:#ec028b;padding:2px 0;"></td></tr>
+  <tr>
+    <td style="padding:20px 24px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding-bottom:14px;border-bottom:1px solid #1f2937;">
+            <p style="margin:0 0 3px;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Lead / Project</p>
+            <p style="margin:0;font-size:16px;color:#ffffff;font-weight:800;">${leadName}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-top:14px;padding-bottom:14px;border-bottom:1px solid #1f2937;">
+            <p style="margin:0 0 3px;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Follow-Up Type</p>
+            <p style="margin:0;font-size:14px;color:#f3f4f6;font-weight:700;">${typeLabel}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-top:14px;${fu.notes ? 'padding-bottom:14px;border-bottom:1px solid #1f2937;' : ''}">
+            <p style="margin:0 0 3px;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Scheduled For</p>
+            <p style="margin:0;font-size:14px;color:#ec028b;font-weight:800;">Tomorrow${timeDisplay ? ` at ${timeDisplay}` : ''}</p>
+          </td>
+        </tr>
+        ${fu.notes ? `
+        <tr>
+          <td style="padding-top:14px;">
+            <p style="margin:0 0 3px;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Notes</p>
+            <p style="margin:0;font-size:14px;color:#d1d5db;line-height:1.6;">${fu.notes.replace(/\n/g, '<br/>')}</p>
+          </td>
+        </tr>` : ''}
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="background:#ec028b;border-radius:3px;">
+      <a href="https://app.rhiveconstruction.com"
+         style="display:inline-block;padding:12px 24px;color:#ffffff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">
+        View in RHIVE →
+      </a>
+    </td>
+  </tr>
+</table>`;
+
+                batch.push(
+                    db.collection('mail').add({
+                        to: resolveEmailRecipient(assigneeEmail),
+                        from: 'RHIVE Support <support@rhiveconstruction.com>',
+                        message: {
+                            subject: `Reminder: Follow-up Tomorrow — ${leadName}`,
+                            text: [
+                                `Hi ${assigneeName},`,
+                                '',
+                                `Reminder: you have an upcoming follow-up tomorrow.`,
+                                `Lead: ${leadName}`,
+                                `Type: ${typeLabel}`,
+                                fu.time ? `Time: ${timeDisplay}` : '',
+                                fu.notes ? `Notes: ${fu.notes}` : '',
+                                '',
+                                '— RHIVE Construction',
+                            ].filter(Boolean).join('\n'),
+                            html: buildRhiveEmailHtml({
+                                title: `Reminder: Follow-up Tomorrow — ${leadName}`,
+                                subtitle: '24-Hour Advance Notice',
+                                bodyHtml,
+                            }),
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    })
+                );
+
+                console.log(`[sendDailyFollowUpReminders] Queued reminder for: ${leadName} → ${resolveEmailRecipient(assigneeEmail)}`);
+            });
+
+            await Promise.all(batch);
+            console.log(`[sendDailyFollowUpReminders] Queued ${batch.length} reminder(s).`);
+            return null;
+
+        } catch (error) {
+            console.error('[sendDailyFollowUpReminders] Error:', error.message);
+            return null;
+        }
+    });

@@ -749,7 +749,76 @@ export const leadService = {
     subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('leads', callback),
     getById: (id: string) => firestoreService.getDocument('leads', id),
     update: (id: string, data: any) => firestoreService.updateDocument('leads', id, data),
-    delete: (id: string) => firestoreService.deleteDocument('leads', id)
+    delete: (id: string) => firestoreService.deleteDocument('leads', id),
+
+    /**
+     * Schedules a follow-up for a lead/project, logs the action, and sends
+     * a notification email to the assigned employee.
+     */
+    scheduleFollowUp: async (opts: {
+        projectId: string;
+        projectName: string;
+        type: 'call' | 'visit';
+        date: string;           // YYYY-MM-DD
+        time?: string;          // HH:MM
+        notes?: string;
+        stage?: string;
+        assigneeEmail?: string;
+        assigneeName?: string;
+    }): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const { emailService } = await import('./emailService');
+            const currentUser = session.read();
+
+            // 1. Write follow-up document to Firestore
+            const followUpDoc = {
+                project_id: opts.projectId,
+                project_name: opts.projectName,
+                type: opts.type,
+                date: opts.date,
+                time: opts.time || '',
+                notes: opts.notes || '',
+                stage: opts.stage || 'Lead',
+                assigned_to_email: opts.assigneeEmail || currentUser?.email || '',
+                assigned_to_name: opts.assigneeName || currentUser?.name || '',
+                created_by: currentUser?.name || 'Unknown',
+                created_by_id: currentUser?.id || '',
+            };
+            const writeResult = await firestoreService.addDocument('followups', followUpDoc);
+            if (!writeResult.success) {
+                return { success: false, error: writeResult.error };
+            }
+
+            // 2. Log the action
+            await userLogService.logAction(
+                'MEETING_SCHEDULED',
+                `Follow-up scheduled for ${opts.projectName} on ${opts.date}`,
+                { projectId: opts.projectId, projectName: opts.projectName, date: opts.date, type: opts.type }
+            );
+
+            // 3. Send email notification to assignee (best-effort)
+            const emailTarget = opts.assigneeEmail || currentUser?.email || '';
+            if (emailTarget) {
+                emailService.sendFollowUpScheduled({
+                    assigneeEmail: emailTarget,
+                    assigneeName: opts.assigneeName || currentUser?.name,
+                    leadName: opts.projectName,
+                    followUpDate: opts.date,
+                    followUpTime: opts.time,
+                    followUpType: opts.type,
+                    notes: opts.notes,
+                    stage: opts.stage,
+                }).catch((err: any) => {
+                    console.error('[leadService] Failed to send follow-up email:', err);
+                });
+            }
+
+            return { success: true };
+        } catch (error: any) {
+            console.error('Error in leadService.scheduleFollowUp:', error);
+            return { success: false, error: error.message };
+        }
+    }
 };
 
 export const accountService = {
@@ -890,6 +959,73 @@ export const userService = {
             if (snapshot.empty) return { success: false, error: 'No user found with this email' };
             return { success: true, data: snapshot.docs.map(mapDoc)[0] };
         } catch (error: any) {
+            console.error('Error in verifyResetToken:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Completes the password reset.
+     *
+     * AUTO-DETECTS token type:
+     *  - JWT token (starts with "eyJ") → from SMS OTP flow → calls completePasswordReset Cloud Function
+     *    which uses Firebase Admin SDK to update the real Firebase Auth password.
+     *  - Firestore token → from email reset flow → updates password_hash on the user document.
+     */
+    completePasswordReset: async (token: string, newPassword: string): Promise<{ success: boolean; error?: string; email?: string }> => {
+        try {
+            const { emailService } = await import('./emailService');
+
+            // ── JWT path (SMS OTP forgot-password flow) ───────────────────────
+            if (token.startsWith('eyJ')) {
+                const res = await fetch(`${FUNCTIONS_BASE_URL}/completePasswordReset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resetToken: token, newPassword })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    return { success: false, error: data.error || `HTTP ${res.status}` };
+                }
+                // Send password-changed confirmation (best-effort — JWT path may not have email)
+                if (data.email) {
+                    emailService.sendPasswordChangedConfirmation(data.email).catch(() => {});
+                }
+                return { success: true, email: data.email };
+            }
+
+            // ── Firestore token path (email reset flow) ───────────────────────
+            // 1. Verify token and get userId + email directly
+            const verification = await passwordResetService.verifyResetToken(token);
+            if (!verification.success || !verification.userId) {
+                return { success: false, error: verification.error || 'Token verification failed.' };
+            }
+
+            // 2. Hash the new password
+            const passwordHash = await hashPassword(newPassword);
+
+            // 3. Update password_hash and clear reset token fields on the user document
+            const updateResult = await userService.update(verification.userId, {
+                password_hash: passwordHash,
+                reset_token: null,
+                reset_token_expiry: null,
+                updated_at: new Date().toISOString()
+            });
+
+            if (!updateResult.success) {
+                return { success: false, error: updateResult.error || 'Failed to update password.' };
+            }
+
+            // 4. Send password-changed security confirmation email
+            if (verification.email) {
+                emailService.sendPasswordChangedConfirmation(verification.email).catch((err: any) => {
+                    console.error('[passwordResetService] Failed to send confirmation email:', err);
+                });
+            }
+
+            return { success: true, email: verification.email };
+        } catch (error: any) {
+            console.error('Error in completePasswordReset:', error);
             return { success: false, error: error.message };
         }
     }
