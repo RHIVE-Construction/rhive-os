@@ -1770,14 +1770,13 @@ exports.processMailQueue = functions
             html: msg.html,
         };
 
+        console.log(`[processMailQueue] Attempting send to: ${mailOptions.to} | Subject: ${mailOptions.subject}`);
+
         try {
             const info = await transporter.sendMail(mailOptions);
             console.log(`[processMailQueue] ✅ Sent to ${mailOptions.to} — MessageId: ${info.messageId}`);
 
-            // Write SUCCESS atomically with messageId — this is the authoritative delivery record.
-            // The old Firebase extension may race and overwrite, but the test script detects
-            // real delivery by the presence of messageId in the delivery field.
-            await db.collection('mail').doc(docId).set({
+            await db.collection('mail_outbox').doc(docId).set({
                 delivery: {
                     state: 'SUCCESS',
                     endTime: admin.firestore.FieldValue.serverTimestamp(),
@@ -1789,14 +1788,18 @@ exports.processMailQueue = functions
         } catch (error) {
             console.error(`[processMailQueue] ❌ Failed to send to ${mailOptions.to}:`, error.message);
 
-            await db.collection('mail').doc(docId).update({
-                delivery: {
-                    state: 'ERROR',
-                    error: error.message,
-                    endTime: admin.firestore.FieldValue.serverTimestamp(),
-                    attempts: 1,
-                }
-            });
+            try {
+                await db.collection('mail_outbox').doc(docId).update({
+                    delivery: {
+                        state: 'ERROR',
+                        error: error.message,
+                        endTime: admin.firestore.FieldValue.serverTimestamp(),
+                        attempts: 1,
+                    }
+                });
+            } catch (writeErr) {
+                console.error('[processMailQueue] Failed to write error status:', writeErr.message);
+            }
         }
 
         return null;
