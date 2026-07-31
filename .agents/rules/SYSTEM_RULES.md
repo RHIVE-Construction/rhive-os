@@ -4,6 +4,90 @@
 
 ---
 
+## 0. CORE BEHAVIOUR RULES
+
+These rules govern agent and developer behaviour at the highest level. They override defaults.
+
+### 0.1 No Subheadings Unless Explicitly Instructed
+
+- **Do NOT create page-level subheadings, section headers, or UI heading elements** (`<h2>`, `<h3>`, subtitle text, etc.) unless the user has **explicitly asked** for them in that specific request.
+- A page should have at most one `<h1>` title. Sub-sections within a page must use visual separation (cards, dividers, spacing) — not additional heading levels.
+- This rule applies to all pages, modals, panels, and components.
+
+```tsx
+// ❌ WRONG — adding unsolicited subheadings
+<h2>Personal Information</h2>
+<h3>Contact Details</h3>
+
+// ✅ CORRECT — use card/section grouping instead
+<section className="...">
+  {/* Group content visually without heading tags */}
+</section>
+```
+
+### 0.2 No IDs or User IDs Visible on Any Page
+
+- **Never display Firestore document IDs, user IDs, or any internal identifier** to the user anywhere in the UI.
+- This includes: record cards, tables, detail views, tooltips, modals, audit logs, URL slugs shown in UI, and debug overlays.
+- IDs may exist in the data layer and URL paths (for routing), but must **never be rendered as visible text**.
+- If a reference number is needed for the user, generate a human-readable identifier (e.g., a project code or sequential number) — not a raw Firestore ID.
+
+```tsx
+// ❌ WRONG
+<p>ID: xK9mP3qLvT...</p>
+<span>{user.uid}</span>
+
+// ✅ CORRECT — show a name, code, or formatted reference
+<p>Project: RC-2026-001</p>
+<p>{record.name}</p>
+```
+
+### 0.3 Notifications for Every User Action
+
+- **Every event or action a user performs MUST trigger a notification.** No exceptions.
+- This includes: creating a record, editing a record, deleting a record, restoring a record, permanently deleting a record, changing a stage, saving a quote, scheduling a follow-up, and any other data-modifying action.
+- Notifications must appear in the notification bell within seconds of the action.
+- See **Section 7** for the full logging and notification specification.
+
+### 0.4 All CRUD Actions Must Be Server-Side
+
+- **All Create, Read, Update, and Delete operations must be executed server-side** — via Firebase Cloud Functions, not directly from the client.
+- Client code must call a Cloud Function endpoint; the Cloud Function performs the Firestore write/read.
+- **Direct Firestore SDK writes from the client (`setDoc`, `addDoc`, `updateDoc`, `deleteDoc`) are strictly prohibited** for any CRUD action.
+- Reads may use Firestore real-time listeners on the client for live updates, but writes must always go through a Cloud Function.
+
+```ts
+// ❌ WRONG — direct client write
+await setDoc(doc(db, 'leads', id), data);
+
+// ✅ CORRECT — call a Cloud Function
+await httpsCallable(functions, 'updateLead')({ id, data });
+```
+
+### 0.5 Commit Message Format
+
+- All commit messages **must** use the format: `feature-(functionality)` for feature work, or the type-prefixed format defined in **Section 4.2**.
+- Keep the message short — one line, under 60 characters.
+- Use present tense. No period at the end.
+
+```
+// Examples
+feature-(lead-notifications)
+feature-(server-side-crud)
+fix-(stage-change-logging)
+```
+
+### 0.6 Always Run Tests Before Committing or Pushing
+
+- **No commit or push may happen without first running the full test suite.**
+- Run `npm run build` and confirm zero errors.
+- Run `npx tsc --noEmit` and confirm zero TypeScript errors.
+- Manually verify the feature in the dev server.
+- Only after all checks pass is a commit or push allowed.
+- See **Section 3** for the complete pre-commit and pre-push checklists.
+
+---
+
 ## 1. BUTTON & LABEL CONVENTIONS
 
 All interactive buttons across the entire application must follow this naming standard strictly.
@@ -314,4 +398,4 @@ When in doubt, **check this file first.**
 
 ---
 
-*Last updated: 2026-07-31 | Branch: system-rules | Maintained in `.agents/rules/SYSTEM_RULES.md`*
+*Last updated: 2026-08-01 | Branch: system-rules | Maintained in `.agents/rules/SYSTEM_RULES.md`*
