@@ -1706,3 +1706,104 @@ exports.sendDailyFollowUpReminders = functions.pubsub
             return null;
         }
     });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FIRESTORE TRIGGER: processMailQueue
+// Watches the `mail` collection for new documents and sends them via Gmail SMTP.
+// This replaces the Firebase "Trigger Email from Firestore" extension which
+// had SMTP configuration issues.
+//
+// Required secret: RHIVE_SMTP_PASSWORD (set via firebase functions:secrets:set)
+// ─────────────────────────────────────────────────────────────────────────────
+
+exports.processMailQueue = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'] })
+    .firestore.document('mail/{docId}')
+    .onCreate(async (snap, context) => {
+        const nodemailer = require('nodemailer');
+        const db = admin.firestore();
+        const docId = context.params.docId;
+        const data = snap.data();
+
+        // Skip if already processed (delivery field exists)
+        if (data.delivery) {
+            console.log(`[processMailQueue] Skipping ${docId} — already has delivery field.`);
+            return null;
+        }
+
+        const SMTP_USER = 'noreply@rhiveconstruction.com';
+        const SMTP_PASS = process.env.RHIVE_SMTP_PASSWORD;
+
+        if (!SMTP_PASS) {
+            console.error('[processMailQueue] RHIVE_SMTP_PASSWORD secret not available.');
+            await db.collection('mail').doc(docId).update({
+                delivery: {
+                    state: 'ERROR',
+                    error: 'SMTP password secret not configured.',
+                    attempts: 1,
+                    endTime: admin.firestore.FieldValue.serverTimestamp(),
+                }
+            });
+            return null;
+        }
+
+        // Mark as processing
+        await db.collection('mail').doc(docId).update({
+            delivery: {
+                state: 'PROCESSING',
+                startTime: admin.firestore.FieldValue.serverTimestamp(),
+                attempts: 1,
+            }
+        });
+
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                type: 'LOGIN',
+                user: SMTP_USER,
+                pass: SMTP_PASS,
+            },
+        });
+
+        const msg = data.message || {};
+        const mailOptions = {
+            from: data.from || `RHIVE Support <${SMTP_USER}>`,
+            to: Array.isArray(data.to) ? data.to.join(', ') : data.to,
+            cc: data.cc,
+            bcc: data.bcc,
+            replyTo: data.replyTo,
+            subject: msg.subject || '(No Subject)',
+            text: msg.text,
+            html: msg.html,
+        };
+
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log(`[processMailQueue] ✅ Sent to ${mailOptions.to} — MessageId: ${info.messageId}`);
+
+            await db.collection('mail').doc(docId).update({
+                delivery: {
+                    state: 'SUCCESS',
+                    endTime: admin.firestore.FieldValue.serverTimestamp(),
+                    attempts: 1,
+                    messageId: info.messageId,
+                    info: { accepted: info.accepted, rejected: info.rejected },
+                }
+            });
+        } catch (error) {
+            console.error(`[processMailQueue] ❌ Failed to send to ${mailOptions.to}:`, error.message);
+
+            await db.collection('mail').doc(docId).update({
+                delivery: {
+                    state: 'ERROR',
+                    error: error.message,
+                    endTime: admin.firestore.FieldValue.serverTimestamp(),
+                    attempts: 1,
+                }
+            });
+        }
+
+        return null;
+    });
