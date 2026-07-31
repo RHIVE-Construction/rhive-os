@@ -18,6 +18,7 @@ import {
 } from '../components/icons';
 import { userService, userLogService } from '../lib/firebaseService';
 import { useMockDB } from '../contexts/MockDatabaseContext';
+import { useNavigation } from '../contexts/NavigationContext';
 import { User, UserType } from '../types';
 import { cn, hashPassword } from '../lib/utils';
 
@@ -29,6 +30,7 @@ const PASSWORD_CHANGE_ROLES: UserType[] = ['Super Admin'];
 
 const UserManagementPage: React.FC = () => {
     const { currentUser } = useMockDB();
+    const { setSelectedUserId, setActivePageId } = useNavigation();
 
     // Derived permission: only Super Admin can change other users' passwords
     const canChangePasswords = PASSWORD_CHANGE_ROLES.includes(currentUser?.role as UserType);
@@ -107,6 +109,17 @@ const UserManagementPage: React.FC = () => {
             'EDIT_USER_MODAL_OPENED',
             `Edit modal opened for user "${user.name}" (${user.role}) by ${currentUser?.name ?? 'Admin'}`,
             { targetUserId: user.id, targetUserName: user.name, targetUserRole: user.role, openedBy: currentUser?.id }
+        );
+    };
+
+    /** Navigate to the full profile page for a given user */
+    const handleViewProfile = (user: User) => {
+        setSelectedUserId(user.id);
+        setActivePageId('A-02-profile');
+        userLogService.logAction(
+            'PAGE_ACCESSED',
+            `Profile page opened for "${user.name}" (${user.role}) by ${currentUser?.name ?? 'Unknown'}`,
+            { targetUserId: user.id, openedBy: currentUser?.id }
         );
     };
 
@@ -356,33 +369,45 @@ const UserManagementPage: React.FC = () => {
                             <p className="text-gray-600 text-sm italic">No users found. Add your first user above.</p>
                         </div>
                     ) : filteredUsers.map((user) => (
-                        <div key={user.id} className="group relative bg-gray-900/40 border border-gray-800 rounded-2xl p-6 hover:border-[#ec028b]/50 transition-all duration-300">
+                        <div
+                            key={user.id}
+                            className="group relative bg-gray-900/40 border border-gray-800 rounded-2xl p-6 hover:border-[#ec028b]/50 transition-all duration-300 cursor-pointer"
+                            onClick={() => handleViewProfile(user)}
+                            id={`user-card-${user.id}`}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => e.key === 'Enter' && handleViewProfile(user)}
+                            aria-label={`View profile for ${user.name}`}
+                        >
                             {/* Actions Overlay */}
-                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                 <button
-                                    onClick={() => handleOpenEdit(user)}
+                                    onClick={(e) => { e.stopPropagation(); handleOpenEdit(user); }}
                                     className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-all"
                                     title="Edit user"
                                     id={`edit-user-btn-${user.id}`}
+                                    aria-label={`Edit ${user.name}`}
                                 >
                                     <PencilSquareIcon className="w-4 h-4" />
                                 </button>
                                 {/* Change Password: only visible to Super Admin */}
                                 {canChangePasswords && (
                                     <button
-                                        onClick={() => openChangePw(user)}
+                                        onClick={(e) => { e.stopPropagation(); openChangePw(user); }}
                                         className="p-2 bg-[#ec028b]/10 rounded-lg text-[#ec028b]/60 hover:text-[#ec028b] hover:bg-[#ec028b]/20 transition-all"
                                         title="Change password (Super Admin only)"
                                         id={`change-pw-btn-${user.id}`}
+                                        aria-label={`Change password for ${user.name}`}
                                     >
                                         <LockIcon className="w-4 h-4" />
                                     </button>
                                 )}
                                 <button
-                                    onClick={() => handleDelete(user.id)}
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(user.id); }}
                                     className="p-2 bg-red-900/20 rounded-lg text-red-500/70 hover:text-red-500 hover:bg-red-900/40 transition-all"
                                     title="Delete user"
                                     id={`delete-user-btn-${user.id}`}
+                                    aria-label={`Delete ${user.name}`}
                                 >
                                     <TrashIcon className="w-4 h-4" />
                                 </button>
@@ -591,8 +616,9 @@ const UserManagementPage: React.FC = () => {
                                     onClick={() => setIsModalOpen(false)}
                                     disabled={submitting}
                                     className="flex-1 bg-gray-900 border-gray-800 text-gray-500 hover:text-white disabled:opacity-40"
+                                    id="cancel-user-modal"
                                 >
-                                    Abort
+                                    Cancel
                                 </Button>
                                 <Button
                                     type="submit"

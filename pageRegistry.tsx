@@ -62,6 +62,7 @@ import NewProjectBidsPage from './pages/NewProjectBidsPage'; // CO-05
 import SupplierHomepage from './pages/SupplierHomepage'; // S-01
 import SupplierProfilePage from './pages/SupplierProfilePage'; // S-04
 import UserManagementPage from './pages/UserManagementPage'; // A-02
+import UserProfilePage from './pages/UserProfilePage'; // A-02-profile
 import AdminDashboardPage from './pages/AdminDashboardPage'; // A-01
 import RoleManagementPage from './pages/RoleManagementPage'; // SA-01
 import CustomerTrackerPage from './pages/CustomerTrackerPage'; // C-Tracker
@@ -135,6 +136,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,
   'A-02': UserManagementPage,
+  'A-02-profile': UserProfilePage,
   'A-03': EstimatePricingPage,
   'A-04': EstimateBackendApiPage,
   'A-05': LineItemCatalogPage,
