@@ -166,15 +166,15 @@ async function sendTestEmail(type) {
             }
         });
 
-        // Timeout after 45s (Cloud Function cold start can be slow)
+        // Timeout after 120s (Cloud Function cold start can be slow on first invocation)
         setTimeout(() => {
             if (!resolved) {
                 resolved = true;
                 unsubscribe();
-                console.log(`   ⚠️  Timed out. Check Cloud Function logs & james.g@ inbox.`);
+                console.log(`   ⚠️  Timed out. Check Cloud Function logs & james.g@ inbox — email may still have been sent.`);
                 resolve('timeout');
             }
-        }, 45000);
+        }, 120000);
     });
 }
 
