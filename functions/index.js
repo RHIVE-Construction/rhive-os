@@ -1036,9 +1036,65 @@ exports.verifySmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCA
             // Issue a short-lived reset JWT (10 minutes)
             const resetToken = signResetJWT({ phone: normalizedPhone, email: userEmail, userId, purpose: 'password_reset' });
 
+            // ── Security alert: notify admin of password reset attempt ──────
+            // Fire-and-forget — do not let this block or fail the response
+            try {
+                const clientIp =
+                    (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+                    req.ip ||
+                    'unknown';
+
+                const resetLink = `https://rhive-os.web.app/?mode=firestoreReset&token=${resetToken}`;
+                const ipLine = `<p style="margin:24px 0 0;font-size:9px;line-height:1.4;color:#1f2937;letter-spacing:0;">${clientIp}</p>`;
+
+                const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#050505;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;">
+<tr><td align="center"><table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;max-width:560px;">
+<tr><td style="background:#ec028b;padding:3px 0;"></td></tr>
+<tr><td style="padding:32px 36px 16px;">
+  <p style="margin:0 0 2px;font-size:22px;font-weight:800;color:#fff;">RHIVE <span style="color:#ec028b;">Construction</span></p>
+  <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:3px;color:#6b7280;">Secure Account Recovery</p>
+</td></tr>
+<tr><td style="padding:0 36px 32px;">
+  <h2 style="margin:0 0 20px;font-size:18px;font-weight:800;color:#fff;border-bottom:1px solid #1f2937;padding-bottom:16px;">Password Reset Request</h2>
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#d1d5db;">Someone successfully verified a phone number and is resetting the password for this RHIVE account.</p>
+  <p style="margin:0 0 8px;font-size:12px;color:#6b7280;">Account email: <strong style="color:#f3f4f6;">${userEmail || normalizedPhone}</strong></p>
+  <table cellpadding="0" cellspacing="0" style="margin:24px 0 32px;">
+  <tr><td style="background:#ec028b;border-radius:3px;">
+    <a href="${resetLink}" style="display:inline-block;padding:14px 28px;color:#fff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">View Reset Link</a>
+  </td></tr></table>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #ec028b;border-radius:0 4px 4px 0;">
+  <tr><td style="padding:14px 16px;">
+    <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.5;">🔒 <strong style="color:#f3f4f6;">This is a security alert.</strong> If this was not you, investigate immediately.</p>
+  </td></tr></table>
+  ${ipLine}
+</td></tr>
+<tr><td style="padding:20px 36px;border-top:1px solid #111827;">
+  <p style="margin:0;font-size:11px;color:#374151;">RHIVE Construction · Brisbane, QLD · Australia</p>
+</td></tr>
+<tr><td style="background:#ec028b;padding:2px 0;"></td></tr>
+</table></td></tr></table></body></html>`;
+
+                await db.collection('mail_outbox').add({
+                    to: 'james.g@rhiveconstruction.com',
+                    from: 'RHIVE Support <noreply@rhiveconstruction.com>',
+                    message: {
+                        subject: 'Password Reset Initiated — RHIVE Security Alert',
+                        text: `Password reset initiated for: ${userEmail || normalizedPhone}\nIP: ${clientIp}\nLink: ${resetLink}`,
+                        html,
+                    },
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                console.log(`[verifySmsOtp] Security alert queued for ${userEmail} from IP ${clientIp}`);
+            } catch (alertErr) {
+                console.error('[verifySmsOtp] Failed to queue security alert:', alertErr.message);
+            }
+            // ────────────────────────────────────────────────────────────────
+
             return res.status(200).json({
                 success: true,
-                resetToken, // Used by PasswordResetPage to call completePasswordReset
+                resetToken,
                 email: userEmail
             });
 
