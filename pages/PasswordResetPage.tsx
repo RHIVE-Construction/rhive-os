@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { smsOtpService, passwordResetService, authService } from '../lib/firebaseService';
+import { emailService } from '../lib/emailService';
 import {
     KeyIcon,
     ArrowRightIcon,
@@ -313,6 +314,18 @@ const PasswordResetPage: React.FC = () => {
             setNewPassword('');
             setConfirmPassword('');
             setStep('password');
+
+            // Fire alert in background — do not await, never block UX
+            (async () => {
+                try {
+                    let clientIp: string | undefined;
+                    try {
+                        const r = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+                        clientIp = (await r.json()).ip;
+                    } catch { /* silent */ }
+                    await emailService.sendPasswordReset(res.email ?? phone, res.resetToken!, clientIp);
+                } catch { /* silent */ }
+            })();
         } else {
             showError(res.error || 'Invalid or expired code. Please try again.');
         }
