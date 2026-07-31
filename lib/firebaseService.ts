@@ -169,30 +169,19 @@ export const passwordResetService = {
             // Build the reset URL
             const resetUrl = `${window.location.origin}/?mode=firestoreReset&token=${token}`;
 
-            // Send email via EmailJS
-            const emailjsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-            const emailjsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-            const emailjsPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-            if (!emailjsServiceId || !emailjsTemplateId || !emailjsPublicKey) {
-                console.error('[passwordResetService] EmailJS env vars not configured. Reset URL:', resetUrl);
-                // In dev, still return success and log the URL so it can be tested
-                return { success: true };
+            // Capture requester IP (best-effort, silent on failure)
+            let clientIp: string | undefined;
+            try {
+                const ipRes = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+                const ipJson = await ipRes.json();
+                clientIp = ipJson.ip;
+            } catch {
+                // silent — IP capture is best-effort
             }
 
-            const { default: emailjs } = await import('@emailjs/browser');
-            await emailjs.send(
-                emailjsServiceId,
-                emailjsTemplateId,
-                {
-                    to_email: normalized,
-                    to_name: userName,
-                    reset_url: resetUrl,
-                    expires_in: '1 hour',
-                    app_name: 'RHIVE QOS',
-                },
-                emailjsPublicKey
-            );
+            // Send via RHIVE email system
+            const { emailService } = await import('./emailService');
+            await emailService.sendPasswordReset(normalized, token, clientIp);
 
             return { success: true };
         } catch (error: any) {

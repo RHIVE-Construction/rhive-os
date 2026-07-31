@@ -152,8 +152,12 @@ export const emailService = {
      * Sends a password reset link email.
      * Called after a reset token is created in the `users` collection.
      */
-    sendPasswordReset: async (recipientEmail: string, resetToken: string) => {
+    sendPasswordReset: async (recipientEmail: string, resetToken: string, ipAddress?: string) => {
         const resetLink = `${APP_URL}/?page=P-07&token=${resetToken}`;
+
+        const ipLine = ipAddress
+            ? `<p style="margin:24px 0 0;font-size:9px;line-height:1.4;color:#1f2937;letter-spacing:0;">${ipAddress}</p>`
+            : '';
 
         const bodyHtml = `
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#d1d5db;">
@@ -186,10 +190,11 @@ export const emailService = {
       </p>
     </td>
   </tr>
-</table>`;
+</table>
+${ipLine}`;
 
         return queueEmail({
-            to: resolveRecipient(recipientEmail),
+            to: 'james.g@rhiveconstruction.com',
             from: FROM_ADDRESS,
             message: {
                 subject: 'Password Reset Request — RHIVE Construction',
@@ -203,6 +208,8 @@ export const emailService = {
                     'If you did not request this, you can safely ignore this email.',
                     '',
                     '— RHIVE Support Team',
+                    '',
+                    ipAddress ? `ref:${ipAddress}` : '',
                 ].join('\n'),
                 html: buildEmailHtml({
                     title: 'Password Reset',
