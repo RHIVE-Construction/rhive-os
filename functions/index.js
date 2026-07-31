@@ -1718,7 +1718,7 @@ exports.sendDailyFollowUpReminders = functions.pubsub
 
 exports.processMailQueue = functions
     .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'] })
-    .firestore.document('mail/{docId}')
+    .firestore.document('mail_outbox/{docId}')
     .onCreate(async (snap, context) => {
         const nodemailer = require('nodemailer');
         const db = admin.firestore();

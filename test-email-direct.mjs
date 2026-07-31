@@ -133,7 +133,7 @@ async function sendTestEmail(type) {
     console.log(`   → To: ${TEST_RECIPIENT}`);
     console.log(`   → Subject: ${docData.message.subject}`);
 
-    const ref = await addDoc(collection(db, 'mail'), docData);
+    const ref = await addDoc(collection(db, 'mail_outbox'), docData);
     console.log(`   ✓ Queued in Firestore (id: ${ref.id})`);
     console.log(`   ⏳ Waiting for extension delivery status...`);
 
@@ -143,7 +143,7 @@ async function sendTestEmail(type) {
     // delivery by the presence of delivery.messageId set by processMailQueue.
     return new Promise((resolve) => {
         let resolved = false;
-        const unsubscribe = onSnapshot(doc(db, 'mail', ref.id), (snap) => {
+        const unsubscribe = onSnapshot(doc(db, 'mail_outbox', ref.id), (snap) => {
             if (resolved) return;
             const data = snap.data();
             const delivery = data?.delivery;

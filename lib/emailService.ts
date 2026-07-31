@@ -28,7 +28,7 @@
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
-const MAIL_COLLECTION = 'mail';
+const MAIL_COLLECTION = 'mail_outbox';
 const FROM_ADDRESS = 'RHIVE Support <noreply@rhiveconstruction.com>';
 const APP_URL = typeof window !== 'undefined'
     ? window.location.origin
