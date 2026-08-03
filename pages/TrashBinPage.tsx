@@ -1,13 +1,59 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import PageContainer from '../components/PageContainer';
-import { TrashIcon, ArrowLeftIcon, XIcon, CheckCircleIcon, BriefcaseIcon, MapPinIcon } from '../components/icons';
+import { TrashIcon, ArrowLeftIcon, XIcon, CheckCircleIcon, MapPinIcon } from '../components/icons';
 import { firestoreService, userLogService } from '../lib/firebaseService';
 import { cn } from '../lib/utils';
 import { onSnapshot, collection } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-// ─── Hard-delete confirmation modal ───────────────────────────────────────────
+const TRASH_EXPIRY_DAYS = 90;
+
+// â”€â”€â”€ Expiry helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const getDaysRemaining = (deletedAt?: string): number | null => {
+    if (!deletedAt) return null;
+    const deletedDate = new Date(deletedAt).getTime();
+    const now = Date.now();
+    const daysPassed = Math.floor((now - deletedDate) / (1000 * 60 * 60 * 24));
+    return TRASH_EXPIRY_DAYS - daysPassed;
+};
+
+const ExpiryBadge: React.FC<{ deletedAt?: string }> = ({ deletedAt }) => {
+    const days = getDaysRemaining(deletedAt);
+    if (days === null) return null;
+
+    if (days <= 0) {
+        return (
+            <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-red-700/30 border border-red-600/60 text-red-300 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                Expiring now
+            </span>
+        );
+    }
+    if (days <= 7) {
+        return (
+            <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-red-900/30 border border-red-800/60 text-red-400 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                {days}d left
+            </span>
+        );
+    }
+    if (days <= 30) {
+        return (
+            <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-yellow-900/20 border border-yellow-700/40 text-yellow-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 shrink-0" />
+                {days}d left
+            </span>
+        );
+    }
+    return (
+        <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-gray-900/40 border border-gray-700/40 text-gray-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-600 shrink-0" />
+            {days}d left
+        </span>
+    );
+};
+
+// â”€â”€â”€ Hard-delete confirmation modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface HardDeleteModalProps {
     recordName: string;
     onClose: () => void;
@@ -65,7 +111,7 @@ const HardDeleteModal: React.FC<HardDeleteModalProps> = ({ recordName, onClose, 
                             disabled={loading}
                             className="flex-1 py-2 text-xs font-black uppercase tracking-widest bg-red-700/30 border border-red-600/60 text-red-400 hover:bg-red-700/50 hover:text-red-300 transition-all rounded-sm disabled:opacity-50 disabled:pointer-events-none"
                         >
-                            {loading ? 'Deleting…' : 'Delete'}
+                            {loading ? 'Deletingâ€¦' : 'Delete'}
                         </button>
                     </div>
                 </div>
@@ -74,7 +120,7 @@ const HardDeleteModal: React.FC<HardDeleteModalProps> = ({ recordName, onClose, 
     );
 };
 
-// ─── Stage badge ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Stage badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const stageBadgeColor = (stage?: string) => {
     const s = (stage || '').toLowerCase();
     if (s.includes('lead')) return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
@@ -88,27 +134,45 @@ const stageBadgeColor = (stage?: string) => {
     return 'bg-gray-800 text-gray-400 border-gray-700';
 };
 
-// ─── Source badge ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Source badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const sourceBadge = (source?: string) => {
     if (source === 'leads') return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30';
     if (source === 'deals') return 'bg-blue-500/10 text-blue-500 border-blue-500/30';
     return 'bg-gray-800/60 text-gray-500 border-gray-700';
 };
 
-// ─── Helper to resolve source collection ─────────────────────────────────────
+// â”€â”€â”€ Helper to resolve source collection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const resolveCollection = (record: any): string => {
     if (record._source === 'leads') return 'leads';
     if (record._source === 'deals') return 'deals';
     return 'projects';
 };
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const TrashBinPage: React.FC = () => {
     const [allDeleted, setAllDeleted] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [restoringId, setRestoringId] = useState<string | null>(null);
     const [hardDeleteTarget, setHardDeleteTarget] = useState<any | null>(null);
     const [filterStage, setFilterStage] = useState<string>('All');
+    const [autoExpiredCount, setAutoExpiredCount] = useState(0);
+
+    // Auto-expire records past 90 days on mount
+    useEffect(() => {
+        firestoreService.autoExpireTrash(['projects', 'leads', 'deals'], TRASH_EXPIRY_DAYS)
+            .then(async (expired) => {
+                if (expired.length === 0) return;
+                setAutoExpiredCount(expired.length);
+                // Log each auto-expired record
+                for (const r of expired) {
+                    await userLogService.logAction(
+                        'PERMANENT_DELETE',
+                        `Record auto-deleted after ${TRASH_EXPIRY_DAYS} days in trash`,
+                        { recordId: r.id, collection: r.collection, recordName: r.name }
+                    );
+                }
+            });
+    }, []);
 
     // Subscribe to all 3 collections for deleted records
     useEffect(() => {
@@ -172,14 +236,22 @@ const TrashBinPage: React.FC = () => {
         return allDeleted.filter(r => (r.current_stage || 'Unknown') === filterStage);
     }, [allDeleted, filterStage]);
 
-    // Sorted newest-deleted first
+    // Sorted soonest-to-expire first
     const sorted = useMemo(() => {
         return [...filtered].sort((a, b) => {
             const da = new Date(a.deleted_at || 0).getTime();
-            const db = new Date(b.deleted_at || 0).getTime();
-            return db - da;
+            const db_ = new Date(b.deleted_at || 0).getTime();
+            return da - db_; // oldest deleted_at = nearest expiry
         });
     }, [filtered]);
+
+    // Count records expiring within 7 days
+    const expiringSoonCount = useMemo(() => {
+        return allDeleted.filter(r => {
+            const d = getDaysRemaining(r.deleted_at);
+            return d !== null && d <= 7 && d > 0;
+        }).length;
+    }, [allDeleted]);
 
     const handleRestore = async (record: any) => {
         setRestoringId(record.id);
@@ -187,8 +259,8 @@ const TrashBinPage: React.FC = () => {
         await firestoreService.restoreDocument(col, record.id);
         await userLogService.logAction(
             'RESTORE_RECORD',
-            `Record restored from trash (ID: ${record.id}, Name: ${record.name || 'Unknown'})`,
-            { recordId: record.id, collection: col }
+            `${record.name || 'Record'} was restored from trash`,
+            { recordId: record.id, collection: col, recordName: record.name || 'Unknown' }
         );
         setRestoringId(null);
     };
@@ -198,33 +270,45 @@ const TrashBinPage: React.FC = () => {
         await firestoreService.deleteDocument(col, record.id);
         await userLogService.logAction(
             'PERMANENT_DELETE',
-            `Record permanently deleted (ID: ${record.id}, Name: ${record.name || 'Unknown'})`,
-            { recordId: record.id, collection: col }
+            `${record.name || 'Record'} was permanently deleted`,
+            { recordId: record.id, collection: col, recordName: record.name || 'Unknown' }
         );
         setHardDeleteTarget(null);
     };
 
     const formatDeletedAt = (iso?: string) => {
-        if (!iso) return '—';
+        if (!iso) return 'â€”';
         const d = new Date(iso);
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
-            ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            ' Â· ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
         <PageContainer
             title="Trash Bin"
-            description="Soft-deleted pipeline records. Restore any record to bring it back into the active pipeline, or permanently delete it."
+            description="Deleted pipeline records. Records are automatically and permanently deleted after 90 days."
             headerAction={
                 <div className={cn(
                     'flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest',
                     loading ? 'text-yellow-400 animate-pulse' : 'text-green-400'
                 )}>
                     <span className={cn('w-1.5 h-1.5 rounded-full', loading ? 'bg-yellow-400' : 'bg-green-400 shadow-[0_0_8px_#4ade80]')} />
-                    {loading ? 'Syncing…' : 'Live'}
+                    {loading ? 'Syncingâ€¦' : 'Live'}
                 </div>
             }
         >
+            {/* Auto-expired banner */}
+            {autoExpiredCount > 0 && (
+                <div className="flex items-center gap-3 mb-4 p-3 bg-red-900/10 border border-red-900/30 text-[11px] text-red-400"
+                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                >
+                    <TrashIcon className="w-3.5 h-3.5 shrink-0" />
+                    <span>
+                        <span className="font-black">{autoExpiredCount} record{autoExpiredCount !== 1 ? 's' : ''}</span> were automatically and permanently deleted â€” they had been in the trash for over 90 days.
+                    </span>
+                </div>
+            )}
+
             {/* Stage filter tabs */}
             <div className="flex items-center gap-2 mb-6 flex-wrap">
                 <div className="flex items-center gap-1.5 mr-2 shrink-0">
@@ -259,17 +343,26 @@ const TrashBinPage: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Total in Trash</p>
-                        <p className="text-lg font-black text-white">{loading ? '—' : allDeleted.length}</p>
+                        <p className="text-lg font-black text-white">{loading ? 'â€”' : allDeleted.length}</p>
                     </div>
                 </div>
                 <div className="w-px h-8 bg-gray-800" />
                 <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Showing</p>
-                    <p className="text-lg font-black text-white">{loading ? '—' : sorted.length}</p>
+                    <p className="text-lg font-black text-white">{loading ? 'â€”' : sorted.length}</p>
                 </div>
+                {expiringSoonCount > 0 && (
+                    <>
+                        <div className="w-px h-8 bg-gray-800" />
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-red-500">Expiring Soon</p>
+                            <p className="text-lg font-black text-red-400 animate-pulse">{expiringSoonCount}</p>
+                        </div>
+                    </>
+                )}
                 <div className="ml-auto flex items-start gap-2 text-[11px] text-gray-600 leading-relaxed max-w-xs text-right">
                     <CheckCircleIcon className="w-3.5 h-3.5 text-gray-700 mt-0.5 shrink-0" />
-                    <span>Records here are hidden from the pipeline but stored safely in Firebase.</span>
+                    <span>Records are permanently deleted after {TRASH_EXPIRY_DAYS} days in trash.</span>
                 </div>
             </div>
 
@@ -298,97 +391,114 @@ const TrashBinPage: React.FC = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {sorted.map(record => (
-                        <div
-                            key={`${record._source}-${record.id}`}
-                            id={`trash-record-${record.id}`}
-                            className="relative bg-gray-900/40 border border-gray-800 hover:border-red-900/50 transition-all duration-300 group"
-                            style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
-                        >
-                            {/* Red top accent on hover */}
-                            <div className="absolute top-0 left-4 right-0 h-[1px] bg-gradient-to-r from-transparent via-red-600/0 to-transparent group-hover:via-red-600/40 transition-all" />
+                    {sorted.map(record => {
+                        const daysLeft = getDaysRemaining(record.deleted_at);
+                        const isUrgent = daysLeft !== null && daysLeft <= 7;
+                        return (
+                            <div
+                                key={`${record._source}-${record.id}`}
+                                id={`trash-record-${record.id}`}
+                                className={cn(
+                                    'relative bg-gray-900/40 border transition-all duration-300 group',
+                                    isUrgent
+                                        ? 'border-red-900/50 hover:border-red-700/70'
+                                        : 'border-gray-800 hover:border-red-900/50'
+                                )}
+                                style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
+                            >
+                                {/* Urgent glow for expiring soon */}
+                                {isUrgent && (
+                                    <div className="absolute inset-0 bg-red-900/5 pointer-events-none" />
+                                )}
+                                {/* Top accent */}
+                                <div className={cn(
+                                    'absolute top-0 left-4 right-0 h-[1px] bg-gradient-to-r from-transparent to-transparent transition-all',
+                                    isUrgent ? 'via-red-600/30' : 'via-red-600/0 group-hover:via-red-600/40'
+                                )} />
 
-                            <div className="p-5">
-                                {/* Record header */}
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="min-w-0 pr-2">
-                                        <h3 className="text-white font-bold text-base truncate group-hover:text-red-400 transition-colors">
-                                            {record.name || 'Unnamed Record'}
-                                        </h3>
-                                        {record.property_address && (
-                                            <div className="flex items-center text-xs text-gray-600 mt-1">
-                                                <MapPinIcon className="w-3 h-3 mr-1 shrink-0" />
-                                                <span className="truncate">{record.property_address}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <span className={cn(
-                                        'text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border shrink-0',
-                                        sourceBadge(record._source)
-                                    )}>
-                                        {record._source}
-                                    </span>
-                                </div>
-
-                                {/* Stage + deleted info */}
-                                <div className="space-y-1.5 mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className={cn('text-[10px] px-2 py-0.5 border font-black uppercase tracking-wider', stageBadgeColor(record.current_stage))}>
-                                            {record.current_stage || 'Unknown'}
+                                <div className="p-5">
+                                    {/* Record header */}
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="min-w-0 pr-2">
+                                            <h3 className="text-white font-bold text-base truncate group-hover:text-red-400 transition-colors">
+                                                {record.name || 'Unnamed Record'}
+                                            </h3>
+                                            {record.property_address && (
+                                                <div className="flex items-center text-xs text-gray-600 mt-1">
+                                                    <MapPinIcon className="w-3 h-3 mr-1 shrink-0" />
+                                                    <span className="truncate">{record.property_address}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className={cn(
+                                            'text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border shrink-0',
+                                            sourceBadge(record._source)
+                                        )}>
+                                            {record._source}
                                         </span>
                                     </div>
 
-                                    {record.deletion_reason && (
-                                        <p className="text-[11px] text-gray-600 italic truncate">
-                                            "{record.deletion_reason}"
-                                        </p>
-                                    )}
+                                    {/* Stage + expiry + deleted info */}
+                                    <div className="space-y-1.5 mb-4">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className={cn('text-[10px] px-2 py-0.5 border font-black uppercase tracking-wider', stageBadgeColor(record.current_stage))}>
+                                                {record.current_stage || 'Unknown'}
+                                            </span>
+                                            <ExpiryBadge deletedAt={record.deleted_at} />
+                                        </div>
 
-                                    <div className="flex items-center gap-1.5 text-[10px] text-gray-700 font-mono">
-                                        <TrashIcon className="w-3 h-3 text-red-900" />
-                                        <span>{formatDeletedAt(record.deleted_at)}</span>
+                                        {record.deletion_reason && (
+                                            <p className="text-[11px] text-gray-600 italic truncate">
+                                                "{record.deletion_reason}"
+                                            </p>
+                                        )}
+
+                                        <div className="flex items-center gap-1.5 text-[10px] text-gray-700 font-mono">
+                                            <TrashIcon className="w-3 h-3 text-red-900" />
+                                            <span>{formatDeletedAt(record.deleted_at)}</span>
+                                        </div>
+
+                                        {record.deleted_by && record.deleted_by !== 'unknown' && (
+                                            <p className="text-[10px] text-gray-700 font-mono">
+                                                By: <span className="text-gray-600">{record.deleted_by}</span>
+                                            </p>
+                                        )}
                                     </div>
 
-                                    {record.deleted_by && record.deleted_by !== 'unknown' && (
-                                        <p className="text-[10px] text-gray-700 font-mono">
-                                            By: <span className="text-gray-600">{record.deleted_by}</span>
-                                        </p>
-                                    )}
-                                </div>
+                                    {/* Actions */}
+                                    <div className="flex gap-2 pt-3 border-t border-gray-800/60">
+                                        {/* Restore */}
+                                        <button
+                                            id={`restore-btn-${record.id}`}
+                                            onClick={() => handleRestore(record)}
+                                            disabled={restoringId === record.id}
+                                            aria-label={`Restore ${record.name || 'record'}`}
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-black uppercase tracking-widest bg-[#ec028b]/10 border border-[#ec028b]/30 text-[#ec028b] hover:bg-[#ec028b]/20 hover:border-[#ec028b]/60 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                                        >
+                                            {restoringId === record.id ? (
+                                                <div className="w-3 h-3 border border-[#ec028b] border-t-transparent rounded-full animate-spin" />
+                                            ) : (
+                                                <ArrowLeftIcon className="w-3 h-3 rotate-[-90deg]" />
+                                            )}
+                                            {restoringId === record.id ? 'Restoringâ€¦' : 'Restore'}
+                                        </button>
 
-                                {/* Actions */}
-                                <div className="flex gap-2 pt-3 border-t border-gray-800/60">
-                                    {/* Restore */}
-                                    <button
-                                        id={`restore-btn-${record.id}`}
-                                        onClick={() => handleRestore(record)}
-                                        disabled={restoringId === record.id}
-                                        aria-label={`Restore ${record.name || 'record'}`}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-black uppercase tracking-widest bg-[#ec028b]/10 border border-[#ec028b]/30 text-[#ec028b] hover:bg-[#ec028b]/20 hover:border-[#ec028b]/60 transition-all disabled:opacity-50 disabled:pointer-events-none"
-                                        style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
-                                    >
-                                        {restoringId === record.id ? (
-                                            <div className="w-3 h-3 border border-[#ec028b] border-t-transparent rounded-full animate-spin" />
-                                        ) : (
-                                            <ArrowLeftIcon className="w-3 h-3 rotate-[-90deg]" />
-                                        )}
-                                        {restoringId === record.id ? 'Restoring…' : 'Restore'}
-                                    </button>
-
-                                    {/* Permanent delete */}
-                                    <button
-                                        id={`hard-delete-btn-${record.id}`}
-                                        onClick={() => setHardDeleteTarget(record)}
-                                        aria-label={`Permanently delete ${record.name || 'record'}`}
-                                        className="w-9 h-9 flex items-center justify-center bg-red-900/10 border border-red-900/30 text-red-700 hover:bg-red-900/25 hover:border-red-700/50 hover:text-red-400 transition-all"
-                                        style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
-                                    >
-                                        <XIcon className="w-3.5 h-3.5" />
-                                    </button>
+                                        {/* Permanent delete */}
+                                        <button
+                                            id={`hard-delete-btn-${record.id}`}
+                                            onClick={() => setHardDeleteTarget(record)}
+                                            aria-label={`Permanently delete ${record.name || 'record'}`}
+                                            className="w-9 h-9 flex items-center justify-center bg-red-900/10 border border-red-900/30 text-red-700 hover:bg-red-900/25 hover:border-red-700/50 hover:text-red-400 transition-all"
+                                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                                        >
+                                            <XIcon className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 

@@ -403,6 +403,86 @@ export const firestoreService = {
         }
     },
 
+    /**
+     * Bulk soft-delete multiple documents across one or more collections.
+     * Uses writeBatch for atomicity — all updates succeed or none do.
+     * Each item must specify: collectionName, id, and optional metadata.
+     */
+    bulkSoftDelete: async (
+        items: Array<{
+            collectionName: string;
+            id: string;
+            metadata?: { deleted_by?: string; deletion_reason?: string };
+        }>
+    ): Promise<{ success: boolean; count: number; error?: string }> => {
+        try {
+            const batch = writeBatch(db);
+            const now = new Date().toISOString();
+            items.forEach(({ collectionName, id, metadata = {} }) => {
+                const docRef = doc(db, collectionName, id);
+                batch.update(docRef, {
+                    deleted: true,
+                    status: 'trashed',
+                    deleted_at: now,
+                    deleted_by: metadata.deleted_by || 'unknown',
+                    deletion_reason: metadata.deletion_reason || '',
+                    updated_at: now,
+                });
+            });
+            await batch.commit();
+            return { success: true, count: items.length };
+        } catch (error: any) {
+            return { success: false, count: 0, error: error.message };
+        }
+    },
+
+    /**
+     * Auto-expire trashed records older than `daysThreshold` days.
+     * Hard-deletes them permanently from Firestore via writeBatch.
+     * Returns the list of permanently deleted records for logging.
+     */
+    autoExpireTrash: async (
+        collectionNames: string[],
+        daysThreshold = 90
+    ): Promise<Array<{ id: string; collection: string; name: string }>> => {
+        const expired: Array<{ id: string; collection: string; name: string }> = [];
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - daysThreshold);
+        const cutoffISO = cutoff.toISOString();
+
+        try {
+            const batch = writeBatch(db);
+            for (const collectionName of collectionNames) {
+                const snap = await getDocs(collection(db, collectionName));
+                snap.docs.forEach(d => {
+                    const data = d.data();
+                    if (
+                        data.deleted === true &&
+                        data.deleted_at &&
+                        data.deleted_at < cutoffISO
+                    ) {
+                        batch.delete(doc(db, collectionName, d.id));
+                        expired.push({
+                            id: d.id,
+                            collection: collectionName,
+                            name:
+                                data.name ||
+                                (data.firstName && data.lastName
+                                    ? `${data.firstName} ${data.lastName}`
+                                    : null) ||
+                                data.Deal_Name ||
+                                'Unnamed Record',
+                        });
+                    }
+                });
+            }
+            if (expired.length > 0) await batch.commit();
+        } catch (_e) {
+            // Silently fail — auto-expiry is best-effort
+        }
+        return expired;
+    },
+
     createBatch: async (collectionName: string, dataArray: any[]) => {
         try {
             const batch = writeBatch(db);

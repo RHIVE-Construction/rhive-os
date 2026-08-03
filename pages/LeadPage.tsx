@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
@@ -7,6 +6,7 @@ import Button from '../components/Button';
 import FollowUpModal from '../components/FollowUpModal';
 import EditRecordModal from '../components/EditRecordModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import BulkDeleteConfirmModal from '../components/BulkDeleteConfirmModal';
 import { 
     BriefcaseIcon, 
     UserIcon, 
@@ -24,7 +24,7 @@ import {
 import { projectService, firestoreService, userLogService } from '../lib/firebaseService';
 import { cn, getStagePageId } from '../lib/utils';
 
-// ─── Conversion Modal ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Conversion Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface ConvertModalProps {
     project: any;
     onClose: () => void;
@@ -101,7 +101,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ project, onClose, onConvert
                                 </p>
                             </div>
                             <div className="mt-1 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 rounded">
-                                Stage → Estimate
+                                Stage â†’ Estimate
                             </div>
                         </button>
 
@@ -126,7 +126,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ project, onClose, onConvert
                                 </p>
                             </div>
                             <div className="mt-1 text-[9px] font-black uppercase tracking-widest text-[#ec028b] border border-[#ec028b]/30 bg-[#ec028b]/10 px-2 py-0.5 rounded">
-                                Stage → Quote
+                                Stage â†’ Quote
                             </div>
                         </button>
                     </div>
@@ -146,7 +146,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ project, onClose, onConvert
                         onClick={onClose}
                         className="text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-gray-400 transition-colors"
                     >
-                        Cancel — Keep as Lead
+                        Cancel â€” Keep as Lead
                     </button>
                 </div>
             </div>
@@ -186,6 +186,25 @@ const LeadPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [editTarget, setEditTarget] = useState<any | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+
+    // â”€â”€ Multi-select state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+
+    const toggleSelectId = useCallback((id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    }, []);
+
+    const exitSelectionMode = useCallback(() => {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+    }, []);
 
     useEffect(() => {
         const unsubscribe = projectService.subscribe((data: any[]) => {
@@ -265,7 +284,7 @@ const LeadPage: React.FC = () => {
                     });
                 }
             } else {
-                // Wasn't in leads collection — update directly in projects
+                // Wasn't in leads collection â€” update directly in projects
                 await firestoreService.updateDocument('projects', selectedProjectId, {
                     current_stage: newStage,
                     status: 'Active',
@@ -311,10 +330,32 @@ const LeadPage: React.FC = () => {
         });
         await userLogService.logAction(
             'DELETE_RECORD',
-            `Record moved to trash (ID: ${deleteTarget.id}, Name: ${deleteTarget.name || 'Unknown'})`,
-            { recordId: deleteTarget.id, collection: col, reason }
+            `${deleteTarget.name || 'Record'} was moved to trash`,
+            { recordId: deleteTarget.id, collection: col, recordName: deleteTarget.name || 'Unknown', reason }
         );
         setDeleteTarget(null);
+    };
+
+    // --- BULK SOFT DELETE HANDLER ---
+    const handleBulkSoftDelete = async (reason: string) => {
+        const selectedProjects = projects.filter(p => selectedIds.has(p.id));
+        const items = selectedProjects.map(p => ({
+            collectionName: p._source === 'leads' ? 'leads' : p._source === 'deals' ? 'deals' : 'projects',
+            id: p.id,
+            metadata: { deleted_by: 'employee', deletion_reason: reason },
+        }));
+        await firestoreService.bulkSoftDelete(items);
+        // Log each deletion individually
+        for (const p of selectedProjects) {
+            const col = p._source === 'leads' ? 'leads' : p._source === 'deals' ? 'deals' : 'projects';
+            await userLogService.logAction(
+                'DELETE_RECORD',
+                `${p.name || 'Record'} was moved to trash`,
+                { recordId: p.id, collection: col, recordName: p.name || 'Unknown', reason }
+            );
+        }
+        setShowBulkDeleteModal(false);
+        exitSelectionMode();
     };
 
     // --- LIST VIEW LOGIC ---
@@ -517,7 +558,7 @@ const LeadPage: React.FC = () => {
                                         View Account
                                     </Button>
 
-                                    {/* ── Schedule Follow-Up ── */}
+                                    {/* â”€â”€ Schedule Follow-Up â”€â”€ */}
                                     <button
                                         onClick={() => setShowFollowUp(true)}
                                         className="group relative w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400 font-black text-sm uppercase tracking-wider hover:bg-purple-500/20 hover:border-purple-500/60 hover:shadow-[0_0_20px_rgba(168,85,247,0.2)] transition-all duration-300 overflow-hidden"
@@ -577,15 +618,43 @@ const LeadPage: React.FC = () => {
     return (
         <>
         <PageContainer 
-            title="Stage 1 — Leads"
+            title="Stage 1 â€” Leads"
             description="All intake leads grouped by assigned employee or sales rep. Unassigned leads appear at the bottom."
             headerAction={
-                <div className={cn(
-                    "flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest",
-                    loading ? "text-yellow-400 animate-pulse" : "text-green-400"
-                )}>
-                    <span className={cn("w-1.5 h-1.5 rounded-full", loading ? "bg-yellow-400" : "bg-green-400 shadow-[0_0_8px_#4ade80]")} />
-                    {loading ? 'Syncing…' : 'Live'}
+                <div className="flex items-center gap-2">
+                    {/* Selection mode toggle */}
+                    {!loading && (
+                        selectionMode ? (
+                            <button
+                                id="leads-selection-done-btn"
+                                onClick={exitSelectionMode}
+                                aria-label="Exit selection mode"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black uppercase tracking-widest bg-gray-900 border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white transition-all"
+                                style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                            >
+                                <XIcon className="w-3 h-3" />
+                                Done
+                            </button>
+                        ) : (
+                            <button
+                                id="leads-select-mode-btn"
+                                onClick={() => setSelectionMode(true)}
+                                aria-label="Enter selection mode to bulk delete"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-black uppercase tracking-widest bg-gray-900/60 border border-gray-800 text-gray-500 hover:border-gray-600 hover:text-white transition-all"
+                                style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                            >
+                                <CheckCircleIcon className="w-3.5 h-3.5" />
+                                Select
+                            </button>
+                        )
+                    )}
+                    <div className={cn(
+                        "flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest",
+                        loading ? "text-yellow-400 animate-pulse" : "text-green-400"
+                    )}>
+                        <span className={cn("w-1.5 h-1.5 rounded-full", loading ? "bg-yellow-400" : "bg-green-400 shadow-[0_0_8px_#4ade80]")} />
+                        {loading ? 'Syncingâ€¦' : 'Live'}
+                    </div>
                 </div>
             }
         >
@@ -642,18 +711,56 @@ const LeadPage: React.FC = () => {
                             
                             {/* Project Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {group.projects.map(project => (
+                                {group.projects.map(project => {
+                                    const isSelected = selectedIds.has(project.id);
+                                    return (
                                     <div
                                         key={project.id}
-                                        className="relative group/card"
+                                        className={cn(
+                                            'relative group/card transition-all duration-200',
+                                            selectionMode && isSelected && 'ring-1 ring-[#ec028b]/60'
+                                        )}
                                     >
+                                        {/* Selection toggle pill â€” shown in selection mode */}
+                                        {selectionMode && (
+                                            <button
+                                                id={`lead-select-pill-${project.id}`}
+                                                onClick={(e) => { e.stopPropagation(); toggleSelectId(project.id); }}
+                                                aria-label={isSelected ? `Deselect ${project.name || 'record'}` : `Select ${project.name || 'record'}`}
+                                                className={cn(
+                                                    'absolute top-2 left-2 z-20 flex items-center gap-1 px-2 py-1 text-[9px] font-black uppercase tracking-widest border transition-all',
+                                                    isSelected
+                                                        ? 'bg-[#ec028b] border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.4)]'
+                                                        : 'bg-[#0a0a0a] border-gray-700 text-gray-500 hover:border-[#ec028b]/50 hover:text-[#ec028b]'
+                                                )}
+                                                style={{ clipPath: 'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)' }}
+                                            >
+                                                {isSelected ? (
+                                                    <CheckCircleIcon className="w-3 h-3" />
+                                                ) : (
+                                                    <span className="w-3 h-3 flex items-center justify-center border border-gray-600 rounded-sm" />
+                                                )}
+                                                {isSelected ? 'Selected' : 'Select'}
+                                            </button>
+                                        )}
+
                                         <Card 
-                                            onClick={() => handleProjectClick(project.id, project.current_stage || 'lead')}
-                                            className="cursor-pointer hover:border-[#ec028b] hover:shadow-[0_0_20px_rgba(236,2,139,0.1)] transition-all group p-5 bg-gray-900/40"
+                                            onClick={() => {
+                                                if (selectionMode) { toggleSelectId(project.id); return; }
+                                                handleProjectClick(project.id, project.current_stage || 'lead');
+                                            }}
+                                            className={cn(
+                                                'transition-all group p-5 bg-gray-900/40',
+                                                selectionMode
+                                                    ? isSelected
+                                                        ? 'cursor-pointer border-[#ec028b]/60 bg-[#ec028b]/5'
+                                                        : 'cursor-pointer hover:border-gray-600'
+                                                    : 'cursor-pointer hover:border-[#ec028b] hover:shadow-[0_0_20px_rgba(236,2,139,0.1)]'
+                                            )}
                                         >
-                                            <div className="flex justify-between items-start mb-3">
+                                            <div className={cn('flex justify-between items-start mb-3', selectionMode && 'pl-14')}>
                                                 <div className="min-w-0 pr-4">
-                                                    <h3 className="text-white font-bold text-lg truncate group-hover:text-[#ec028b] transition-colors">
+                                                    <h3 className={cn('font-bold text-lg truncate transition-colors', isSelected && selectionMode ? 'text-[#ec028b]' : 'text-white group-hover:text-[#ec028b]')}>
                                                         {project.name || 'Unnamed Project'}
                                                     </h3>
                                                     <div className="flex items-center text-xs text-gray-500 mt-1">
@@ -664,9 +771,11 @@ const LeadPage: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 
-                                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-black border border-gray-700 flex items-center justify-center group-hover:bg-[#ec028b] group-hover:border-[#ec028b] group-hover:text-white transition-all text-gray-500">
-                                                    <ArrowRightIcon className="w-4 h-4" />
-                                                </div>
+                                                {!selectionMode && (
+                                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-black border border-gray-700 flex items-center justify-center group-hover:bg-[#ec028b] group-hover:border-[#ec028b] group-hover:text-white transition-all text-gray-500">
+                                                        <ArrowRightIcon className="w-4 h-4" />
+                                                    </div>
+                                                )}
                                             </div>
                                             
                                             <div className="mt-4 flex items-center justify-between border-t border-gray-800 pt-3">
@@ -683,29 +792,32 @@ const LeadPage: React.FC = () => {
                                             </div>
                                         </Card>
 
-                                        {/* Edit / Delete action buttons — appear on card hover */}
-                                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 z-10">
-                                            <button
-                                                id={`lead-edit-btn-${project.id}`}
-                                                onClick={(e) => { e.stopPropagation(); setEditTarget(project); }}
-                                                aria-label={`Edit ${project.name || 'record'}`}
-                                                className="w-7 h-7 flex items-center justify-center bg-[#0a0a0a] border border-[#ec028b]/40 text-[#ec028b] hover:bg-[#ec028b]/20 hover:border-[#ec028b] transition-all shadow-lg"
-                                                style={{ clipPath: 'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)' }}
-                                            >
-                                                <PencilIcon className="w-3 h-3" />
-                                            </button>
-                                            <button
-                                                id={`lead-delete-btn-${project.id}`}
-                                                onClick={(e) => { e.stopPropagation(); setDeleteTarget(project); }}
-                                                aria-label={`Move ${project.name || 'record'} to trash`}
-                                                className="w-7 h-7 flex items-center justify-center bg-[#0a0a0a] border border-red-900/40 text-red-700 hover:bg-red-900/20 hover:border-red-600/60 hover:text-red-400 transition-all shadow-lg"
-                                                style={{ clipPath: 'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)' }}
-                                            >
-                                                <TrashIcon className="w-3 h-3" />
-                                            </button>
-                                        </div>
+                                        {/* Edit / Delete action buttons â€” appear on card hover (hidden in selection mode) */}
+                                        {!selectionMode && (
+                                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 z-10">
+                                                <button
+                                                    id={`lead-edit-btn-${project.id}`}
+                                                    onClick={(e) => { e.stopPropagation(); setEditTarget(project); }}
+                                                    aria-label={`Edit ${project.name || 'record'}`}
+                                                    className="w-7 h-7 flex items-center justify-center bg-[#0a0a0a] border border-[#ec028b]/40 text-[#ec028b] hover:bg-[#ec028b]/20 hover:border-[#ec028b] transition-all shadow-lg"
+                                                    style={{ clipPath: 'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)' }}
+                                                >
+                                                    <PencilIcon className="w-3 h-3" />
+                                                </button>
+                                                <button
+                                                    id={`lead-delete-btn-${project.id}`}
+                                                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(project); }}
+                                                    aria-label={`Move ${project.name || 'record'} to trash`}
+                                                    className="w-7 h-7 flex items-center justify-center bg-[#0a0a0a] border border-red-900/40 text-red-700 hover:bg-red-900/20 hover:border-red-600/60 hover:text-red-400 transition-all shadow-lg"
+                                                    style={{ clipPath: 'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)' }}
+                                                >
+                                                    <TrashIcon className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                         );
@@ -713,6 +825,39 @@ const LeadPage: React.FC = () => {
                 )}
             </div>
         </PageContainer>
+
+        {/* Floating bulk-action bar â€” visible in selection mode with items selected */}
+        {selectionMode && selectedIds.size > 0 && (
+            <div
+                className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-5 py-3 bg-[#0a0a0a] border border-[#ec028b]/40 shadow-[0_0_40px_rgba(236,2,139,0.2)]"
+                style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}
+            >
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#ec028b]/60 to-transparent" />
+                <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">
+                    <span className="text-[#ec028b] text-base">{selectedIds.size}</span> selected
+                </span>
+                <div className="w-px h-5 bg-gray-800" />
+                <button
+                    id="leads-bulk-trash-btn"
+                    onClick={() => setShowBulkDeleteModal(true)}
+                    aria-label={`Move ${selectedIds.size} selected records to trash`}
+                    className="flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest bg-red-600/20 border border-red-600/50 text-red-400 hover:bg-red-600/30 hover:border-red-500 hover:text-red-300 transition-all"
+                    style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
+                >
+                    <TrashIcon className="w-3.5 h-3.5" />
+                    Move to Trash
+                </button>
+                <button
+                    id="leads-bulk-cancel-btn"
+                    onClick={exitSelectionMode}
+                    aria-label="Cancel selection"
+                    className="w-8 h-8 flex items-center justify-center border border-gray-800 text-gray-500 hover:border-gray-600 hover:text-white transition-all"
+                    style={{ clipPath: 'polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px)' }}
+                >
+                    <XIcon className="w-3.5 h-3.5" />
+                </button>
+            </div>
+        )}
 
         {/* Edit Modal */}
         {editTarget && (
@@ -731,8 +876,17 @@ const LeadPage: React.FC = () => {
                 onConfirm={handleSoftDelete}
             />
         )}
+
+        {/* Bulk Delete Modal */}
+        {showBulkDeleteModal && (
+            <BulkDeleteConfirmModal
+                count={selectedIds.size}
+                onClose={() => setShowBulkDeleteModal(false)}
+                onConfirm={handleBulkSoftDelete}
+            />
+        )}
         </>
     );
 };
 
-export default LeadPage;
+export default LeadPage;
