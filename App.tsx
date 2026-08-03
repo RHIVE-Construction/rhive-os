@@ -1,5 +1,6 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { logUserActivity, LOG_ACTIONS, PAGE_NAMES } from './lib/userActivityLogger';
 import { PricingProvider } from './contexts/PricingContext';
 import { MockDatabaseProvider, useMockDB } from './contexts/MockDatabaseContext';
 import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
@@ -60,6 +61,8 @@ const AppContentAuthenticated: React.FC = () => {
     const isDark = theme === 'dark';
     const mainRef = React.useRef<HTMLElement>(null);
 
+    const pageVisitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     // Refresh the 24-hour session window on any user activity
     useEffect(() => {
         const refresh = () => session.refresh();
@@ -72,6 +75,25 @@ const AppContentAuthenticated: React.FC = () => {
             window.removeEventListener('scroll',  refresh);
         };
     }, []);
+
+    // Log page navigation with 2-second debounce to reduce noise from rapid switching
+    useEffect(() => {
+        if (!activePageId || !currentUser) return;
+        // Skip logging the Log viewer itself to prevent infinite feedback loops
+        if (activePageId === 'A-LOGS') return;
+        if (pageVisitTimer.current) clearTimeout(pageVisitTimer.current);
+        pageVisitTimer.current = setTimeout(() => {
+            const pageName = PAGE_NAMES[activePageId] || activePageId;
+            logUserActivity(
+                LOG_ACTIONS.PAGE_VISITED,
+                `Visited: ${pageName}`,
+                { pageId: activePageId, pageName }
+            );
+        }, 2000);
+        return () => {
+            if (pageVisitTimer.current) clearTimeout(pageVisitTimer.current);
+        };
+    }, [activePageId, currentUser]);
 
     useEffect(() => {
         if (mainRef.current) {

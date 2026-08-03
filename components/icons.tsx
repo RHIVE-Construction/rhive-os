@@ -16,6 +16,8 @@ export const I = DefaultIcon;
 
 // Core Icons with distinct paths
 export const HomeIcon = createIcon("M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10");
+export const ArrowDownTrayIcon = createIcon("M12 15V3 M5 15l7 7 7-7 M3 21h18");
+
 export const ChartBarIcon = createIcon("M18 20V10 M12 20V4 M6 20v-6");
 export const UserIcon = createIcon("M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z");
 export const MailIcon = createIcon("M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6");

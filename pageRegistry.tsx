@@ -89,6 +89,7 @@ import CompletedPage from './pages/CompletedPage'; // E-36
 import PastCustomerPage from './pages/PastCustomerPage'; // E-37
 
 import TrashBinPage from './pages/TrashBinPage'; // E-TRASH
+import UserActivityLogPage from './pages/UserActivityLogPage'; // A-LOGS
 
 const Placeholder = ({ name }: { name: string }) => (
   <div className="p-10 text-white font-mono">
@@ -137,6 +138,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'A-01': AdminDashboardPage,
   'A-02': UserManagementPage,
   'A-02-profile': UserProfilePage,
+  'A-LOGS': UserActivityLogPage,
   'A-03': EstimatePricingPage,
   'A-04': EstimateBackendApiPage,
   'A-05': LineItemCatalogPage,

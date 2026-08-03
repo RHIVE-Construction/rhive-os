@@ -5,6 +5,7 @@ import {
 import { db } from '../lib/firebase';
 import { userLogService } from '../lib/firebaseService';
 import { session } from '../lib/session';
+import { logUserActivity, LOG_ACTIONS } from '../lib/userActivityLogger';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -184,6 +185,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             setNotifications(prev =>
                 prev.map(n => n.id === id ? { ...n, read: true } : n)
             );
+            await logUserActivity(LOG_ACTIONS.NOTIFICATION_READ, `Notification marked as read`, { notificationId: id });
         } catch (err) {
             console.warn('[NotificationContext] markRead error:', err);
         }
@@ -214,6 +216,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             await batch.commit();
 
             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            await logUserActivity(LOG_ACTIONS.NOTIFICATION_READ_ALL, `All notifications marked as read`, { count: unread.length });
         } catch (err) {
             console.warn('[NotificationContext] markAllRead error:', err);
         }

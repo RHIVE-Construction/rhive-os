@@ -27,6 +27,14 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // User Activity Logs — app-layer controlled
+    // Write: open to the app (session-validated at app layer)
+    // Read: open to the app (role-based filtering applied in application code)
+    match /user_log/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     // Existing open catch-all (maintained for app-layer auth compatibility)
     match /{document=**} {
       allow read: if true;
