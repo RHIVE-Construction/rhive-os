@@ -117,7 +117,6 @@ const AdminSettingsPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-white">{user.name}</p>
-                                        <p className="text-[10px] text-gray-500 font-mono mt-0.5">{user.id}</p>
                                     </div>
                                 </div>
                                 <div className="md:col-span-4 text-xs font-mono text-gray-400 truncate pr-2">
