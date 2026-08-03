@@ -364,8 +364,8 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // 2. Verify the role matches what the user selected (if role selection is supplied)
         if (role && role !== 'Public') {
             const isRoleAllowed = foundUser.role === role || 
-                                  foundUser.role === 'Super Admin' ||
-                                  (role === 'Admin' && foundUser.role === 'Super Admin');
+                                  (foundUser.role as string) === 'Super Admin' ||
+                                  (role === 'Admin' && (foundUser.role as string) === 'Super Admin');
             if (!isRoleAllowed) {
                 return { success: false, error: `No ${role} account found with this email.` };
             }

@@ -985,7 +985,7 @@ export const userService = {
 
             // ── Firestore token path (email reset flow) ───────────────────────
             // 1. Verify token and get userId + email directly
-            const verification = await passwordResetService.verifyResetToken(token);
+            const verification = await passwordResetService.verifyToken(token);
             if (!verification.success || !verification.userId) {
                 return { success: false, error: verification.error || 'Token verification failed.' };
             }
