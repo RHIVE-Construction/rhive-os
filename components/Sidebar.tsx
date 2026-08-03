@@ -57,6 +57,7 @@ const getIconForPage = (id: string) => {
     // ADMIN (A-Series)
     if (id === 'A-01') return <HomeIcon className="h-5 w-5" />;
     if (id === 'A-02') return <UserIcon className="h-5 w-5" />;
+    if (id === 'A-LOGS') return <DocumentTextIcon className="h-5 w-5" />;
     if (id === 'A-03') return <CurrencyDollarIcon className="h-5 w-5" />;
     if (id === 'A-04') return <BoltIcon className="h-5 w-5" />;
     if (id === 'A-05') return <ListBulletIcon className="h-5 w-5" />;

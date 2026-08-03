@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Project, Property, User, ProjectStage, PROJECT_STAGES_ORDER } from '../types';
 import { contactService, userService, userLogService, firestoreService } from '../lib/firebaseService';
 import { session, initialUser } from '../lib/session';
+import { logUserActivity, LOG_ACTIONS } from '../lib/userActivityLogger';
 
 interface MockDatabaseContextType {
     users: User[];
@@ -354,6 +355,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         if (!foundUser) {
+            logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — account not found`, {
+                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown'
+            });
             return { success: false, error: 'No account found with this email address.' };
         }
 
@@ -370,6 +374,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // 3. Verify password — MUST come from Firestore (fromFirestore = true).
         //    If user was found from seed fallback (no password_hash), reject with a clear message.
         if (!fromFirestore && !foundUser?.password_hash) {
+            logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login — credentials could not be verified (offline or seed user)`, {
+                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown'
+            });
             return { success: false, error: 'Could not verify credentials. Please check your connection and try again.' };
         }
 
@@ -387,6 +394,10 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
         const hashed = await hashPassword(password!);
         if (foundUser.password_hash !== hashed) {
+            logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — incorrect password`, {
+                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
+                role: foundUser.role
+            });
             return { success: false, error: 'Invalid email or password.' };
         }
         // 4. Success — write session and set current user

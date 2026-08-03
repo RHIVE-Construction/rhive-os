@@ -146,6 +146,7 @@ export const PAGE_GROUPS: PageGroup[] = [
         pages: [
             { id: 'A-01', name: 'Admin Dashboard', userType: 'Admin' },
             { id: 'A-02', name: 'User Management', userType: 'Admin' },
+            { id: 'A-LOGS', name: 'Activity Logs', userType: 'Admin' },
             { id: 'E-TRASH', name: 'Trash Bin', userType: 'Admin' },
             { id: 'A-03', name: 'Estimate Pricing', userType: 'Admin' },
             { id: 'A-05', name: 'Line Item Master', userType: 'Admin' },
