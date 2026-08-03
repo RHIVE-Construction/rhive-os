@@ -189,7 +189,7 @@ const PublicHomepageV2: React.FC = () => {
             <section id="hero-d" className="relative w-full min-h-[85vh] flex items-center justify-center pt-32 pb-24 overflow-hidden shrink-0">
                 <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1 }}>
                     <video autoPlay muted loop playsInline className="w-full h-full object-cover scale-100">
-                        <source src="/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
+                        <source src="https://rhive-os.web.app/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
                     </video>
                 </div>
                 <div className="absolute inset-0 bg-black/85 pointer-events-none" style={{ zIndex: 2 }} />
@@ -423,7 +423,7 @@ const PublicHomepageV2: React.FC = () => {
                                     {/* Macro-Video Loop Hover State */}
                                     <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000">
                                         <video autoPlay muted loop playsInline className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000">
-                                            <source src="/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
+                                            <source src="https://rhive-os.web.app/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
                                         </video>
                                         <div className="absolute inset-0 bg-black/60 mix-blend-multiply" />
                                     </div>
@@ -461,7 +461,7 @@ const PublicHomepageV2: React.FC = () => {
                             >
                                 <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000">
                                     <video autoPlay muted loop playsInline className="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-1000">
-                                        <source src="/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
+                                        <source src="https://rhive-os.web.app/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
                                     </video>
                                     <div className="absolute inset-0 bg-black/60 mix-blend-multiply" />
                                 </div>
