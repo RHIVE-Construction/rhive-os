@@ -15,6 +15,8 @@ import {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+type CustomerType = 'retail' | 'insurance' | 'new-construction' | 'government';
+
 interface ActivityDetail {
   tag: string;
   title: string;
@@ -55,6 +57,13 @@ const STAGES = [
   { id: 'S11', name: 'PAST CUSTOMER', sub: 'Referral' },
 ];
 
+const CUSTOMER_TYPES: { id: CustomerType; label: string; icon: string; active: boolean; desc: string; color: string }[] = [
+  { id: 'retail',           label: 'Retail',           icon: '🏠', active: true,  desc: 'Standard residential & commercial customer — no insurance involvement', color: '#60a5fa' },
+  { id: 'insurance',        label: 'Insurance',        icon: '🛡️', active: true,  desc: 'Insurance-backed claim — pricing & quote depend on carrier approval', color: '#a78bfa' },
+  { id: 'new-construction', label: 'New Construction', icon: '🏗️', active: false, desc: 'Coming Soon', color: '#4b5563' },
+  { id: 'government',       label: 'Government',       icon: '🏛️', active: false, desc: 'Coming Soon', color: '#4b5563' },
+];
+
 const ROLES: { icon: string; name: string; desc: string; color: string }[] = [
   { icon: '👤', name: 'Customer', desc: 'Property owner or commercial contact', color: '#60a5fa' },
   { icon: '💼', name: 'Sales Rep / Employee', desc: 'RHIVE internal staff', color: '#ec028b' },
@@ -67,21 +76,39 @@ const ROLES: { icon: string; name: string; desc: string; color: string }[] = [
 // Null means empty cell (dash)
 type CellData = Activity | null;
 
+// ── Customer swimlane data keyed by customer type ──────────────────────────────
+
+const RETAIL_CUSTOMER_LANE: CellData[] = [
+  { icon: '📞', title: 'Initiates Contact', detail: 'Phone · web form · estimate tool · referral', badge: { label: 'Entry Point', color: 'pink' }, variant: 'primary', detail_modal: { tag: 'S1 · Retail Customer', title: 'Initiates Contact', desc: 'Customer makes first contact via phone, website form, estimate tool, or referral. Provides property address, contact details, and intent (ballpark vs firm quote). May submit damage photos.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Channel', value: 'Phone / Web / Referral' }, { label: 'Output', value: 'First Contact Logged' }] } },
+  { icon: '🏠', title: 'Property Access', detail: 'Allows aerial or in-person roof survey', variant: undefined, detail_modal: { tag: 'S2 · Retail Customer', title: 'Provides Property Access', desc: 'Customer grants access to property for aerial data collection or in-person inspection. Answers questions about roof age, existing layers, and damage extent.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'Property Access' }, { label: 'Output', value: 'Survey Data Captured' }] } },
+  { icon: '📋', title: 'Reviews Quote', detail: 'Selects package · reviews financing options', badge: { label: 'Decision Point', color: 'gold' }, variant: undefined, detail_modal: { tag: 'S3 · Retail Customer', title: 'Reviews Quote', desc: 'Customer reviews pricing presentation with package options (Duration / Flex / Designer / Premium Designer). Evaluates financing options if needed. Requests revisions or approves.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Decision', value: 'Select Package' }, { label: 'Options', value: 'Duration / Flex / Designer / Premium' }, { label: 'Output', value: 'Approval or Revision' }] } },
+  { icon: '✍️', title: 'Signs Agreement', detail: 'E-signature · standard contract', badge: { label: 'Key Milestone', color: 'pink' }, variant: 'primary', detail_modal: { tag: 'S4 · Retail Customer', title: 'Signs Agreement', desc: 'Customer receives digital contract. Reviews scope of work, warranty terms, and payment schedule. Signs electronically.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'E-Signature' }, { label: 'Legal', value: 'Agreement + Warranty Terms' }, { label: 'Output', value: 'Signed Contract' }] } },
+  { icon: '📅', title: 'Confirms Date', detail: 'SMS/email confirmation · pre-install checklist', variant: undefined, detail_modal: { tag: 'S5 · Retail Customer', title: 'Confirms Install Date', desc: 'Customer receives scheduling notification via SMS/email. Confirms install date and time window. Reviews pre-install checklist (move vehicles, secure pets, trim branches).', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Channel', value: 'SMS / Email / Portal' }, { label: 'Output', value: 'Date Confirmed' }] } },
+  { icon: '🔔', title: 'Property Ready', detail: 'Material drop-off alert · install day reminder', variant: undefined, detail_modal: { tag: 'S6 · Retail Customer', title: 'Property Ready', desc: 'Customer receives material delivery notification and install day reminder. Ensures property is ready — vehicles moved, pets secured, access points clear.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'Property Prep' }, { label: 'Output', value: 'Ready-State Confirmed' }] } },
+  { icon: '📡', title: 'Tracks Progress', detail: 'Live updates via Customer Portal C-02/C-03', variant: undefined, detail_modal: { tag: 'S7 · Retail Customer', title: 'Tracks Progress', desc: 'Customer monitors real-time project status via the Customer Portal (C-02 My Projects / C-03 Project Profile). Views crew on-site status and estimated completion.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Platform', value: 'Customer Portal C-02/C-03' }, { label: 'Output', value: 'Live Progress Visibility' }] } },
+  { icon: '🔎', title: 'Final Walkthrough', detail: 'Reviews punch list · signs off on quality', badge: { label: 'Approval', color: 'gold' }, variant: undefined, detail_modal: { tag: 'S8 · Retail Customer', title: 'Final Walkthrough', desc: 'Customer performs walkthrough with project manager. Reviews punch list items. Signs off on completed work or flags deficiencies requiring remediation before payment release.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'Quality Walkthrough' }, { label: 'Output', value: 'Sign-Off or Remediation Request' }] } },
+  { icon: '💳', title: 'Pays Invoice', detail: 'Card · ACH · check · financing via portal', badge: { label: 'Revenue', color: 'pink' }, variant: 'primary', detail_modal: { tag: 'S9 · Retail Customer', title: 'Pays Invoice', desc: 'Customer receives final itemized invoice via email or portal. Submits payment via credit card, ACH, check, or financing plan. Receives payment confirmation and receipt.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Methods', value: 'Card / ACH / Check / Financing' }, { label: 'Output', value: 'Payment Confirmed' }] } },
+  { icon: '🏆', title: 'Receives Warranty', detail: 'Warranty docs · photos · portal record', variant: undefined, detail_modal: { tag: 'S10 · Retail Customer', title: 'Receives Warranty', desc: 'Customer receives warranty documentation, final installation photos, and project summary. Full project record accessible in customer portal.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Output', value: 'Warranty Docs + Final Photos + Project Record' }] } },
+  { icon: '🌟', title: 'Referral Program', detail: 'Seasonal reminders · referral incentives', badge: { label: 'Lifecycle', color: 'gold' }, variant: 'secondary', detail_modal: { tag: 'S11 · Retail Customer', title: 'Referral Program', desc: 'Customer enrolled into RHIVE past-customer referral program. Receives seasonal maintenance reminders, referral incentive links, and re-engagement campaigns at 6-month and 1-year intervals.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Program', value: 'RHIVE Referral System' }, { label: 'Output', value: 'Referrals + Repeat Business' }] } },
+];
+
+const INSURANCE_CUSTOMER_LANE: CellData[] = [
+  { icon: '📞', title: 'Initiates Contact', detail: 'Reports storm/hail damage · files insurance claim', badge: { label: 'Entry Point', color: 'pink' }, variant: 'primary', detail_modal: { tag: 'S1 · Insurance Customer', title: 'Initiates Contact', desc: 'Customer contacts RHIVE after storm or hail damage event. Reports roof damage and confirms they are filing an insurance claim. Provides insurance carrier name and claim number if available.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Channel', value: 'Phone / Web / Referral' }, { label: 'Output', value: 'Claim Intake Logged' }] } },
+  { icon: '🏠', title: 'Property Access', detail: 'Allows inspection · adjuster coordination', variant: undefined, detail_modal: { tag: 'S2 · Insurance Customer', title: 'Provides Property Access', desc: 'Customer grants access to property for RHIVE inspection AND insurance adjuster site visit. Coordinates adjuster appointment window. Provides access to attic and interior if water damage is suspected.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'Property Access + Adjuster Coordination' }, { label: 'Output', value: 'Inspection & Adjuster Visit Completed' }] } },
+  { icon: '⏳', title: 'Awaits Approval', detail: 'Insurance carrier reviews claim · adjuster report', badge: { label: 'Pending Approval', color: 'gold' }, variant: undefined, detail_modal: { tag: 'S3 · Insurance Customer', title: 'Awaits Insurance Approval', desc: 'Customer waits for insurance carrier to review the adjuster report and issue an Explanation of Benefits (EOB) or scope of loss. Pricing and quote scope are entirely dependent on the carrier approval amount. There is no set price — RHIVE will present options based on what the insurance approves and submit to manager for review.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Status', value: 'Pending Carrier Decision' }, { label: 'Key Note', value: 'No fixed price until EOB received' }, { label: 'Output', value: 'EOB / Scope of Loss Issued by Carrier' }] } },
+  { icon: '✍️', title: 'Signs Agreement', detail: 'Signs after manager approval · ACV or RCV', badge: { label: 'Key Milestone', color: 'pink' }, variant: 'primary', detail_modal: { tag: 'S4 · Insurance Customer', title: 'Signs Agreement', desc: 'Customer signs the contract AFTER the RHIVE manager has reviewed and approved the pricing proposal based on the insurance carrier EOB. Contract includes ACV (actual cash value) or RCV (replacement cost value) terms. Customer provides insurance carrier payout details and deductible amount.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'E-Signature Post-Approval' }, { label: 'Terms', value: 'ACV / RCV + Deductible' }, { label: 'Output', value: 'Signed Insurance Contract' }] } },
+  { icon: '📅', title: 'Confirms Date', detail: 'SMS/email confirmation · pre-install checklist', variant: undefined, detail_modal: { tag: 'S5 · Insurance Customer', title: 'Confirms Install Date', desc: 'Customer receives scheduling notification via SMS/email. Confirms install date and time window. Reviews pre-install checklist (move vehicles, secure pets, trim branches).', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Channel', value: 'SMS / Email / Portal' }, { label: 'Output', value: 'Date Confirmed' }] } },
+  { icon: '🔔', title: 'Property Ready', detail: 'Material drop-off alert · install day reminder', variant: undefined, detail_modal: { tag: 'S6 · Insurance Customer', title: 'Property Ready', desc: 'Customer receives material delivery notification and install day reminder. Ensures property is ready — vehicles moved, pets secured, access points clear.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'Property Prep' }, { label: 'Output', value: 'Ready-State Confirmed' }] } },
+  { icon: '📡', title: 'Tracks Progress', detail: 'Live updates via Customer Portal C-02/C-03', variant: undefined, detail_modal: { tag: 'S7 · Insurance Customer', title: 'Tracks Progress', desc: 'Customer monitors real-time project status via the Customer Portal (C-02 My Projects / C-03 Project Profile). Views crew on-site status and estimated completion.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Platform', value: 'Customer Portal C-02/C-03' }, { label: 'Output', value: 'Live Progress Visibility' }] } },
+  { icon: '🔎', title: 'Final Walkthrough', detail: 'Reviews punch list · signs off on quality', badge: { label: 'Approval', color: 'gold' }, variant: undefined, detail_modal: { tag: 'S8 · Insurance Customer', title: 'Final Walkthrough', desc: 'Customer performs walkthrough with project manager. Reviews punch list items. Signs off on completed work or flags deficiencies requiring remediation before payment release.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'Quality Walkthrough' }, { label: 'Output', value: 'Sign-Off or Remediation Request' }] } },
+  { icon: '🛡️', title: 'Insurance Payment', detail: 'ACV check received · RCV supplement after install', badge: { label: 'Insurance Pay', color: 'indigo' }, variant: 'primary', detail_modal: { tag: 'S9 · Insurance Customer', title: 'Insurance Payment Flow', desc: 'Customer routes insurance carrier payment (ACV check) to RHIVE. Once installation is complete, a supplemental claim may be filed for RCV recovery (depreciation recoup). Customer is responsible only for their deductible. RHIVE coordinates directly with carrier for any supplement.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'ACV', value: 'Initial carrier payout' }, { label: 'RCV', value: 'Post-install supplement' }, { label: 'Output', value: 'Insurance Payment + Deductible Collected' }] } },
+  { icon: '🏆', title: 'Receives Warranty', detail: 'Warranty docs · photos · portal record', variant: undefined, detail_modal: { tag: 'S10 · Insurance Customer', title: 'Receives Warranty', desc: 'Customer receives warranty documentation, final installation photos, and project summary. Full project record accessible in customer portal. Insurance certificate of completion filed if required by carrier.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Output', value: 'Warranty Docs + Final Photos + Insurance Record' }] } },
+  { icon: '🌟', title: 'Referral Program', detail: 'Seasonal reminders · referral incentives', badge: { label: 'Lifecycle', color: 'gold' }, variant: 'secondary', detail_modal: { tag: 'S11 · Insurance Customer', title: 'Referral Program', desc: 'Customer enrolled into RHIVE past-customer referral program. Receives seasonal maintenance reminders, referral incentive links, and re-engagement campaigns at 6-month and 1-year intervals.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Program', value: 'RHIVE Referral System' }, { label: 'Output', value: 'Referrals + Repeat Business' }] } },
+];
+
 const SWIMLANES: CellData[][] = [
-  // ── Customer ────────────────────────────────────────────────────────────────
-  [
-    { icon: '📞', title: 'Initiates Contact', detail: 'Phone · web form · estimate tool · referral', badge: { label: 'Entry Point', color: 'pink' }, variant: 'primary', detail_modal: { tag: 'S1 · Customer', title: 'Initiates Contact', desc: 'Customer makes first contact via phone, website form, estimate tool, or referral. Provides property address, contact details, and intent (ballpark vs firm quote). May submit damage photos.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Channel', value: 'Phone / Web / Referral' }, { label: 'Output', value: 'First Contact Logged' }] } },
-    { icon: '🏠', title: 'Property Access', detail: 'Allows aerial or in-person roof survey', variant: undefined, detail_modal: { tag: 'S2 · Customer', title: 'Provides Property Access', desc: 'Customer grants access to property for aerial data collection or in-person inspection. Answers questions about roof age, existing layers, and damage extent.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'Property Access' }, { label: 'Output', value: 'Survey Data Captured' }] } },
-    { icon: '📋', title: 'Reviews Quote', detail: 'Selects package · reviews financing options', badge: { label: 'Decision Point', color: 'gold' }, variant: undefined, detail_modal: { tag: 'S3 · Customer', title: 'Reviews Quote', desc: 'Customer reviews pricing presentation with package options (Duration / Flex / Designer / Premium Designer). Evaluates financing options if needed. Requests revisions or approves.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Decision', value: 'Select Package' }, { label: 'Options', value: 'Duration / Flex / Designer / Premium' }, { label: 'Output', value: 'Approval or Revision' }] } },
-    { icon: '✍️', title: 'Signs Agreement', detail: 'E-signature · insurance carrier verification', badge: { label: 'Key Milestone', color: 'pink' }, variant: 'primary', detail_modal: { tag: 'S4 · Customer', title: 'Signs Agreement', desc: 'Customer receives digital contract. Reviews scope of work, warranty terms, and payment schedule. Signs electronically. Provides insurance carrier info if applicable.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'E-Signature' }, { label: 'Legal', value: 'Agreement + Warranty Terms' }, { label: 'Output', value: 'Signed Contract' }] } },
-    { icon: '📅', title: 'Confirms Date', detail: 'SMS/email confirmation · pre-install checklist', variant: undefined, detail_modal: { tag: 'S5 · Customer', title: 'Confirms Install Date', desc: 'Customer receives scheduling notification via SMS/email. Confirms install date and time window. Reviews pre-install checklist (move vehicles, secure pets, trim branches).', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Channel', value: 'SMS / Email / Portal' }, { label: 'Output', value: 'Date Confirmed' }] } },
-    { icon: '🔔', title: 'Property Ready', detail: 'Material drop-off alert · install day reminder', variant: undefined, detail_modal: { tag: 'S6 · Customer', title: 'Property Ready', desc: 'Customer receives material delivery notification and install day reminder. Ensures property is ready — vehicles moved, pets secured, access points clear.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'Property Prep' }, { label: 'Output', value: 'Ready-State Confirmed' }] } },
-    { icon: '📡', title: 'Tracks Progress', detail: 'Live updates via Customer Portal C-02/C-03', variant: undefined, detail_modal: { tag: 'S7 · Customer', title: 'Tracks Progress', desc: 'Customer monitors real-time project status via the Customer Portal (C-02 My Projects / C-03 Project Profile). Views crew on-site status and estimated completion.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Platform', value: 'Customer Portal C-02/C-03' }, { label: 'Output', value: 'Live Progress Visibility' }] } },
-    { icon: '🔎', title: 'Final Walkthrough', detail: 'Reviews punch list · signs off on quality', badge: { label: 'Approval', color: 'gold' }, variant: undefined, detail_modal: { tag: 'S8 · Customer', title: 'Final Walkthrough', desc: 'Customer performs walkthrough with project manager. Reviews punch list items. Signs off on completed work or flags deficiencies requiring remediation before payment release.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Action', value: 'Quality Walkthrough' }, { label: 'Output', value: 'Sign-Off or Remediation Request' }] } },
-    { icon: '💳', title: 'Pays Invoice', detail: 'Card · ACH · check · financing via portal', badge: { label: 'Revenue', color: 'pink' }, variant: 'primary', detail_modal: { tag: 'S9 · Customer', title: 'Pays Invoice', desc: 'Customer receives final itemized invoice via email or portal. Submits payment via credit card, ACH, check, or financing plan. Receives payment confirmation and receipt.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Methods', value: 'Card / ACH / Check / Financing' }, { label: 'Output', value: 'Payment Confirmed' }] } },
-    { icon: '🏆', title: 'Receives Warranty', detail: 'Warranty docs · photos · portal record', variant: undefined, detail_modal: { tag: 'S10 · Customer', title: 'Receives Warranty', desc: 'Customer receives warranty documentation, final installation photos, and project summary. Full project record accessible in customer portal.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Output', value: 'Warranty Docs + Final Photos + Project Record' }] } },
-    { icon: '🌟', title: 'Referral Program', detail: 'Seasonal reminders · referral incentives', badge: { label: 'Lifecycle', color: 'gold' }, variant: 'secondary', detail_modal: { tag: 'S11 · Customer', title: 'Referral Program', desc: 'Customer enrolled into RHIVE past-customer referral program. Receives seasonal maintenance reminders, referral incentive links, and re-engagement campaigns at 6-month and 1-year intervals.', meta: [{ label: 'Role', value: 'Customer' }, { label: 'Program', value: 'RHIVE Referral System' }, { label: 'Output', value: 'Referrals + Repeat Business' }] } },
-  ],
+  // ── Customer row — populated dynamically based on selected customer type
+  RETAIL_CUSTOMER_LANE,
   // ── Sales Rep / Employee ─────────────────────────────────────────────────────
   [
     { icon: '🖥️', title: 'Intake & Triage', detail: 'E-02a · dupe check · notes · auto-stage', badge: { label: 'Core Action', color: 'pink' }, variant: 'primary', detail_modal: { tag: 'S1 · Sales Rep', title: 'Intake & Triage', desc: 'Opens New Project form (E-02a). Searches by phone or address for existing records. Records DISC personality, contact info, rough notes. System auto-triages to Estimate or Quote bucket.', meta: [{ label: 'Role', value: 'Employee' }, { label: 'Tool', value: 'E-02a New Project' }, { label: 'Output', value: 'Project Created + Auto-Triaged' }] } },
@@ -518,10 +545,19 @@ const NotesModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 const InternalBpmPage: React.FC = () => {
   const [modal, setModal] = useState<ActivityDetail | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
+  const [customerType, setCustomerType] = useState<CustomerType>('retail');
   const openModal = useCallback((d: ActivityDetail) => setModal(d), []);
   const closeModal = useCallback(() => setModal(null), []);
   const openNotes = useCallback(() => setNotesOpen(true), []);
   const closeNotes = useCallback(() => setNotesOpen(false), []);
+
+  // Resolve the customer swimlane based on selected type
+  const resolvedCustomerLane: CellData[] = (
+    customerType === 'insurance' ? INSURANCE_CUSTOMER_LANE : RETAIL_CUSTOMER_LANE
+  );
+
+  // Build the final swimlane grid with the correct customer row
+  const resolvedSwimlanes = [resolvedCustomerLane, ...SWIMLANES.slice(1)];
 
   return (
     <div className="relative min-h-screen bg-black text-white font-[Rubik,sans-serif] overflow-x-auto">
@@ -658,40 +694,128 @@ const InternalBpmPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Swimlane rows */}
-          {SWIMLANES.map((row, ri) => (
-            <div
-              key={ri}
-              className="grid border-b border-[rgba(55,65,81,0.3)] last:border-b-0"
-              style={{ gridTemplateColumns: '150px repeat(11,1fr)', minHeight: '130px' }}
-            >
-              {/* Role label */}
-              <div className="flex flex-col items-center justify-center px-2 py-4 border-r border-[rgba(55,65,81,0.8)] sticky left-0 z-[5] bg-[rgba(0,0,0,0.97)] backdrop-blur-md gap-1">
-                <span className="text-[22px] leading-none">{ROLES[ri].icon}</span>
-                <span
-                  className="font-[Orbitron,sans-serif] text-[8.5px] font-bold text-center uppercase tracking-[1px] leading-tight"
-                  style={{ color: ROLES[ri].color }}
-                >
-                  {ROLES[ri].name}
-                </span>
-                <span className="text-[8px] text-[#6b7280] text-center leading-tight">{ROLES[ri].desc}</span>
-              </div>
-
-              {/* Cells */}
-              {row.map((cell, ci) => (
-                <div
-                  key={ci}
-                  className="flex items-center justify-center p-2 border-r border-[rgba(55,65,81,0.2)] last:border-r-0"
-                >
-                  {cell ? (
-                    <ActivityCard cell={cell} onOpen={openModal} />
-                  ) : (
-                    <div className="w-9 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(55,65,81,0.8),transparent)' }} />
-                  )}
-                </div>
-              ))}
+          {/* ── Customer Type Branch Row ── */}
+          <div
+            className="grid border-b-2 border-[rgba(160,100,240,0.35)] bg-[rgba(5,0,15,0.9)]"
+            style={{ gridTemplateColumns: '150px repeat(11,1fr)' }}
+          >
+            {/* Label cell */}
+            <div className="border-r border-[rgba(55,65,81,0.8)] flex flex-col items-center justify-center px-2 py-3 sticky left-0 z-[5] bg-[rgba(0,0,0,0.97)] backdrop-blur-md gap-1">
+              <span className="text-[18px] leading-none">🔀</span>
+              <span
+                className="font-[Orbitron,sans-serif] text-[7.5px] font-bold text-center uppercase tracking-[1px] leading-tight"
+                style={{ color: '#a78bfa' }}
+              >
+                Customer
+              </span>
+              <span className="text-[7px] text-[#6b7280] text-center leading-tight">Type Branch</span>
             </div>
-          ))}
+            {/* Spanning cell for customer type tabs */}
+            <div className="col-span-11 flex items-center justify-start px-4 py-3 gap-2 flex-wrap">
+              <span className="font-[Orbitron,sans-serif] text-[8px] font-bold tracking-[2px] text-[#a78bfa] uppercase mr-2 flex-shrink-0">
+                Select Customer Category:
+              </span>
+              {CUSTOMER_TYPES.map((ct) => {
+                const isSelected = customerType === ct.id;
+                const isDisabled = !ct.active;
+                return (
+                  <button
+                    key={ct.id}
+                    id={`bpm-customer-type-${ct.id}`}
+                    onClick={() => !isDisabled && setCustomerType(ct.id)}
+                    disabled={isDisabled}
+                    aria-label={isDisabled ? `${ct.label} — Coming Soon` : `Switch to ${ct.label} customer type`}
+                    title={ct.desc}
+                    className={[
+                      'relative flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[1px] transition-all duration-200 border',
+                      isDisabled
+                        ? 'opacity-30 cursor-not-allowed border-[rgba(55,65,81,0.4)] text-[#4b5563] bg-transparent'
+                        : isSelected
+                          ? 'border-[#a78bfa] bg-[rgba(167,139,250,0.15)] text-[#a78bfa] shadow-[0_0_12px_rgba(167,139,250,0.4)] cursor-pointer'
+                          : 'border-[rgba(55,65,81,0.7)] text-[#6b7280] bg-transparent hover:border-[rgba(167,139,250,0.5)] hover:text-[#a78bfa] cursor-pointer',
+                    ].join(' ')}
+                    style={{ clipPath: 'polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)' }}
+                  >
+                    <span className="text-[11px]">{ct.icon}</span>
+                    {ct.label}
+                    {isDisabled && (
+                      <span className="text-[7px] opacity-60 font-normal normal-case tracking-normal"> (Soon)</span>
+                    )}
+                    {isSelected && !isDisabled && (
+                      <span
+                        className="absolute bottom-0 left-0 right-0 h-[2px]"
+                        style={{ background: 'linear-gradient(90deg,transparent,#a78bfa,transparent)' }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+              {/* Insurance-specific notice */}
+              {customerType === 'insurance' && (
+                <div className="ml-auto flex items-center gap-2 px-3 py-1.5 border border-[rgba(167,139,250,0.3)] bg-[rgba(167,139,250,0.06)] text-[8.5px] text-[#a78bfa] font-medium"
+                  style={{ clipPath: 'polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)' }}
+                >
+                  <span>🛡️</span>
+                  <span>Pricing &amp; quote depend on carrier approval — sent to manager for review before signing</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Swimlane rows */}
+          {resolvedSwimlanes.map((row, ri) => {
+            const isCustomerRow = ri === 0;
+            const rowBorderColor = isCustomerRow && customerType === 'insurance'
+              ? 'border-[rgba(167,139,250,0.2)]'
+              : 'border-[rgba(55,65,81,0.3)]';
+            const roleColor = isCustomerRow && customerType === 'insurance'
+              ? '#a78bfa'
+              : ROLES[ri].color;
+            const roleDesc = isCustomerRow && customerType === 'insurance'
+              ? 'Insurance claim flow'
+              : ROLES[ri].desc;
+            return (
+              <div
+                key={ri}
+                className={`grid border-b last:border-b-0 ${rowBorderColor}`}
+                style={{ gridTemplateColumns: '150px repeat(11,1fr)', minHeight: '130px' }}
+              >
+                {/* Role label */}
+                <div className="flex flex-col items-center justify-center px-2 py-4 border-r border-[rgba(55,65,81,0.8)] sticky left-0 z-[5] bg-[rgba(0,0,0,0.97)] backdrop-blur-md gap-1">
+                  <span className="text-[22px] leading-none">
+                    {isCustomerRow
+                      ? (CUSTOMER_TYPES.find(c => c.id === customerType)?.icon ?? ROLES[ri].icon)
+                      : ROLES[ri].icon
+                    }
+                  </span>
+                  <span
+                    className="font-[Orbitron,sans-serif] text-[8.5px] font-bold text-center uppercase tracking-[1px] leading-tight"
+                    style={{ color: roleColor }}
+                  >
+                    {isCustomerRow
+                      ? (CUSTOMER_TYPES.find(c => c.id === customerType)?.label ?? ROLES[ri].name)
+                      : ROLES[ri].name
+                    }
+                  </span>
+                  <span className="text-[8px] text-[#6b7280] text-center leading-tight">{roleDesc}</span>
+                </div>
+
+                {/* Cells */}
+                {row.map((cell, ci) => (
+                  <div
+                    key={ci}
+                    className="flex items-center justify-center p-2 border-r border-[rgba(55,65,81,0.2)] last:border-r-0"
+                  >
+                    {cell ? (
+                      <ActivityCard cell={cell} onOpen={openModal} />
+                    ) : (
+                      <div className="w-9 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(55,65,81,0.8),transparent)' }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
 
         {/* ── Footer Notes ── */}
