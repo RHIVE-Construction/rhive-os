@@ -34,8 +34,12 @@ class InnerBoundary extends Component<InnerProps, InnerState> {
         return { crashed: true };
     }
 
-    componentDidCatch(): void {
-        // Intentionally swallowed — outer functional wrapper handles the UX
+    componentDidCatch(_error: Error, _info: React.ErrorInfo): void {
+        // Notify the outer functional wrapper so it can display the fallback UI.
+        // Without this call, crashed state in EstimateErrorBoundary stays false
+        // and InnerBoundary's null return produces a permanent black screen.
+        const p = (this as any).props as InnerProps;
+        p.onError();
     }
 
     render(): ReactNode {
