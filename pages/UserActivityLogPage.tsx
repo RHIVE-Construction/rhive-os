@@ -232,7 +232,11 @@ const UserActivityLogPage: React.FC = () => {
     const [maxRows, setMaxRows] = useState(200);
     const tableRef = useRef<HTMLDivElement>(null);
 
-    const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin';
+    // Access: Super Admin (owner), or explicitly allowlisted email (james.g@rhiveconstruction.com)
+    const ALLOWLISTED_EMAILS = ['james.g@rhiveconstruction.com'];
+    const isAdmin =
+        currentUser?.role === 'Super Admin' ||
+        (!!currentUser?.email && ALLOWLISTED_EMAILS.includes(currentUser.email.toLowerCase()));
 
     // ── Real-time Firestore subscription ──────────────────────────────────────
     useEffect(() => {
@@ -326,7 +330,7 @@ const UserActivityLogPage: React.FC = () => {
                 <div className="text-center">
                     <ShieldCheckIcon className="h-16 w-16 text-rhive-pink/40 mx-auto mb-4" />
                     <h2 className="text-xl font-black uppercase tracking-widest text-gray-400 mb-2">Access Restricted</h2>
-                    <p className="text-sm text-gray-600">Admin or Super Admin role required to view activity logs.</p>
+                    <p className="text-sm text-gray-600">Owner or Super Admin access required to view activity logs.</p>
                 </div>
             </div>
         );
