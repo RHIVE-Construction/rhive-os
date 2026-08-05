@@ -40,7 +40,6 @@ const AppContentAuthenticated: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        console.log('App: activePageId changed to:', activePageId);
         if (mainRef.current) {
             mainRef.current.scrollTop = 0;
         }
@@ -203,7 +202,6 @@ const LoginBridge: React.FC = () => {
     // Scroll to top when activePageId changes for public layout
     useEffect(() => {
         if (!currentUser) {
-            console.log('LoginBridge: activePageId changed to:', activePageId);
             if (mainRef.current) {
                 mainRef.current.scrollTop = 0;
             }
