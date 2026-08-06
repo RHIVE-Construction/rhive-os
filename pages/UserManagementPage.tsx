@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
 import { Button } from '../components/ui/button';
@@ -14,26 +14,27 @@ import {
     BriefcaseIcon,
     EnvelopeIcon,
     PhoneIcon,
-    LockIcon,
-    CalendarIcon
+    LockIcon
 } from '../components/icons';
 import { userService, userLogService } from '../lib/firebaseService';
-import { User, UserType } from '../types';
 import { useMockDB } from '../contexts/MockDatabaseContext';
+import { useNavigation } from '../contexts/NavigationContext';
+import { User, UserType } from '../types';
 import { cn, hashPassword } from '../lib/utils';
-import {
-    syncUserGoogleCalendar,
-    isGISLoaded,
-    type CalendarSyncResult,
-    type RhiveCalendarEvent,
-} from '../services/googleCalendarService';
 
 // Internal roles that must register via Firebase Auth
 const INTERNAL_ROLES: UserType[] = ['Admin', 'Super Admin', 'Employee'];
 
+// Roles that are allowed to change another user's password
+const PASSWORD_CHANGE_ROLES: UserType[] = ['Super Admin'];
 
 const UserManagementPage: React.FC = () => {
     const { currentUser } = useMockDB();
+    const { setSelectedUserId, setActivePageId } = useNavigation();
+
+    // Derived permission: only Super Admin can change other users' passwords
+    const canChangePasswords = PASSWORD_CHANGE_ROLES.includes(currentUser?.role as UserType);
+
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
@@ -48,13 +49,6 @@ const UserManagementPage: React.FC = () => {
     const [pwError, setPwError] = useState('');
     const [pwSuccess, setPwSuccess] = useState(false);
     const [pwSubmitting, setPwSubmitting] = useState(false);
-
-    // Calendar Sync modal state
-    const [calSyncUser, setCalSyncUser] = useState<User | null>(null);
-    const [calSyncing, setCalSyncing] = useState(false);
-    const [calSyncResult, setCalSyncResult] = useState<CalendarSyncResult | null>(null);
-    const [calSyncError, setCalSyncError] = useState('');
-    const [gisReady, setGisReady] = useState(false);
 
 
     // Form state
@@ -71,50 +65,14 @@ const UserManagementPage: React.FC = () => {
             setUsers(data as User[]);
             setLoading(false);
         });
+        // Log page access
+        userLogService.logAction(
+            'PAGE_ACCESSED',
+            'User Management page was accessed',
+            { page: 'UserManagementPage' }
+        );
         return () => unsub();
     }, []);
-
-    // Poll for GIS library readiness (loaded async via CDN)
-    useEffect(() => {
-        if (isGISLoaded()) { setGisReady(true); return; }
-        const interval = setInterval(() => {
-            if (isGISLoaded()) {
-                setGisReady(true);
-                clearInterval(interval);
-            }
-        }, 500);
-        return () => clearInterval(interval);
-    }, []);
-
-    const openCalendarSync = useCallback((user: User) => {
-        setCalSyncUser(user);
-        setCalSyncResult(null);
-        setCalSyncError('');
-    }, []);
-
-    const handleCalendarSync = useCallback(async () => {
-        if (!calSyncUser?.email) {
-            setCalSyncError('This user has no email address registered. Please add one first.');
-            return;
-        }
-        setCalSyncing(true);
-        setCalSyncError('');
-        setCalSyncResult(null);
-
-        const result = await syncUserGoogleCalendar(calSyncUser.id, calSyncUser.email);
-
-        if (result.success) {
-            setCalSyncResult(result);
-            userLogService.logAction(
-                'CALENDAR_SYNCED',
-                `Google Calendar synced for user "${calSyncUser.name}" — ${result.eventsCount} events imported`,
-                { targetUserId: calSyncUser.id, targetUserEmail: calSyncUser.email, eventsCount: result.eventsCount }
-            );
-        } else {
-            setCalSyncError(result.error || 'Calendar sync failed. Please try again.');
-        }
-        setCalSyncing(false);
-    }, [calSyncUser]);
 
     const filteredUsers = users.filter(u =>
         u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -128,6 +86,11 @@ const UserManagementPage: React.FC = () => {
         setSubmitError('');
         setFormData({ name: '', role: 'Employee', email: '', phone: '', password: '' });
         setIsModalOpen(true);
+        userLogService.logAction(
+            'ADD_USER_MODAL_OPENED',
+            `New user registration modal opened by ${currentUser?.name ?? 'Admin'}`,
+            { openedBy: currentUser?.id, openedByRole: currentUser?.role }
+        );
     };
 
     const handleOpenEdit = (user: User) => {
@@ -142,21 +105,71 @@ const UserManagementPage: React.FC = () => {
             password: ''
         });
         setIsModalOpen(true);
+        userLogService.logAction(
+            'EDIT_USER_MODAL_OPENED',
+            `Edit modal opened for user "${user.name}" (${user.role}) by ${currentUser?.name ?? 'Admin'}`,
+            { targetUserId: user.id, targetUserName: user.name, targetUserRole: user.role, openedBy: currentUser?.id }
+        );
+    };
+
+    /** Navigate to the full profile page for a given user */
+    const handleViewProfile = (user: User) => {
+        setSelectedUserId(user.id);
+        setActivePageId('A-02-profile');
+        userLogService.logAction(
+            'PAGE_ACCESSED',
+            `Profile page opened for "${user.name}" (${user.role}) by ${currentUser?.name ?? 'Unknown'}`,
+            { targetUserId: user.id, openedBy: currentUser?.id }
+        );
     };
 
     const handleDelete = async (id: string) => {
+        const targetUser = users.find(u => u.id === id);
+        userLogService.logAction(
+            'DELETE_USER_CONFIRM_PROMPTED',
+            `Delete confirmation shown for user "${targetUser?.name ?? id}" by ${currentUser?.name ?? 'Admin'}`,
+            { targetUserId: id, targetUserName: targetUser?.name, promptedBy: currentUser?.id }
+        );
         if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-            const targetUser = users.find(u => u.id === id);
             await userService.delete(id);
             userLogService.logAction(
                 'USER_DELETED',
-                `User "${targetUser?.name ?? id}" (${targetUser?.role ?? 'Unknown'}) was deleted`,
-                { deletedUserId: id, deletedUserName: targetUser?.name, deletedUserRole: targetUser?.role, deletedUserEmail: targetUser?.email }
+                `User "${targetUser?.name ?? id}" (${targetUser?.role ?? 'Unknown'}) was permanently deleted by ${currentUser?.name ?? 'Admin'}`,
+                {
+                    deletedUserId: id,
+                    deletedUserName: targetUser?.name,
+                    deletedUserRole: targetUser?.role,
+                    deletedUserEmail: targetUser?.email,
+                    deletedBy: currentUser?.id,
+                    deletedByName: currentUser?.name,
+                    deletedByRole: currentUser?.role,
+                    deletedAt: new Date().toISOString()
+                }
+            );
+        } else {
+            userLogService.logAction(
+                'USER_DELETE_CANCELLED',
+                `Delete cancelled for user "${targetUser?.name ?? id}" by ${currentUser?.name ?? 'Admin'}`,
+                { targetUserId: id, cancelledBy: currentUser?.id }
             );
         }
     };
 
     const openChangePw = (user: User) => {
+        // Guard: only Super Admin / Owner can change passwords
+        if (!canChangePasswords) {
+            userLogService.logAction(
+                'UNAUTHORIZED_PASSWORD_CHANGE_ATTEMPT',
+                `Unauthorized attempt to change password for "${user.name}" — blocked (role: ${currentUser?.role ?? 'unknown'})`,
+                { targetUserId: user.id, targetUserName: user.name, actorRole: currentUser?.role }
+            );
+            return;
+        }
+        userLogService.logAction(
+            'PASSWORD_CHANGE_MODAL_OPENED',
+            `Password change modal opened for user "${user.name}" (${user.role})`,
+            { targetUserId: user.id, targetUserName: user.name, targetUserRole: user.role }
+        );
         setPwUser(user);
         setNewPassword('');
         setPwError('');
@@ -165,26 +178,54 @@ const UserManagementPage: React.FC = () => {
 
     const handleChangePassword = async () => {
         if (!pwUser) return;
+        // Final server-side guard — should never reach here without permission
+        if (!canChangePasswords) {
+            setPwError('Access denied. Only Super Admin can change passwords.');
+            userLogService.logAction(
+                'UNAUTHORIZED_PASSWORD_CHANGE_BLOCKED',
+                `Server-side block: unauthorized password change attempt for "${pwUser.name}"`,
+                { targetUserId: pwUser.id, actorRole: currentUser?.role }
+            );
+            return;
+        }
         if (newPassword.length < 6) { setPwError('Password must be at least 6 characters.'); return; }
         setPwSubmitting(true);
         setPwError('');
         try {
             const hashed = await hashPassword(newPassword);
-            console.log('[ChangePassword] Updating user ID:', pwUser.id, '| hash preview:', hashed.slice(0, 12) + '...');
-            const result = await userService.update(pwUser.id, { password_hash: hashed, updated_at: new Date().toISOString() });
-            console.log('[ChangePassword] Result:', result);
+            const now = new Date().toISOString();
+
+            const result = await userService.update(pwUser.id, {
+                password_hash: hashed,
+                password_updated_at: now,
+                updated_at: now
+            });
+
             if (result.success) {
                 setPwSuccess(true);
                 userLogService.logAction(
                     'USER_PASSWORD_CHANGED',
-                    `Password changed for user "${pwUser.name}" (${pwUser.role})`,
-                    { targetUserId: pwUser.id, targetUserName: pwUser.name, targetUserRole: pwUser.role, targetUserEmail: pwUser.email }
+                    `Password successfully changed for user "${pwUser.name}" (${pwUser.role}) by ${currentUser?.name ?? 'Admin'}`,
+                    {
+                        targetUserId: pwUser.id,
+                        targetUserName: pwUser.name,
+                        targetUserRole: pwUser.role,
+                        targetUserEmail: pwUser.email,
+                        changedBy: currentUser?.id,
+                        changedByName: currentUser?.name,
+                        changedByRole: currentUser?.role,
+                        passwordUpdatedAt: now
+                    }
                 );
             } else {
-                setPwError(result.error || 'Firestore update failed. Check console for details.');
+                setPwError(result.error || 'Firestore update failed. Please try again.');
+                userLogService.logAction(
+                    'USER_PASSWORD_CHANGE_FAILED',
+                    `Password change FAILED for "${pwUser.name}" — Firestore error`,
+                    { targetUserId: pwUser.id, error: result.error }
+                );
             }
         } catch (err: any) {
-            console.error('[ChangePassword] Error:', err);
             setPwError(err?.message || 'Failed to update password.');
         } finally {
             setPwSubmitting(false);
@@ -200,24 +241,25 @@ const UserManagementPage: React.FC = () => {
         try {
             if (editingUser) {
                 // ── EDIT: update Firestore profile ──────────────────────────────
+                const now = new Date().toISOString();
                 const payload: any = {
                     name: formData.name,
                     role: formData.role,
                     email: formData.email,
                     phone: formData.phone,
-                    updated_at: new Date().toISOString()
+                    updated_at: now
                 };
-                if (formData.password) {
-                    payload.password_hash = await hashPassword(formData.password);
-                }
                 await userService.update(editingUser.id, payload);
                 userLogService.logAction(
-                    'USER_UPDATED',
-                    `User "${formData.name}" (${formData.role}) profile was updated`,
+                    'USER_PROFILE_UPDATED',
+                    `Profile for "${formData.name}" (${formData.role}) was updated by ${currentUser?.name ?? 'Admin'}`,
                     {
                         targetUserId: editingUser.id,
                         updatedFields: { name: formData.name, role: formData.role, phone: formData.phone },
-                        passwordChanged: !!formData.password
+                        updatedBy: currentUser?.id,
+                        updatedByName: currentUser?.name,
+                        updatedByRole: currentUser?.role,
+                        updatedAt: now
                     }
                 );
             } else {
@@ -227,6 +269,7 @@ const UserManagementPage: React.FC = () => {
                     setSubmitting(false);
                     return;
                 }
+                const now = new Date().toISOString();
                 const passwordHash = await hashPassword(formData.password);
                 await userService.create({
                     name: formData.name,
@@ -234,12 +277,22 @@ const UserManagementPage: React.FC = () => {
                     email: formData.email.toLowerCase().trim(),
                     phone: formData.phone,
                     password_hash: passwordHash,
-                    created_at: new Date().toISOString(),
+                    created_at: now,
+                    updated_at: now,
                 });
                 userLogService.logAction(
                     'USER_CREATED',
-                    `New user "${formData.name}" registered with role "${formData.role}"`,
-                    { newUserEmail: formData.email.toLowerCase().trim(), newUserRole: formData.role, newUserName: formData.name, newUserPhone: formData.phone }
+                    `New user "${formData.name}" registered with role "${formData.role}" by ${currentUser?.name ?? 'Admin'}`,
+                    {
+                        newUserEmail: formData.email.toLowerCase().trim(),
+                        newUserRole: formData.role,
+                        newUserName: formData.name,
+                        newUserPhone: formData.phone,
+                        createdBy: currentUser?.id,
+                        createdByName: currentUser?.name,
+                        createdByRole: currentUser?.role,
+                        createdAt: now
+                    }
                 );
             }
 
@@ -270,8 +323,6 @@ const UserManagementPage: React.FC = () => {
         if (role === 'Supplier') return <BriefcaseIcon className="w-4 h-4" />;
         return <UserIcon className="w-4 h-4" />;
     };
-
-    const isInternal = INTERNAL_ROLES.includes(formData.role as UserType);
 
     return (
         <PageContainer
@@ -318,27 +369,45 @@ const UserManagementPage: React.FC = () => {
                             <p className="text-gray-600 text-sm italic">No users found. Add your first user above.</p>
                         </div>
                     ) : filteredUsers.map((user) => (
-                        <div key={user.id} className="group relative bg-gray-900/40 border border-gray-800 rounded-2xl p-6 hover:border-[#ec028b]/50 transition-all duration-300">
+                        <div
+                            key={user.id}
+                            className="group relative bg-gray-900/40 border border-gray-800 rounded-2xl p-6 hover:border-[#ec028b]/50 transition-all duration-300 cursor-pointer"
+                            onClick={() => handleViewProfile(user)}
+                            id={`user-card-${user.id}`}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => e.key === 'Enter' && handleViewProfile(user)}
+                            aria-label={`View profile for ${user.name}`}
+                        >
                             {/* Actions Overlay */}
-                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                 <button
-                                    onClick={() => handleOpenEdit(user)}
+                                    onClick={(e) => { e.stopPropagation(); handleOpenEdit(user); }}
                                     className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-all"
                                     title="Edit user"
+                                    id={`edit-user-btn-${user.id}`}
+                                    aria-label={`Edit ${user.name}`}
                                 >
                                     <PencilSquareIcon className="w-4 h-4" />
                                 </button>
+                                {/* Change Password: only visible to Super Admin */}
+                                {canChangePasswords && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); openChangePw(user); }}
+                                        className="p-2 bg-[#ec028b]/10 rounded-lg text-[#ec028b]/60 hover:text-[#ec028b] hover:bg-[#ec028b]/20 transition-all"
+                                        title="Change password (Super Admin only)"
+                                        id={`change-pw-btn-${user.id}`}
+                                        aria-label={`Change password for ${user.name}`}
+                                    >
+                                        <LockIcon className="w-4 h-4" />
+                                    </button>
+                                )}
                                 <button
-                                    onClick={() => openChangePw(user)}
-                                    className="p-2 bg-[#ec028b]/10 rounded-lg text-[#ec028b]/60 hover:text-[#ec028b] hover:bg-[#ec028b]/20 transition-all"
-                                    title="Change password"
-                                >
-                                    <LockIcon className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(user.id)}
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(user.id); }}
                                     className="p-2 bg-red-900/20 rounded-lg text-red-500/70 hover:text-red-500 hover:bg-red-900/40 transition-all"
                                     title="Delete user"
+                                    id={`delete-user-btn-${user.id}`}
+                                    aria-label={`Delete ${user.name}`}
                                 >
                                     <TrashIcon className="w-4 h-4" />
                                 </button>
@@ -371,8 +440,7 @@ const UserManagementPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between">
-                                <span className="text-[9px] text-gray-600 font-mono italic">ID: {user.id.slice(-8)}</span>
+                            <div className="mt-6 pt-4 border-t border-gray-800 flex items-center justify-end">
                                 <div className="flex items-center gap-1.5">
                                     <div className={cn(
                                         "w-1.5 h-1.5 rounded-full",
@@ -496,7 +564,9 @@ const UserManagementPage: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Password: only shown when registering a NEW user */}
+                            {/* Password: only shown when registering a NEW user.
+                                Editing an existing user's password requires Super Admin
+                                and must be done via the dedicated Change Password modal. */}
                             {!editingUser && (
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Password</label>
@@ -516,6 +586,17 @@ const UserManagementPage: React.FC = () => {
                                 </div>
                             )}
 
+                            {/* Info banner in edit mode for Super Admins */}
+                            {editingUser && canChangePasswords && (
+                                <div className="flex items-center gap-3 bg-[#ec028b]/5 border border-[#ec028b]/20 rounded-xl px-4 py-3">
+                                    <LockIcon className="w-4 h-4 text-[#ec028b]/60 shrink-0" />
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                        To change this user's password, close this modal and use the
+                                        <span className="text-[#ec028b]"> 🔒 lock icon</span> on the user card.
+                                    </p>
+                                </div>
+                            )}
+
                             {formError && (
                                 <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
                                     <p className="text-red-400 text-xs font-bold">{formError}</p>
@@ -528,54 +609,15 @@ const UserManagementPage: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* ── Google Calendar Sync (edit mode, own account only) ── */}
-                            {editingUser && currentUser && editingUser.id === currentUser.id && (
-                                <div className="pt-2 border-t border-gray-800/60">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-gray-600 mb-2">Account Integrations</p>
-                                    <button
-                                        id="edit-modal-cal-sync-btn"
-                                        type="button"
-                                        onClick={() => { setIsModalOpen(false); openCalendarSync(editingUser); }}
-                                        className={cn(
-                                            "w-full flex items-center gap-3 py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 border",
-                                            editingUser.googleCalendarLinked
-                                                ? "bg-green-900/20 border-green-500/30 text-green-400 hover:bg-green-900/30 hover:border-green-500/50"
-                                                : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-blue-500/40 hover:text-blue-300 hover:bg-blue-900/10"
-                                        )}
-                                    >
-                                        {/* Google G logo */}
-                                        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
-                                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                                        </svg>
-                                        <span className="flex-1 text-left">
-                                            {editingUser.googleCalendarLinked ? (
-                                                <span className="flex items-center gap-2">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_6px_#4ade80]" />
-                                                    Google Calendar Linked
-                                                    {editingUser.calendarEventCount !== undefined && (
-                                                        <span className="opacity-60 font-normal normal-case">· {editingUser.calendarEventCount} events synced</span>
-                                                    )}
-                                                </span>
-                                            ) : (
-                                                'Sync Google Calendar'
-                                            )}
-                                        </span>
-                                        <CalendarIcon className="w-3.5 h-3.5 shrink-0 opacity-50" />
-                                    </button>
-                                </div>
-                            )}
-
                             <div className="pt-4 flex gap-4">
                                 <Button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
                                     disabled={submitting}
                                     className="flex-1 bg-gray-900 border-gray-800 text-gray-500 hover:text-white disabled:opacity-40"
+                                    id="cancel-user-modal"
                                 >
-                                    Abort
+                                    Cancel
                                 </Button>
                                 <Button
                                     type="submit"
@@ -607,7 +649,7 @@ const UserManagementPage: React.FC = () => {
                         <div className="p-6 border-b border-gray-800 bg-black/40 flex justify-between items-center">
                             <div>
                                 <h3 className="text-xl font-black text-white uppercase tracking-widest leading-none mb-1">Change Password</h3>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Updates Firestore record only</p>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Super Admin — Restricted Access</p>
                             </div>
                             <button onClick={() => setPwUser(null)} className="text-gray-500 hover:text-white transition-colors">
                                 <XMarkIcon className="w-6 h-6" />
@@ -675,195 +717,6 @@ const UserManagementPage: React.FC = () => {
                                                 </span>
                                             ) : (
                                                 <span className="flex items-center gap-2"><LockIcon className="w-4 h-4" />Save Password</span>
-                                            )}
-                                        </Button>
-                                    </div>
-
-
-                                </>
-
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-            {/* ── Google Calendar Sync Modal ───────────────────────────── */}
-            {calSyncUser && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !calSyncing && setCalSyncUser(null)} />
-                    <div className="relative w-full max-w-lg bg-[#0c0c0e] border border-gray-800 rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
-
-                        {/* Header */}
-                        <div className="p-6 border-b border-gray-800 bg-black/40 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                                    <CalendarIcon className="w-5 h-5 text-blue-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-black text-white uppercase tracking-widest leading-none">Sync Google Calendar</h3>
-
-                                </div>
-                            </div>
-                            <button onClick={() => !calSyncing && setCalSyncUser(null)} className="text-gray-500 hover:text-white transition-colors">
-                                <XMarkIcon className="w-6 h-6" />
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-5">
-                            {/* Target user preview */}
-                            <div className="flex items-center gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl p-3">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-800 to-black border border-gray-700 flex items-center justify-center font-black text-[#ec028b] text-lg uppercase">
-                                    {calSyncUser.name.charAt(0)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-white font-bold text-sm leading-none truncate">{calSyncUser.name}</p>
-                                    <p className="text-gray-400 text-xs mt-0.5 truncate">{calSyncUser.email || 'No email — cannot sync'}</p>
-                                </div>
-                                {calSyncUser.googleCalendarLinked && (
-                                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-900/20 border border-green-500/30">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_6px_#4ade80]" />
-                                        <span className="text-[9px] font-black text-green-400 uppercase tracking-widest">Previously synced</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {calSyncResult?.success ? (
-                                /* ── Success State ── */
-                                <div className="space-y-4">
-                                    <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center space-y-2">
-                                        <div className="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto">
-                                            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </div>
-                                        <p className="text-green-400 font-black text-sm uppercase tracking-wide">Sync Successful!</p>
-                                        <p className="text-gray-300 text-sm">
-                                            <span className="text-green-400 font-bold text-xl">{calSyncResult.eventsCount}</span> events imported from Google Calendar
-                                        </p>
-                                        <p className="text-[9px] text-gray-500 font-mono">Saved to Firestore · calendar_events collection</p>
-                                    </div>
-
-                                    {/* Preview first 5 events */}
-                                    {calSyncResult.events.length > 0 && (
-                                        <div className="space-y-2">
-                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Recent Events Preview</p>
-                                            <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                                                {calSyncResult.events.slice(0, 5).map((ev: RhiveCalendarEvent) => (
-                                                    <div key={ev.googleEventId} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-gray-900/60 border border-gray-800">
-                                                        <div className={cn(
-                                                            "w-1.5 h-1.5 rounded-full mt-1.5 shrink-0",
-                                                            ev.status === 'confirmed' ? 'bg-green-400' :
-                                                            ev.status === 'tentative' ? 'bg-yellow-400' : 'bg-gray-500'
-                                                        )} />
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-white text-xs font-semibold truncate">{ev.title}</p>
-                                                            <p className="text-gray-500 text-[10px]">
-                                                                {ev.isAllDay ? 'All day' : new Date(ev.startDateTime).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {calSyncResult.events.length > 5 && (
-                                                    <p className="text-center text-[10px] text-gray-600 py-1">+{calSyncResult.events.length - 5} more events saved</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <Button
-                                        type="button"
-                                        onClick={() => setCalSyncUser(null)}
-                                        className="w-full bg-green-600 hover:bg-green-500 text-white"
-                                    >
-                                        Done
-                                    </Button>
-                                </div>
-                            ) : (
-                                /* ── Initial / Error State ── */
-                                <>
-                                    {/* Info box */}
-                                    <div className="bg-blue-500/5 border border-blue-500/15 rounded-xl p-4 space-y-2">
-                                        <p className="text-blue-300 text-xs font-bold flex items-center gap-2">
-                                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            How it works
-                                        </p>
-                                        <ol className="text-[11px] text-gray-400 space-y-1 ml-6 list-decimal">
-                                            <li>A Google sign-in popup will open</li>
-                                            <li>Sign in with <span className="text-white font-semibold">{calSyncUser.email || 'the user\'s Gmail'}</span></li>
-                                            <li>Grant calendar read-only access</li>
-                                            <li>Events are fetched and saved to Firestore</li>
-                                        </ol>
-                                    </div>
-
-                                    {/* Previous sync info */}
-                                    {calSyncUser.lastCalendarSync && (
-                                        <div className="flex items-center gap-2 text-[10px] text-gray-500 font-mono">
-                                            <CalendarIcon className="w-3 h-3 text-green-400" />
-                                            Last synced: {new Date(calSyncUser.lastCalendarSync).toLocaleString()}
-                                            {calSyncUser.calendarEventCount !== undefined && (
-                                                <span className="text-gray-600">· {calSyncUser.calendarEventCount} events</span>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {/* GIS not loaded warning */}
-                                    {!gisReady && (
-                                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3">
-                                            <p className="text-yellow-400 text-xs font-bold">⚠ Google Identity Services is loading… please wait a moment and try again.</p>
-                                        </div>
-                                    )}
-
-
-
-
-                                    {/* Error */}
-                                    {calSyncError && (
-                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
-                                            <p className="text-red-400 text-xs font-bold">✕ {calSyncError}</p>
-                                        </div>
-                                    )}
-
-                                    {/* No email warning */}
-                                    {!calSyncUser.email && (
-                                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
-                                            <p className="text-red-400 text-xs font-bold">✕ No email registered for this user. Please add one before syncing.</p>
-                                        </div>
-                                    )}
-
-                                    <div className="flex gap-4 pt-1">
-                                        <Button
-                                            type="button"
-                                            onClick={() => setCalSyncUser(null)}
-                                            disabled={calSyncing}
-                                            className="flex-1 bg-gray-900 border-gray-800 text-gray-500 hover:text-white disabled:opacity-40"
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            id="connect-google-calendar-btn"
-                                            type="button"
-                                            onClick={handleCalendarSync}
-                                            disabled={calSyncing || !calSyncUser.email || !gisReady}
-                                            className="flex-[2] bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 flex items-center justify-center gap-2"
-                                        >
-                                            {calSyncing ? (
-                                                <>
-                                                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                    Syncing Calendar...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {/* Google "G" logo */}
-                                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                                                    </svg>
-                                                    Connect Google Calendar
-                                                </>
                                             )}
                                         </Button>
                                     </div>

@@ -285,22 +285,31 @@
         var s = document.createElement('script');
         s.async = true;
         s.onerror = onGoogleMapsApiError;
-        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&v=weekly&libraries=places,geometry&callback=onGoogleMapsApiReady&loading=async';
+        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady';
         document.head.appendChild(s);
       }
 
-      // Try Vite template-injected key first (fast, synchronous availability)
+      // Try Vite template-injected key first (fast, synchronous availability).
+      // At build time, Vite replaces %VITE_GOOGLE_MAPS_API_KEY% with the real key.
+      // In local dev (npm run dev), Vite also replaces this via its HTML transform.
       var inlineKey = '%VITE_GOOGLE_MAPS_API_KEY%';
       if (inlineKey && inlineKey.indexOf('%') === -1) {
-        // Vite replaced the template variable — use it directly
+        // Vite injected the key at build/serve time — use it directly.
         loadMapsScript(inlineKey);
       } else {
-        // Fall back to /api/config (Vite dev server middleware)
+        // Key was not injected (e.g. raw file open or edge-case build).
+        // Attempt the Vite dev-server /api/config endpoint as a last resort.
+        // This route does NOT exist in production — failure here is expected and handled gracefully.
         fetch('/api/config')
-          .then(function (res) { return res.json(); })
+          .then(function (res) {
+            if (!res.ok) throw new Error('status ' + res.status);
+            return res.json();
+          })
           .then(function (data) { loadMapsScript(data.mapsApiKey || ''); })
-          .catch(function (err) {
-            console.error('[RHIVE] Failed to fetch maps key from /api/config:', err);
+          .catch(function () {
+            // /api/config is only available on the Vite dev server.
+            // In production the key is baked in at build time — this path should not run.
+            console.warn('[RHIVE] Maps API key not available — map features will be disabled.');
             window.googleMapsApiFailed = true;
             window.dispatchEvent(new Event('google-maps-api-failed'));
           });

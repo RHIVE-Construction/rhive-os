@@ -1,5 +1,6 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { logUserActivity, LOG_ACTIONS, PAGE_NAMES } from './lib/userActivityLogger';
 import { PricingProvider } from './contexts/PricingContext';
 import { MockDatabaseProvider, useMockDB } from './contexts/MockDatabaseContext';
 import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
@@ -31,12 +32,52 @@ const isPasswordResetFlow = (): boolean => {
            (mode === 'firestoreReset' && !!params.get('token'));
 };
 
+// Detect /map path once at module load — used to short-circuit the entire auth flow
+const IS_MAP_ROUTE = window.location.pathname === '/map';
+
+// Detect CUSTOMER-SIGN-VERIFY page (link-only, no auth, no sidebar)
+const IS_SIGN_VERIFY_ROUTE = ((): boolean => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('page') === 'CUSTOMER-SIGN-VERIFY';
+})();
+
+// ── Customer Sign & Verify Full-Screen Renderer ——————————————————————————————————
+const SignVerifyRenderer: React.FC = () => {
+    const SignVerifyPage = pageComponentMap['CUSTOMER-SIGN-VERIFY'];
+    return (
+        <div className="fixed inset-0 w-screen h-screen overflow-hidden font-sans">
+            {SignVerifyPage && <SignVerifyPage />}
+        </div>
+    );
+};
+
+// ── /map Full-Screen Renderer ─────────────────────────────────────────────────
+// Rendered when the user navigates to /map directly (no auth, no sidebar).
+const BpmMapRenderer: React.FC = () => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    const BpmPage = pageComponentMap['INTERNAL-BPM'];
+    return (
+        <div className={cn(
+            'fixed inset-0 w-screen h-screen overflow-hidden font-sans',
+            isDark ? 'bg-black text-white' : 'bg-black text-white'
+        )}>
+            <CircuitryBackground backgroundColor="#000000" dotColor="#ec028b" lineColor="236, 2, 139" />
+            <main className="relative z-10 w-full h-full overflow-y-auto">
+                {BpmPage && <BpmPage />}
+            </main>
+        </div>
+    );
+};
+
 const AppContentAuthenticated: React.FC = () => {
     const { activePageId, setActivePageId, showEditorMenu } = useNavigation();
     const { currentUser } = useMockDB();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const mainRef = React.useRef<HTMLElement>(null);
+
+    const pageVisitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Refresh the 24-hour session window on any user activity
     useEffect(() => {
@@ -51,8 +92,26 @@ const AppContentAuthenticated: React.FC = () => {
         };
     }, []);
 
+    // Log page navigation with 2-second debounce to reduce noise from rapid switching
     useEffect(() => {
-        console.log('App: activePageId changed to:', activePageId);
+        if (!activePageId || !currentUser) return;
+        // Skip logging the Log viewer itself to prevent infinite feedback loops
+        if (activePageId === 'A-LOGS') return;
+        if (pageVisitTimer.current) clearTimeout(pageVisitTimer.current);
+        pageVisitTimer.current = setTimeout(() => {
+            const pageName = PAGE_NAMES[activePageId] || activePageId;
+            logUserActivity(
+                LOG_ACTIONS.PAGE_VISITED,
+                `Visited: ${pageName}`,
+                { pageId: activePageId, pageName }
+            );
+        }, 2000);
+        return () => {
+            if (pageVisitTimer.current) clearTimeout(pageVisitTimer.current);
+        };
+    }, [activePageId, currentUser]);
+
+    useEffect(() => {
         if (mainRef.current) {
             mainRef.current.scrollTop = 0;
         }
@@ -109,8 +168,9 @@ const AppContentAuthenticated: React.FC = () => {
     }, [activePageId, setActivePageId, currentUser]);
 
     useEffect(() => {
-        // Redirect to role dashboard after login from ANY public page (P-xx) or no page
-        if (currentUser && (!activePageId || activePageId.startsWith('P-'))) {
+        // Only redirect to role dashboard from the login page (P-06) or when no page is set.
+        // Do NOT redirect from other public pages like Estimate Tool (P-12).
+        if (currentUser && (!activePageId || activePageId === 'P-06')) {
             switch (currentUser.role) {
                 case 'Super Admin': setActivePageId('SA-01'); break;
                 case 'Admin': setActivePageId('E-01'); break;
@@ -118,7 +178,7 @@ const AppContentAuthenticated: React.FC = () => {
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
                 case 'Supplier': setActivePageId('S-01'); break;
-                case 'Public': setActivePageId('P-00-V3'); break;
+                default: setActivePageId('P-00'); break;
             }
         }
     }, [currentUser, setActivePageId, activePageId]);
@@ -314,10 +374,52 @@ const LoginBridge: React.FC = () => {
         );
     }
 
+    // ── Authenticated users on Estimate Tool ──────────────────────────────────
+    // Render P-12 in the public layout when logged in to prevent the double
+    // CircuitryBackground conflict that causes a black screen in AppContentAuthenticated.
+    if (currentUser && activePageId === 'P-12') {
+        const EstimatePageComponent = pageComponentMap['P-12'];
+        return (
+            <div className={cn(
+                "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
+                isDark ? "bg-black text-white" : "bg-[#F8F9FA] text-black"
+            )}>
+                <CircuitryBackground
+                    backgroundColor={isDark ? "#000000" : "#F8F9FA"}
+                    dotColor={isDark ? "#ec028b" : "#ec028b"}
+                    lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
+                />
+                <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto">
+                    {EstimatePageComponent && <EstimatePageComponent />}
+                </main>
+                <FloatingBackButton />
+                {window.location.hostname === 'localhost' && <DevNavigator />}
+            </div>
+        );
+    }
+
     return <AppContentAuthenticated />;
 };
 
 export default function App() {
+    // /sign-verify route — render customer form outside auth (link-only, no sidebar)
+    if (IS_SIGN_VERIFY_ROUTE) {
+        return (
+            <ThemeProvider>
+                <SignVerifyRenderer />
+            </ThemeProvider>
+        );
+    }
+
+    // /map route — render BPM page inside ThemeProvider only (no auth, no sidebar)
+    if (IS_MAP_ROUTE) {
+        return (
+            <ThemeProvider>
+                <BpmMapRenderer />
+            </ThemeProvider>
+        );
+    }
+
     return (
         <ThemeProvider>
             <LanguageProvider>

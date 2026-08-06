@@ -72,7 +72,7 @@ const DetailItem: React.FC<{ label: string, value: React.ReactNode, isTotal?: bo
 const BuildingDrawing: React.FC<{ building: Building }> = ({ building }) => {
     const numFacets = building.facets.length;
     
-    if (building.polygonVertices && building.polygonVertices.length >= 3) {
+    if (building.polygonVertices && building.polygonVertices.length >= 3 && !building.isOverridden) {
         const vertices = building.polygonVertices;
         let minLat = Infinity, maxLat = -Infinity;
         let minLng = Infinity, maxLng = -Infinity;
@@ -212,7 +212,7 @@ const getStaticMapUrl = (
       : b.id === building.id;
     const vertices = b.polygonVertices || [];
     
-    if (vertices.length >= 3) {
+    if (vertices.length >= 3 && !b.isOverridden) {
       const closedVertices = [...vertices, vertices[0]];
       const pathCoords = closedVertices.map(v => `${v.lat.toFixed(6)},${v.lng.toFixed(6)}`).join('|');
       const pathColor = isHighlighted ? '0xec028b' : '0x6b7280';

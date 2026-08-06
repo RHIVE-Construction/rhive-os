@@ -5,6 +5,7 @@ declare global {
   interface Window {
     google: any;
     googleMapsApiLoaded?: boolean;
+    googleMapsApiFailed?: boolean;
     onGoogleMapsApiReady?: () => void;
   }
 }

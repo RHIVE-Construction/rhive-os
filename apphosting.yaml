@@ -53,13 +53,13 @@ env:
       - RUNTIME
 
   - variable: VITE_FIREBASE_APP_ID
-    value: 1:672274474306:web:226d0a7064e8ae894e14db
+    value: 1:672274474306:web:542a4f84bad36a114e14db
     availability:
       - BUILD
       - RUNTIME
 
   - variable: VITE_FIREBASE_MEASUREMENT_ID
-    value: G-T8H6BQPK3H
+    value: G-KKZJ0W2GT4
     availability:
       - BUILD
       - RUNTIME
@@ -72,8 +72,10 @@ env:
       - BUILD
       - RUNTIME
 
+  # Maps JS API key is a public browser key (visible in bundle) — safe as plaintext.
+  # Secret Manager injection was silently failing at BUILD time, leaving %VITE_GOOGLE_MAPS_API_KEY% unreplaced.
   - variable: VITE_GOOGLE_MAPS_API_KEY
-    secret: google-maps-api-key
+    value: AIzaSyAKE58hL99Sl5AATLEt-B3h9NQGxf778cY
     availability:
       - BUILD
       - RUNTIME

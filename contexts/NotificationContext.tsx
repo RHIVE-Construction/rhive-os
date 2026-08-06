@@ -5,6 +5,7 @@ import {
 import { db } from '../lib/firebase';
 import { userLogService } from '../lib/firebaseService';
 import { session } from '../lib/session';
+import { logUserActivity, LOG_ACTIONS } from '../lib/userActivityLogger';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,7 +63,12 @@ export const ACTIVITY_ICONS: Record<string, string> = {
     user_created:          '🧑‍💼',
     user_role_changed:     '🛡️',
     page_visited:          '👁️',
-    // Record-level events (Section 7 — System Rules)
+    // Calendar actions
+    calendar_event_created: '📅',
+    calendar_event_updated: '✏️',
+    calendar_event_deleted: '🗑️',
+    calendar_synced:        '🔄',
+    // Record-level events (System Rules §7)
     RECORD_CREATED:        '📋',
     EDIT_RECORD:           '✏️',
     DELETE_RECORD:         '🗑️',
@@ -73,6 +79,7 @@ export const ACTIVITY_ICONS: Record<string, string> = {
     MEETING_SCHEDULED:     '📅',
     APPOINTMENT_BOOKED:    '📅',
 };
+
 
 export const getActivityIcon = (actionType: string) =>
     ACTIVITY_ICONS[actionType] || '🔔';
@@ -91,6 +98,8 @@ const PROJECT_ACTION_TYPES = new Set([
     'meeting_scheduled', 'meeting_updated',
     'payment_recorded', 'document_uploaded',
     'MEETING_SCHEDULED', 'APPOINTMENT_BOOKED',
+    // Calendar actions
+    'calendar_event_created', 'calendar_event_updated', 'calendar_event_deleted', 'calendar_synced',
 ]);
 
 const isProjectAction = (actionType: string) =>
@@ -176,6 +185,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             setNotifications(prev =>
                 prev.map(n => n.id === id ? { ...n, read: true } : n)
             );
+            await logUserActivity(LOG_ACTIONS.NOTIFICATION_READ, `Notification marked as read`, { notificationId: id });
         } catch (err) {
             console.warn('[NotificationContext] markRead error:', err);
         }
@@ -206,6 +216,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             await batch.commit();
 
             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            await logUserActivity(LOG_ACTIONS.NOTIFICATION_READ_ALL, `All notifications marked as read`, { count: unread.length });
         } catch (err) {
             console.warn('[NotificationContext] markAllRead error:', err);
         }

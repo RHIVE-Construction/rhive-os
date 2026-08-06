@@ -79,7 +79,7 @@ const PlexusShape: React.FC<PlexusShapeProps> = ({
     canvas.height = height;
     initDots();
 
-    // Mouse interaction relative to canvas
+    // Mouse interaction relative to canvas (globally tracked on window)
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       mouse.current.x = e.clientX - rect.left;
@@ -91,8 +91,8 @@ const PlexusShape: React.FC<PlexusShapeProps> = ({
       mouse.current.y = null;
     };
 
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
 
     const animate = () => {
       // Clear the canvas properly to prevent streaking with transparent backgrounds
@@ -169,15 +169,15 @@ const PlexusShape: React.FC<PlexusShapeProps> = ({
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
       resizeObserver.disconnect();
     };
   }, [backgroundColor, dotColor, lineColor, density]);
 
   return (
-    <div ref={containerRef} className={`relative w-full h-full overflow-hidden ${className}`}>
-      <canvas ref={canvasRef} className="block" />
+    <div ref={containerRef} className={`relative w-full h-full overflow-hidden pointer-events-none ${className}`}>
+      <canvas ref={canvasRef} className="block pointer-events-none" />
     </div>
   );
 };

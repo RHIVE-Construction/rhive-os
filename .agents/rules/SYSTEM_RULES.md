@@ -80,11 +80,17 @@ fix-(stage-change-logging)
 ### 0.6 Always Run Tests Before Committing or Pushing
 
 - **No commit or push may happen without first running the full test suite.**
-- Run `npm run build` and confirm zero errors.
-- Run `npx tsc --noEmit` and confirm zero TypeScript errors.
+- Run `npm run build` — this now runs `tsc --noEmit` **first** (type-gated build), then `vite build`.
+  - If `tsc` fails, the build stops and you **must fix all TypeScript errors** before proceeding.
+  - A passing build guarantees zero runtime type-crash regressions.
+- You may also run `npm run typecheck` alone to quickly validate types without bundling.
 - Manually verify the feature in the dev server.
 - Only after all checks pass is a commit or push allowed.
 - See **Section 3** for the complete pre-commit and pre-push checklists.
+
+> **Why this matters:** Vite uses `esbuild` for bundling which skips TypeScript checks.
+> A type error that passes the old `vite build` can cause a **blank white page** at runtime.
+> The new gated build (`tsc --noEmit && vite build`) prevents this class of bug entirely.
 
 ---
 

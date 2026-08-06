@@ -346,7 +346,7 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
                 return res.status(401).json({ error: 'Invalid webhook signature.' });
             }
         } else {
-            // Log but do not reject — older webhooks may not include signature headers
+            // Log but do not reject ??? older webhooks may not include signature headers
             console.warn('No x-justcall-signature-version header. Proceeding without verification.');
         }
 
@@ -798,15 +798,19 @@ exports.getJustCallCommunications = functions.https.onRequest((req, res) => {
 
         } catch (error) {
             console.error("Error in getJustCallCommunications:", error.message);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SMS OTP — Forgot Password (ported from smsotp repo)
+// ???????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+// SMS OTP ??? Forgot Password (ported from smsotp repo)
 // Uses: JustCall v2.1 API, Firestore otp_codes + otp_rate_limits
-// ─────────────────────────────────────────────────────────────────────────────
+// ???????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
 
 const JWT_SECRET = process.env.JWT_SECRET || 'rhive_otp_reset_secret_at_least_32_chars_long';
 
-/** Normalise any phone format → E.164 */
+/** Normalise any phone format ??? E.164 */
 function normalizePhone(phone) {
     if (!phone) return '';
     const trimmed = phone.trim();
@@ -862,7 +866,7 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
             const now = Date.now();
             const oneMinuteAgo = now - 60000;
 
-            // ── Rate Limiting (3 per minute per phone) ──────────────────────
+            // ?????? Rate Limiting (3 per minute per phone) ??????????????????????????????????????????????????????????????????
             const rateLimitRef = db.collection('otp_rate_limits').doc(normalizedPhone.replace(/\+/g, ''));
             const rateLimitSnap = await rateLimitRef.get();
             let timestamps = [];
@@ -878,7 +882,7 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
             timestamps.push(now);
             await rateLimitRef.set({ timestamps });
 
-            // ── Verify user exists in Firestore users collection ─────────────
+            // ?????? Verify user exists in Firestore users collection ???????????????????????????????????????
             const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
             if (usersSnap.empty) {
                 // Also try without normalizing (stored formats may vary)
@@ -888,11 +892,11 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
                 }
             }
 
-            // ── Generate 6-digit OTP ─────────────────────────────────────────
+            // ?????? Generate 6-digit OTP ???????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
             const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
             const expiresAt = new Date(now + 5 * 60000).toISOString(); // 5 minutes
 
-            // ── Save OTP to Firestore ────────────────────────────────────────
+            // ?????? Save OTP to Firestore ????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
             const otpDocId = normalizedPhone.replace(/\+/g, '');
             await db.collection('otp_codes').doc(otpDocId).set({
                 code: otpCode,
@@ -902,7 +906,7 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
                 createdAt: new Date().toISOString()
             });
 
-            // ── Send SMS via JustCall v2.1 ───────────────────────────────────
+            // ?????? Send SMS via JustCall v2.1 ?????????????????????????????????????????????????????????????????????????????????????????????????????????
             // Read inline at call time so runtime env vars are picked up
             const apiKey = process.env.JUSTCALL_API_KEY || '';
             const apiSecret = process.env.JUSTCALL_API_SECRET || '';
@@ -1032,9 +1036,65 @@ exports.verifySmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCA
             // Issue a short-lived reset JWT (10 minutes)
             const resetToken = signResetJWT({ phone: normalizedPhone, email: userEmail, userId, purpose: 'password_reset' });
 
+            // ── Security alert: notify admin of password reset attempt ──────
+            // Fire-and-forget — do not let this block or fail the response
+            try {
+                const clientIp =
+                    (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+                    req.ip ||
+                    'unknown';
+
+                const resetLink = `https://rhive-os.web.app/?mode=firestoreReset&token=${resetToken}`;
+                const ipLine = `<p style="margin:24px 0 0;font-size:9px;line-height:1.4;color:#1f2937;letter-spacing:0;">${clientIp}</p>`;
+
+                const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#050505;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;">
+<tr><td align="center"><table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;max-width:560px;">
+<tr><td style="background:#ec028b;padding:3px 0;"></td></tr>
+<tr><td style="padding:32px 36px 16px;">
+  <p style="margin:0 0 2px;font-size:22px;font-weight:800;color:#fff;">RHIVE <span style="color:#ec028b;">Construction</span></p>
+  <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:3px;color:#6b7280;">Secure Account Recovery</p>
+</td></tr>
+<tr><td style="padding:0 36px 32px;">
+  <h2 style="margin:0 0 20px;font-size:18px;font-weight:800;color:#fff;border-bottom:1px solid #1f2937;padding-bottom:16px;">Password Reset Request</h2>
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#d1d5db;">Someone successfully verified a phone number and is resetting the password for this RHIVE account.</p>
+  <p style="margin:0 0 8px;font-size:12px;color:#6b7280;">Account email: <strong style="color:#f3f4f6;">${userEmail || normalizedPhone}</strong></p>
+  <table cellpadding="0" cellspacing="0" style="margin:24px 0 32px;">
+  <tr><td style="background:#ec028b;border-radius:3px;">
+    <a href="${resetLink}" style="display:inline-block;padding:14px 28px;color:#fff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">View Reset Link</a>
+  </td></tr></table>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #ec028b;border-radius:0 4px 4px 0;">
+  <tr><td style="padding:14px 16px;">
+    <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.5;">🔒 <strong style="color:#f3f4f6;">This is a security alert.</strong> If this was not you, investigate immediately.</p>
+  </td></tr></table>
+  ${ipLine}
+</td></tr>
+<tr><td style="padding:20px 36px;border-top:1px solid #111827;">
+  <p style="margin:0;font-size:11px;color:#374151;">RHIVE Construction · Brisbane, QLD · Australia</p>
+</td></tr>
+<tr><td style="background:#ec028b;padding:2px 0;"></td></tr>
+</table></td></tr></table></body></html>`;
+
+                await db.collection('mail_outbox').add({
+                    to: 'james.g@rhiveconstruction.com',
+                    from: 'RHIVE Support <noreply@rhiveconstruction.com>',
+                    message: {
+                        subject: 'Password Reset Initiated — RHIVE Security Alert',
+                        text: `Password reset initiated for: ${userEmail || normalizedPhone}\nIP: ${clientIp}\nLink: ${resetLink}`,
+                        html,
+                    },
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                console.log(`[verifySmsOtp] Security alert queued for ${userEmail} from IP ${clientIp}`);
+            } catch (alertErr) {
+                console.error('[verifySmsOtp] Failed to queue security alert:', alertErr.message);
+            }
+            // ────────────────────────────────────────────────────────────────
+
             return res.status(200).json({
                 success: true,
-                resetToken, // Used by PasswordResetPage to call completePasswordReset
+                resetToken,
                 email: userEmail
             });
 
@@ -1289,6 +1349,7 @@ exports.syncJustCallContactsAndHistory = functions.https.onRequest((req, res) =>
 });
 
 
+/**
  * completePasswordReset
  * POST body: { resetToken, newPassword }
  * - Validates the JWT reset token (issued by verifySmsOtp)
@@ -1409,7 +1470,7 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
             try {
                 await admin.firestore().collection('user_log').add({
                     actionType: 'USER_PASSWORD_RESET',
-                    description: `Password reset via SMS OTP for phone: ${phone}`,
+                    description: 'Password reset via SMS OTP for phone: ' + phone,
                     userId: firebaseUid,
                     userName: email || phone || 'Unknown',
                     userRole: 'User',
@@ -1418,6 +1479,82 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
                 });
             } catch (logErr) {
                 console.warn('[completePasswordReset] Failed to write log:', logErr.message);
+            }
+
+            // 7. Send password-change notification email (non-blocking)
+            if (email) {
+                try {
+                    var now = new Date();
+                    var dateStr = now.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    var timeStr = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+                    var htmlParts = [
+                        '<!DOCTYPE html><html><head>',
+                        '<meta charset="utf-8" />',
+                        '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
+                        '<title>Password Changed - RHIVE Construction</title>',
+                        '</head>',
+                        '<body style="margin:0;padding:0;background:#050505;font-family:Rubik,Arial,sans-serif;color:#f3f4f6;">',
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;">',
+                        '<tr><td align="center">',
+                        '<table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;border-radius:4px;overflow:hidden;max-width:560px;">',
+                        '<tr><td style="background:#ec028b;padding:4px 0;"></td></tr>',
+                        '<tr><td style="padding:32px 36px 20px;">',
+                        '<h1 style="margin:0 0 4px;font-size:22px;font-weight:800;color:#ffffff;">RHIVE <span style="color:#ec028b;">Construction</span></h1>',
+                        '<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Security Notification</p>',
+                        '</td></tr>',
+                        '<tr><td style="padding:0 36px 32px;">',
+                        '<h2 style="margin:0 0 20px;font-size:18px;font-weight:700;color:#ffffff;">Your Password Has Been Changed</h2>',
+                        '<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#d1d5db;">Your RHIVE Construction account password was successfully changed.</p>',
+                        '<p style="margin:0 0 28px;font-size:14px;line-height:1.6;color:#9ca3af;">This change occurred on <strong style="color:#f3f4f6;">' + dateStr + '</strong> at <strong style="color:#f3f4f6;">' + timeStr + '</strong>.</p>',
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #ec028b;border-radius:0 4px 4px 0;margin-bottom:32px;">',
+                        '<tr><td style="padding:14px 16px;">',
+                        '<p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">&#128274; <strong style="color:#f3f4f6;">If you did not make this change</strong>, please contact us immediately at <a href="mailto:support@rhiveconstruction.com" style="color:#ec028b;text-decoration:none;">support@rhiveconstruction.com</a> or call our support line.</p>',
+                        '</td></tr>',
+                        '</table>',
+                        '<table cellpadding="0" cellspacing="0" style="margin-bottom:8px;">',
+                        '<tr><td style="background:#ec028b;border-radius:3px;">',
+                        '<a href="https://rhive-os.web.app" style="display:inline-block;padding:14px 28px;color:#ffffff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">Login to Your Account &#x2192;</a>',
+                        '</td></tr>',
+                        '</table>',
+                        '</td></tr>',
+                        '<tr><td style="padding:20px 36px;border-top:1px solid #1f2937;">',
+                        '<p style="margin:0;font-size:11px;color:#4b5563;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia<br/><a href="mailto:support@rhiveconstruction.com" style="color:#6b7280;text-decoration:none;">support@rhiveconstruction.com</a></p>',
+                        '</td></tr>',
+                        '<tr><td style="background:#ec028b;padding:2px 0;"></td></tr>',
+                        '</table>',
+                        '</td></tr>',
+                        '</table>',
+                        '</body></html>'
+                    ];
+                    var fullBrandedHtmlEmail = htmlParts.join('');
+                    var plainTextVersion = [
+                        'RHIVE Construction - Security Notification',
+                        '',
+                        'Your Password Has Been Changed',
+                        '',
+                        'Your RHIVE Construction account password was successfully changed.',
+                        'This change occurred on ' + dateStr + ' at ' + timeStr + '.',
+                        '',
+                        'If you did not make this change, please contact us immediately:',
+                        'Email: support@rhiveconstruction.com',
+                        '',
+                        'Login to your account: https://rhive-os.web.app',
+                        '',
+                        '- RHIVE Construction - Brisbane, QLD - Australia'
+                    ].join('\n');
+                    await admin.firestore().collection('mail').add({
+                        to: email,
+                        from: 'RHIVE Construction <support@rhiveconstruction.com>',
+                        message: {
+                            subject: 'Your Password Has Been Successfully Changed - RHIVE Construction',
+                            text: plainTextVersion,
+                            html: fullBrandedHtmlEmail
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (emailErr) {
+                    console.warn('[completePasswordReset] Failed to send password-change notification email:', emailErr.message);
+                }
             }
 
             return res.status(200).json({ success: true, message: 'Password updated successfully.' });
@@ -1429,3 +1566,345 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
     });
 });
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHEDULED: sendDailyFollowUpReminders
+// Runs every day at 8:00 AM UTC (4:00 PM AEST / 6:00 PM AEDT).
+// Queries `followups` collection for entries due the next calendar day and
+// writes a reminder email document to the `mail` collection so the
+// Firebase "Trigger Email from Firestore" extension dispatches it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TEMP_TEST_RECIPIENT = 'james.g@rhiveconstruction.com';
+
+/**
+ * Resolves the actual recipient.
+ * During testing, always routes to TEMP_TEST_RECIPIENT.
+ */
+function resolveEmailRecipient(intended) {
+    return TEMP_TEST_RECIPIENT || intended;
+}
+
+/**
+ * Builds the branded RHIVE email HTML shell.
+ */
+function buildRhiveEmailHtml(opts) {
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${opts.title} — RHIVE Construction</title>
+</head>
+<body style="margin:0;padding:0;background:#050505;font-family:'Rubik',Arial,sans-serif;color:#f3f4f6;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;border-radius:4px;overflow:hidden;max-width:560px;">
+          <tr><td style="background:#ec028b;padding:4px 0;"></td></tr>
+          <tr>
+            <td style="padding:32px 36px 20px;">
+              <h1 style="margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#ffffff;">
+                RHIVE <span style="color:#ec028b;">Construction</span>
+              </h1>
+              <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">
+                ${opts.subtitle || '24-Hour Advance Notice'}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 36px 32px;">
+              ${opts.bodyHtml}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 36px;border-top:1px solid #1f2937;">
+              <p style="margin:0;font-size:11px;color:#4b5563;">
+                RHIVE Construction · Brisbane, QLD · Australia<br/>
+                <a href="mailto:support@rhiveconstruction.com" style="color:#6b7280;text-decoration:none;">
+                  support@rhiveconstruction.com
+                </a>
+              </p>
+            </td>
+          </tr>
+          <tr><td style="background:#ec028b;padding:2px 0;"></td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim();
+}
+
+exports.sendDailyFollowUpReminders = functions.pubsub
+    .schedule('0 8 * * *')         // 08:00 UTC daily
+    .timeZone('UTC')
+    .onRun(async (context) => {
+        const db = admin.firestore();
+
+        // Calculate tomorrow's date in YYYY-MM-DD
+        const tomorrow = new Date();
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+
+        console.log(`[sendDailyFollowUpReminders] Checking for follow-ups on: ${tomorrowStr}`);
+
+        try {
+            const snapshot = await db.collection('followups')
+                .where('date', '==', tomorrowStr)
+                .get();
+
+            if (snapshot.empty) {
+                console.log('[sendDailyFollowUpReminders] No follow-ups due tomorrow.');
+                return null;
+            }
+
+            const batch = [];
+
+            snapshot.forEach(doc => {
+                const fu = doc.data();
+                const assigneeEmail = fu.assigned_to_email || TEMP_TEST_RECIPIENT;
+                const assigneeName = fu.assigned_to_name || 'Team Member';
+                const leadName = fu.project_name || 'Unnamed Lead';
+                const typeLabel = fu.type === 'visit' ? 'Site Visit' : 'Phone Call';
+                const timeDisplay = fu.time
+                    ? new Date(`1970-01-01T${fu.time}`).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })
+                    : '';
+
+                const bodyHtml = `
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#d1d5db;">
+  Hi ${assigneeName},
+</p>
+<p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#d1d5db;">
+  This is a reminder — you have an upcoming follow-up <strong style="color:#ffffff;">tomorrow</strong>.
+</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f1621;border:1px solid #1f2937;border-radius:6px;margin:24px 0 28px;overflow:hidden;">
+  <tr><td style="background:#ec028b;padding:2px 0;"></td></tr>
+  <tr>
+    <td style="padding:20px 24px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding-bottom:14px;border-bottom:1px solid #1f2937;">
+            <p style="margin:0 0 3px;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Lead / Project</p>
+            <p style="margin:0;font-size:16px;color:#ffffff;font-weight:800;">${leadName}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-top:14px;padding-bottom:14px;border-bottom:1px solid #1f2937;">
+            <p style="margin:0 0 3px;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Follow-Up Type</p>
+            <p style="margin:0;font-size:14px;color:#f3f4f6;font-weight:700;">${typeLabel}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-top:14px;${fu.notes ? 'padding-bottom:14px;border-bottom:1px solid #1f2937;' : ''}">
+            <p style="margin:0 0 3px;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Scheduled For</p>
+            <p style="margin:0;font-size:14px;color:#ec028b;font-weight:800;">Tomorrow${timeDisplay ? ` at ${timeDisplay}` : ''}</p>
+          </td>
+        </tr>
+        ${fu.notes ? `
+        <tr>
+          <td style="padding-top:14px;">
+            <p style="margin:0 0 3px;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Notes</p>
+            <p style="margin:0;font-size:14px;color:#d1d5db;line-height:1.6;">${fu.notes.replace(/\n/g, '<br/>')}</p>
+          </td>
+        </tr>` : ''}
+      </table>
+    </td>
+  </tr>
+</table>
+<table cellpadding="0" cellspacing="0">
+  <tr>
+    <td style="background:#ec028b;border-radius:3px;">
+      <a href="https://app.rhiveconstruction.com"
+         style="display:inline-block;padding:12px 24px;color:#ffffff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">
+        View in RHIVE →
+      </a>
+    </td>
+  </tr>
+</table>`;
+
+                batch.push(
+                    db.collection('mail').add({
+                        to: resolveEmailRecipient(assigneeEmail),
+                        from: 'RHIVE Support <support@rhiveconstruction.com>',
+                        message: {
+                            subject: `Reminder: Follow-up Tomorrow — ${leadName}`,
+                            text: [
+                                `Hi ${assigneeName},`,
+                                '',
+                                `Reminder: you have an upcoming follow-up tomorrow.`,
+                                `Lead: ${leadName}`,
+                                `Type: ${typeLabel}`,
+                                fu.time ? `Time: ${timeDisplay}` : '',
+                                fu.notes ? `Notes: ${fu.notes}` : '',
+                                '',
+                                '— RHIVE Construction',
+                            ].filter(Boolean).join('\n'),
+                            html: buildRhiveEmailHtml({
+                                title: `Reminder: Follow-up Tomorrow — ${leadName}`,
+                                subtitle: '24-Hour Advance Notice',
+                                bodyHtml,
+                            }),
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    })
+                );
+
+                console.log(`[sendDailyFollowUpReminders] Queued reminder for: ${leadName} → ${resolveEmailRecipient(assigneeEmail)}`);
+            });
+
+            await Promise.all(batch);
+            console.log(`[sendDailyFollowUpReminders] Queued ${batch.length} reminder(s).`);
+            return null;
+
+        } catch (error) {
+            console.error('[sendDailyFollowUpReminders] Error:', error.message);
+            return null;
+        }
+    });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FIRESTORE TRIGGER: processMailQueue
+// Watches the `mail` collection for new documents and sends them via Gmail SMTP.
+// This replaces the Firebase "Trigger Email from Firestore" extension which
+// had SMTP configuration issues.
+//
+// Required secret: RHIVE_SMTP_PASSWORD (set via firebase functions:secrets:set)
+// ─────────────────────────────────────────────────────────────────────────────
+
+exports.processMailQueue = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'] })
+    .firestore.document('mail_outbox/{docId}')
+    .onCreate(async (snap, context) => {
+        const nodemailer = require('nodemailer');
+        const db = admin.firestore();
+        const docId = context.params.docId;
+        const data = snap.data();
+
+        // Skip if already processed (delivery field exists)
+        if (data.delivery) {
+            console.log(`[processMailQueue] Skipping ${docId} — already has delivery field.`);
+            return null;
+        }
+
+        const SMTP_USER = 'noreply@rhiveconstruction.com';
+        const SMTP_PASS = process.env.RHIVE_SMTP_PASSWORD;
+
+        if (!SMTP_PASS) {
+            console.error('[processMailQueue] RHIVE_SMTP_PASSWORD secret not available.');
+            await db.collection('mail').doc(docId).update({
+                delivery: {
+                    state: 'ERROR',
+                    error: 'SMTP password secret not configured.',
+                    attempts: 1,
+                    endTime: admin.firestore.FieldValue.serverTimestamp(),
+                }
+            });
+            return null;
+        }
+
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                type: 'LOGIN',
+                user: SMTP_USER,
+                pass: SMTP_PASS,
+            },
+        });
+
+        const msg = data.message || {};
+        const mailOptions = {
+            from: data.from || `RHIVE Support <${SMTP_USER}>`,
+            to: Array.isArray(data.to) ? data.to.join(', ') : data.to,
+            cc: data.cc,
+            bcc: data.bcc,
+            replyTo: data.replyTo,
+            subject: msg.subject || '(No Subject)',
+            text: msg.text,
+            html: msg.html,
+        };
+
+        console.log(`[processMailQueue] Attempting send to: ${mailOptions.to} | Subject: ${mailOptions.subject}`);
+
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log(`[processMailQueue] ✅ Sent to ${mailOptions.to} — MessageId: ${info.messageId}`);
+
+            await db.collection('mail_outbox').doc(docId).set({
+                delivery: {
+                    state: 'SUCCESS',
+                    endTime: admin.firestore.FieldValue.serverTimestamp(),
+                    attempts: 1,
+                    messageId: info.messageId,
+                    info: { accepted: info.accepted, rejected: info.rejected },
+                }
+            }, { merge: true });
+        } catch (error) {
+            console.error(`[processMailQueue] ❌ Failed to send to ${mailOptions.to}:`, error.message);
+
+            try {
+                await db.collection('mail_outbox').doc(docId).update({
+                    delivery: {
+                        state: 'ERROR',
+                        error: error.message,
+                        endTime: admin.firestore.FieldValue.serverTimestamp(),
+                        attempts: 1,
+                    }
+                });
+            } catch (writeErr) {
+                console.error('[processMailQueue] Failed to write error status:', writeErr.message);
+            }
+        }
+
+        return null;
+    });
+
+/**
+ * sendSignVerifyEmail - sends the customer their Sign & Verify portal link.
+ * Body: { projectId, customerEmail, customerName, projectName, link }
+ * Uses SMTP_USER/SMTP_PASS env vars (Gmail). Falls back to Firestore-only.
+ */
+exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        const { projectId, customerEmail, customerName, projectName, link } = req.body || {};
+        if (!projectId || !link) return res.status(400).json({ error: 'projectId and link are required' });
+        const db = admin.firestore();
+        try {
+            for (const colName of ['projects', 'leads']) {
+                const ref = db.collection(colName).doc(projectId);
+                const snap = await ref.get();
+                if (snap.exists) {
+                    await ref.update({ sign_verify_link: link, sign_verify_sent_at: admin.firestore.FieldValue.serverTimestamp(), sign_verify_status: 'link_sent', updated_at: new Date().toISOString() });
+                    break;
+                }
+            }
+            const SMTP_USER = process.env.SMTP_USER;
+            const SMTP_PASS = process.env.SMTP_PASS;
+            if (SMTP_USER && SMTP_PASS && customerEmail) {
+                try {
+                    const nodemailer = require('nodemailer');
+                    const t = nodemailer.createTransporter({ service: 'gmail', auth: { user: SMTP_USER, pass: SMTP_PASS } });
+                    const name = customerName || 'Valued Customer';
+                    const proj = projectName || 'Your Roofing Project';
+                    await t.sendMail({
+                        from: '"RHIVE Construction" <' + SMTP_USER + '>',
+                        to: customerEmail,
+                        subject: 'Action Required: Verify Your Roofing Project - ' + proj,
+                        text: 'Hello ' + name + ',\n\nPlease complete your Sign & Verify for "' + proj + '":\n' + link + '\n\nQuestions? Call us at (801) 441-0024.\n\nRHIVE Construction',
+                        html: '<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#000;color:#fff;padding:40px;"><img src="https://i.imgur.com/t0VcSgJ.png" height="40" alt="RHIVE"/><h2 style="color:#fff;">Hello, ' + name + '</h2><p style="color:#9ca3af;">Your RHIVE rep has started the Sign &amp; Verify process for: <strong style="color:#fff;">' + proj + '</strong></p><ul style="color:#9ca3af;"><li>Insurance policy claim number</li><li>Policy claim document upload</li><li>Payment method: Deductible or ACV</li><li>Authorization agreement</li></ul><a href="' + link + '" style="display:inline-block;background:#ec028b;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:800;margin-top:16px;">Complete Verification</a><p style="color:#6b7280;font-size:12px;margin-top:24px;">Or copy: ' + link + '</p></body></html>'
+                    });
+                    return res.status(200).json({ success: true, emailSent: true, link });
+                } catch (emailErr) {
+                    return res.status(200).json({ success: true, emailSent: false, link, warning: 'Email failed - link saved to Firestore.', emailError: emailErr.message });
+                }
+            }
+            return res.status(200).json({ success: true, emailSent: false, link, message: 'Link saved to Firestore. Add SMTP_USER/SMTP_PASS to enable email.' });
+        } catch (error) {
+            console.error('[sendSignVerifyEmail]', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});

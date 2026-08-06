@@ -102,7 +102,6 @@ const RoleManagementPage: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-white group-hover:text-[#ec028b] transition-colors">{user.name}</p>
-                                                    <p className="text-[10px] text-gray-500 font-mono uppercase">UID: {user.id.slice(-8)}</p>
                                                 </div>
                                             </div>
                                         </td>
