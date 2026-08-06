@@ -17,10 +17,6 @@ env:
   # deprecation warning since GH Actions dropped Node 20 in 2026)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-# Cancel any in-progress deploy if a new push arrives on the same branch
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   deploy:
