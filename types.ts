@@ -205,6 +205,9 @@ export interface User {
     googleCalendarEmail?: string;
     lastCalendarSync?: string;  // ISO datetime string
     calendarEventCount?: number;
+    /** Account-level override: grants password-change rights regardless of role.
+     *  Only Super Admin can set this flag. Currently granted to: james.g@rhiveconstruction.com */
+    can_change_passwords?: boolean;
 }
 
 export interface Project {
