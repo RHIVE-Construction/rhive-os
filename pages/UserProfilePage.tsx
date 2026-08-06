@@ -17,7 +17,7 @@ import {
     IdentificationIcon,
     BuildingStorefrontIcon,
 } from '../components/icons';
-import { userService, userLogService } from '../lib/firebaseService';
+import { userService, userLogService, firestoreService } from '../lib/firebaseService';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { User, UserType } from '../types';
@@ -147,7 +147,7 @@ const UserProfilePage: React.FC = () => {
     // ── Activity log ───────────────────────────────────────────────────────────
     const [activityLog, setActivityLog] = useState<ActivityEntry[]>([]);
 
-    // ── Load user from Firestore (subscribe) ───────────────────────────────────
+    // ── Load user from Firestore (direct fetch + live subscribe) ───────────────
     useEffect(() => {
         if (!selectedUserId) {
             setLoading(false);
@@ -157,16 +157,29 @@ const UserProfilePage: React.FC = () => {
         setLoading(true);
         setNotFound(false);
 
-        // Subscribe to live updates on this user document
-        const unsub = userService.subscribe((allUsers: User[]) => {
-            const found = allUsers.find(u => u.id === selectedUserId);
-            if (found) {
-                setUser(found);
+        // 1. Immediately fetch the specific doc — no race condition, no partial-list issue
+        firestoreService.getDocument('users', selectedUserId).then((result) => {
+            if (result.success && result.data) {
+                setUser(result.data as User);
                 setNotFound(false);
             } else {
                 setNotFound(true);
             }
             setLoading(false);
+        }).catch(() => {
+            setNotFound(true);
+            setLoading(false);
+        });
+
+        // 2. Also subscribe for live updates (edits reflect instantly)
+        const unsub = userService.subscribe((allUsers: User[]) => {
+            const found = allUsers.find(u => u.id === selectedUserId);
+            if (found) {
+                setUser(found);
+                setNotFound(false);
+            }
+            // NOTE: do NOT set notFound=true here — only the initial fetch does that
+            // to avoid the race condition where subscribe fires before the user doc arrives
         });
         return () => unsub();
     }, [selectedUserId]);
