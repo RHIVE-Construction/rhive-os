@@ -161,7 +161,7 @@ const SWIMLANES: CellData[][] = [
     { icon: '⚡', title: 'Geocode + Triage', detail: 'Address validate · dupe check · notes · auto-stage', badge: { label: 'Automated', color: 'cyan' }, variant: 'system', detail_modal: { tag: 'S1 · System', title: 'Geocode, Dedupe & Triage', desc: 'On intake: validates address via Google Geocoding API (IndexedDB cached). Checks Firestore for duplicate records by phone and address. Auto-formats phone numbers. Auto-assigns pipeline stage by triage rules.', meta: [{ label: 'APIs', value: 'Google Geocoding' }, { label: 'DB', value: 'Firestore' }, { label: 'Cache', value: 'IndexedDB' }, { label: 'Output', value: 'Clean Record + Auto-Stage' }] } },
     { icon: '🛰️', title: 'Aerial Data Pull', detail: 'Google Solar API → facets · pitch · sq auto-calc', badge: { label: 'API Call', color: 'cyan' }, variant: 'system', detail_modal: { tag: 'S2 · System', title: 'Aerial Data Collection', desc: 'Google Solar API fetches roof facet data for the property address. Calculates pitch degrees, facet area in m², and total roof square footage. Auto-converts to roofing squares and feeds the estimate engine.', meta: [{ label: 'API', value: 'Google Solar API' }, { label: 'Output', value: 'Roof Report Auto-Generated' }] } },
     { icon: '🧮', title: 'Pricing Engine', detail: 'Bundles · rolls · waste · pitch rates · totals', badge: { label: 'Calculation', color: 'cyan' }, variant: 'system', detail_modal: { tag: 'S3 · System', title: 'Pricing Calculation Engine', desc: 'Quote Builder applies pitch-based labor rates, material overhead, and profit margins from Admin pricing config. Auto-calculates shingle bundles, underlayment rolls, drip edge, waste factor, and total squares. Produces itemized cost breakdown.', meta: [{ label: 'Logic', value: 'Pricing Engine' }, { label: 'Output', value: 'Auto-Calculated Quote Breakdown' }] } },
-    { icon: '📨', title: 'Contract Delivery', detail: 'JustCall SMS/email · Firestore stage advance', badge: { label: 'Automated', color: 'cyan' }, variant: 'system', detail_modal: { tag: 'S4 · System', title: 'Contract Delivery & Stage Advance', desc: 'Digital contract sent via email. JustCall integration logs communication event. Firestore document updated with signed status, timestamp, and insurance data. Pipeline stage auto-advances on confirmation.', meta: [{ label: 'Integrations', value: 'JustCall + Firestore' }, { label: 'Output', value: 'Signed Record + Stage Advanced' }] } },
+    { icon: '📨', title: 'Portal Link + Docs', detail: 'Policy claim upload · customer portal link · Firestore stage advance', badge: { label: 'Automated', color: 'cyan' }, variant: 'system', detail_modal: { tag: 'S4 · System', title: 'Sign & Verify Portal Delivery', desc: 'Employee uploads insurance policy claim and scope of work documents in E-29. System generates a unique customer portal link (/?page=CUSTOMER-SIGN-VERIFY&token=projectId). Link emailed to customer for self-serve completion of: policy claim number entry, payment method selection (Deductible or ACV), and insurance authorization agreement toggle. Customer submission saved to Firestore. Pipeline stage auto-advances on confirmation.', meta: [{ label: 'Integrations', value: 'Firestore + Email Function' }, { label: 'Customer Portal', value: 'CUSTOMER-SIGN-VERIFY page' }, { label: 'Payment Options', value: 'Deductible / ACV' }, { label: 'Output', value: 'Signed Record + Stage Advanced' }] } },
     { icon: '📡', title: 'Calendar Sync', detail: 'Google Calendar API · JustCall SMS notify', badge: { label: 'Sync', color: 'cyan' }, variant: 'system', detail_modal: { tag: 'S5 · System', title: 'Calendar Sync & Notifications', desc: 'Google Calendar API syncs scheduled install date to employee and contractor calendars. JustCall triggers automated SMS confirmation to customer. Production Board (E-14) updates with new scheduled entry.', meta: [{ label: 'Integrations', value: 'Google Calendar + JustCall' }, { label: 'Output', value: 'Calendars Synced + SMS Sent' }] } },
     null, null, null,
     { icon: '⚙️', title: 'Auto-Invoice', detail: 'Invoice generate · payment gateway · commission calc', badge: { label: 'Automated', color: 'cyan' }, variant: 'system', detail_modal: { tag: 'S9 · System', title: 'Auto Invoice & Commission', desc: 'Invoice auto-generated from approved project quote and line items. Payment gateway processes transaction. Firestore payment status updated. Commission calculation triggered automatically for assigned sales rep.', meta: [{ label: 'Logic', value: 'Invoice + Commission Engine' }, { label: 'Output', value: 'Payment Confirmed + Commission Queued' }] } },
@@ -590,6 +590,27 @@ const InternalBpmPage: React.FC = () => {
           >
             End-to-End Business Process Map
           </h1>
+
+          {/* Back to Homepage Button — upper left */}
+          <button
+            id="bpm-back-home-btn"
+            onClick={() => { window.location.href = '/'; }}
+            aria-label="Go back to homepage"
+            className="absolute top-0 left-0 flex items-center gap-2 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[1.5px] text-[#9ca3af] border border-[rgba(55,65,81,0.6)] bg-[rgba(255,255,255,0.03)] hover:border-[rgba(226,171,73,0.6)] hover:text-[#e2ab49] hover:bg-[rgba(226,171,73,0.07)] hover:shadow-[0_0_16px_rgba(226,171,73,0.25)] transition-all duration-200 group"
+            style={{ clipPath: 'polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)' }}
+          >
+            <svg
+              className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Home
+          </button>
 
           {/* Add Note Button — upper right */}
           <button

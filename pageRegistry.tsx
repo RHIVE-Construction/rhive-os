@@ -74,6 +74,7 @@ import UniversalLandingPage from './pages/UniversalLandingPage'; // P-Landing
 import MaintenancePage from './pages/MaintenancePage'; // P-14
 import FirestoreDebugPage from './pages/FirestoreDebugPage'; // DEBUG
 import InternalBpmPage from './pages/InternalBpmPage'; // INTERNAL-BPM (/map)
+import CustomerSignVerifyPage from './pages/CustomerSignVerifyPage'; // CUSTOMER-SIGN-VERIFY (link-only)
 
 // Specific stage pages
 import LeadPage from './pages/LeadPage'; // E-26
@@ -217,5 +218,8 @@ export const pageComponentMap: Record<string, React.FC> = {
 
   // Internal (Hidden) — not in navigation, accessible via /map path only
   'INTERNAL-BPM': InternalBpmPage,
+
+  // Customer-facing Sign & Verify form — accessible via link only (no sidebar, no auth required)
+  'CUSTOMER-SIGN-VERIFY': CustomerSignVerifyPage,
 
 };

@@ -1860,3 +1860,51 @@ exports.processMailQueue = functions
 
         return null;
     });
+
+/**
+ * sendSignVerifyEmail - sends the customer their Sign & Verify portal link.
+ * Body: { projectId, customerEmail, customerName, projectName, link }
+ * Uses SMTP_USER/SMTP_PASS env vars (Gmail). Falls back to Firestore-only.
+ */
+exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        const { projectId, customerEmail, customerName, projectName, link } = req.body || {};
+        if (!projectId || !link) return res.status(400).json({ error: 'projectId and link are required' });
+        const db = admin.firestore();
+        try {
+            for (const colName of ['projects', 'leads']) {
+                const ref = db.collection(colName).doc(projectId);
+                const snap = await ref.get();
+                if (snap.exists) {
+                    await ref.update({ sign_verify_link: link, sign_verify_sent_at: admin.firestore.FieldValue.serverTimestamp(), sign_verify_status: 'link_sent', updated_at: new Date().toISOString() });
+                    break;
+                }
+            }
+            const SMTP_USER = process.env.SMTP_USER;
+            const SMTP_PASS = process.env.SMTP_PASS;
+            if (SMTP_USER && SMTP_PASS && customerEmail) {
+                try {
+                    const nodemailer = require('nodemailer');
+                    const t = nodemailer.createTransporter({ service: 'gmail', auth: { user: SMTP_USER, pass: SMTP_PASS } });
+                    const name = customerName || 'Valued Customer';
+                    const proj = projectName || 'Your Roofing Project';
+                    await t.sendMail({
+                        from: '"RHIVE Construction" <' + SMTP_USER + '>',
+                        to: customerEmail,
+                        subject: 'Action Required: Verify Your Roofing Project - ' + proj,
+                        text: 'Hello ' + name + ',\n\nPlease complete your Sign & Verify for "' + proj + '":\n' + link + '\n\nQuestions? Call us at (801) 441-0024.\n\nRHIVE Construction',
+                        html: '<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#000;color:#fff;padding:40px;"><img src="https://i.imgur.com/t0VcSgJ.png" height="40" alt="RHIVE"/><h2 style="color:#fff;">Hello, ' + name + '</h2><p style="color:#9ca3af;">Your RHIVE rep has started the Sign &amp; Verify process for: <strong style="color:#fff;">' + proj + '</strong></p><ul style="color:#9ca3af;"><li>Insurance policy claim number</li><li>Policy claim document upload</li><li>Payment method: Deductible or ACV</li><li>Authorization agreement</li></ul><a href="' + link + '" style="display:inline-block;background:#ec028b;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:800;margin-top:16px;">Complete Verification</a><p style="color:#6b7280;font-size:12px;margin-top:24px;">Or copy: ' + link + '</p></body></html>'
+                    });
+                    return res.status(200).json({ success: true, emailSent: true, link });
+                } catch (emailErr) {
+                    return res.status(200).json({ success: true, emailSent: false, link, warning: 'Email failed - link saved to Firestore.', emailError: emailErr.message });
+                }
+            }
+            return res.status(200).json({ success: true, emailSent: false, link, message: 'Link saved to Firestore. Add SMTP_USER/SMTP_PASS to enable email.' });
+        } catch (error) {
+            console.error('[sendSignVerifyEmail]', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});

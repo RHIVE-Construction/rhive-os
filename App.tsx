@@ -35,6 +35,22 @@ const isPasswordResetFlow = (): boolean => {
 // Detect /map path once at module load — used to short-circuit the entire auth flow
 const IS_MAP_ROUTE = window.location.pathname === '/map';
 
+// Detect CUSTOMER-SIGN-VERIFY page (link-only, no auth, no sidebar)
+const IS_SIGN_VERIFY_ROUTE = ((): boolean => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('page') === 'CUSTOMER-SIGN-VERIFY';
+})();
+
+// ── Customer Sign & Verify Full-Screen Renderer ——————————————————————————————————
+const SignVerifyRenderer: React.FC = () => {
+    const SignVerifyPage = pageComponentMap['CUSTOMER-SIGN-VERIFY'];
+    return (
+        <div className="fixed inset-0 w-screen h-screen overflow-hidden font-sans">
+            {SignVerifyPage && <SignVerifyPage />}
+        </div>
+    );
+};
+
 // ── /map Full-Screen Renderer ─────────────────────────────────────────────────
 // Rendered when the user navigates to /map directly (no auth, no sidebar).
 const BpmMapRenderer: React.FC = () => {
@@ -386,6 +402,15 @@ const LoginBridge: React.FC = () => {
 };
 
 export default function App() {
+    // /sign-verify route — render customer form outside auth (link-only, no sidebar)
+    if (IS_SIGN_VERIFY_ROUTE) {
+        return (
+            <ThemeProvider>
+                <SignVerifyRenderer />
+            </ThemeProvider>
+        );
+    }
+
     // /map route — render BPM page inside ThemeProvider only (no auth, no sidebar)
     if (IS_MAP_ROUTE) {
         return (
