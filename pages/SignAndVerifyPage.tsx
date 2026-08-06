@@ -120,10 +120,15 @@ const PermitModal: React.FC<PermitModalProps> = ({ url, fileName, onClose }) => 
                 {/* Modal Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 shrink-0">
                     <div className="flex items-center gap-3">
-                        <DocumentTextIcon className="w-5 h-5 text-[#ec028b]" />
+                        <div className="w-9 h-9 rounded-lg bg-[#ec028b]/15 border border-[#ec028b]/30 flex items-center justify-center flex-none">
+                            <DocumentTextIcon className="w-5 h-5 text-[#ec028b]" />
+                        </div>
                         <div>
-                            <p className="text-white font-bold text-sm">Purchase Permit Document</p>
-                            <p className="text-gray-500 text-xs truncate max-w-[300px]">{fileName}</p>
+                            <div className="flex items-center gap-2 mb-0.5">
+                                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-[#ec028b]/15 border border-[#ec028b]/30 text-[#ec028b]">Purchase Permit</span>
+                            </div>
+                            <p className="text-white font-semibold text-sm truncate max-w-[280px]">{fileName}</p>
+                            <p className="text-gray-600 text-xs">Uploaded by customer</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -339,21 +344,44 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                             <div className="space-y-4">
                                 {hasPermit ? (
                                     <>
-                                        {/* Clickable file preview trigger */}
-                                        <button
-                                            id="sv-permit-preview-btn"
-                                            onClick={() => setPermitModalOpen(true)}
-                                            className="w-full group flex items-center gap-4 p-4 bg-gray-900/50 border border-[#ec028b]/20 rounded-xl hover:border-[#ec028b]/60 hover:bg-[#ec028b]/5 transition-all duration-200 text-left"
-                                            aria-label="View purchase permit document">
-                                            <div className="w-10 h-10 flex-none rounded-lg bg-[#ec028b]/10 border border-[#ec028b]/20 flex items-center justify-center">
-                                                <DocumentTextIcon className="w-5 h-5 text-[#ec028b]" />
+                                        {/* Labelled document card */}
+                                        <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden">
+                                            {/* Document type header strip */}
+                                            <div className="flex items-center gap-2 px-4 py-2 bg-[#ec028b]/8 border-b border-[#ec028b]/20">
+                                                <DocumentTextIcon className="w-3.5 h-3.5 text-[#ec028b]" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">Purchase Permit</span>
+                                                <span className="ml-auto text-[10px] text-gray-600 font-mono">Customer Upload</span>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-white font-bold text-sm group-hover:text-[#ec028b] transition-colors truncate">{permitFileName}</p>
-                                                <p className="text-gray-500 text-xs mt-0.5">Uploaded by customer · click to preview</p>
+                                            {/* File info row */}
+                                            <div className="flex items-center gap-3 px-4 py-3">
+                                                <div className="w-9 h-9 flex-none rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center">
+                                                    <DocumentTextIcon className="w-4 h-4 text-gray-400" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-white font-semibold text-sm truncate">{permitFileName}</p>
+                                                    <p className="text-gray-600 text-xs mt-0.5">This is the purchase permit provided by the customer</p>
+                                                </div>
                                             </div>
-                                            <span className="text-[10px] text-[#ec028b] font-bold uppercase tracking-widest border border-[#ec028b]/30 px-2 py-1 rounded-full">View</span>
-                                        </button>
+                                            {/* Action row */}
+                                            <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-800 bg-black/20">
+                                                <button
+                                                    id="sv-permit-preview-btn"
+                                                    onClick={() => setPermitModalOpen(true)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-[#ec028b] text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-[#d4017d] transition-all shadow-[0_0_12px_rgba(236,2,139,0.3)] hover:shadow-[0_0_18px_rgba(236,2,139,0.5)]"
+                                                    aria-label="View purchase permit document">
+                                                    <DocumentTextIcon className="w-3.5 h-3.5" />
+                                                    View File
+                                                </button>
+                                                <button
+                                                    id="sv-permit-download-card-btn"
+                                                    onClick={() => { const a = document.createElement('a'); a.href = permitUrl; a.download = permitFileName; a.target = '_blank'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg text-xs font-bold uppercase tracking-widest hover:text-white hover:border-gray-600 transition-all"
+                                                    aria-label="Download purchase permit">
+                                                    <DownloadIcon className="w-3.5 h-3.5" />
+                                                    Download
+                                                </button>
+                                            </div>
+                                        </div>
 
                                         {/* Super Admin verification */}
                                         {isSuperAdmin ? (
