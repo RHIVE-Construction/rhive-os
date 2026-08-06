@@ -191,6 +191,9 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
     const [verifying, setVerifying] = useState(false);
     const [permitVerified, setPermitVerified] = useState(false);
 
+    // Editable send-to email
+    const [emailTo, setEmailTo] = useState<string>('');
+
     useEffect(() => {
         if (!project?.id) return;
         const colPath = project._source === 'leads' ? 'leads' : 'projects';
@@ -211,12 +214,18 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
     const customerData = firestoreData?.sign_verify_customer_data;
     const permitUrl = firestoreData?.purchase_permit_url || '';
     const permitFileName = firestoreData?.purchase_permit_file_name || 'purchase-permit';
+    const isPermitImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(permitFileName);
     const hasPermit = !!permitUrl;
 
     const customerEmail = project?.contact?.email || project?.customer_email || project?.email || '';
     const customerName = project?.contact
         ? `${project.contact.first_name || ''} ${project.contact.last_name || ''}`.trim()
         : project?.name || 'Customer';
+
+    // Initialise emailTo once customerEmail is resolved
+    useEffect(() => {
+        if (customerEmail && !emailTo) setEmailTo(customerEmail);
+    }, [customerEmail]);
 
     const handleSendLink = async () => {
         if (sending) return;
@@ -236,7 +245,7 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                 await fetch('https://us-central1-rhive-os.cloudfunctions.net/sendSignVerifyEmail', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ projectId: project.id, customerEmail, customerName, projectName: project.name || 'Your Project', link }),
+                    body: JSON.stringify({ projectId: project.id, customerEmail: emailTo || customerEmail, customerName, projectName: project.name || 'Your Project', link }),
                 });
             } catch { /* graceful fallback */ }
             setLinkSent(true);
@@ -352,14 +361,28 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">Purchase Permit</span>
                                                 <span className="ml-auto text-[10px] text-gray-600 font-mono">Customer Upload</span>
                                             </div>
+                                            {/* Image preview (if applicable) */}
+                                            {isPermitImage && (
+                                                <div className="relative border-b border-gray-800 bg-black/40 flex items-center justify-center" style={{ maxHeight: '180px', overflow: 'hidden' }}>
+                                                    <img
+                                                        src={permitUrl}
+                                                        alt="Purchase Permit Preview"
+                                                        className="object-contain w-full"
+                                                        style={{ maxHeight: '180px' }}
+                                                    />
+                                                    <span className="absolute top-2 right-2 text-[10px] bg-black/70 border border-gray-700 text-gray-400 px-2 py-0.5 rounded font-mono">Preview</span>
+                                                </div>
+                                            )}
                                             {/* File info row */}
                                             <div className="flex items-center gap-3 px-4 py-3">
                                                 <div className="w-9 h-9 flex-none rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center">
-                                                    <DocumentTextIcon className="w-4 h-4 text-gray-400" />
+                                                    {isPermitImage
+                                                        ? <img src={permitUrl} alt="" className="w-9 h-9 object-cover rounded-lg" />
+                                                        : <DocumentTextIcon className="w-4 h-4 text-gray-400" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-white font-semibold text-sm truncate">{permitFileName}</p>
-                                                    <p className="text-gray-600 text-xs mt-0.5">This is the purchase permit provided by the customer</p>
+                                                    <p className="text-gray-600 text-xs mt-0.5">Purchase permit uploaded by customer</p>
                                                 </div>
                                             </div>
                                             {/* Action row */}
@@ -428,9 +451,36 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                         {/* Customer Portal Link */}
                         <Card title="Customer Verification Portal">
                             <div className="space-y-4">
-                                <div className="p-3 bg-gray-900/50 rounded-lg border border-gray-800">
-                                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1">Customer Email</p>
-                                    <p className="text-white font-mono text-sm">{customerEmail || '—'}</p>
+                                <div className="space-y-1.5">
+                                    <label htmlFor="sv-email-to" className="block text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+                                        Send Link To <span className="text-[#ec028b]">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            id="sv-email-to"
+                                            type="email"
+                                            value={emailTo}
+                                            onChange={(e) => setEmailTo(e.target.value)}
+                                            placeholder="customer@email.com"
+                                            className="w-full bg-black/60 border border-gray-700 rounded-xl px-4 py-2.5 text-white font-mono text-sm placeholder-gray-600 focus:outline-none focus:border-[#ec028b]/60 focus:shadow-[0_0_10px_rgba(236,2,139,0.1)] transition-all"
+                                            aria-label="Customer email address"
+                                        />
+                                        {emailTo !== customerEmail && customerEmail && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setEmailTo(customerEmail)}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 hover:text-[#ec028b] font-bold uppercase tracking-widest px-2 py-1 transition-colors"
+                                                aria-label="Reset to original email"
+                                            >
+                                                Reset
+                                            </button>
+                                        )}
+                                    </div>
+                                    {emailTo !== customerEmail && customerEmail && (
+                                        <p className="text-[10px] text-amber-400">
+                                            ⚠ Original: <span className="font-mono">{customerEmail}</span>
+                                        </p>
+                                    )}
                                 </div>
                                 {customerData && (
                                     <div className="space-y-2 p-3 bg-gray-900/50 rounded-lg border border-gray-800">
