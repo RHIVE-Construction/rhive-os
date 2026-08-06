@@ -19,7 +19,7 @@ env:
 
 # Cancel any in-progress deploy if a new push arrives on the same branch
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
