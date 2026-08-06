@@ -398,6 +398,8 @@ const EmployeeTimeoffPage: React.FC = () => {
     const [selectedEvent, setSelectedEvent] = useState<RhiveCalendarEvent | null>(null);
     const [editEvent, setEditEvent] = useState<RhiveCalendarEvent | null>(null);
     const [accessToken, setAccessToken] = useState<string>('');
+    // Tracks whether the user has connected Google for this browser session
+    const [sessionConnected, setSessionConnected] = useState(false);
 
     const [showEventModal, setShowEventModal] = useState(false);
     const [prefillDate, setPrefillDate] = useState<string>('');
@@ -411,6 +413,8 @@ const EmployeeTimeoffPage: React.FC = () => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const todayStr = now.toISOString().slice(0, 10);
     const isAlreadySynced = true; // Team is activated — all users have Google Calendar connected
+    // True when team is activated AND this session has an active Google token
+    const isLiveSynced = isAlreadySynced && sessionConnected;
 
     const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
     const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
@@ -507,10 +511,11 @@ const EmployeeTimeoffPage: React.FC = () => {
         if (accessToken) return accessToken;
         const token = await requestGoogleAccessToken(currentUser?.email || '');
         setAccessToken(token);
+        setSessionConnected(true);
         return token;
     }, [accessToken, currentUser?.email]);
 
-    // ── SYNC ──────────────────────────────────────────────────────────────────
+    // ── SYNC — full OAuth popup + fetch + bidi merge ───────────────────────────
     const handleSync = async () => {
         if (!currentUser) return;
         setSyncing(true); setSyncMsg(null);
@@ -519,6 +524,7 @@ const EmployeeTimeoffPage: React.FC = () => {
             if (result.success) {
                 setGcalEvents(result.events);
                 setAccessToken(result.accessToken || '');
+                setSessionConnected(true);
                 setSyncMsg({ text: `✓ Synced ${result.eventsCount} events from Google Calendar`, ok: true });
                 await logActivity('calendar_synced', `Google Calendar synced — ${result.eventsCount} events imported`, { eventsCount: result.eventsCount });
             } else {
@@ -532,6 +538,60 @@ const EmployeeTimeoffPage: React.FC = () => {
         }
     };
 
+    // ── SESSION CONNECT — for live site: team is activated but token is empty ──
+    // When isAlreadySynced=true the "Connect" button is normally hidden. This
+    // handler is triggered by the new per-session connect button in the banner
+    // so the user can authorize Google Calendar once per browser session.
+    const handleSessionConnect = async () => {
+        if (!currentUser) return;
+        setSyncing(true); setSyncMsg(null);
+        try {
+            const token = await requestGoogleAccessToken(currentUser.email || '');
+            setAccessToken(token);
+            setSessionConnected(true);
+            // Immediately run bidi sync to populate calendar from Google
+            const googleEvs = await fetchGoogleCalendarEvents(token);
+            // Replace google-source events in Firestore with the freshest data
+            const snap = await getDocs(query(
+                collection(db, 'calendar_events'),
+                where('userId', '==', currentUser.id),
+                where('source', '==', 'google')
+            ));
+            await Promise.all(snap.docs.map(d => deleteDoc(doc(db, 'calendar_events', d.id))));
+            const n = new Date().toISOString();
+            for (const gev of googleEvs) {
+                const isAllDay = !gev.start.dateTime;
+                await addDoc(collection(db, 'calendar_events'), {
+                    userId: currentUser.id, userEmail: currentUser.email || '',
+                    googleEventId: gev.id, title: gev.summary || '(No title)',
+                    description: gev.description || '', location: gev.location || '',
+                    startDateTime: gev.start.dateTime || gev.start.date || '',
+                    endDateTime: gev.end.dateTime || gev.end.date || '',
+                    isAllDay, status: gev.status || 'confirmed',
+                    googleLink: gev.htmlLink || '',
+                    organizer: gev.organizer?.email || currentUser.email || '',
+                    syncedAt: n, created_at: n, updated_at: n, source: 'google', color: undefined,
+                });
+            }
+            const allEvs = await getUserCalendarEvents(currentUser.id);
+            setGcalEvents(allEvs);
+            setSyncMsg({ text: `✓ Connected — ${googleEvs.length} Google events synced`, ok: true });
+            await logActivity('calendar_synced', `Google Calendar session connected — ${googleEvs.length} events`, { eventsCount: googleEvs.length });
+        } catch (e: any) {
+            const errCode = (e as any)?.code;
+            if (errCode === 'auth/popup-closed-by-user' || errCode === 'auth/cancelled-popup-request') {
+                setSyncMsg({ text: 'Sign-in cancelled. Click "Connect" again to enable sync.', ok: false });
+            } else if (errCode === 'auth/popup-blocked') {
+                setSyncMsg({ text: 'Popup blocked — please allow popups for this site, then click Connect.', ok: false });
+            } else {
+                setSyncMsg({ text: e.message || 'Connection failed.', ok: false });
+            }
+        } finally {
+            setSyncing(false);
+            setTimeout(() => setSyncMsg(null), 8000);
+        }
+    };
+
     // ── CREATE / EDIT ─────────────────────────────────────────────────────────
     const handleSaveEvent = async (payload: CreateEventPayload & { pushToGoogle: boolean }) => {
         if (!currentUser) return;
@@ -540,7 +600,7 @@ const EmployeeTimeoffPage: React.FC = () => {
         if (editEvent) {
             // ── UPDATE path ──────────────────────────────────────────────────
             // 1. Push to Google Calendar if applicable
-            if (payload.pushToGoogle && isAlreadySynced && editEvent.googleEventId) {
+            if (payload.pushToGoogle && isLiveSynced && editEvent.googleEventId) {
                 try {
                     const token = await ensureToken();
                     const body: any = {
@@ -577,7 +637,7 @@ const EmployeeTimeoffPage: React.FC = () => {
         }
 
         // ── CREATE path ──────────────────────────────────────────────────────
-        if (payload.pushToGoogle && isAlreadySynced) {
+        if (payload.pushToGoogle && isLiveSynced) {
             try {
                 const token = await ensureToken();
                 newEvent = await createGoogleCalendarEvent(token, currentUser.id, currentUser.email || '', payload);
@@ -633,17 +693,20 @@ const EmployeeTimeoffPage: React.FC = () => {
                     <div>
                         <p className="text-sm font-bold text-white">Google Calendar</p>
                         <p className="text-[11px] text-gray-500">
-                            {isAlreadySynced
+                            {isAlreadySynced && sessionConnected
                                 ? `Synced · ${gcalEvents.filter(e => e.source === 'google').length} Google events · auto-polls every 5 min`
+                                : isAlreadySynced
+                                ? 'Team activated — click Connect to load your Google events for this session'
                                 : 'Connect your Google Calendar to enable bidirectional sync'}
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                     {syncMsg && <p className={`text-[11px] font-bold ${syncMsg.ok ? 'text-green-400' : 'text-red-400'}`}>{syncMsg.text}</p>}
-                    {!isAlreadySynced && (
-                        <button onClick={handleSync} disabled={syncing}
-                            className="flex items-center gap-2 px-4 h-9 text-[11px] font-black uppercase tracking-widest border border-gray-700 text-gray-400 hover:border-[#ec028b] hover:text-[#ec028b] disabled:opacity-40 rounded-lg transition-all">
+                    {/* Show connect button when: not synced at all, OR team-activated but no session token */}
+                    {(!isAlreadySynced || (isAlreadySynced && !sessionConnected)) && (
+                        <button onClick={isAlreadySynced ? handleSessionConnect : handleSync} disabled={syncing}
+                            className="flex items-center gap-2 px-4 h-9 text-[11px] font-black uppercase tracking-widest border border-[#ec028b]/60 text-[#ec028b] hover:border-[#ec028b] hover:bg-[#ec028b]/10 disabled:opacity-40 rounded-lg transition-all">
                             <ArrowPathIcon className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
                             {syncing ? 'Connecting…' : 'Connect Google Calendar'}
                         </button>
@@ -824,7 +887,7 @@ const EmployeeTimeoffPage: React.FC = () => {
                 onClose={() => { setShowEventModal(false); setEditEvent(null); }}
                 onSave={handleSaveEvent}
                 prefillDate={prefillDate}
-                isGoogleSynced={isAlreadySynced}
+                isGoogleSynced={isLiveSynced}
                 editEvent={editEvent}
             />
         </PageContainer>
