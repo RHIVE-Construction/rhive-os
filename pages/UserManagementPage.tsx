@@ -82,6 +82,16 @@ const UserManagementPage: React.FC = () => {
         u.role.toLowerCase().includes(search.toLowerCase())
     );
 
+    const handleViewProfile = (user: User) => {
+        userLogService.logAction(
+            'USER_PROFILE_VIEWED',
+            `Profile for "${user.name}" (${user.role}) opened by ${currentUser?.name ?? 'Admin'}`,
+            { targetUserId: user.id, targetUserName: user.name, openedBy: currentUser?.id }
+        );
+        setSelectedUserId(user.id);
+        setActivePageId('A-02-profile');
+    };
+
     const handleOpenAdd = () => {
         setEditingUser(null);
         setFormError('');
@@ -114,16 +124,6 @@ const UserManagementPage: React.FC = () => {
         );
     };
 
-    /** Navigate to the full profile page for a given user */
-    const handleViewProfile = (user: User) => {
-        setSelectedUserId(user.id);
-        setActivePageId('A-02-profile');
-        userLogService.logAction(
-            'PAGE_ACCESSED',
-            `Profile page opened for "${user.name}" (${user.role}) by ${currentUser?.name ?? 'Unknown'}`,
-            { targetUserId: user.id, openedBy: currentUser?.id }
-        );
-    };
 
     const handleDelete = async (id: string) => {
         const targetUser = users.find(u => u.id === id);
