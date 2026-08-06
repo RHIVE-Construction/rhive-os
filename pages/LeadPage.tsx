@@ -23,6 +23,7 @@ import {
     TrashIcon
 } from '../components/icons';
 import { projectService, firestoreService, userLogService } from '../lib/firebaseService';
+import { session } from '../lib/session';
 import { cn, getStagePageId } from '../lib/utils';
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Conversion Modal Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -325,9 +326,10 @@ const LeadPage: React.FC = () => {
     const handleSoftDelete = async (reason: string) => {
         if (!deleteTarget) return;
         const col = deleteTarget._source === 'leads' ? 'leads' : deleteTarget._source === 'deals' ? 'deals' : 'projects';
+        const actor = session.read();
         await firestoreService.softDeleteDocument(col, deleteTarget.id, {
             deletion_reason: reason,
-            deleted_by: 'employee',
+            deleted_by: actor?.name || actor?.email || 'Unknown',
         });
         await userLogService.logAction(
             'DELETE_RECORD',
@@ -339,11 +341,13 @@ const LeadPage: React.FC = () => {
 
     // --- BULK SOFT DELETE HANDLER ---
     const handleBulkSoftDelete = async (reason: string) => {
+        const actor = session.read();
+        const actorName = actor?.name || actor?.email || 'Unknown';
         const selectedProjects = projects.filter(p => selectedIds.has(p.id));
         const items = selectedProjects.map(p => ({
             collectionName: p._source === 'leads' ? 'leads' : p._source === 'deals' ? 'deals' : 'projects',
             id: p.id,
-            metadata: { deleted_by: 'employee', deletion_reason: reason },
+            metadata: { deleted_by: actorName, deletion_reason: reason },
         }));
         await firestoreService.bulkSoftDelete(items);
         // Log each deletion individually

@@ -18,6 +18,7 @@ import {
     TrashIcon
 } from '../components/icons';
 import { projectService, firestoreService, userLogService } from '../lib/firebaseService';
+import { session } from '../lib/session';
 import { cn, getStagePageId } from '../lib/utils';
 
 // The 4 early-stage tabs this page focuses on
@@ -86,9 +87,10 @@ const SalesPipelinePage: React.FC = () => {
     const handleSoftDelete = async (reason: string) => {
         if (!deleteTarget) return;
         const col = deleteTarget._source === 'leads' ? 'leads' : deleteTarget._source === 'deals' ? 'deals' : 'projects';
+        const actor = session.read();
         await firestoreService.softDeleteDocument(col, deleteTarget.id, {
             deletion_reason: reason,
-            deleted_by: 'employee',
+            deleted_by: actor?.name || actor?.email || 'Unknown',
         });
         await userLogService.logAction(
             'DELETE_RECORD',
