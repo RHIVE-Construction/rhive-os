@@ -174,6 +174,12 @@ export interface User {
     phone?: string;
     avatarUrl?: string;
     password_hash?: string;
+    password_updated_at?: string;
+    updated_at?: string;
+    created_at?: string;
+    /** Account-level override: grants password-change rights regardless of role.
+     *  Only Super Admin can set this flag. Currently granted to: james.g@rhiveconstruction.com */
+    can_change_passwords?: boolean;
 }
 
 export interface Project {

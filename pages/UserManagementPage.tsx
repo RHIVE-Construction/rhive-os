@@ -30,8 +30,10 @@ const PASSWORD_CHANGE_ROLES: UserType[] = ['Super Admin'];
 const UserManagementPage: React.FC = () => {
     const { currentUser } = useMockDB();
 
-    // Derived permission: only Super Admin can change other users' passwords
-    const canChangePasswords = PASSWORD_CHANGE_ROLES.includes(currentUser?.role as UserType);
+    // Derived permission: Super Admin by role, OR account granted can_change_passwords flag
+    const canChangePasswords =
+        PASSWORD_CHANGE_ROLES.includes(currentUser?.role as UserType) ||
+        currentUser?.can_change_passwords === true;
 
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState('');
@@ -223,20 +225,34 @@ const UserManagementPage: React.FC = () => {
         e.preventDefault();
         setFormError('');
         setSubmitError('');
+
+        // Validate before locking UI
+        if (!formData.name.trim()) {
+            setFormError('Full name is required.');
+            return;
+        }
+        if (!editingUser && (!formData.email || !formData.password)) {
+            setSubmitError('Email and password are required.');
+            return;
+        }
+
         setSubmitting(true);
 
         try {
             if (editingUser) {
-                // ── EDIT: update Firestore profile ──────────────────────────────
+                // ── EDIT: update Firestore profile — email is immutable after creation ──
                 const now = new Date().toISOString();
-                const payload: any = {
-                    name: formData.name,
+                const payload: Record<string, any> = {
+                    name: formData.name.trim(),
                     role: formData.role,
-                    email: formData.email,
                     phone: formData.phone,
                     updated_at: now
                 };
-                await userService.update(editingUser.id, payload);
+                // Do NOT include email in payload — it cannot change
+                const result = await userService.update(editingUser.id, payload);
+                if (!result?.success && result?.error) {
+                    throw new Error(result.error);
+                }
                 userLogService.logAction(
                     'USER_PROFILE_UPDATED',
                     `Profile for "${formData.name}" (${formData.role}) was updated by ${currentUser?.name ?? 'Admin'}`,
@@ -251,15 +267,10 @@ const UserManagementPage: React.FC = () => {
                 );
             } else {
                 // ── CREATE: all roles stored in Firestore with password_hash ──
-                if (!formData.email || !formData.password) {
-                    setSubmitError('Email and password are required.');
-                    setSubmitting(false);
-                    return;
-                }
                 const now = new Date().toISOString();
                 const passwordHash = await hashPassword(formData.password);
                 await userService.create({
-                    name: formData.name,
+                    name: formData.name.trim(),
                     role: formData.role,
                     email: formData.email.toLowerCase().trim(),
                     phone: formData.phone,
@@ -284,6 +295,7 @@ const UserManagementPage: React.FC = () => {
             }
 
             setIsModalOpen(false);
+            setEditingUser(null);
         } catch (err: any) {
             const msg = err?.message || 'An error occurred. Please try again.';
             setFormError(msg);
@@ -524,17 +536,19 @@ const UserManagementPage: React.FC = () => {
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Email Address</label>
                                 <input
-                                    required
+                                    required={!editingUser}
                                     type="email"
                                     value={formData.email}
                                     disabled={!!editingUser}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    readOnly={!!editingUser}
+                                    onChange={(e) => !editingUser && setFormData({ ...formData, email: e.target.value })}
                                     className={cn(
                                         "w-full bg-black/60 border border-gray-800 focus:border-[#ec028b] rounded-xl px-4 py-3 text-sm text-white outline-none transition-all",
-                                        editingUser && "opacity-50 cursor-not-allowed"
+                                        editingUser && "opacity-40 cursor-not-allowed select-none"
                                     )}
                                     placeholder="user@rhive.industries"
                                 />
+
                                 {editingUser && (
                                     <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-1">Email cannot be changed after registration</p>
                                 )}
@@ -588,11 +602,11 @@ const UserManagementPage: React.FC = () => {
                             <div className="pt-4 flex gap-4">
                                 <Button
                                     type="button"
-                                    onClick={() => setIsModalOpen(false)}
+                                    onClick={() => { setIsModalOpen(false); setEditingUser(null); }}
                                     disabled={submitting}
                                     className="flex-1 bg-gray-900 border-gray-800 text-gray-500 hover:text-white disabled:opacity-40"
                                 >
-                                    Abort
+                                    Cancel
                                 </Button>
                                 <Button
                                     type="submit"
