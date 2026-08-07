@@ -225,7 +225,7 @@ const UserManagementPage: React.FC = () => {
                     }
                 );
             } else {
-                setPwError(result.error || 'Firestore update failed. Please try again.');
+                setPwError(result.error || 'Update failed. Please try again.');
                 userLogService.logAction(
                     'USER_PASSWORD_CHANGE_FAILED',
                     `Password change FAILED for "${pwUser.name}" — Firestore error`,
@@ -733,7 +733,7 @@ const UserManagementPage: React.FC = () => {
 
                             {pwSuccess ? (
                                 <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-4 text-center space-y-3">
-                                    <p className="text-green-400 font-bold text-sm">✓ Password updated in Firestore!</p>
+                                    <p className="text-green-400 font-bold text-sm">✓ Password updated successfully!</p>
                                     <button onClick={() => setPwUser(null)} className="px-6 py-2 bg-gray-800 text-gray-300 hover:text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
                                         Done
                                     </button>

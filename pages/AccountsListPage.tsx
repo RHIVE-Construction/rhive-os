@@ -77,7 +77,7 @@ const AccountsListPage: React.FC = () => {
     return (
         <PageContainer
             title="Accounts"
-            description={`${accounts.length} account${accounts.length !== 1 ? 's' : ''} synced from Firestore`}
+            description={`${accounts.length} account${accounts.length !== 1 ? 's' : ''} synced`}
         >
             {/* Toolbar */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -130,7 +130,7 @@ const AccountsListPage: React.FC = () => {
                     <p className="text-gray-500 text-sm mt-2 text-center max-w-sm">
                         {search
                             ? `No accounts matching "${search}".`
-                            : 'No accounts in Firestore yet. Run the import script to populate accounts.'}
+                            : 'No accounts found. Run the import script to populate accounts.'}
                     </p>
                 </div>
             ) : (

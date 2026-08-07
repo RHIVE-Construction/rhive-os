@@ -347,7 +347,7 @@ const UserActivityLogPage: React.FC = () => {
                     </h1>
                 </div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 ml-9">
-                    Real-time event stream · Firestore `user_log` collection
+                    Real-time event stream · System event log
                 </p>
                 {/* Live indicator */}
                 <div className="ml-9 mt-2 flex items-center gap-2">
