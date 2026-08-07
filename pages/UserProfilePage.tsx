@@ -16,8 +16,13 @@ import {
     ClockIcon,
     IdentificationIcon,
     BuildingStorefrontIcon,
+    LockIcon,
+    EyeIcon,
+    EyeSlashIcon,
+    XMarkIcon,
 } from '../components/icons';
 import { userService, userLogService, firestoreService } from '../lib/firebaseService';
+import { hashPassword } from '../lib/utils';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { User, UserType } from '../types';
@@ -138,6 +143,16 @@ const UserProfilePage: React.FC = () => {
 
     // ── Email confirmation modal state ─────────────────────────────────────────
     const [pendingEmailChange, setPendingEmailChange] = useState<{ oldEmail: string; newEmail: string } | null>(null);
+
+    // ── Change Password modal state ────────────────────────────────────────────
+    const [showPwModal, setShowPwModal] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showNewPw, setShowNewPw] = useState(false);
+    const [showConfirmPw, setShowConfirmPw] = useState(false);
+    const [pwError, setPwError] = useState('');
+    const [pwSubmitting, setPwSubmitting] = useState(false);
+    const [pwSuccess, setPwSuccess] = useState(false);
 
 
     // ── Load user from Firestore (direct fetch + live subscribe) ───────────────
@@ -303,6 +318,65 @@ const UserProfilePage: React.FC = () => {
         await performSave();
     };
 
+    // ── Password validation ────────────────────────────────────────────────────
+    const validatePassword = (pw: string): string | null => {
+        if (pw.length < 8)  return 'Password must be at least 8 characters.';
+        if (pw.length > 16) return 'Password must be no more than 16 characters.';
+        if (!/[a-z]/.test(pw)) return 'Password must contain at least one lowercase letter.';
+        if (!/[A-Z]/.test(pw)) return 'Password must contain at least one uppercase letter.';
+        if (!/[^a-zA-Z0-9]/.test(pw)) return 'Password must contain at least one symbol (e.g. !@#$%).';
+        return null;
+    };
+
+    // ── Change Password handler ────────────────────────────────────────────────
+    const handleChangePassword = async () => {
+        if (!user) return;
+        setPwError('');
+
+        const validationError = validatePassword(newPassword);
+        if (validationError) { setPwError(validationError); return; }
+        if (newPassword !== confirmPassword) { setPwError('Passwords do not match.'); return; }
+
+        // Check against last 5 password hashes
+        const history: string[] = (user as any).password_history || [];
+        const newHash = await hashPassword(newPassword);
+        if (history.includes(newHash) || newHash === user.password_hash) {
+            setPwError('This password was used recently. Please choose a different password (cannot reuse last 5).');
+            return;
+        }
+
+        setPwSubmitting(true);
+        try {
+            const now = new Date().toISOString();
+            // Keep last 5 hashes (push current → drop oldest)
+            const updatedHistory = [...history, user.password_hash].filter(Boolean).slice(-5) as string[];
+
+            const result = await userService.update(user.id, {
+                password_hash: newHash,
+                password_history: updatedHistory,
+                password_updated_at: now,
+                updated_at: now,
+            });
+
+            if (result.success) {
+                userLogService.logAction(
+                    'USER_PASSWORD_CHANGED',
+                    `Password changed for "${user.name}" (${user.role}) by ${currentUser?.name ?? 'Admin'}`,
+                    { targetUserId: user.id, changedBy: currentUser?.id, changedByName: currentUser?.name }
+                );
+                setPwSuccess(true);
+                setNewPassword('');
+                setConfirmPassword('');
+            } else {
+                setPwError(result.error || 'Update failed. Please try again.');
+            }
+        } catch (err: any) {
+            setPwError(err?.message || 'An unexpected error occurred.');
+        } finally {
+            setPwSubmitting(false);
+        }
+    };
+
     // ── Back to User Management ────────────────────────────────────────────────
     const handleBack = () => {
         setSelectedUserId(null);
@@ -362,6 +436,7 @@ const UserProfilePage: React.FC = () => {
                         <span>User Management</span>
                     </button>
                     {canEdit && !isEditing && (
+                        <>
                         <Button
                             onClick={openEdit}
                             id="edit-profile-btn"
@@ -370,6 +445,15 @@ const UserProfilePage: React.FC = () => {
                             <PencilSquareIcon className="w-4 h-4 mr-2" />
                             Edit Profile
                         </Button>
+                        <Button
+                            onClick={() => { setShowPwModal(true); setPwError(''); setPwSuccess(false); setNewPassword(''); setConfirmPassword(''); }}
+                            id="change-password-btn"
+                            className="bg-gray-900 border-gray-700 text-gray-300 hover:text-white hover:border-[#ec028b]/50"
+                        >
+                            <LockIcon className="w-4 h-4 mr-2" />
+                            Change Password
+                        </Button>
+                        </>
                     )}
                 </div>
             }
@@ -738,6 +822,146 @@ const UserProfilePage: React.FC = () => {
                                 )}
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* ── Change Password Modal ─────────────────────────────────────────── */}
+        {showPwModal && user && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !pwSubmitting && setShowPwModal(false)} />
+                <div className="relative w-full max-w-md bg-gray-950 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#ec028b] to-transparent" />
+
+                    {/* Header */}
+                    <div className="p-5 border-b border-gray-800 bg-black/30 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-[#ec028b]/10 border border-[#ec028b]/30 flex items-center justify-center">
+                                <LockIcon className="w-4 h-4 text-[#ec028b]" />
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-[#ec028b] uppercase tracking-widest">Security</p>
+                                <h3 className="text-base font-black text-white">Change Password</h3>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowPwModal(false)} disabled={pwSubmitting} className="text-gray-600 hover:text-white transition-colors">
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div className="p-6 space-y-5">
+                        {/* User preview */}
+                        <div className="flex items-center gap-3 bg-[#ec028b]/5 border border-[#ec028b]/20 rounded-xl px-3 py-2.5">
+                            <div className="w-9 h-9 rounded-lg bg-gray-900 border border-gray-700 flex items-center justify-center font-black text-[#ec028b] text-sm">
+                                {user.name.charAt(0)}
+                            </div>
+                            <div>
+                                <p className="text-white font-bold text-sm leading-none">{user.name}</p>
+                                <p className="text-gray-500 text-xs mt-0.5">{user.email || user.role}</p>
+                            </div>
+                        </div>
+
+                        {pwSuccess ? (
+                            <div className="bg-green-500/10 border border-green-500/30 rounded-xl px-4 py-5 text-center space-y-3">
+                                <CheckIcon className="w-8 h-8 text-green-400 mx-auto" />
+                                <p className="text-green-400 font-bold text-sm">Password updated successfully!</p>
+                                <button onClick={() => setShowPwModal(false)} className="px-6 py-2 bg-gray-800 text-gray-300 hover:text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
+                                    Done
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                {/* New Password */}
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">New Password</label>
+                                    <div className="relative">
+                                        <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                                        <input
+                                            type={showNewPw ? 'text' : 'password'}
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            autoFocus
+                                            maxLength={16}
+                                            className="w-full bg-black/60 border border-gray-800 focus:border-[#ec028b] rounded-xl pl-11 pr-11 py-2.5 text-sm text-white outline-none transition-all"
+                                            placeholder="••••••••"
+                                        />
+                                        <button type="button" onClick={() => setShowNewPw(p => !p)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400 transition-colors">
+                                            {showNewPw ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                    {/* Strength rules */}
+                                    <div className="flex flex-wrap gap-x-3 gap-y-1 ml-1 mt-1.5">
+                                        {[
+                                            { label: '8–16 chars', ok: newPassword.length >= 8 && newPassword.length <= 16 },
+                                            { label: 'Uppercase', ok: /[A-Z]/.test(newPassword) },
+                                            { label: 'Lowercase', ok: /[a-z]/.test(newPassword) },
+                                            { label: 'Symbol',    ok: /[^a-zA-Z0-9]/.test(newPassword) },
+                                        ].map(({ label, ok }) => (
+                                            <span key={label} className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1 ${ ok ? 'text-green-400' : 'text-gray-600' }`}>
+                                                <span>{ok ? '✓' : '○'}</span>{label}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Confirm Password */}
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Confirm Password</label>
+                                    <div className="relative">
+                                        <LockIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                                        <input
+                                            type={showConfirmPw ? 'text' : 'password'}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            maxLength={16}
+                                            className={`w-full bg-black/60 border focus:border-[#ec028b] rounded-xl pl-11 pr-11 py-2.5 text-sm text-white outline-none transition-all ${
+                                                confirmPassword && confirmPassword !== newPassword ? 'border-red-500/60' : 'border-gray-800'
+                                            }`}
+                                            placeholder="••••••••"
+                                        />
+                                        <button type="button" onClick={() => setShowConfirmPw(p => !p)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-400 transition-colors">
+                                            {showConfirmPw ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                    {confirmPassword && confirmPassword !== newPassword && (
+                                        <p className="text-[9px] text-red-400 font-bold uppercase tracking-widest ml-1">Passwords do not match</p>
+                                    )}
+                                </div>
+
+                                {/* History notice */}
+                                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                    <LockIcon className="w-3 h-3" /> Cannot reuse your last 5 passwords
+                                </p>
+
+                                {pwError && (
+                                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+                                        <p className="text-red-400 text-xs font-bold">{pwError}</p>
+                                    </div>
+                                )}
+
+                                <div className="flex gap-3 pt-1">
+                                    <Button type="button" onClick={() => setShowPwModal(false)} disabled={pwSubmitting} className="flex-1 bg-gray-900 border-gray-800 text-gray-500 hover:text-white disabled:opacity-40">
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        onClick={handleChangePassword}
+                                        disabled={pwSubmitting || !newPassword || !confirmPassword}
+                                        className="flex-[2] bg-[#ec028b] hover:bg-[#ff039a] text-white disabled:opacity-50"
+                                    >
+                                        {pwSubmitting ? (
+                                            <span className="flex items-center gap-2">
+                                                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                Saving...
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-2"><LockIcon className="w-4 h-4" /> Save Password</span>
+                                        )}
+                                    </Button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
