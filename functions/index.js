@@ -346,7 +346,7 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
                 return res.status(401).json({ error: 'Invalid webhook signature.' });
             }
         } else {
-            // Log but do not reject — older webhooks may not include signature headers
+            // Log but do not reject Ã¢â‚¬â€ older webhooks may not include signature headers
             console.warn('No x-justcall-signature-version header. Proceeding without verification.');
         }
 
@@ -803,14 +803,14 @@ exports.getJustCallCommunications = functions.https.onRequest((req, res) => {
     });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SMS OTP — Forgot Password (ported from smsotp repo)
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// SMS OTP Ã¢â‚¬â€ Forgot Password (ported from smsotp repo)
 // Uses: JustCall v2.1 API, Firestore otp_codes + otp_rate_limits
-// ─────────────────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 const JWT_SECRET = process.env.JWT_SECRET || 'rhive_otp_reset_secret_at_least_32_chars_long';
 
-/** Normalise any phone format → E.164 */
+/** Normalise any phone format Ã¢â€ â€™ E.164 */
 function normalizePhone(phone) {
     if (!phone) return '';
     const trimmed = phone.trim();
@@ -866,7 +866,7 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
             const now = Date.now();
             const oneMinuteAgo = now - 60000;
 
-            // ── Rate Limiting (3 per minute per phone) ──────────────────────
+            // Ã¢â€â‚¬Ã¢â€â‚¬ Rate Limiting (3 per minute per phone) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
             const rateLimitRef = db.collection('otp_rate_limits').doc(normalizedPhone.replace(/\+/g, ''));
             const rateLimitSnap = await rateLimitRef.get();
             let timestamps = [];
@@ -882,7 +882,7 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
             timestamps.push(now);
             await rateLimitRef.set({ timestamps });
 
-            // ── Verify user exists in Firestore users collection ─────────────
+            // Ã¢â€â‚¬Ã¢â€â‚¬ Verify user exists in Firestore users collection Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
             const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
             if (usersSnap.empty) {
                 // Also try without normalizing (stored formats may vary)
@@ -892,11 +892,11 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
                 }
             }
 
-            // ── Generate 6-digit OTP ─────────────────────────────────────────
+            // Ã¢â€â‚¬Ã¢â€â‚¬ Generate 6-digit OTP Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
             const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
             const expiresAt = new Date(now + 5 * 60000).toISOString(); // 5 minutes
 
-            // ── Save OTP to Firestore ────────────────────────────────────────
+            // Ã¢â€â‚¬Ã¢â€â‚¬ Save OTP to Firestore Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
             const otpDocId = normalizedPhone.replace(/\+/g, '');
             await db.collection('otp_codes').doc(otpDocId).set({
                 code: otpCode,
@@ -906,7 +906,7 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
                 createdAt: new Date().toISOString()
             });
 
-            // ── Send SMS via JustCall v2.1 ───────────────────────────────────
+            // Ã¢â€â‚¬Ã¢â€â‚¬ Send SMS via JustCall v2.1 Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
             // Read inline at call time so runtime env vars are picked up
             const apiKey = process.env.JUSTCALL_API_KEY || '';
             const apiSecret = process.env.JUSTCALL_API_SECRET || '';
@@ -1511,10 +1511,12 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
 });
 
 
+
 /**
- * sendSignVerifyEmail � sends the customer their Sign & Verify portal link.
+ * sendSignVerifyEmail - sends the customer their Sign & Verify portal link via email.
  * Body: { projectId, customerEmail, customerName, projectName, link }
- * Uses SMTP_USER/SMTP_PASS env vars (Gmail). Falls back to Firestore-only.
+ * Uses the Firestore 'mail' collection (Firebase Trigger Email extension) -
+ * same mechanism as password-change notifications. Always queues if customerEmail provided.
  */
 exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
     return cors(req, res, async () => {
@@ -1523,35 +1525,119 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
         if (!projectId || !link) return res.status(400).json({ error: 'projectId and link are required' });
         const db = admin.firestore();
         try {
+            // 1. Persist link + status to the project/lead document
             for (const colName of ['projects', 'leads']) {
                 const ref = db.collection(colName).doc(projectId);
                 const snap = await ref.get();
                 if (snap.exists) {
-                    await ref.update({ sign_verify_link: link, sign_verify_sent_at: admin.firestore.FieldValue.serverTimestamp(), sign_verify_status: 'link_sent', updated_at: new Date().toISOString() });
+                    await ref.update({
+                        sign_verify_link: link,
+                        sign_verify_sent_at: admin.firestore.FieldValue.serverTimestamp(),
+                        sign_verify_status: 'link_sent',
+                        updated_at: new Date().toISOString(),
+                    });
                     break;
                 }
             }
-            const SMTP_USER = process.env.SMTP_USER;
-            const SMTP_PASS = process.env.SMTP_PASS;
-            if (SMTP_USER && SMTP_PASS && customerEmail) {
-                try {
-                    const nodemailer = require('nodemailer');
-                    const t = nodemailer.createTransporter({ service: 'gmail', auth: { user: SMTP_USER, pass: SMTP_PASS } });
-                    const name = customerName || 'Valued Customer';
-                    const proj = projectName || 'Your Roofing Project';
-                    await t.sendMail({
-                        from: `"RHIVE Construction" <${SMTP_USER}>`,
-                        to: customerEmail,
-                        subject: `Action Required: Verify Your Roofing Project � ${proj}`,
-                        text: `Hello ${name},\n\nPlease complete your Sign & Verify for "${proj}":\n${link}\n\nYou will need to enter your insurance policy claim number, upload your claim document, select your payment method (Deductible or ACV), and confirm your authorization agreement.\n\nQuestions? Call us at (801) 441-0024.\n\nRHIVE Construction`,
-                        html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#000;color:#fff;padding:40px;"><img src="https://i.imgur.com/t0VcSgJ.png" height="40" alt="RHIVE"/><h2 style="color:#fff;">Hello, ${name}</h2><p style="color:#9ca3af;">Your RHIVE rep has started the Sign &amp; Verify process for: <strong style="color:#fff;">${proj}</strong></p><p style="color:#9ca3af;">Please complete:</p><ul style="color:#9ca3af;"><li>Insurance policy claim number</li><li>Policy claim document upload</li><li>Payment method: Deductible or ACV</li><li>Authorization agreement</li></ul><a href="${link}" style="display:inline-block;background:#ec028b;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:800;margin-top:16px;">Complete Verification</a><p style="color:#6b7280;font-size:12px;margin-top:24px;">Or copy: ${link}</p><p style="color:#374151;font-size:11px;">RHIVE Construction &bull; (801) 441-0024</p></body></html>`
-                    });
-                    return res.status(200).json({ success: true, emailSent: true, link });
-                } catch (emailErr) {
-                    return res.status(200).json({ success: true, emailSent: false, link, warning: 'Email failed � link saved to Firestore.', emailError: emailErr.message });
-                }
+
+            // 2. Queue email via Firestore 'mail' collection (Firebase Trigger Email extension)
+            if (customerEmail) {
+                const name = customerName || 'Valued Customer';
+                const proj = projectName || 'Your Roofing Project';
+
+                const htmlParts = [
+                    '<!DOCTYPE html><html><head>',
+                    '<meta charset="utf-8" />',
+                    '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
+                    '<title>Action Required: Complete Your Sign &amp; Verify - RHIVE Construction</title>',
+                    '</head>',
+                    '<body style="margin:0;padding:0;background:#050505;font-family:Rubik,Arial,sans-serif;color:#f3f4f6;">',
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;">',
+                    '<tr><td align="center">',
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;border-radius:4px;overflow:hidden;max-width:560px;">',
+                    '<tr><td style="background:#ec028b;padding:4px 0;"></td></tr>',
+                    '<tr><td style="padding:32px 36px 20px;">',
+                    '<h1 style="margin:0 0 4px;font-size:22px;font-weight:800;color:#ffffff;">RHIVE <span style="color:#ec028b;">Construction</span></h1>',
+                    '<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Sign &amp; Verify Portal</p>',
+                    '</td></tr>',
+                    '<tr><td style="padding:0 36px 32px;">',
+                    '<h2 style="margin:0 0 16px;font-size:18px;font-weight:700;color:#ffffff;">Action Required: Complete Your Verification</h2>',
+                    '<p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#d1d5db;">Hello <strong style="color:#ffffff;">' + name + '</strong>,</p>',
+                    '<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#9ca3af;">Your RHIVE Construction representative has initiated the Sign &amp; Verify process for your project: <strong style="color:#ffffff;">' + proj + '</strong>.</p>',
+                    '<p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#9ca3af;">Please complete the following steps through our secure portal:</p>',
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #ec028b;border-radius:0 4px 4px 0;margin-bottom:28px;">',
+                    '<tr><td style="padding:16px 20px;">',
+                    '<p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#f3f4f6;">&#x2714; What you will need to provide:</p>',
+                    '<ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.8;color:#9ca3af;">',
+                    '<li>Insurance policy claim number</li>',
+                    '<li>Upload your insurance claim document</li>',
+                    '<li>Select payment method: Deductible or ACV</li>',
+                    '<li>Sign your authorization agreement</li>',
+                    '</ul>',
+                    '</td></tr>',
+                    '</table>',
+                    '<table cellpadding="0" cellspacing="0" style="margin-bottom:20px;">',
+                    '<tr><td style="background:#ec028b;border-radius:3px;">',
+                    '<a href="' + link + '" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">Complete Verification &#x2192;</a>',
+                    '</td></tr>',
+                    '</table>',
+                    '<p style="margin:0 0 28px;font-size:11px;color:#4b5563;word-break:break-all;">Or copy this link: <a href="' + link + '" style="color:#6b7280;text-decoration:none;">' + link + '</a></p>',
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border:1px solid #1f2937;border-radius:4px;margin-bottom:8px;">',
+                    '<tr><td style="padding:12px 16px;">',
+                    '<p style="margin:0;font-size:12px;color:#9ca3af;">&#128222; Questions? Call us at <a href="tel:+18014410024" style="color:#ec028b;text-decoration:none;">(801) 441-0024</a></p>',
+                    '</td></tr>',
+                    '</table>',
+                    '</td></tr>',
+                    '<tr><td style="padding:20px 36px;border-top:1px solid #1f2937;">',
+                    '<p style="margin:0;font-size:11px;color:#4b5563;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia<br/><a href="mailto:support@rhiveconstruction.com" style="color:#6b7280;text-decoration:none;">support@rhiveconstruction.com</a></p>',
+                    '</td></tr>',
+                    '<tr><td style="background:#ec028b;padding:2px 0;"></td></tr>',
+                    '</table>',
+                    '</td></tr>',
+                    '</table>',
+                    '</body></html>'
+                ];
+
+                const plainText = [
+                    'RHIVE Construction - Sign & Verify Portal',
+                    '',
+                    'Hello ' + name + ',',
+                    '',
+                    'Action Required: Complete Your Verification for "' + proj + '"',
+                    '',
+                    'Your RHIVE Construction representative has initiated the Sign & Verify process.',
+                    '',
+                    'Please complete the following steps through our secure portal:',
+                    '  - Insurance policy claim number',
+                    '  - Upload your insurance claim document',
+                    '  - Select payment method: Deductible or ACV',
+                    '  - Sign your authorization agreement',
+                    '',
+                    'Complete your verification here:',
+                    link,
+                    '',
+                    'Questions? Call us at (801) 441-0024',
+                    'Email: support@rhiveconstruction.com',
+                    '',
+                    '- RHIVE Construction - Brisbane, QLD - Australia'
+                ].join('\n');
+
+                await db.collection('mail').add({
+                    to: customerEmail,
+                    from: 'RHIVE Construction <support@rhiveconstruction.com>',
+                    message: {
+                        subject: `Action Required: Complete Your Sign & Verify - ${proj}`,
+                        text: plainText,
+                        html: htmlParts.join(''),
+                    },
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+
+                console.log(`[sendSignVerifyEmail] Email queued via 'mail' collection for: ${customerEmail}`);
+                return res.status(200).json({ success: true, emailSent: true, link });
             }
-            return res.status(200).json({ success: true, emailSent: false, link, message: 'Link saved to Firestore. Add SMTP_USER/SMTP_PASS to enable email.' });
+
+            return res.status(200).json({ success: true, emailSent: false, link, message: 'No customer email provided. Link saved to Firestore.' });
         } catch (error) {
             console.error('[sendSignVerifyEmail]', error);
             return res.status(500).json({ error: error.message });

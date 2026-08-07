@@ -131,6 +131,7 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
     const [scopeFile, setScopeFile] = useState<File | null>(null);
     const [sending, setSending] = useState(false);
     const [linkSent, setLinkSent] = useState(false);
+    const [emailQueued, setEmailQueued] = useState<boolean | null>(null); // null = not attempted
     const [generatedLink, setGeneratedLink] = useState<string>('');
     const [copyDone, setCopyDone] = useState(false);
     const [saveError, setSaveError] = useState('');
@@ -166,10 +167,10 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                 updated_at: new Date().toISOString(),
             });
 
-            // Attempt to call Cloud Function email endpoint (non-blocking — graceful fallback)
+            // Call Cloud Function to queue email via Firestore 'mail' collection
             try {
                 const fnUrl = `https://us-central1-rhive-os.cloudfunctions.net/sendSignVerifyEmail`;
-                await fetch(fnUrl, {
+                const fnRes = await fetch(fnUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -180,8 +181,11 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                         link,
                     }),
                 });
+                const fnData = await fnRes.json().catch(() => ({}));
+                setEmailQueued(fnData.emailSent === true);
             } catch {
-                // Email function may not be deployed yet — link is still saved to Firestore
+                // Cloud Function unavailable — link is still saved to Firestore
+                setEmailQueued(false);
             }
 
             setLinkSent(true);
@@ -298,7 +302,33 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                                         Link sent — awaiting customer completion
                                     </div>
 
-                                    {/* ── Copyable link fallback ── */}
+                                    {/* ═══ Email delivery status ═══ */}
+                                    {emailQueued === true && customerEmail && (
+                                        <div className="flex items-start gap-2 p-2.5 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
+                                            <EnvelopeIcon className="w-4 h-4 text-emerald-400 flex-none mt-0.5" />
+                                            <div>
+                                                <p className="text-emerald-400 text-xs font-bold">Email sent</p>
+                                                <p className="text-gray-500 text-[11px] mt-0.5">Verification link emailed to <span className="text-gray-400 font-mono">{customerEmail}</span></p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {emailQueued === false && customerEmail && (
+                                        <div className="flex items-start gap-2 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                                            <EnvelopeIcon className="w-4 h-4 text-amber-400 flex-none mt-0.5" />
+                                            <div>
+                                                <p className="text-amber-400 text-xs font-bold">Email queuing failed</p>
+                                                <p className="text-gray-500 text-[11px] mt-0.5">Copy the link below and share with <span className="text-gray-400 font-mono">{customerEmail}</span></p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {!customerEmail && (
+                                        <div className="flex items-start gap-2 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                                            <EnvelopeIcon className="w-4 h-4 text-amber-400 flex-none mt-0.5" />
+                                            <p className="text-amber-400 text-xs">No email on file — share the link below manually.</p>
+                                        </div>
+                                    )}
+
+                                    {/* ═══ Copyable link fallback ═══ */}
                                     {generatedLink && (
                                         <div className="space-y-1">
                                             <p className="text-[10px] text-gray-600 uppercase font-bold tracking-widest">
@@ -327,7 +357,7 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                                         id="sv-resend-link-btn"
                                         variant="secondary"
                                         className="w-full flex items-center justify-center gap-2"
-                                        onClick={() => { setLinkSent(false); setGeneratedLink(''); }}
+                                        onClick={() => { setLinkSent(false); setGeneratedLink(''); setEmailQueued(null); }}
                                     >
                                         <EnvelopeIcon className="w-4 h-4" />
                                         Resend Link
