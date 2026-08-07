@@ -52,6 +52,11 @@ const UserManagementPage: React.FC = () => {
     const [pwSuccess, setPwSuccess] = useState(false);
     const [pwSubmitting, setPwSubmitting] = useState(false);
 
+    // Email change confirmation modal state
+    const [emailConfirmUser, setEmailConfirmUser] = useState<User | null>(null);
+    const [pendingEmailChange, setPendingEmailChange] = useState('');
+    const [emailConfirmSubmitting, setEmailConfirmSubmitting] = useState(false);
+    const [emailConfirmError, setEmailConfirmError] = useState('');
 
     // Form state
     const [formData, setFormData] = useState({
@@ -253,7 +258,17 @@ const UserManagementPage: React.FC = () => {
 
         try {
             if (editingUser) {
-                // ── EDIT: update Firestore profile — email is immutable after creation ──
+                // ── EDIT: if email changed, route to confirmation modal first ──
+                const emailChanged = formData.email.trim().toLowerCase() !== (editingUser.email || '').toLowerCase();
+                if (emailChanged) {
+                    setPendingEmailChange(formData.email.trim().toLowerCase());
+                    setEmailConfirmUser(editingUser);
+                    setEmailConfirmError('');
+                    setSubmitting(false);
+                    return;
+                }
+
+                // Email unchanged — save name, role, phone only
                 const now = new Date().toISOString();
                 const payload: Record<string, any> = {
                     name: formData.name.trim(),
@@ -261,7 +276,6 @@ const UserManagementPage: React.FC = () => {
                     phone: formData.phone,
                     updated_at: now
                 };
-                // Do NOT include email in payload — it cannot change
                 const result = await userService.update(editingUser.id, payload);
                 if (!result?.success && result?.error) {
                     throw new Error(result.error);
@@ -318,6 +332,48 @@ const UserManagementPage: React.FC = () => {
         }
     };
 
+    const handleConfirmEmailChange = async () => {
+        if (!emailConfirmUser) return;
+        setEmailConfirmSubmitting(true);
+        setEmailConfirmError('');
+        try {
+            const now = new Date().toISOString();
+            const payload: Record<string, any> = {
+                name: formData.name.trim(),
+                role: formData.role,
+                phone: formData.phone,
+                email: pendingEmailChange,
+                updated_at: now
+            };
+            const result = await userService.update(emailConfirmUser.id, payload);
+            if (!result?.success && result?.error) {
+                throw new Error(result.error);
+            }
+            userLogService.logAction(
+                'USER_EMAIL_CHANGED',
+                `Email for "${emailConfirmUser.name}" changed by ${currentUser?.name ?? 'Admin'}`,
+                {
+                    targetUserId: emailConfirmUser.id,
+                    targetUserName: emailConfirmUser.name,
+                    oldEmail: emailConfirmUser.email,
+                    newEmail: pendingEmailChange,
+                    changedBy: currentUser?.id,
+                    changedByName: currentUser?.name,
+                    changedByRole: currentUser?.role,
+                    changedAt: now
+                }
+            );
+            setEmailConfirmUser(null);
+            setPendingEmailChange('');
+            setIsModalOpen(false);
+            setEditingUser(null);
+        } catch (err: any) {
+            setEmailConfirmError(err?.message || 'Failed to update email. Please try again.');
+        } finally {
+            setEmailConfirmSubmitting(false);
+        }
+    };
+
     const getRoleBadgeColor = (role: string) => {
         switch (role) {
             case 'Super Admin': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
@@ -339,7 +395,6 @@ const UserManagementPage: React.FC = () => {
     return (
         <PageContainer
             title="User Management"
-            description="Manage organizational access, security roles, and user credentials from a centralized protocol."
             headerAction={
                 <Button onClick={handleOpenAdd} className="bg-[#ec028b] hover:bg-[#ff039a] text-white">
                     <PlusIcon className="w-4 h-4 mr-2" />
@@ -477,12 +532,11 @@ const UserManagementPage: React.FC = () => {
                     <div className="relative w-full max-w-lg bg-[#0c0c0e] border border-gray-800 rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
                         <div className="p-6 border-b border-gray-800 bg-black/40 flex justify-between items-center">
                             <div>
-                                <h3 className="text-xl font-black text-white uppercase tracking-widest leading-none mb-1">
-                                    {editingUser ? 'Edit Internal User' : 'Register New User'}
+                                <h3 className="text-xl font-black text-white uppercase tracking-widest leading-none">
+                                    {editingUser ? 'Edit User Profile' : 'Register New User'}
                                 </h3>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">RHIVE Security Protocol v2.5</p>
                             </div>
-                            <button onClick={() => !submitting && setIsModalOpen(false)} className="text-gray-500 hover:text-white transition-colors">
+                            <button onClick={() => !submitting && setIsModalOpen(false)} className="text-gray-500 hover:text-white transition-colors" id="close-user-modal" aria-label="Close modal">
                                 <XMarkIcon className="w-6 h-6" />
                             </button>
                         </div>
@@ -560,21 +614,16 @@ const UserManagementPage: React.FC = () => {
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Email Address</label>
                                 <input
-                                    required={!editingUser}
+                                    required
                                     type="email"
                                     value={formData.email}
-                                    disabled={!!editingUser}
-                                    readOnly={!!editingUser}
-                                    onChange={(e) => !editingUser && setFormData({ ...formData, email: e.target.value })}
-                                    className={cn(
-                                        "w-full bg-black/60 border border-gray-800 focus:border-[#ec028b] rounded-xl px-4 py-3 text-sm text-white outline-none transition-all",
-                                        editingUser && "opacity-40 cursor-not-allowed select-none"
-                                    )}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full bg-black/60 border border-gray-800 focus:border-[#ec028b] rounded-xl px-4 py-3 text-sm text-white outline-none transition-all"
                                     placeholder="user@rhive.industries"
+                                    id="edit-user-email"
                                 />
-
                                 {editingUser && (
-                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-1">Email cannot be changed after registration</p>
+                                    <p className="text-[9px] text-[#ec028b]/60 font-bold uppercase tracking-widest ml-1">Changing email will update login credentials</p>
                                 )}
                             </div>
 
@@ -736,6 +785,96 @@ const UserManagementPage: React.FC = () => {
                                     </div>
                                 </>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Email Change Confirmation Modal ─────────────────────── */}
+            {emailConfirmUser && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !emailConfirmSubmitting && setEmailConfirmUser(null)} />
+                    <div className="relative w-full max-w-md bg-[#0c0c0e] border border-[#ec028b]/30 rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
+
+                        {/* Header */}
+                        <div className="p-6 border-b border-gray-800 bg-black/40 flex justify-between items-center">
+                            <h3 className="text-xl font-black text-white uppercase tracking-widest leading-none">Confirm Email Change</h3>
+                            <button
+                                onClick={() => !emailConfirmSubmitting && setEmailConfirmUser(null)}
+                                className="text-gray-500 hover:text-white transition-colors"
+                                id="close-email-confirm-modal"
+                                aria-label="Close email confirmation"
+                            >
+                                <XMarkIcon className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-5">
+                            {/* User preview */}
+                            <div className="flex items-center gap-3 bg-gray-900/60 border border-gray-800 rounded-xl p-3">
+                                <div className="w-9 h-9 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-[#ec028b]">
+                                    {emailConfirmUser.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <p className="text-white font-bold text-sm leading-none">{emailConfirmUser.name}</p>
+                                    <p className="text-gray-500 text-xs mt-0.5">{emailConfirmUser.role}</p>
+                                </div>
+                            </div>
+
+                            {/* Before / After */}
+                            <div className="space-y-2">
+                                <div className="bg-gray-900/40 border border-gray-800 rounded-xl px-4 py-3">
+                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mb-1">Current Email</p>
+                                    <p className="text-gray-300 text-sm font-mono">{emailConfirmUser.email || '—'}</p>
+                                </div>
+                                <div className="flex items-center justify-center text-gray-600 text-xs">↓</div>
+                                <div className="bg-[#ec028b]/5 border border-[#ec028b]/30 rounded-xl px-4 py-3">
+                                    <p className="text-[9px] text-[#ec028b]/70 font-bold uppercase tracking-widest mb-1">New Email</p>
+                                    <p className="text-white text-sm font-mono">{pendingEmailChange}</p>
+                                </div>
+                            </div>
+
+                            {/* Warning */}
+                            <div className="flex items-start gap-3 bg-yellow-500/5 border border-yellow-500/20 rounded-xl px-4 py-3">
+                                <EnvelopeIcon className="w-4 h-4 text-yellow-500/60 shrink-0 mt-0.5" />
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed">
+                                    This will update the user's login email. Make sure the new address is correct before confirming.
+                                </p>
+                            </div>
+
+                            {emailConfirmError && (
+                                <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+                                    <p className="text-red-400 text-xs font-bold">{emailConfirmError}</p>
+                                </div>
+                            )}
+
+                            <div className="flex gap-4 pt-1">
+                                <Button
+                                    type="button"
+                                    onClick={() => setEmailConfirmUser(null)}
+                                    disabled={emailConfirmSubmitting}
+                                    className="flex-1 bg-gray-900 border-gray-800 text-gray-500 hover:text-white disabled:opacity-40"
+                                    id="cancel-email-change"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={handleConfirmEmailChange}
+                                    disabled={emailConfirmSubmitting}
+                                    className="flex-[2] bg-[#ec028b] hover:bg-[#ff039a] text-white disabled:opacity-60"
+                                    id="confirm-email-change"
+                                >
+                                    {emailConfirmSubmitting ? (
+                                        <span className="flex items-center gap-2">
+                                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Saving...
+                                        </span>
+                                    ) : (
+                                        'Confirm'
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
