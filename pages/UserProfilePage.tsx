@@ -129,11 +129,15 @@ const UserProfilePage: React.FC = () => {
 
     // ── Edit form state ────────────────────────────────────────────────────────
     const [editName, setEditName] = useState('');
+    const [editEmail, setEditEmail] = useState('');
     const [editPhone, setEditPhone] = useState('');
     const [editAddress, setEditAddress] = useState('');
     const [editDepartment, setEditDepartment] = useState('');
     const [editRole, setEditRole] = useState<UserType>('Employee');
     const [editAvatarUrl, setEditAvatarUrl] = useState('');
+
+    // ── Email confirmation modal state ─────────────────────────────────────────
+    const [pendingEmailChange, setPendingEmailChange] = useState<{ oldEmail: string; newEmail: string } | null>(null);
 
 
     // ── Load user from Firestore (direct fetch + live subscribe) ───────────────
@@ -189,6 +193,7 @@ const UserProfilePage: React.FC = () => {
     const openEdit = () => {
         if (!user) return;
         setEditName(user.name);
+        setEditEmail(user.email || '');
         setEditPhone(user.phone || '');
         setEditAddress(user.address || '');
         setEditDepartment(user.department || '');
@@ -220,6 +225,19 @@ const UserProfilePage: React.FC = () => {
             return;
         }
 
+        // If email changed, show confirmation modal first
+        const emailChanged = editEmail.trim().toLowerCase() !== (user.email || '').toLowerCase();
+        if (emailChanged && user.email) {
+            setPendingEmailChange({ oldEmail: user.email, newEmail: editEmail.trim() });
+            return;
+        }
+
+        await performSave();
+    };
+
+    // ── Shared save logic ──────────────────────────────────────────────────────
+    const performSave = async () => {
+        if (!user) return;
         setSaving(true);
         setSaveError('');
 
@@ -227,6 +245,7 @@ const UserProfilePage: React.FC = () => {
             const now = new Date().toISOString();
             const payload: Partial<User> = {
                 name: editName.trim(),
+                email: editEmail.trim(),
                 phone: editPhone.trim(),
                 address: editAddress.trim(),
                 department: editDepartment.trim(),
@@ -241,7 +260,6 @@ const UserProfilePage: React.FC = () => {
             const result = await userService.update(user.id, payload);
 
             if (result.success) {
-                // Log the action per SYSTEM_RULES §7.1
                 userLogService.logAction(
                     'USER_PROFILE_UPDATED',
                     `Profile for "${editName}" (${editRole}) updated by ${currentUser?.name ?? 'Unknown'}`,
@@ -249,7 +267,7 @@ const UserProfilePage: React.FC = () => {
                         recordId: user.id,
                         recordName: editName,
                         collection: 'users',
-                        changes: ['name', 'phone', 'address', 'department', 'role', 'avatarUrl'].filter(f => {
+                        changes: ['name', 'email', 'phone', 'address', 'department', 'role', 'avatarUrl'].filter(f => {
                             const old = (user as any)[f];
                             const nw = (payload as any)[f];
                             return old !== nw;
@@ -262,6 +280,7 @@ const UserProfilePage: React.FC = () => {
                 );
                 setSaveSuccess(true);
                 setIsEditing(false);
+                setPendingEmailChange(null);
                 setTimeout(() => setSaveSuccess(false), 3000);
             } else {
                 setSaveError(result.error || 'Update failed. Please try again.');
@@ -271,6 +290,17 @@ const UserProfilePage: React.FC = () => {
         } finally {
             setSaving(false);
         }
+    };
+
+    // ── Confirm email change ───────────────────────────────────────────────────
+    const handleConfirmEmailChange = async () => {
+        if (!user || !pendingEmailChange) return;
+        userLogService.logAction(
+            'USER_EMAIL_CHANGED',
+            `Email changed for "${user.name}" from ${pendingEmailChange.oldEmail} → ${pendingEmailChange.newEmail} by ${currentUser?.name ?? 'Unknown'}`,
+            { targetUserId: user.id, oldEmail: pendingEmailChange.oldEmail, newEmail: pendingEmailChange.newEmail }
+        );
+        await performSave();
     };
 
     // ── Back to User Management ────────────────────────────────────────────────
@@ -317,6 +347,7 @@ const UserProfilePage: React.FC = () => {
     // RENDER: Main Profile
     // ══════════════════════════════════════════════════════════════════════════
     return (
+        <>
         <PageContainer
             title="User Profile"
             description=""
@@ -499,14 +530,13 @@ const UserProfilePage: React.FC = () => {
 
                                     <EditField
                                         label="Email Address"
-                                        value={user.email || ''}
-                                        onChange={() => {}}
+                                        value={editEmail}
+                                        onChange={setEditEmail}
                                         type="email"
-                                        disabled
-                                        placeholder="Email cannot be changed here"
+                                        placeholder="user@example.com"
                                     />
-                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest -mt-2 ml-1">
-                                        Email cannot be changed after registration
+                                    <p className="text-[9px] text-amber-500/80 font-bold uppercase tracking-widest -mt-2 ml-1">
+                                        ⚠ Changing email updates login credentials
                                     </p>
 
                                     <EditField
@@ -640,6 +670,79 @@ const UserProfilePage: React.FC = () => {
                 </div>
             </div>
         </PageContainer>
+
+        {/* ── Email Change Confirmation Modal ──────────────────────────────── */}
+        {pendingEmailChange && user && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setPendingEmailChange(null)} />
+                <div className="relative w-full max-w-md bg-gray-950 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+                    {/* Pink top accent */}
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#ec028b] to-transparent" />
+
+                    <div className="p-6">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
+                                <EnvelopeIcon className="w-4 h-4 text-amber-400" />
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black text-[#ec028b] uppercase tracking-widest">Confirm Change</p>
+                                <h3 className="text-base font-black text-white">Update Email Address</h3>
+                            </div>
+                        </div>
+
+                        {/* User context */}
+                        <p className="text-xs text-gray-500 mb-4">
+                            You are changing the login email for{' '}
+                            <span className="text-white font-bold">{user.name}</span>{' '}
+                            <span className="text-[#ec028b] font-bold">({user.role})</span>.
+                        </p>
+
+                        {/* Before → After */}
+                        <div className="space-y-2 mb-5">
+                            <div className="bg-gray-900/60 border border-gray-800 rounded-xl px-4 py-2.5">
+                                <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest mb-0.5">Current Email</p>
+                                <p className="text-sm text-gray-400 font-mono">{pendingEmailChange.oldEmail}</p>
+                            </div>
+                            <div className="flex justify-center">
+                                <span className="text-[#ec028b] text-xs font-black">↓ changing to</span>
+                            </div>
+                            <div className="bg-[#ec028b]/5 border border-[#ec028b]/30 rounded-xl px-4 py-2.5">
+                                <p className="text-[9px] font-black text-[#ec028b]/60 uppercase tracking-widest mb-0.5">New Email</p>
+                                <p className="text-sm text-white font-mono font-bold">{pendingEmailChange.newEmail}</p>
+                            </div>
+                        </div>
+
+                        {/* Warning */}
+                        <p className="text-[10px] text-amber-500/70 font-bold bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2 mb-5">
+                            ⚠ This will update the user's login credentials. The user must sign in with the new email.
+                        </p>
+
+                        {/* Actions */}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setPendingEmailChange(null)}
+                                className="flex-1 px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-sm font-bold text-gray-400 hover:text-white transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmEmailChange}
+                                disabled={saving}
+                                className="flex-[2] px-4 py-2.5 bg-[#ec028b] hover:bg-[#ff039a] rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                            >
+                                {saving ? (
+                                    <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</>
+                                ) : (
+                                    <><CheckIcon className="w-4 h-4" /> Confirm Change</>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+    </>
     );
 };
 
