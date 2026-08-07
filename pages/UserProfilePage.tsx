@@ -109,15 +109,6 @@ const EditField: React.FC<{
 // ═══════════════════════════════════════════════════════════════════════════════
 // Main Page
 // ═══════════════════════════════════════════════════════════════════════════════
-// ── Activity log entry type ───────────────────────────────────────────────────
-interface ActivityEntry {
-    id?: string;
-    actionType: string;
-    description: string;
-    userName: string;
-    userRole: string;
-    timestamp: string;
-}
 
 const UserProfilePage: React.FC = () => {
     const { currentUser } = useMockDB();
@@ -144,8 +135,6 @@ const UserProfilePage: React.FC = () => {
     const [editRole, setEditRole] = useState<UserType>('Employee');
     const [editAvatarUrl, setEditAvatarUrl] = useState('');
 
-    // ── Activity log ───────────────────────────────────────────────────────────
-    const [activityLog, setActivityLog] = useState<ActivityEntry[]>([]);
 
     // ── Load user from Firestore (direct fetch + live subscribe) ───────────────
     useEffect(() => {
@@ -184,22 +173,6 @@ const UserProfilePage: React.FC = () => {
         return () => unsub();
     }, [selectedUserId]);
 
-    // ── Subscribe to activity log for this user ───────────────────────────────
-    useEffect(() => {
-        if (!selectedUserId) return;
-        const unsub = userLogService.subscribe((allLogs: any[]) => {
-            const relevant = allLogs
-                .filter((log) =>
-                    log.userId === selectedUserId ||
-                    log.payload?.targetUserId === selectedUserId ||
-                    log.payload?.recordId === selectedUserId
-                )
-                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                .slice(0, 30);
-            setActivityLog(relevant);
-        });
-        return () => unsub();
-    }, [selectedUserId]);
 
     // ── Log page access ────────────────────────────────────────────────────────
     useEffect(() => {
@@ -291,7 +264,7 @@ const UserProfilePage: React.FC = () => {
                 setIsEditing(false);
                 setTimeout(() => setSaveSuccess(false), 3000);
             } else {
-                setSaveError(result.error || 'Firestore update failed. Please try again.');
+                setSaveError(result.error || 'Update failed. Please try again.');
             }
         } catch (err: any) {
             setSaveError(err?.message || 'An unexpected error occurred.');
@@ -662,45 +635,6 @@ const UserProfilePage: React.FC = () => {
                                 </p>
                             </div>
                         )}
-
-                        {/* ── Activity Log card ─────────────────────────────────── */}
-                        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-800 bg-black/20 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <ClockIcon className="w-4 h-4 text-[#ec028b]" />
-                                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Activity Log</span>
-                                </div>
-                                {activityLog.length > 0 && (
-                                    <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest border border-gray-800 px-2 py-0.5 rounded">
-                                        {activityLog.length} {activityLog.length === 1 ? 'entry' : 'entries'}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="divide-y divide-gray-800/60">
-                                {activityLog.length === 0 ? (
-                                    <div className="px-6 py-8 text-center">
-                                        <ClockIcon className="w-8 h-8 text-gray-700 mx-auto mb-2" />
-                                        <p className="text-xs text-gray-600 italic">No activity recorded yet.</p>
-                                    </div>
-                                ) : (
-                                    activityLog.map((entry, idx) => (
-                                        <div key={entry.id || idx} className="px-6 py-3 flex items-start gap-3 hover:bg-white/[0.02] transition-colors">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-[#ec028b] mt-2 shrink-0 shadow-[0_0_6px_#ec028b]" />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[11px] text-gray-300 leading-snug">{entry.description}</p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-[9px] font-bold text-[#ec028b]/70 uppercase tracking-widest">{entry.actionType.replace(/_/g, ' ')}</span>
-                                                    <span className="text-[9px] text-gray-700">·</span>
-                                                    <span className="text-[9px] text-gray-600">{entry.userName}</span>
-                                                    <span className="text-[9px] text-gray-700">·</span>
-                                                    <span className="text-[9px] text-gray-600">{formatDate(entry.timestamp)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
 
                     </div>
                 </div>

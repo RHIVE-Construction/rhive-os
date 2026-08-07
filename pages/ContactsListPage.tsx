@@ -177,7 +177,7 @@ const ContactsListPage: React.FC = () => {
     return (
         <PageContainer
             title="Contacts"
-            description={`${contacts.length} contact${contacts.length !== 1 ? 's' : ''} synced from Firestore`}
+            description={`${contacts.length} contact${contacts.length !== 1 ? 's' : ''} synced`}
         >
             {/* Toolbar */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -251,7 +251,7 @@ const ContactsListPage: React.FC = () => {
                     <p className="text-gray-500 text-sm mt-2 text-center max-w-sm">
                         {search
                             ? `No contacts matching "${search}".`
-                            : 'No contacts in Firestore yet. Import contacts using the import script.'}
+                            : 'No contacts found. Import contacts using the import script.'}
                     </p>
                 </div>
             ) : (
