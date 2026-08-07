@@ -200,6 +200,8 @@ export interface User {
     updated_by?: string;        // Display name of last editor
     updated_by_id?: string;     // Firestore ID of last editor
     password_updated_at?: string; // ISO timestamp of last password change
+    password_history?: string[];  // Last 5 password hashes (oldest first) for repeat-detection
+
     // Google Calendar sync metadata
     googleCalendarLinked?: boolean;
     googleCalendarEmail?: string;
