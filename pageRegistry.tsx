@@ -130,7 +130,8 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-09': ContractorSignupPage,
   'P-10': PublicCareersPage,
   'P-11': JobApplicationPage,
-  'P-12': EstimateToolPage,
+  'estimate-tool': EstimateToolPage, // Canonical key — maps to /estimate-tool clean URL
+  'P-12': EstimateToolPage,           // Alias kept for backward-compat (setActivePageId call sites)
   'P-13': InsurancePage,
   'P-14': MaintenancePage,
   'P-Landing': UniversalLandingPage,
@@ -173,7 +174,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-24': ContactsVendorsPage,
   'E-25': ContactVendorProfilePage,
   'E-26': LeadPage,
-  'E-27': EstimateToolPage,
+  'E-27': EstimateToolPage,  // Sidebar entry (employee route — aliases to estimate-tool)
   'E-28': QuotePage,
   'E-29': SignAndVerifyPage,
   'E-30': SchedulePage,

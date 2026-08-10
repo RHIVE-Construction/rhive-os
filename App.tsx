@@ -37,7 +37,7 @@ const isPasswordResetFlow = (): boolean => {
 // Pages listed here are rendered as standalone website pages (no CRM chrome, no login required).
 // To add a new public URL: add an entry below and deploy — no other changes needed.
 const PATH_ROUTES: Record<string, string> = {
-    '/estimate-tool': 'P-12',
+    '/estimate-tool': 'estimate-tool',
     '/map':           'INTERNAL-BPM',
     // Uncomment to add more public URL pages:
     // '/insurance':   'P-13',
@@ -401,10 +401,10 @@ const LoginBridge: React.FC = () => {
     }
 
     // ── Authenticated users on Estimate Tool ──────────────────────────────────
-    // Render P-12 in the public layout when logged in to prevent the double
-    // CircuitryBackground conflict that causes a black screen in AppContentAuthenticated.
-    if (currentUser && activePageId === 'P-12') {
-        const EstimatePageComponent = pageComponentMap['P-12'];
+    // Render the estimate tool in the public layout when logged in to prevent the
+    // double CircuitryBackground conflict that causes a black screen.
+    if (currentUser && (activePageId === 'P-12' || activePageId === 'estimate-tool')) {
+        const EstimatePageComponent = pageComponentMap['estimate-tool'] ?? pageComponentMap['P-12'];
         return (
             <div className={cn(
                 "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",

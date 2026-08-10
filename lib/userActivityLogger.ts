@@ -183,6 +183,7 @@ export const PAGE_NAMES: Record<string, string> = {
     'P-09':    'Contractor Signup',
     'P-10':    'Public Careers',
     'P-11':    'Job Application',
+    'estimate-tool': 'Estimate Tool',
     'P-12':    'Estimate Tool',
     'P-13':    'Insurance',
     'P-14':    'Maintenance',
