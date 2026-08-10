@@ -373,7 +373,6 @@ const AddressScanInput = ({
                 }}
             >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                <Zap size={18} fill="currentColor" className="text-white" />
                 <span className="relative z-10">Scan My Roof</span>
             </button>
         </div>

@@ -163,8 +163,29 @@ const AppContentAuthenticated: React.FC = () => {
         const handleCustomNav = (e: any) => {
             if (e.detail) setActivePageId(e.detail);
         };
+        const handleRoofConfigurator = (e: any) => {
+            if (e.detail?.mode === 'estimate') {
+                sessionStorage.removeItem('estimateAddress');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('estimateAddress', e.detail.address);
+                }
+                setActivePageId('P-12');
+            } else {
+                sessionStorage.removeItem('intakeScopeType');
+                sessionStorage.removeItem('intakePurchaseIntent');
+                sessionStorage.removeItem('globalSearchQuery');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('globalSearchQuery', e.detail.address);
+                }
+                setActivePageId('E-02a');
+            }
+        };
         window.addEventListener('nav-page', handleCustomNav);
-        return () => window.removeEventListener('nav-page', handleCustomNav);
+        window.addEventListener('open-roof-configurator', handleRoofConfigurator);
+        return () => {
+            window.removeEventListener('nav-page', handleCustomNav);
+            window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
+        };
     }, [activePageId, setActivePageId, currentUser]);
 
     useEffect(() => {
@@ -200,15 +221,14 @@ const AppContentAuthenticated: React.FC = () => {
                 dotColor={isDark ? "#ec028b" : "#ec028b"}
                 lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
             />
-            {!isPublicRoute && <GlobalHeader />}
+            <GlobalHeader />
 
-            <div className={cn("relative z-10 flex h-full w-full", !isPublicRoute ? "pt-12" : "pt-0")}>
-                {!isPublicRoute && <Sidebar />}
+            <div className="relative z-10 flex h-full w-full pt-12">
+                <Sidebar />
                 <main 
                     ref={mainRef}
                     className={cn(
-                    "flex-1 h-full overflow-y-auto relative transition-colors duration-500",
-                    !isPublicRoute && "border-l",
+                    "flex-1 h-full overflow-y-auto relative transition-colors duration-500 border-l",
                     isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-black/5"
                 )}>
                     <CurrentPage />
@@ -259,11 +279,30 @@ const LoginBridge: React.FC = () => {
         const handleCustomNav = (e: any) => {
             if (e.detail) setActivePageId(e.detail);
         };
+        const handleRoofConfigurator = (e: any) => {
+            if (e.detail?.mode === 'estimate') {
+                sessionStorage.removeItem('estimateAddress');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('estimateAddress', e.detail.address);
+                }
+                setActivePageId('P-12');
+            } else {
+                sessionStorage.removeItem('intakeScopeType');
+                sessionStorage.removeItem('intakePurchaseIntent');
+                sessionStorage.removeItem('globalSearchQuery');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('globalSearchQuery', e.detail.address);
+                }
+                setActivePageId('E-02a');
+            }
+        };
         window.addEventListener('nav-page', handleCustomNav);
+        window.addEventListener('open-roof-configurator', handleRoofConfigurator);
 
         return () => {
             window.removeEventListener('popstate', handleUrlChange);
             window.removeEventListener('nav-page', handleCustomNav);
+            window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
         };
     }, [setActivePageId]);
 
@@ -369,30 +408,6 @@ const LoginBridge: React.FC = () => {
                 <HunniChatWidget />
                 <GlobalCustomerLookupModal />
                 <GlobalWeatherModal />
-                {window.location.hostname === 'localhost' && <DevNavigator />}
-            </div>
-        );
-    }
-
-    // ── Authenticated users on Estimate Tool ──────────────────────────────────
-    // Render P-12 in the public layout when logged in to prevent the double
-    // CircuitryBackground conflict that causes a black screen in AppContentAuthenticated.
-    if (currentUser && activePageId === 'P-12') {
-        const EstimatePageComponent = pageComponentMap['P-12'];
-        return (
-            <div className={cn(
-                "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
-                isDark ? "bg-black text-white" : "bg-[#F8F9FA] text-black"
-            )}>
-                <CircuitryBackground
-                    backgroundColor={isDark ? "#000000" : "#F8F9FA"}
-                    dotColor={isDark ? "#ec028b" : "#ec028b"}
-                    lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
-                />
-                <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto">
-                    {EstimatePageComponent && <EstimatePageComponent />}
-                </main>
-                <FloatingBackButton />
                 {window.location.hostname === 'localhost' && <DevNavigator />}
             </div>
         );
