@@ -4,6 +4,7 @@ import { Project, Property, User, ProjectStage, PROJECT_STAGES_ORDER } from '../
 import { contactService, userService, userLogService, firestoreService } from '../lib/firebaseService';
 import { session, initialUser } from '../lib/session';
 import { logUserActivity, LOG_ACTIONS } from '../lib/userActivityLogger';
+import { getIpLocation } from '../lib/ipLocationService';
 
 interface MockDatabaseContextType {
     users: User[];
@@ -253,7 +254,8 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     sessionUser.role = role as any;
                 }
                 setSessionUser(sessionUser);
-                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in via developer bypass`, { role: sessionUser.role }, sessionUser);
+                const ipData = await getIpLocation();
+                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in via developer bypass`, { role: sessionUser.role }, sessionUser, ipData);
                 return { success: true };
             }
         }
@@ -355,8 +357,13 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         if (!foundUser) {
+            const ipData = await getIpLocation();
             logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — account not found`, {
-                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown'
+                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
+                ipAddress: ipData.ip,
+                city: ipData.city,
+                region: ipData.region,
+                country: ipData.country,
             });
             return { success: false, error: 'No account found with this email address.' };
         }
@@ -374,8 +381,13 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // 3. Verify password — MUST come from Firestore (fromFirestore = true).
         //    If user was found from seed fallback (no password_hash), reject with a clear message.
         if (!fromFirestore && !foundUser?.password_hash) {
+            const ipData = await getIpLocation();
             logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login — credentials could not be verified (offline or seed user)`, {
-                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown'
+                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
+                ipAddress: ipData.ip,
+                city: ipData.city,
+                region: ipData.region,
+                country: ipData.country,
             });
             return { success: false, error: 'Could not verify credentials. Please check your connection and try again.' };
         }
@@ -387,16 +399,22 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     sessionUser.role = role as any;
                 }
                 setSessionUser(sessionUser);
-                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, { email: sessionUser.email }, sessionUser);
+                const ipData = await getIpLocation();
+                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, { email: sessionUser.email }, sessionUser, ipData);
                 return { success: true };
             }
             return { success: false, error: 'Invalid email or password.' };
         }
         const hashed = await hashPassword(password!);
         if (foundUser.password_hash !== hashed) {
+            const ipData = await getIpLocation();
             logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — incorrect password`, {
                 email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
-                role: foundUser.role
+                role: foundUser.role,
+                ipAddress: ipData.ip,
+                city: ipData.city,
+                region: ipData.region,
+                country: ipData.country,
             });
             return { success: false, error: 'Invalid email or password.' };
         }
@@ -406,7 +424,8 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             sessionUser.role = role as any;
         }
         setSessionUser(sessionUser);
-        userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully`, { email: sessionUser.email }, sessionUser);
+        const ipData = await getIpLocation();
+        userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully`, { email: sessionUser.email }, sessionUser, ipData);
         return { success: true };
     };
 

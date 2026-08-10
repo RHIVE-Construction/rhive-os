@@ -1421,6 +1421,15 @@ export interface UserLog {
     description: string;
     payload?: Record<string, any>;
     timestamp: string;
+    // IP geolocation fields — populated on login events
+    ipAddress?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    countryName?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    timezone?: string;
 }
 
 export const userLogService = {
@@ -1430,14 +1439,15 @@ export const userLogService = {
         actionType: string,
         description: string,
         payload?: Record<string, any>,
-        userContext?: { id: string; name: string; role: string }
+        userContext?: { id: string; name: string; role: string },
+        ipLocation?: { ip: string; city: string; region: string; country: string; countryName: string; latitude: number | null; longitude: number | null; timezone: string }
     ) => {
         const currentUser = userContext || session.read();
         const userId = currentUser?.id || 'anonymous';
         const userName = currentUser?.name || 'Anonymous';
         const userRole = currentUser?.role || 'Guest';
 
-        const logDoc = {
+        const logDoc: Record<string, any> = {
             userId,
             userName,
             userRole,
@@ -1454,8 +1464,20 @@ export const userLogService = {
                 ...(payload || {}),
             },
             timestamp: new Date().toISOString(),
-            read: false
+            read: false,
         };
+
+        // Attach IP geolocation when available (login events)
+        if (ipLocation) {
+            logDoc.ipAddress   = ipLocation.ip;
+            logDoc.city        = ipLocation.city;
+            logDoc.region      = ipLocation.region;
+            logDoc.country     = ipLocation.country;
+            logDoc.countryName = ipLocation.countryName;
+            logDoc.latitude    = ipLocation.latitude;
+            logDoc.longitude   = ipLocation.longitude;
+            logDoc.timezone    = ipLocation.timezone;
+        }
 
         try {
             const result = await firestoreService.addDocument('user_log', logDoc);
