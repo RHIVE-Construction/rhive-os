@@ -646,7 +646,8 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                                         )}
                                         <Button id="sv-resend-link-btn" variant="secondary"
                                             className="w-full flex items-center justify-center gap-2"
-                                            onClick={() => { setLinkSent(false); setGeneratedLink(''); }}>
+                                            onClick={() => { setLinkSent(false); setGeneratedLink(''); setEmailQueued(null); }}>
+
                                             <EnvelopeIcon className="w-4 h-4" /> Resend Link
                                         </Button>
                                     </div>
