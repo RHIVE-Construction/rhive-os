@@ -226,9 +226,6 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                             <div className="flex items-center gap-1 text-base text-gray-500 mt-0.5">
                                 <MapPinIcon className="w-3 h-3 flex-none" />
                                 <span className="truncate">{getAddress(project)}</span>
-                                <span className="text-gray-700 ml-2 font-mono text-base">
-                                    ID: {project.id?.slice(-8)}
-                                </span>
                             </div>
                         </div>
                     </div>

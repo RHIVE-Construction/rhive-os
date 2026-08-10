@@ -181,6 +181,7 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
     const [scopeFile, setScopeFile] = useState<File | null>(null);
     const [sending, setSending] = useState(false);
     const [linkSent, setLinkSent] = useState(false);
+    const [emailQueued, setEmailQueued] = useState<boolean | null>(null); // null = not attempted
     const [generatedLink, setGeneratedLink] = useState<string>('');
     const [copyDone, setCopyDone] = useState(false);
     const [saveError, setSaveError] = useState('');
@@ -217,15 +218,37 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
     const isPermitImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(permitFileName);
     const hasPermit = !!permitUrl;
 
-    const customerEmail = project?.contact?.email || project?.customer_email || project?.email || '';
-    const customerName = project?.contact
-        ? `${project.contact.first_name || ''} ${project.contact.last_name || ''}`.trim()
-        : project?.name || 'Customer';
+    // Resolve customer email across all schema variants:
+    //  - contact_email  → normalizeLead() output (leads from CRM)
+    //  - contact?.email → project intake sub-contact (projects collection)
+    //  - customer_email → explicit field some records use
+    //  - email          → raw top-level field on older lead docs
+    //  - insurance?.claimant_email / billing?.email → additional fallbacks
+    const customerEmail =
+        project?.contact_email ||
+        project?.contact?.email ||
+        project?.customer_email ||
+        project?.email ||
+        project?.insurance?.claimant_email ||
+        project?.billing?.email ||
+        '';
+    // Resolve customer name across all schema variants
+    const customerName = (() => {
+        if (project?.contact?.first_name || project?.contact?.last_name) {
+            return `${project.contact.first_name || ''} ${project.contact.last_name || ''}`.trim();
+        }
+        if (project?.contact_name) return project.contact_name;
+        if (project?.firstName || project?.lastName) {
+            return `${project.firstName || ''} ${project.lastName || ''}`.trim();
+        }
+        return project?.name || 'Customer';
+    })();
 
     // Initialise emailTo once customerEmail is resolved
     useEffect(() => {
         if (customerEmail && !emailTo) setEmailTo(customerEmail);
     }, [customerEmail]);
+
 
     const handleSendLink = async () => {
         if (sending) return;
@@ -241,13 +264,23 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                 sign_verify_status: 'link_sent',
                 updated_at: new Date().toISOString(),
             });
+
+            // Call Cloud Function to queue email via Firestore 'mail' collection
             try {
-                await fetch('https://us-central1-rhive-os.cloudfunctions.net/sendSignVerifyEmail', {
+                const fnUrl = `https://us-central1-rhive-os.cloudfunctions.net/sendSignVerifyEmail`;
+                const fnRes = await fetch(fnUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ projectId: project.id, customerEmail: emailTo || customerEmail, customerName, projectName: project.name || 'Your Project', link }),
                 });
-            } catch { /* graceful fallback */ }
+                const fnData = await fnRes.json().catch(() => ({}));
+                setEmailQueued(fnData.emailSent === true);
+            } catch {
+                // Cloud Function unavailable — link is still saved to Firestore
+                setEmailQueued(false);
+            }
+
+
             setLinkSent(true);
         } catch {
             setSaveError('Failed to generate link. Please try again.');
@@ -325,6 +358,101 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                 </Card>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    {/* Send Link Card */}
+                    <Card title="Send Customer Link">
+                        <div className="space-y-4">
+                            {saveError && (
+                                <p className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                                    {saveError}
+                                </p>
+                            )}
+
+                            {linkSent ? (
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 text-emerald-400 text-sm font-bold">
+                                        <CheckCircleIcon className="w-4 h-4" />
+                                        Link sent — awaiting customer completion
+                                    </div>
+
+                                    {/* ═══ Email delivery status ═══ */}
+                                    {emailQueued === true && customerEmail && (
+                                        <div className="flex items-start gap-2 p-2.5 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
+                                            <EnvelopeIcon className="w-4 h-4 text-emerald-400 flex-none mt-0.5" />
+                                            <div>
+                                                <p className="text-emerald-400 text-xs font-bold">Email sent</p>
+                                                <p className="text-gray-500 text-[11px] mt-0.5">Verification link emailed to <span className="text-gray-400 font-mono">{customerEmail}</span></p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {emailQueued === false && customerEmail && (
+                                        <div className="flex items-start gap-2 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                                            <EnvelopeIcon className="w-4 h-4 text-amber-400 flex-none mt-0.5" />
+                                            <div>
+                                                <p className="text-amber-400 text-xs font-bold">Email queuing failed</p>
+                                                <p className="text-gray-500 text-[11px] mt-0.5">Copy the link below and share with <span className="text-gray-400 font-mono">{customerEmail}</span></p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {!customerEmail && (
+                                        <div className="flex items-start gap-2 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                                            <EnvelopeIcon className="w-4 h-4 text-amber-400 flex-none mt-0.5" />
+                                            <p className="text-amber-400 text-xs">No email on file — share the link below manually.</p>
+                                        </div>
+                                    )}
+
+                                    {/* ═══ Copyable link fallback ═══ */}
+                                    {generatedLink && (
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] text-gray-600 uppercase font-bold tracking-widest">
+                                                Customer Link
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    id="sv-generated-link"
+                                                    readOnly
+                                                    value={generatedLink}
+                                                    className="flex-1 bg-black border border-gray-800 rounded-lg px-3 py-2 text-xs font-mono text-gray-300 focus:outline-none focus:border-[#ec028b]/50"
+                                                    aria-label="Customer sign verify link"
+                                                />
+                                                <button
+                                                    id="sv-copy-link-btn"
+                                                    onClick={handleCopy}
+                                                    className="px-3 py-2 border border-gray-700 rounded-lg text-xs font-bold text-gray-400 hover:text-white hover:border-[#ec028b]/50 transition-all"
+                                                >
+                                                    {copyDone ? 'Copied!' : 'Copy'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        id="sv-resend-link-btn"
+                                        variant="secondary"
+                                        className="w-full flex items-center justify-center gap-2"
+                                        onClick={() => { setLinkSent(false); setGeneratedLink(''); setEmailQueued(null); }}
+                                    >
+                                        <EnvelopeIcon className="w-4 h-4" />
+                                        Resend Link
+                                    </Button>
+                                </div>
+                            ) : (
+                                <Button
+                                    id="sv-send-link-btn"
+                                    className="w-full flex items-center justify-center gap-2"
+                                    onClick={handleSendLink}
+                                    disabled={sending}
+                                >
+                                    {sending ? (
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <EnvelopeIcon className="w-4 h-4" />
+                                    )}
+                                    {sending ? 'Generating link…' : 'Send Sign & Verify Link'}
+                                </Button>
+                            )}
+                        </div>
+                    </Card>
 
                     {/* Insurance Documents */}
                     <Card title="Insurance Documents">
@@ -518,7 +646,8 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                                         )}
                                         <Button id="sv-resend-link-btn" variant="secondary"
                                             className="w-full flex items-center justify-center gap-2"
-                                            onClick={() => { setLinkSent(false); setGeneratedLink(''); }}>
+                                            onClick={() => { setLinkSent(false); setGeneratedLink(''); setEmailQueued(null); }}>
+
                                             <EnvelopeIcon className="w-4 h-4" /> Resend Link
                                         </Button>
                                     </div>

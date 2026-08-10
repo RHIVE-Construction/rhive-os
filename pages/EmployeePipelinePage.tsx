@@ -159,9 +159,6 @@ const EmployeePipelinePage: React.FC<EmployeePipelinePageProps> = ({ hideLeads =
                                                 <div className="font-mono text-xs font-bold text-[#ec028b] shadow-sm">
                                                     {getQuoteTotal(project) ?? '$—'}
                                                 </div>
-                                                <div className="text-[9px] text-gray-600 uppercase font-bold">
-                                                    ID: {project.id.slice(-6)}
-                                                </div>
                                             </div>
                                         </div>
                                     </Card>

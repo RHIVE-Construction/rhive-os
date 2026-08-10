@@ -241,7 +241,7 @@ const AdminDashboardPage: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-white leading-none mb-1">{p.name || 'Unnamed Project'}</p>
-                                                    <p className="text-[10px] text-gray-500 font-mono italic">ID: {p.id.slice(-8)} • {p.current_stage || 'Intake'}</p>
+                                                    <p className="text-[10px] text-gray-500 font-mono italic">{p.current_stage || 'Intake'}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
