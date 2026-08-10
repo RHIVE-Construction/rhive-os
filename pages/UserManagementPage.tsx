@@ -16,7 +16,7 @@ import {
     PhoneIcon,
     LockIcon
 } from '../components/icons';
-import { userService, userLogService } from '../lib/firebaseService';
+import { userService, userLogService, securityNotificationService } from '../lib/firebaseService';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { User, UserType } from '../types';
@@ -188,11 +188,6 @@ const UserManagementPage: React.FC = () => {
         // Final server-side guard — should never reach here without permission
         if (!canChangePasswords) {
             setPwError('Access denied. Only Super Admin can change passwords.');
-            userLogService.logAction(
-                'UNAUTHORIZED_PASSWORD_CHANGE_BLOCKED',
-                `Server-side block: unauthorized password change attempt for "${pwUser.name}"`,
-                { targetUserId: pwUser.id, actorRole: currentUser?.role }
-            );
             return;
         }
         if (newPassword.length < 6) { setPwError('Password must be at least 6 characters.'); return; }
@@ -200,37 +195,20 @@ const UserManagementPage: React.FC = () => {
         setPwError('');
         try {
             const hashed = await hashPassword(newPassword);
-            const now = new Date().toISOString();
-
-            const result = await userService.update(pwUser.id, {
-                password_hash: hashed,
-                password_updated_at: now,
-                updated_at: now
-            });
-
+            const result = await userService.update(pwUser.id, { password_hash: hashed, updated_at: new Date().toISOString() });
             if (result.success) {
                 setPwSuccess(true);
                 userLogService.logAction(
                     'USER_PASSWORD_CHANGED',
-                    `Password successfully changed for user "${pwUser.name}" (${pwUser.role}) by ${currentUser?.name ?? 'Admin'}`,
-                    {
-                        targetUserId: pwUser.id,
-                        targetUserName: pwUser.name,
-                        targetUserRole: pwUser.role,
-                        targetUserEmail: pwUser.email,
-                        changedBy: currentUser?.id,
-                        changedByName: currentUser?.name,
-                        changedByRole: currentUser?.role,
-                        passwordUpdatedAt: now
-                    }
+                    `Password changed for user "${pwUser.name}" (${pwUser.role})`,
+                    { targetUserId: pwUser.id, targetUserName: pwUser.name, targetUserRole: pwUser.role, targetUserEmail: pwUser.email }
                 );
+                // Send security notification email (non-blocking)
+                if (pwUser.email) {
+                    securityNotificationService.sendPasswordChangedEmail(pwUser.email, pwUser.name);
+                }
             } else {
-                setPwError(result.error || 'Firestore update failed. Please try again.');
-                userLogService.logAction(
-                    'USER_PASSWORD_CHANGE_FAILED',
-                    `Password change FAILED for "${pwUser.name}" — Firestore error`,
-                    { targetUserId: pwUser.id, error: result.error }
-                );
+                setPwError(result.error || 'Failed to update password.');
             }
         } catch (err: any) {
             setPwError(err?.message || 'Failed to update password.');
@@ -238,6 +216,7 @@ const UserManagementPage: React.FC = () => {
             setPwSubmitting(false);
         }
     };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -258,40 +237,38 @@ const UserManagementPage: React.FC = () => {
 
         try {
             if (editingUser) {
-                // ── EDIT: if email changed, route to confirmation modal first ──
-                const emailChanged = formData.email.trim().toLowerCase() !== (editingUser.email || '').toLowerCase();
-                if (emailChanged) {
-                    setPendingEmailChange(formData.email.trim().toLowerCase());
-                    setEmailConfirmUser(editingUser);
-                    setEmailConfirmError('');
-                    setSubmitting(false);
-                    return;
-                }
+                // ── EDIT: update Firestore profile ──────────────────────────────
+                const oldEmail = (editingUser.email || '').toLowerCase().trim();
+                const newEmailVal = (formData.email || '').toLowerCase().trim();
+                const emailChanged = oldEmail !== newEmailVal && newEmailVal !== '';
 
-                // Email unchanged — save name, role, phone only
-                const now = new Date().toISOString();
-                const payload: Record<string, any> = {
-                    name: formData.name.trim(),
+                const payload: any = {
+                    name: formData.name,
                     role: formData.role,
+                    email: formData.email,
                     phone: formData.phone,
-                    updated_at: now
+                    updated_at: new Date().toISOString()
                 };
-                const result = await userService.update(editingUser.id, payload);
-                if (!result?.success && result?.error) {
-                    throw new Error(result.error);
+                if (formData.password) {
+                    payload.password_hash = await hashPassword(formData.password);
                 }
+                await userService.update(editingUser.id, payload);
                 userLogService.logAction(
-                    'USER_PROFILE_UPDATED',
-                    `Profile for "${formData.name}" (${formData.role}) was updated by ${currentUser?.name ?? 'Admin'}`,
+                    'USER_UPDATED',
+                    `User "${formData.name}" (${formData.role}) profile was updated`,
                     {
                         targetUserId: editingUser.id,
                         updatedFields: { name: formData.name, role: formData.role, phone: formData.phone },
-                        updatedBy: currentUser?.id,
-                        updatedByName: currentUser?.name,
-                        updatedByRole: currentUser?.role,
-                        updatedAt: now
+                        passwordChanged: !!formData.password
                     }
                 );
+                // Send security notification emails (non-blocking)
+                if (emailChanged) {
+                    securityNotificationService.sendEmailChangedEmail(oldEmail, newEmailVal, formData.name);
+                }
+                if (formData.password && newEmailVal) {
+                    securityNotificationService.sendPasswordChangedEmail(newEmailVal, formData.name);
+                }
             } else {
                 // ── CREATE: all roles stored in Firestore with password_hash ──
                 const now = new Date().toISOString();
