@@ -217,10 +217,31 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
     const isPermitImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(permitFileName);
     const hasPermit = !!permitUrl;
 
-    const customerEmail = project?.contact?.email || project?.customer_email || project?.email || '';
-    const customerName = project?.contact
-        ? `${project.contact.first_name || ''} ${project.contact.last_name || ''}`.trim()
-        : project?.name || 'Customer';
+    // Resolve customer email across all schema variants:
+    //  - contact_email  → normalizeLead() output (leads from CRM)
+    //  - contact?.email → project intake sub-contact (projects collection)
+    //  - customer_email → explicit field some records use
+    //  - email          → raw top-level field on older lead docs
+    //  - insurance?.claimant_email / billing?.email → additional fallbacks
+    const customerEmail =
+        project?.contact_email ||
+        project?.contact?.email ||
+        project?.customer_email ||
+        project?.email ||
+        project?.insurance?.claimant_email ||
+        project?.billing?.email ||
+        '';
+    // Resolve customer name across all schema variants
+    const customerName = (() => {
+        if (project?.contact?.first_name || project?.contact?.last_name) {
+            return `${project.contact.first_name || ''} ${project.contact.last_name || ''}`.trim();
+        }
+        if (project?.contact_name) return project.contact_name;
+        if (project?.firstName || project?.lastName) {
+            return `${project.firstName || ''} ${project.lastName || ''}`.trim();
+        }
+        return project?.name || 'Customer';
+    })();
 
     // Initialise emailTo once customerEmail is resolved
     useEffect(() => {
