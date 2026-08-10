@@ -4,7 +4,35 @@ import { Project, Property, User, ProjectStage, PROJECT_STAGES_ORDER } from '../
 import { contactService, userService, userLogService, firestoreService } from '../lib/firebaseService';
 import { session, initialUser } from '../lib/session';
 import { logUserActivity, LOG_ACTIONS } from '../lib/userActivityLogger';
-import { getIpLocation } from '../lib/ipLocationService';
+
+// ── Server-side login event logger ───────────────────────────────────────────
+// Calls the logLoginEvent Cloud Function which resolves the REAL client IP
+// server-side (from request headers) and writes the full log to Firestore.
+const FIREBASE_PROJECT_ID = (import.meta as any).env?.VITE_FIREBASE_PROJECT_ID || 'rhive-os';
+const LOG_LOGIN_URL = `https://us-central1-${FIREBASE_PROJECT_ID}.cloudfunctions.net/logLoginEvent`;
+
+function callLogLoginEvent(
+    actionType: string,
+    description: string,
+    userId: string,
+    userName: string,
+    userRole: string,
+    extraPayload?: Record<string, any>
+): void {
+    // Fire-and-forget — never blocks login, never throws
+    fetch(LOG_LOGIN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            actionType,
+            description,
+            userId,
+            userName,
+            userRole,
+            payload: extraPayload || {},
+        }),
+    }).catch(() => { /* best-effort — silently ignore network errors */ });
+}
 
 interface MockDatabaseContextType {
     users: User[];
@@ -254,8 +282,8 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     sessionUser.role = role as any;
                 }
                 setSessionUser(sessionUser);
-                const ipData = await getIpLocation();
-                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in via developer bypass`, { role: sessionUser.role }, sessionUser, ipData);
+                // Log via Cloud Function (server-side IP resolution)
+                callLogLoginEvent('LOGIN', `User ${sessionUser.name} logged in via developer bypass`, sessionUser.id, sessionUser.name, sessionUser.role, { role: sessionUser.role });
                 return { success: true };
             }
         }
@@ -357,13 +385,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         if (!foundUser) {
-            const ipData = await getIpLocation();
-            logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — account not found`, {
+            // Log failed login via Cloud Function (server resolves real IP)
+            callLogLoginEvent(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — account not found`, 'anonymous', 'anonymous', 'Guest', {
                 email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
-                ipAddress: ipData.ip,
-                city: ipData.city,
-                region: ipData.region,
-                country: ipData.country,
             });
             return { success: false, error: 'No account found with this email address.' };
         }
@@ -381,13 +405,8 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // 3. Verify password — MUST come from Firestore (fromFirestore = true).
         //    If user was found from seed fallback (no password_hash), reject with a clear message.
         if (!fromFirestore && !foundUser?.password_hash) {
-            const ipData = await getIpLocation();
-            logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login — credentials could not be verified (offline or seed user)`, {
+            callLogLoginEvent(LOG_ACTIONS.FAILED_LOGIN, `Failed login — credentials could not be verified (offline or seed user)`, 'anonymous', 'anonymous', 'Guest', {
                 email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
-                ipAddress: ipData.ip,
-                city: ipData.city,
-                region: ipData.region,
-                country: ipData.country,
             });
             return { success: false, error: 'Could not verify credentials. Please check your connection and try again.' };
         }
@@ -399,22 +418,16 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     sessionUser.role = role as any;
                 }
                 setSessionUser(sessionUser);
-                const ipData = await getIpLocation();
-                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, { email: sessionUser.email }, sessionUser, ipData);
+                callLogLoginEvent('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, sessionUser.id, sessionUser.name, sessionUser.role, { email: sessionUser.email });
                 return { success: true };
             }
             return { success: false, error: 'Invalid email or password.' };
         }
         const hashed = await hashPassword(password!);
         if (foundUser.password_hash !== hashed) {
-            const ipData = await getIpLocation();
-            logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — incorrect password`, {
+            callLogLoginEvent(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — incorrect password`, 'anonymous', foundUser.name, foundUser.role, {
                 email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
                 role: foundUser.role,
-                ipAddress: ipData.ip,
-                city: ipData.city,
-                region: ipData.region,
-                country: ipData.country,
             });
             return { success: false, error: 'Invalid email or password.' };
         }
@@ -424,8 +437,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             sessionUser.role = role as any;
         }
         setSessionUser(sessionUser);
-        const ipData = await getIpLocation();
-        userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully`, { email: sessionUser.email }, sessionUser, ipData);
+        callLogLoginEvent('LOGIN', `User ${sessionUser.name} logged in successfully`, sessionUser.id, sessionUser.name, sessionUser.role, { email: sessionUser.email });
         return { success: true };
     };
 

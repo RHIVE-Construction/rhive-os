@@ -1908,3 +1908,314 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
         }
     });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// logLoginEvent — Server-side login event logger with IP geolocation
+// Called by the frontend after every login attempt (success or failure).
+// Resolves the real client IP from request headers, performs a server-side
+// geo-lookup, and writes the full log entry to Firestore `user_log`.
+// ─────────────────────────────────────────────────────────────────────────────
+exports.logLoginEvent = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const db = admin.firestore();
+
+            // ── 1. Extract the real client IP ─────────────────────────────────
+            // Cloud Functions sit behind Google's load balancer; the true IP is
+            // in x-forwarded-for (first entry is the client, rest are proxies).
+            const forwardedFor = req.headers['x-forwarded-for'] || '';
+            const clientIp = forwardedFor.split(',')[0].trim() || req.ip || 'unknown';
+
+            // ── 2. Server-side geo-lookup via ipapi.co ────────────────────────
+            let geoData = {
+                ip: clientIp,
+                city: 'unknown',
+                region: 'unknown',
+                country: 'unknown',
+                countryName: 'unknown',
+                latitude: null,
+                longitude: null,
+                timezone: 'unknown',
+            };
+
+            if (clientIp && clientIp !== 'unknown' && clientIp !== '::1' && clientIp !== '127.0.0.1') {
+                try {
+                    const geoRes = await axios.get(`https://ipapi.co/${clientIp}/json/`, {
+                        timeout: 4000,
+                        headers: { 'User-Agent': 'RHIVE-QOS/1.0' },
+                    });
+                    const g = geoRes.data;
+                    if (g && !g.error) {
+                        geoData = {
+                            ip:          g.ip          || clientIp,
+                            city:        g.city        || 'unknown',
+                            region:      g.region      || 'unknown',
+                            country:     g.country     || 'unknown',
+                            countryName: g.country_name || 'unknown',
+                            latitude:    typeof g.latitude  === 'number' ? g.latitude  : null,
+                            longitude:   typeof g.longitude === 'number' ? g.longitude : null,
+                            timezone:    g.timezone    || 'unknown',
+                        };
+                    }
+                } catch (geoErr) {
+                    // Geo lookup is best-effort — never fail the log write
+                    console.warn('[logLoginEvent] geo-lookup failed:', geoErr.message);
+                }
+            }
+
+            // ── 3. Build and write the log document ───────────────────────────
+            const {
+                actionType   = 'LOGIN',
+                description  = 'User logged in',
+                userId       = 'anonymous',
+                userName     = 'Anonymous',
+                userRole     = 'Guest',
+                email        = '',
+                payload      = {},
+            } = req.body || {};
+
+            const logDoc = {
+                userId,
+                userName,
+                userRole,
+                actionType,
+                description,
+                payload: {
+                    recordId:   payload.recordId   || '',
+                    recordName: payload.recordName || payload.name || '',
+                    collection: payload.collection || '',
+                    stage:      payload.stage      || '',
+                    reason:     payload.reason     || '',
+                    changes:    payload.changes    || [],
+                    ...(email ? { email } : {}),
+                    ...payload,
+                },
+                // IP geolocation — resolved server-side from the real request IP
+                ipAddress:   geoData.ip,
+                city:        geoData.city,
+                region:      geoData.region,
+                country:     geoData.country,
+                countryName: geoData.countryName,
+                latitude:    geoData.latitude,
+                longitude:   geoData.longitude,
+                timezone:    geoData.timezone,
+                timestamp:   new Date().toISOString(),
+                read:        false,
+            };
+
+            const docRef = await db.collection('user_log').add(logDoc);
+            return res.status(200).json({ success: true, id: docRef.id, ip: geoData.ip });
+
+        } catch (error) {
+            console.error('[logLoginEvent] Error:', error);
+            return res.status(500).json({ success: false, error: error.message });
+        }
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECURITY EMAIL: sendPasswordChangeNotification
+// Called by admin (UserManagement) after changing a user's password.
+// Sends a branded "Your Password Was Changed" email via the `mail` collection.
+// ─────────────────────────────────────────────────────────────────────────────
+
+exports.sendPasswordChangeNotification = functions.https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        try {
+            const { email, userName } = req.body;
+            if (!email) return res.status(400).json({ error: 'email is required' });
+
+            var now = new Date();
+            var dateStr = now.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            var timeStr = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+            var displayName = userName || 'RHIVE User';
+
+            var htmlParts = [
+                '<!DOCTYPE html><html><head>',
+                '<meta charset="utf-8" />',
+                '<meta name="viewport" content="width=device-width, initial-scale=1.0" />',
+                '<title>Password Changed - RHIVE Construction</title>',
+                '</head>',
+                '<body style="margin:0;padding:0;background:#050505;font-family:Rubik,Arial,sans-serif;color:#f3f4f6;">',
+                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;">',
+                '<tr><td align="center">',
+                '<table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;border-radius:4px;overflow:hidden;max-width:560px;">',
+                '<tr><td style="background:#ec028b;padding:4px 0;"></td></tr>',
+                '<tr><td style="padding:32px 36px 20px;">',
+                '<h1 style="margin:0 0 4px;font-size:22px;font-weight:800;color:#ffffff;">RHIVE <span style="color:#ec028b;">Construction</span></h1>',
+                '<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Security Notification</p>',
+                '</td></tr>',
+                '<tr><td style="padding:0 36px 32px;">',
+                '<h2 style="margin:0 0 20px;font-size:18px;font-weight:700;color:#ffffff;">Your Password Has Been Changed</h2>',
+                '<p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#d1d5db;">Hi <strong style="color:#ffffff;">' + displayName + '</strong>,</p>',
+                '<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#d1d5db;">Your RHIVE Construction account password was successfully changed by an administrator.</p>',
+                '<p style="margin:0 0 28px;font-size:14px;line-height:1.6;color:#9ca3af;">This change occurred on <strong style="color:#f3f4f6;">' + dateStr + '</strong> at <strong style="color:#f3f4f6;">' + timeStr + '</strong>.</p>',
+                '<table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #ec028b;border-radius:0 4px 4px 0;margin-bottom:32px;">',
+                '<tr><td style="padding:14px 16px;">',
+                '<p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">&#128274; <strong style="color:#f3f4f6;">If you did not authorise this change</strong>, please contact us immediately at <a href="mailto:support@rhiveconstruction.com" style="color:#ec028b;text-decoration:none;">support@rhiveconstruction.com</a> or call our support line.</p>',
+                '</td></tr>',
+                '</table>',
+                '<table cellpadding="0" cellspacing="0" style="margin-bottom:8px;">',
+                '<tr><td style="background:#ec028b;border-radius:3px;">',
+                '<a href="https://rhive-os.web.app" style="display:inline-block;padding:14px 28px;color:#ffffff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">Login to Your Account &#x2192;</a>',
+                '</td></tr>',
+                '</table>',
+                '</td></tr>',
+                '<tr><td style="padding:20px 36px;border-top:1px solid #1f2937;">',
+                '<p style="margin:0;font-size:11px;color:#4b5563;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia<br/><a href="mailto:support@rhiveconstruction.com" style="color:#6b7280;text-decoration:none;">support@rhiveconstruction.com</a></p>',
+                '</td></tr>',
+                '<tr><td style="background:#ec028b;padding:2px 0;"></td></tr>',
+                '</table>',
+                '</td></tr>',
+                '</table>',
+                '</body></html>'
+            ];
+            var htmlEmail = htmlParts.join('');
+            var plainText = [
+                'RHIVE Construction - Security Notification',
+                '',
+                'Your Password Has Been Changed',
+                '',
+                'Hi ' + displayName + ',',
+                '',
+                'Your RHIVE Construction account password was successfully changed by an administrator.',
+                'This change occurred on ' + dateStr + ' at ' + timeStr + '.',
+                '',
+                'If you did not authorise this change, please contact us immediately:',
+                'Email: support@rhiveconstruction.com',
+                '',
+                'Login to your account: https://rhive-os.web.app',
+                '',
+                '- RHIVE Construction - Brisbane, QLD - Australia'
+            ].join('\n');
+
+            await admin.firestore().collection('mail').add({
+                to: email,
+                from: 'RHIVE Construction <support@rhiveconstruction.com>',
+                message: {
+                    subject: 'Security Alert: Your Password Was Changed - RHIVE Construction',
+                    text: plainText,
+                    html: htmlEmail
+                },
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            return res.status(200).json({ success: true });
+        } catch (error) {
+            console.error('[sendPasswordChangeNotification]', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECURITY EMAIL: sendEmailChangeNotification
+// Called by admin (UserManagement) after changing a user's email address.
+// Sends branded notifications to BOTH the old and new email addresses.
+// ─────────────────────────────────────────────────────────────────────────────
+
+exports.sendEmailChangeNotification = functions.https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        try {
+            const { oldEmail, newEmail, userName } = req.body;
+            if (!oldEmail && !newEmail) return res.status(400).json({ error: 'oldEmail or newEmail is required' });
+
+            var now = new Date();
+            var dateStr = now.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            var timeStr = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+            var displayName = userName || 'RHIVE User';
+
+            function maskEmail(e) {
+                if (!e) return '';
+                var parts = e.split('@');
+                if (parts.length < 2) return e;
+                var user = parts[0];
+                return user[0] + '*'.repeat(Math.min(user.length - 1, 4)) + '@' + parts[1];
+            }
+
+            function buildEmailHtml(recipientNote, highlightedEmail) {
+                var parts = [
+                    '<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Account Email Updated - RHIVE Construction</title></head>',
+                    '<body style="margin:0;padding:0;background:#050505;font-family:Rubik,Arial,sans-serif;color:#f3f4f6;">',
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;"><tr><td align="center">',
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;border-radius:4px;overflow:hidden;max-width:560px;">',
+                    '<tr><td style="background:#ec028b;padding:4px 0;"></td></tr>',
+                    '<tr><td style="padding:32px 36px 20px;">',
+                    '<h1 style="margin:0 0 4px;font-size:22px;font-weight:800;color:#ffffff;">RHIVE <span style="color:#ec028b;">Construction</span></h1>',
+                    '<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Security Notification</p>',
+                    '</td></tr><tr><td style="padding:0 36px 32px;">',
+                    '<h2 style="margin:0 0 20px;font-size:18px;font-weight:700;color:#ffffff;">Your Account Email Was Updated</h2>',
+                    '<p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#d1d5db;">Hi <strong style="color:#ffffff;">' + displayName + '</strong>,</p>',
+                    '<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#d1d5db;">' + recipientNote + '</p>',
+                    '<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#9ca3af;">This change occurred on <strong style="color:#f3f4f6;">' + dateStr + '</strong> at <strong style="color:#f3f4f6;">' + timeStr + '</strong>.</p>',
+                ];
+                if (highlightedEmail) {
+                    parts.push(
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #e2ab49;border-radius:0 4px 4px 0;margin-bottom:20px;">',
+                        '<tr><td style="padding:14px 16px;">',
+                        '<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6b7280;margin-bottom:4px;">Account Email Address</p>',
+                        '<p style="margin:0;font-size:15px;font-weight:700;color:#e2ab49;">' + highlightedEmail + '</p>',
+                        '</td></tr></table>'
+                    );
+                }
+                parts.push(
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #ec028b;border-radius:0 4px 4px 0;margin-bottom:32px;">',
+                    '<tr><td style="padding:14px 16px;">',
+                    '<p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">&#128274; <strong style="color:#f3f4f6;">If you did not authorise this change</strong>, please contact us at <a href="mailto:support@rhiveconstruction.com" style="color:#ec028b;text-decoration:none;">support@rhiveconstruction.com</a>.</p>',
+                    '</td></tr></table>',
+                    '<table cellpadding="0" cellspacing="0" style="margin-bottom:8px;">',
+                    '<tr><td style="background:#ec028b;border-radius:3px;">',
+                    '<a href="https://rhive-os.web.app" style="display:inline-block;padding:14px 28px;color:#ffffff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">Login to Your Account &#x2192;</a>',
+                    '</td></tr></table>',
+                    '</td></tr>',
+                    '<tr><td style="padding:20px 36px;border-top:1px solid #1f2937;">',
+                    '<p style="margin:0;font-size:11px;color:#4b5563;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia</p>',
+                    '</td></tr>',
+                    '<tr><td style="background:#ec028b;padding:2px 0;"></td></tr>',
+                    '</table></td></tr></table></body></html>'
+                );
+                return parts.join('');
+            }
+
+            var emailTasks = [];
+
+            if (oldEmail) {
+                emailTasks.push(admin.firestore().collection('mail').add({
+                    to: oldEmail,
+                    from: 'RHIVE Construction <support@rhiveconstruction.com>',
+                    message: {
+                        subject: 'Security Alert: Your Account Email Was Updated - RHIVE Construction',
+                        text: 'Hi ' + displayName + ',\n\nYour account login email has been changed.\nNew email: ' + (newEmail || 'updated') + '\nOccurred: ' + dateStr + ' at ' + timeStr + '\n\nNot you? Contact: support@rhiveconstruction.com\n\n- RHIVE Construction',
+                        html: buildEmailHtml('The login email on your RHIVE Construction account has been updated by an administrator.', newEmail ? maskEmail(newEmail) : null)
+                    },
+                    createdAt: admin.firestore.FieldValue.serverTimestamp()
+                }));
+            }
+
+            if (newEmail) {
+                emailTasks.push(admin.firestore().collection('mail').add({
+                    to: newEmail,
+                    from: 'RHIVE Construction <support@rhiveconstruction.com>',
+                    message: {
+                        subject: 'Security Alert: Your Account Email Was Updated - RHIVE Construction',
+                        text: 'Hi ' + displayName + ',\n\nThis address is now the login email for your RHIVE Construction account.\nOccurred: ' + dateStr + ' at ' + timeStr + '\n\nNot you? Contact: support@rhiveconstruction.com\n\n- RHIVE Construction',
+                        html: buildEmailHtml('This email address has been set as the login email for your RHIVE Construction account.', newEmail)
+                    },
+                    createdAt: admin.firestore.FieldValue.serverTimestamp()
+                }));
+            }
+
+            await Promise.all(emailTasks);
+            return res.status(200).json({ success: true, notified: emailTasks.length });
+        } catch (error) {
+            console.error('[sendEmailChangeNotification]', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});

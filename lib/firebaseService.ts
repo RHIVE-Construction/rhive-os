@@ -1439,15 +1439,14 @@ export const userLogService = {
         actionType: string,
         description: string,
         payload?: Record<string, any>,
-        userContext?: { id: string; name: string; role: string },
-        ipLocation?: { ip: string; city: string; region: string; country: string; countryName: string; latitude: number | null; longitude: number | null; timezone: string }
+        userContext?: { id: string; name: string; role: string }
     ) => {
         const currentUser = userContext || session.read();
         const userId = currentUser?.id || 'anonymous';
         const userName = currentUser?.name || 'Anonymous';
         const userRole = currentUser?.role || 'Guest';
 
-        const logDoc: Record<string, any> = {
+        const logDoc = {
             userId,
             userName,
             userRole,
@@ -1466,18 +1465,6 @@ export const userLogService = {
             timestamp: new Date().toISOString(),
             read: false,
         };
-
-        // Attach IP geolocation when available (login events)
-        if (ipLocation) {
-            logDoc.ipAddress   = ipLocation.ip;
-            logDoc.city        = ipLocation.city;
-            logDoc.region      = ipLocation.region;
-            logDoc.country     = ipLocation.country;
-            logDoc.countryName = ipLocation.countryName;
-            logDoc.latitude    = ipLocation.latitude;
-            logDoc.longitude   = ipLocation.longitude;
-            logDoc.timezone    = ipLocation.timezone;
-        }
 
         try {
             const result = await firestoreService.addDocument('user_log', logDoc);
@@ -1545,3 +1532,45 @@ export const smsOtpService = {
     }
 };
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECURITY NOTIFICATION SERVICE
+// Sends email alerts to users when their password or email address is changed.
+// Uses Cloud Functions which write to the `mail` Firestore collection.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const securityNotificationService = {
+    /**
+     * Sends a "Your Password Was Changed" security notification to the given email.
+     * Non-blocking — call after a successful password update; failures are swallowed.
+     */
+    sendPasswordChangedEmail: async (email: string, userName: string): Promise<void> => {
+        if (!email) return;
+        try {
+            await fetch(`${FUNCTIONS_BASE_URL}/sendPasswordChangeNotification`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, userName })
+            });
+        } catch (err: any) {
+            console.warn('[securityNotificationService] sendPasswordChangedEmail failed silently:', err?.message);
+        }
+    },
+
+    /**
+     * Sends a "Your Account Email Was Updated" notification to BOTH old and new addresses.
+     * Non-blocking — call after a successful email update; failures are swallowed.
+     */
+    sendEmailChangedEmail: async (oldEmail: string, newEmail: string, userName: string): Promise<void> => {
+        if (!oldEmail && !newEmail) return;
+        try {
+            await fetch(`${FUNCTIONS_BASE_URL}/sendEmailChangeNotification`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldEmail, newEmail, userName })
+            });
+        } catch (err: any) {
+            console.warn('[securityNotificationService] sendEmailChangedEmail failed silently:', err?.message);
+        }
+    }
+};
