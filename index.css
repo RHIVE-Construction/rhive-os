@@ -1,4 +1,9 @@
 /* RHIVE OS Design Tokens */
+
+/* Ensure full-height h-full chain works for all descendants */
+html, body, #root {
+    height: 100%;
+}
 :root {
     --rhive-pink: #ec028b;
     --rhive-obsidian: #050505;

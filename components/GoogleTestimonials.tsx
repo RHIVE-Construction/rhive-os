@@ -43,7 +43,6 @@ export const GoogleTestimonials = () => {
     useEffect(() => {
         const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (!apiKey) {
-            console.log("No Google Maps API key found, using fallback reviews.");
             return;
         }
 

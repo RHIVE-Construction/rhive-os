@@ -16,6 +16,8 @@ export const I = DefaultIcon;
 
 // Core Icons with distinct paths
 export const HomeIcon = createIcon("M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10");
+export const ArrowDownTrayIcon = createIcon("M12 15V3 M5 15l7 7 7-7 M3 21h18");
+
 export const ChartBarIcon = createIcon("M18 20V10 M12 20V4 M6 20v-6");
 export const UserIcon = createIcon("M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z");
 export const MailIcon = createIcon("M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6");
@@ -24,6 +26,7 @@ export const BriefcaseIcon = createIcon("M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H
 export const MapPinIcon = createIcon("M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z");
 export const BuildingStorefrontIcon = createIcon("M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M12 22V12");
 export const PlusIcon = createIcon("M12 5v14 M5 12h14");
+export const ChevronLeftIcon = createIcon("M15 18l-6-6 6-6");
 export const ChevronRightIcon = createIcon("M9 18l6-6-6-6");
 export const ChevronDownIcon = createIcon("M6 9l6 6 6-6");
 export const XIcon = createIcon("M18 6L6 18 M6 6l12 12");
@@ -97,7 +100,7 @@ export const ChatBubbleOvalLeftEllipsisIcon = I;
 export const StopCircleIcon = I;
 export const PlayCircleIcon = I;
 export const PauseCircleIcon = I;
-export const ArrowPathIcon = I;
+export const ArrowPathIcon = createIcon("M1 4v6h6 M23 20v-6h-6 M20.49 9A9 9 0 0 0 5.64 5.64L1 10 M3.51 15a9 9 0 0 0 14.85 3.36L23 14");
 export const ArrowsPointingInIcon = I;
 export const ArrowsPointingOutIcon = I;
 export const ArrowUpIcon = I;
@@ -137,7 +140,8 @@ export const List = I;
 export const Layout = I;
 export const Maximize = I;
 export const Minimize = I;
-export const ExternalLink = I;
+export const ExternalLink = createIcon("M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6 M15 3h6v6 M10 14L21 3");
+export const ExternalLinkIcon = ExternalLink;
 export const Link = I;
 export const Globe = I;
 export const Monitor = I;

@@ -14,7 +14,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onPlaceSelected, error
   const [hasInteracted, setHasInteracted] = useState(false);
 
   return (
-    <div className="relative h-full w-full flex flex-col justify-center items-center p-4 overflow-hidden">
+    <div className="relative h-full w-full flex flex-col justify-center items-center p-4">
       <CircuitryBackground />
       <RhiveLogo className="absolute top-8 left-8 h-10 z-20" />
       <div className="relative z-10 w-full">

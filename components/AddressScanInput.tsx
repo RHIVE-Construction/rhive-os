@@ -10,6 +10,7 @@ interface AddressScanInputProps {
     value?: string;
     onChange?: (val: string) => void;
     onScan?: (address: string) => void;
+    placeholder?: string;
 }
 
 export const AddressScanInput = ({
@@ -19,12 +20,13 @@ export const AddressScanInput = ({
     value,
     onChange,
     onScan,
+    placeholder,
 }: AddressScanInputProps) => {
     const chamferSize = "16px";
 
 
-    // Typewriter placeholder animation
-    const fullText = "ENTER PROJECT ADDRESS";
+    // Typewriter placeholder animation — uses custom placeholder prop if provided
+    const fullText = placeholder || "ENTER PROJECT ADDRESS";
     const [animatedPlaceholder, setAnimatedPlaceholder] = useState("");
     const [index, setIndex] = useState(0);
     const [localVal, setLocalVal] = useState("");

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { smsOtpService, passwordResetService, authService } from '../lib/firebaseService';
+import { logUserActivity, LOG_ACTIONS } from '../lib/userActivityLogger';
+import { emailService } from '../lib/emailService';
 import {
     KeyIcon,
     ArrowRightIcon,
@@ -275,6 +277,7 @@ const PasswordResetPage: React.FC = () => {
             setOtpTimerKey(k => k + 1);
             setOtp('');
             setStep('otp');
+            await logUserActivity(LOG_ACTIONS.FORGOT_PASSWORD_OTP_SENT, `OTP sent to phone for password reset`, { phone: phone?.slice(-4) ? `***${phone.slice(-4)}` : 'unknown' });
         } else {
             showError(res.error || 'Failed to send OTP. Check your phone number.');
         }
@@ -313,6 +316,19 @@ const PasswordResetPage: React.FC = () => {
             setNewPassword('');
             setConfirmPassword('');
             setStep('password');
+            await logUserActivity(LOG_ACTIONS.FORGOT_PASSWORD_OTP_VERIFIED, `OTP verified successfully for password reset`);
+
+            // Fire alert in background — do not await, never block UX
+            (async () => {
+                try {
+                    let clientIp: string | undefined;
+                    try {
+                        const r = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+                        clientIp = (await r.json()).ip;
+                    } catch { /* silent */ }
+                    await emailService.sendPasswordReset(res.email ?? phone, res.resetToken!, clientIp);
+                } catch { /* silent */ }
+            })();
         } else {
             showError(res.error || 'Invalid or expired code. Please try again.');
         }
@@ -337,6 +353,7 @@ const PasswordResetPage: React.FC = () => {
             setLoading(false);
             if (res.ok) {
                 setStep('success');
+                await logUserActivity(LOG_ACTIONS.FORGOT_PASSWORD_RESET_COMPLETE, `Password reset completed successfully`);
             } else {
                 showError(data.error || 'Failed to reset password. Please try again.');
             }

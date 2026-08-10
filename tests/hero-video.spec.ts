@@ -14,7 +14,7 @@ test('hero section video background', async ({ page }) => {
 
     // 2. Verify the src points to the correct file
     const sourceElement = videoElement.locator('source');
-    await expect(sourceElement).toHaveAttribute('src', '/vidupload/TRADESHOW MARKETING VIDEO.mp4');
+    await expect(sourceElement).toHaveAttribute('src', '/vidupload/compressed_tradeshow_video.mp4');
 
     // 3. Verify it is actively playing (not paused)
     await heroSection.evaluate(async () => {

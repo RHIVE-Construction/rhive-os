@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     UserIcon,
     BriefcaseIcon,
@@ -297,7 +297,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                         disabled={!email || !password || loading}
                                         className="flex-1 h-12 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white uppercase tracking-widest text-[10px] font-black shadow-[0_0_30px_rgba(236,2,139,0.3)] disabled:opacity-40"
                                     >
-                                        {loading ? 'VerifyingΓÇª' : 'Sign In'}
+                                        {'Sign In'}
                                         <ArrowRightIcon className="w-4 h-4 ml-2" />
                                     </Button>
                                 </div>

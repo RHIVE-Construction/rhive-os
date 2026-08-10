@@ -64,10 +64,12 @@ export const AddressInput: React.FC<AddressInputProps> = ({
             window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
             autocompleteRef.current = null; 
         }
-        const pacContainers = document.querySelectorAll('.pac-container');
-        pacContainers.forEach((el) => el.remove());
+        // Note: do NOT remove .pac-container elements here.
+        // Google appends them to <body> and manages their own lifecycle.
+        // Removing them globally breaks other autocomplete instances on the same page.
     };
   }, [isApiReady, onPlaceSelected]);
+
 
   const defaultContainerClasses = "group relative flex w-full items-center rounded-full border bg-black/50 shadow-lg border-gray-800 transition-all duration-300 ease-in-out hover:shadow-[0_0_15px_rgba(236,2,139,0.2)] focus-within:border-pink-500/70 focus-within:shadow-[0_0_25px_rgba(236,2,139,0.4)]";
   const finalContainerClasses = containerClassName || defaultContainerClasses;

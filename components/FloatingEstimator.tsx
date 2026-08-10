@@ -86,7 +86,14 @@ export const FloatingEstimator: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (!isApiReady || !inputRef.current || !window.google?.maps?.places) return;
+        // Only initialize once when the API is ready and input is mounted.
+        // We include `isOpen` because the inputRef only mounts when the drawer is open.
+        // We do NOT include `step` — the autocomplete lives on the 'address' step input
+        // and does not need to reinitialize on every step change.
+        // CRITICAL: Do NOT remove .pac-container elements in cleanup — doing so nukes
+        // other autocomplete dropdowns globally (e.g., the EstimateTool's AddressInput).
+        if (!isApiReady || !isOpen || !inputRef.current || !window.google?.maps?.places) return;
+
         if (autocompleteRef.current) return;
 
         const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
@@ -107,15 +114,16 @@ export const FloatingEstimator: React.FC = () => {
         autocompleteRef.current = autocomplete;
 
         return () => {
+            // Only clear listeners — do NOT remove .pac-container elements globally.
+            // Google appends pac-containers to <body> and manages their lifecycle.
+            // Removing them here wipes out other autocomplete dropdowns on the page.
             if (autocompleteRef.current) {
                 window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current);
                 autocompleteRef.current = null;
             }
-            // Remove pac-containers only if they persist
-            const pacContainers = document.querySelectorAll('.pac-container');
-            pacContainers.forEach((el) => el.remove());
         };
-    }, [isApiReady, step, isOpen]);
+    }, [isApiReady, isOpen]);
+
 
     const steps = [
         { id: 'address', label: 'Identity' },

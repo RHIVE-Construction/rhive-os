@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { firestoreService } from '../lib/firebaseService';
+import { leadService } from '../lib/firebaseService';
 import { PhoneIcon, MapPinIcon, CalendarIcon, ClockIcon, XIcon, CheckCircleIcon } from './icons';
 import { cn } from '../lib/utils';
 
@@ -52,22 +52,35 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ project, onClose, onSaved
     const handleSave = async () => {
         if (!date || saving) return;
         setSaving(true);
-        const event: FollowUpEvent = {
-            project_id: project.id,
-            project_name: project.name || 'Unnamed Project',
-            type,
-            date,
-            time,
-            notes,
-            stage: project.current_stage || 'Unknown',
-        };
         try {
-            await firestoreService.addDocument('followups', event);
-            setSaved(true);
-            onSaved?.(event);
-            setTimeout(() => {
-                onClose();
-            }, 1200);
+            const result = await leadService.scheduleFollowUp({
+                projectId: project.id,
+                projectName: project.name || 'Unnamed Project',
+                type,
+                date,
+                time,
+                notes,
+                stage: project.current_stage || 'Lead',
+                // assigneeEmail is picked up from session inside scheduleFollowUp
+            });
+            if (result.success) {
+                setSaved(true);
+                const event: FollowUpEvent = {
+                    project_id: project.id,
+                    project_name: project.name || 'Unnamed Project',
+                    type,
+                    date,
+                    time,
+                    notes,
+                    stage: project.current_stage || 'Lead',
+                };
+                onSaved?.(event);
+                setTimeout(() => {
+                    onClose();
+                }, 1200);
+            } else {
+                console.error('Failed to save follow-up:', result.error);
+            }
         } catch (err) {
             console.error('Failed to save follow-up:', err);
         } finally {

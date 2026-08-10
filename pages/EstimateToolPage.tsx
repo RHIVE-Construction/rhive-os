@@ -1,15 +1,21 @@
 
 import React from 'react';
 import { EstimatorFlow } from '../components/EstimatorFlow';
+import { EstimateErrorBoundary } from '../components/EstimateErrorBoundary';
 import { useNavigation } from '../contexts/NavigationContext';
 
 const EstimateToolPage: React.FC = () => {
     const { setActivePageId } = useNavigation();
 
-    // This page just acts as a container for the full-screen estimator flow
+    const handleClose = () => setActivePageId('E-01');
+
+    // Wrapped in EstimateErrorBoundary so any crash inside the tool
+    // shows a RHIVE-branded recovery UI instead of a blank black screen.
     return (
         <div className="h-full w-full bg-black relative z-20">
-            <EstimatorFlow onClose={() => setActivePageId('E-01')} />
+            <EstimateErrorBoundary onReset={handleClose}>
+                <EstimatorFlow onClose={handleClose} />
+            </EstimateErrorBoundary>
         </div>
     );
 };

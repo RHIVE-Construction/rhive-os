@@ -62,6 +62,7 @@ import NewProjectBidsPage from './pages/NewProjectBidsPage'; // CO-05
 import SupplierHomepage from './pages/SupplierHomepage'; // S-01
 import SupplierProfilePage from './pages/SupplierProfilePage'; // S-04
 import UserManagementPage from './pages/UserManagementPage'; // A-02
+import UserProfilePage from './pages/UserProfilePage'; // A-02-profile
 import AdminDashboardPage from './pages/AdminDashboardPage'; // A-01
 import RoleManagementPage from './pages/RoleManagementPage'; // SA-01
 import CustomerTrackerPage from './pages/CustomerTrackerPage'; // C-Tracker
@@ -87,6 +88,9 @@ import InvoicingPage from './pages/InvoicingPage'; // E-34
 import PaymentsModularPage from './pages/PaymentsModularPage'; // E-35
 import CompletedPage from './pages/CompletedPage'; // E-36
 import PastCustomerPage from './pages/PastCustomerPage'; // E-37
+
+import TrashBinPage from './pages/TrashBinPage'; // E-TRASH
+import UserActivityLogPage from './pages/UserActivityLogPage'; // A-LOGS
 
 const Placeholder = ({ name }: { name: string }) => (
   <div className="p-10 text-white font-mono">
@@ -134,6 +138,8 @@ export const pageComponentMap: Record<string, React.FC> = {
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,
   'A-02': UserManagementPage,
+  'A-02-profile': UserProfilePage,
+  'A-LOGS': UserActivityLogPage,
   'A-03': EstimatePricingPage,
   'A-04': EstimateBackendApiPage,
   'A-05': LineItemCatalogPage,
@@ -180,6 +186,9 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-37': PastCustomerPage,
   'E-38': WeatherGuideWidgetPage,
   'E-39': RHIVEBrandingPage,
+
+  // Trash Bin
+  'E-TRASH': TrashBinPage,
 
   // Customer
   'C-01': CustomerHomepage,
