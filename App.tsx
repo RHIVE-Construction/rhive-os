@@ -32,8 +32,20 @@ const isPasswordResetFlow = (): boolean => {
            (mode === 'firestoreReset' && !!params.get('token'));
 };
 
-// Detect /map path once at module load — used to short-circuit the entire auth flow
-const IS_MAP_ROUTE = window.location.pathname === '/map';
+// ── Clean URL Path Registry ────────────────────────────────────────────────────
+// Maps a URL pathname to a pageComponentMap key.
+// Pages listed here are rendered as standalone website pages (no CRM chrome, no login required).
+// To add a new public URL: add an entry below and deploy — no other changes needed.
+const PATH_ROUTES: Record<string, string> = {
+    '/estimate-tool': 'P-12',
+    '/map':           'INTERNAL-BPM',
+    // Uncomment to add more public URL pages:
+    // '/insurance':   'P-13',
+    // '/maintenance': 'P-14',
+};
+
+// Resolved on module load — null means this is a normal app route
+const CLEAN_PATH_PAGE: string | null = PATH_ROUTES[window.location.pathname] ?? null;
 
 // Detect CUSTOMER-SIGN-VERIFY page (link-only, no auth, no sidebar)
 const IS_SIGN_VERIFY_ROUTE = ((): boolean => {
@@ -51,22 +63,36 @@ const SignVerifyRenderer: React.FC = () => {
     );
 };
 
-// ── /map Full-Screen Renderer ─────────────────────────────────────────────────
-// Rendered when the user navigates to /map directly (no auth, no sidebar).
-const BpmMapRenderer: React.FC = () => {
+// ── Clean Path Full-Screen Renderer ───────────────────────────────────────────
+// Rendered when the URL pathname matches a PATH_ROUTES entry.
+// No auth, no sidebar, no CRM chrome — looks and feels like a public website page.
+// PricingProvider is included so estimate-tool and any pricing-dependent page works.
+const CleanPathRenderer: React.FC<{ pageId: string }> = ({ pageId }) => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
-    const BpmPage = pageComponentMap['INTERNAL-BPM'];
+    const PageComponent = pageComponentMap[pageId];
     return (
-        <div className={cn(
-            'fixed inset-0 w-screen h-screen overflow-hidden font-sans',
-            isDark ? 'bg-black text-white' : 'bg-black text-white'
-        )}>
-            <CircuitryBackground backgroundColor="#000000" dotColor="#ec028b" lineColor="236, 2, 139" />
-            <main className="relative z-10 w-full h-full overflow-y-auto">
-                {BpmPage && <BpmPage />}
-            </main>
-        </div>
+        <PricingProvider>
+            <div className={cn(
+                'fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500',
+                isDark ? 'bg-black text-white' : 'bg-[#F8F9FA] text-black'
+            )}>
+                <CircuitryBackground
+                    backgroundColor={isDark ? '#000000' : '#F8F9FA'}
+                    dotColor="#ec028b"
+                    lineColor="236, 2, 139"
+                />
+                <main className="relative z-10 w-full h-full overflow-y-auto">
+                    {PageComponent ? <PageComponent /> : (
+                        <div className="flex items-center justify-center h-full">
+                            <p className="text-gray-400 font-mono">Page not found.</p>
+                        </div>
+                    )}
+                </main>
+                <FloatingBackButton />
+                {window.location.hostname === 'localhost' && <DevNavigator />}
+            </div>
+        </PricingProvider>
     );
 };
 
@@ -411,11 +437,11 @@ export default function App() {
         );
     }
 
-    // /map route — render BPM page inside ThemeProvider only (no auth, no sidebar)
-    if (IS_MAP_ROUTE) {
+    // Clean URL path routes (e.g. /estimate-tool, /map) — no auth, no CRM chrome
+    if (CLEAN_PATH_PAGE) {
         return (
             <ThemeProvider>
-                <BpmMapRenderer />
+                <CleanPathRenderer pageId={CLEAN_PATH_PAGE} />
             </ThemeProvider>
         );
     }
