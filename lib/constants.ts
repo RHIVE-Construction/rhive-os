@@ -12,6 +12,11 @@ export const INITIAL_SURVEY_STATE: SurveyState = {
     swampCoolers: 0,
     skylights: 0,
   },
+  flatRoofFeatures: {
+    roofCurbSmall: 0,
+    roofCurbLarge: 0,
+    parapetSq: 0,
+  },
   gutters: {
     enabled: false,
     length: 0,

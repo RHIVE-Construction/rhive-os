@@ -150,12 +150,13 @@ export const MeasurementsSummary: React.FC<MeasurementsSummaryProps> = ({
         buildingData,
         pricing,
         surveyState.includedBuildingIds.length > 0 ? surveyState.includedBuildingIds : undefined,
+        surveyState,
       );
     } catch (e) {
       console.error('[MeasurementsSummary] computeDetailedMeasurements failed:', e);
       return null;
     }
-  }, [buildingData, pricing, surveyState.includedBuildingIds]);
+  }, [buildingData, pricing, surveyState]);
 
   if (!report) {
     return (
@@ -310,6 +311,20 @@ export const MeasurementsSummary: React.FC<MeasurementsSummaryProps> = ({
                     <StatRow label="SqRaw (flat area)"    value={`${fmt(report.flatSqRaw, 2)} SQ`} />
                     <StatRow label={`Waste (${fmtPct(report.flatWastePct)})`} value={`${fmt(report.flatSqLoad - report.flatSqRaw, 2)} SQ`} />
                     <StatRow label="SqLoad (order qty)"   value={`${fmt(report.flatSqLoad, 2)} SQ`} highlight pink />
+                    {surveyState.flatRoofFeatures && (surveyState.flatRoofFeatures.roofCurbSmall > 0 || surveyState.flatRoofFeatures.roofCurbLarge > 0 || surveyState.flatRoofFeatures.parapetSq > 0) && (
+                      <div className="mt-3 pt-2 border-t border-gray-800/40 space-y-0">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">Accessories / Details</p>
+                        {surveyState.flatRoofFeatures.roofCurbSmall > 0 && (
+                          <StatRow label="Roof Curb (Small)" value={`${surveyState.flatRoofFeatures.roofCurbSmall}`} />
+                        )}
+                        {surveyState.flatRoofFeatures.roofCurbLarge > 0 && (
+                          <StatRow label="Roof Curb (Large)" value={`${surveyState.flatRoofFeatures.roofCurbLarge}`} />
+                        )}
+                        {surveyState.flatRoofFeatures.parapetSq > 0 && (
+                          <StatRow label="Parapet Wall Area" value={`${fmt(surveyState.flatRoofFeatures.parapetSq, 2)} SQ`} />
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

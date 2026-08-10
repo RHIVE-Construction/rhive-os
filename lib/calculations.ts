@@ -160,7 +160,8 @@ export function calculateEstimate(inputs: CalculationInputs, pricing: Pricing, l
     const scalingFactor = apiTotalSq > 0 ? finalSq / apiTotalSq : 1;
 
     const finalAsphaltSq = initialAsphaltSq * scalingFactor;
-    const finalFlatSq = initialFlatSq * scalingFactor;
+    const parapetSq = surveyState.flatRoofFeatures?.parapetSq || 0;
+    const finalFlatSq = (initialFlatSq * scalingFactor) + parapetSq;
 
     // 1. Calculate Asphalt Roof Cost
     let totalAsphaltMaterialCost = 0;
@@ -200,9 +201,14 @@ export function calculateEstimate(inputs: CalculationInputs, pricing: Pricing, l
     let flatRoofLaborCost = 0;
     let flatRoofOverheadCost = 0;
     
+    const smallCurbMat = (surveyState.flatRoofFeatures?.roofCurbSmall || 0) * 80;
+    const smallCurbLab = (surveyState.flatRoofFeatures?.roofCurbSmall || 0) * 150;
+    const largeCurbMat = (surveyState.flatRoofFeatures?.roofCurbLarge || 0) * 120;
+    const largeCurbLab = (surveyState.flatRoofFeatures?.roofCurbLarge || 0) * 250;
+
     if (flatRoofingEnabled && finalFlatSq > 0) {
-        flatRoofMaterialCost = finalFlatSq * baseFlatRoofPricing.materials;
-        flatRoofLaborCost = finalFlatSq * baseFlatRoofPricing.labor;
+        flatRoofMaterialCost = finalFlatSq * baseFlatRoofPricing.materials + smallCurbMat + largeCurbMat;
+        flatRoofLaborCost = finalFlatSq * baseFlatRoofPricing.labor + smallCurbLab + largeCurbLab;
         flatRoofOverheadCost = finalFlatSq * baseFlatRoofPricing.overhead;
     }
     

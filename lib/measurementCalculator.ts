@@ -22,7 +22,7 @@
  * We use it for the area display but derive ground SQ from it for pricing inputs.
  */
 
-import type { BuildingData, RoofFacet, Pricing } from '../types';
+import type { BuildingData, RoofFacet, Pricing, SurveyState } from '../types';
 import { SQ_FEET_PER_SQUARE, SQ_METERS_TO_SQ_FEET } from '../constants';
 import { pricingToSheet, sheetVal, type SpreadsheetState } from './spreadsheetEngine';
 
@@ -219,6 +219,7 @@ export function computeDetailedMeasurements(
   buildingData: BuildingData,
   pricing: Pricing,
   includedBuildingIds?: string[],
+  surveyState?: SurveyState,
 ): DetailedMeasurementReport {
   // Collect facets from included buildings (or all buildings if not specified)
   const buildings = includedBuildingIds && includedBuildingIds.length > 0
@@ -340,7 +341,9 @@ export function computeDetailedMeasurements(
     const cell = FLAT_PITCH_CELL[pitchIn12];
     if (cell) sheetInputs[cell] = { value: gSQ, isEditable: true };
   });
-  sheetInputs["F35"] = { value: 0, isEditable: true }; // no parapet by default
+  sheetInputs["F35"] = { value: surveyState?.flatRoofFeatures?.parapetSq || 0, isEditable: true };
+  sheetInputs["F29"] = { value: surveyState?.flatRoofFeatures?.roofCurbSmall || 0, isEditable: true };
+  sheetInputs["F30"] = { value: surveyState?.flatRoofFeatures?.roofCurbLarge || 0, isEditable: true };
 
   const sheet = pricingToSheet(pricing, sheetInputs);
 

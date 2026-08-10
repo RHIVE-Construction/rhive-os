@@ -57,6 +57,11 @@ export interface SurveyState {
     swampCoolers: number;
     skylights: number;
   };
+  flatRoofFeatures?: {
+    roofCurbSmall: number;
+    roofCurbLarge: number;
+    parapetSq: number;
+  };
   gutters: {
     enabled: boolean;
     length: number;
