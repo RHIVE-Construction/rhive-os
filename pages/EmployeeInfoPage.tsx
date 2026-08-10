@@ -28,7 +28,6 @@ const EmployeeInfoPage: React.FC = () => {
                         <h2 className="text-2xl font-bold text-white">{currentUser.name}</h2>
                         <p className="text-[#ec028b] font-medium">Senior Project Manager</p>
                         <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-3 text-sm text-gray-400">
-                            <span className="flex items-center"><BriefcaseIcon className="w-4 h-4 mr-1" /> ID: {currentUser.id}</span>
                             <span className="flex items-center"><MapPinIcon className="w-4 h-4 mr-1" /> Salt Lake City, UT</span>
                         </div>
                     </div>

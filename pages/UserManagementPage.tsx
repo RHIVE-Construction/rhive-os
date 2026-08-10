@@ -382,8 +382,7 @@ const UserManagementPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between">
-                                <span className="text-[9px] text-gray-600 font-mono italic">ID: {user.id.slice(-8)}</span>
+                            <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-end">
                                 <div className="flex items-center gap-1.5">
                                     <div className={cn(
                                         "w-1.5 h-1.5 rounded-full",
