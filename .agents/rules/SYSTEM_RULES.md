@@ -176,6 +176,8 @@ Before running `firebase deploy`, the following must be verified:
 
 - [ ] **Merge to `main` is clean** — No unresolved conflicts.
 - [ ] **`npm run build` passes on `main`** — Always re-run the build after merging.
+- [ ] **Full page health check passes** — Run the Section 9 checklist across all pages. No blank pages, no black screens, no broken routes.
+- [ ] **Google Maps loads correctly** — Confirm the Estimate Tool map renders without error on a fresh load.
 - [ ] **REFERENCES/ is shielded** — Restore shield after merge if it was removed.
 - [ ] **Deploy only what changed** — Use `--only hosting` or `--only functions` unless a full deploy is required.
 
@@ -303,7 +305,9 @@ Every new feature follows this exact sequence:
    ↓
 9. BUILD — npm run build on main
    ↓
-10. DEPLOY — firebase deploy --only hosting
+10. HEALTH CHECK — run Section 9 full page verification
+    ↓
+11. DEPLOY — firebase deploy --only hosting
 ```
 
 ---
@@ -404,4 +408,71 @@ When in doubt, **check this file first.**
 
 ---
 
-*Last updated: 2026-08-01 | Branch: system-rules | Maintained in `.agents/rules/SYSTEM_RULES.md`*
+## 9. FULL PAGE HEALTH CHECK — MANDATORY BEFORE EVERY DEPLOY
+
+> **Every deploy must pass a full page health check.** No exceptions.
+> A feature that builds but breaks another page is not ready to ship.
+
+This check must be run on the **live dev server** (`npm run dev`) after merging to `main` and before `firebase deploy`.
+
+### 9.1 What to Check
+
+Visit **every route in the application** and verify:
+
+| Check | Pass Criteria |
+|-------|---------------|
+| No blank white page | The page renders content within 3 seconds of navigation |
+| No black screen | No full-viewport black or empty render state |
+| No broken layout | Components are visible, not clipped or overflowing off-screen |
+| No console errors | Zero red errors in the browser console on page load |
+| No broken navigation | All sidebar links and route transitions work without crashing |
+| All interactive elements respond | Buttons, modals, forms, toggles, dropdowns all open and close correctly |
+| Data loads correctly | Lists, tables, and cards display data — no infinite spinners or empty states due to errors |
+| Google Maps loads on Estimate Tool | The map renders without a grey box, API error banner, or blank tile |
+| Auth-gated routes redirect correctly | Unauthenticated users are sent to login; authenticated users reach the correct page |
+| No regression in adjacent pages | Pages near the changed area still work as before |
+
+### 9.2 Pages to Verify (Minimum)
+
+Every health check must cover at minimum:
+
+- [ ] **Public Homepage** — loads, hero renders, nav works
+- [ ] **Login Page** — form renders, submit flow works, no crash
+- [ ] **Dashboard** — loads after login, widgets visible
+- [ ] **Sales Pipeline** — stage columns render, leads load
+- [ ] **Lead Detail** — opens a record, fields visible, edit/delete accessible
+- [ ] **Estimate Tool** — page loads, Google Maps renders, address autocomplete works
+- [ ] **User Management** — list loads, no blank screen
+- [ ] **User Profile** — page renders for the logged-in user
+- [ ] **Trash Bin** — page loads, records visible (or correct empty state)
+- [ ] **User Activity Log** — page loads, log entries visible
+- [ ] **Admin Settings** — page accessible for admin role
+- [ ] **Sign & Verify** — page renders for correct roles
+
+### 9.3 Google Maps Specific Checks
+
+The Estimate Tool map must pass all of the following:
+
+- [ ] Map tiles render on page load (no grey/blank map)
+- [ ] No `InvalidKeyMapError`, `RefererNotAllowedMapError`, or similar API error overlay
+- [ ] Address autocomplete dropdown appears when typing a street address
+- [ ] After address selection, map pans to the correct location
+- [ ] No `window.google is not defined` or similar JS console error
+
+### 9.4 Failure Protocol
+
+If **any** check fails:
+
+1. **Do NOT deploy.** Stop immediately.
+2. Identify the root cause — check browser console errors, network tab, and React error boundaries.
+3. Fix the issue on the current branch.
+4. Re-run `npm run build` to confirm the fix.
+5. Re-run the full health check from the top.
+6. Only deploy once **all checks pass**.
+
+> **A deploy with a known broken page is strictly prohibited.**
+> If a page was working before your change and is broken after, you introduced a regression. Fix it before shipping.
+
+---
+
+*Last updated: 2026-08-12 | Branch: system-rules | Maintained in `.agents/rules/SYSTEM_RULES.md`*
