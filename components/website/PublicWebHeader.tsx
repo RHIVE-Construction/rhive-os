@@ -26,6 +26,9 @@ const NAV_LINKS = [
   { label: 'CONTACT',   href: '/?page=P-05' },
 ];
 
+// Explicit homepage URL — avoids sessionStorage overriding to a CRM page
+const HOME_URL = '/?page=P-00-V3';
+
 const PublicWebHeader: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
@@ -91,7 +94,7 @@ const PublicWebHeader: React.FC = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => { window.location.href = '/'; }}
+          onClick={() => { window.location.href = HOME_URL; }}
           className="relative flex items-center justify-center mt-1 pointer-events-auto"
           title="RHIVE Construction — Home"
         >

@@ -95,8 +95,8 @@ const CleanPathRenderer: React.FC<{ pageId: string }> = ({ pageId }) => {
                         </div>
                     )}
                 </main>
-                <FloatingBackButton />
-                {window.location.hostname === 'localhost' && <DevNavigator />}
+                {/* FloatingBackButton and DevNavigator intentionally excluded —
+                    both use useNavigation() which is not available in the public zone. */}
             </div>
         </PricingProvider>
     );
