@@ -17,6 +17,7 @@ import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
 import { GlobalChatWidget } from './components/chat/GlobalChatWidget';
 import HunniChatWidget from './components/website/HunniChatWidget';
+import PublicWebHeader from './components/website/PublicWebHeader';
 import { DevNavigator } from './components/DevNavigator';
 import { FloatingBackButton } from './components/FloatingBackButton';
 import { GlobalCustomerLookupModal } from './components/GlobalCustomerLookupModal';
@@ -65,8 +66,11 @@ const SignVerifyRenderer: React.FC = () => {
 
 // ── Clean Path Full-Screen Renderer ───────────────────────────────────────────
 // Rendered when the URL pathname matches a PATH_ROUTES entry.
-// No auth, no sidebar, no CRM chrome — looks and feels like a public website page.
-// PricingProvider is included so estimate-tool and any pricing-dependent page works.
+// COMPLETELY ISOLATED from the CRM provider tree:
+//   - No NavigationContext, no MockDatabaseContext, no NotificationContext
+//   - PricingProvider only (estimate tool needs pricing data)
+//   - PublicWebHeader: context-free website nav (window.location.href links)
+// A customer arriving via QR code will never touch or see any CRM state.
 const CleanPathRenderer: React.FC<{ pageId: string }> = ({ pageId }) => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -82,7 +86,9 @@ const CleanPathRenderer: React.FC<{ pageId: string }> = ({ pageId }) => {
                     dotColor="#ec028b"
                     lineColor="236, 2, 139"
                 />
-                <main className="relative z-10 w-full h-full overflow-y-auto">
+                {/* Website nav header — context-free, no CRM hooks */}
+                <PublicWebHeader />
+                <main className="relative z-10 w-full h-full overflow-y-auto pt-12">
                     {PageComponent ? <PageComponent /> : (
                         <div className="flex items-center justify-center h-full">
                             <p className="text-gray-400 font-mono">Page not found.</p>
