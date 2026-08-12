@@ -252,8 +252,7 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
           const place: Place = {
             address: results[0].formatted_address,
             latitude: loc.lat(),
-            longitude: loc.lng(),
-            placeId: results[0].place_id
+            longitude: loc.lng()
           };
           handlePlaceSelected(place);
         } else {

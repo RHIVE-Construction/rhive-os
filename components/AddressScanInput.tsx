@@ -36,32 +36,6 @@ export const AddressScanInput = ({
     const isControlled = value !== undefined;
 
     useEffect(() => {
-        if (!isApiReady || !inputRef.current || !window.google?.maps?.places) return;
-
-        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-            types: ['address'],
-            fields: ['formatted_address', 'geometry'],
-            componentRestrictions: { country: 'us' }
-        });
-
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace();
-            if (place.formatted_address) {
-                if (!isControlled) {
-                    setLocalVal(place.formatted_address);
-                }
-                if (onChange) {
-                    onChange(place.formatted_address);
-                }
-            }
-        });
-
-        return () => {
-            window.google?.maps?.event?.clearInstanceListeners(autocomplete);
-        };
-    }, [isApiReady, isControlled, onChange]);
-
-    useEffect(() => {
         if (index < fullText.length) {
             const timeout = setTimeout(() => {
                 setAnimatedPlaceholder(prev => prev + fullText[index]);
@@ -79,7 +53,6 @@ export const AddressScanInput = ({
 
     const currentVal = isControlled ? value : localVal;
 
-    const isApiReady = useGoogleMapsApi();
     const autocompleteRef = useRef<any>(null);
 
     useEffect(() => {
