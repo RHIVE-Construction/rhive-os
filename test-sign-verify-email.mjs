@@ -22,7 +22,7 @@ const TEST_PROJECT_ID = 'test-sign-verify-' + Date.now();
 const TEST_LINK = 'https://rhive-os.web.app/?page=CUSTOMER-SIGN-VERIFY&token=' + TEST_PROJECT_ID;
 
 // Accept email as CLI arg or use default test address
-const recipientEmail = process.argv[2] || 'victor.v@rhiveconstruction.com';
+const recipientEmail = process.argv[2] || 'james.g@rhiveconstruction.com';
 
 const payload = {
     projectId: TEST_PROJECT_ID,
