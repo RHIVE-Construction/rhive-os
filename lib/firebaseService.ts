@@ -573,7 +573,7 @@ const normalizeLead = (lead: any): any => {
         property_address: address,
         // Preserve contact info in a predictable place
         contact_name: displayName,
-        contact_email: lead.email || lead.secondaryEmail || '',
+        contact_email: lead.email || lead.contact?.email || lead.secondaryEmail || '',
         contact_phone: lead.phone || lead.mobile || lead.contactPhone2 || '',
         lead_source: lead.leadSource || lead.lead_source || lead.howDidYouHear || '',
         notes: lead.additionalProjectDetails || lead.notes || '',

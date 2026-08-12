@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 const { GoogleGenAI } = require('@google/genai');
@@ -1864,7 +1864,6 @@ exports.processMailQueue = functions
 
 /**
  * sendSignVerifyEmail - sends the customer their Sign & Verify portal link.
->>>>>>> origin/main
  * Body: { projectId, customerEmail, customerName, projectName, link }
  * Uses the Firestore 'mail' collection (Firebase Trigger Email extension) -
  * same mechanism as password-change notifications. Always queues if customerEmail provided.
