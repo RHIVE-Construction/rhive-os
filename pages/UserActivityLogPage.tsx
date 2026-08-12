@@ -34,6 +34,15 @@ interface UserLogEntry {
     payload?: Record<string, any>;
     timestamp: string;
     read: boolean;
+    // IP geolocation fields
+    ipAddress?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    countryName?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    timezone?: string;
 }
 
 // ─── Severity styles ───────────────────────────────────────────────────────────
@@ -188,6 +197,12 @@ const LogRow: React.FC<{ entry: UserLogEntry; isExpanded: boolean; onToggle: () 
                 {/* Description */}
                 <td className="px-4 py-3 text-xs text-gray-300 max-w-[280px]">
                     <span className="truncate block">{entry.description}</span>
+                    {/* IP location badge — shown inline on the row for login events */}
+                    {entry.ipAddress && entry.ipAddress !== 'unknown' && (
+                        <span className="text-[9px] font-mono text-gray-500 mt-0.5 block">
+                            🌐 {entry.ipAddress} &bull; {entry.city !== 'unknown' ? entry.city : ''}{entry.country && entry.country !== 'unknown' ? `, ${entry.country}` : ''}
+                        </span>
+                    )}
                 </td>
                 {/* Expand */}
                 <td className="px-4 py-3 text-center">
@@ -205,6 +220,48 @@ const LogRow: React.FC<{ entry: UserLogEntry; isExpanded: boolean; onToggle: () 
                                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">Event Details</p>
                                 <PayloadViewer payload={entry.payload} />
                             </div>
+                            {/* IP Location Panel */}
+                            {entry.ipAddress && (
+                                <div className="min-w-[200px]">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">🌐 IP Location</p>
+                                    <div className="font-mono text-[11px] space-y-1 px-2">
+                                        <div className="flex gap-2">
+                                            <span className="text-rhive-pink font-bold min-w-[80px]">IP</span>
+                                            <span className="text-gray-300">{entry.ipAddress}</span>
+                                        </div>
+                                        {entry.city && entry.city !== 'unknown' && (
+                                            <div className="flex gap-2">
+                                                <span className="text-rhive-pink font-bold min-w-[80px]">City</span>
+                                                <span className="text-gray-300">{entry.city}</span>
+                                            </div>
+                                        )}
+                                        {entry.region && entry.region !== 'unknown' && (
+                                            <div className="flex gap-2">
+                                                <span className="text-rhive-pink font-bold min-w-[80px]">Region</span>
+                                                <span className="text-gray-300">{entry.region}</span>
+                                            </div>
+                                        )}
+                                        {entry.countryName && entry.countryName !== 'unknown' && (
+                                            <div className="flex gap-2">
+                                                <span className="text-rhive-pink font-bold min-w-[80px]">Country</span>
+                                                <span className="text-gray-300">{entry.countryName} ({entry.country})</span>
+                                            </div>
+                                        )}
+                                        {entry.timezone && entry.timezone !== 'unknown' && (
+                                            <div className="flex gap-2">
+                                                <span className="text-rhive-pink font-bold min-w-[80px]">Timezone</span>
+                                                <span className="text-gray-300">{entry.timezone}</span>
+                                            </div>
+                                        )}
+                                        {entry.latitude != null && entry.longitude != null && (
+                                            <div className="flex gap-2">
+                                                <span className="text-rhive-pink font-bold min-w-[80px]">Coords</span>
+                                                <span className="text-gray-300">{entry.latitude}, {entry.longitude}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                             <div className="text-[10px] text-gray-600 font-mono space-y-1 min-w-[180px]">
                                 <p><span className="text-gray-500">ID:</span> {entry.id}</p>
                                 <p><span className="text-gray-500">User ID:</span> {entry.userId}</p>
@@ -301,14 +358,18 @@ const UserActivityLogPage: React.FC = () => {
     // ── CSV Export ────────────────────────────────────────────────────────────
 
     const exportCSV = () => {
-        const header = ['Timestamp', 'User', 'Role', 'Action', 'Description', 'User ID'];
+        const header = ['Timestamp', 'User', 'Role', 'Action', 'Description', 'User ID', 'IP Address', 'City', 'Region', 'Country'];
         const rows = filteredLogs.map(l => [
             l.timestamp,
             `"${l.userName}"`,
             l.userRole,
             l.actionType,
             `"${l.description.replace(/"/g, '""')}"`,
-            l.userId
+            l.userId,
+            l.ipAddress || '',
+            l.city || '',
+            l.region || '',
+            l.country || '',
         ]);
         const csv = [header, ...rows].map(r => r.join(',')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
