@@ -125,9 +125,135 @@ export const authService = {
 
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 
-// passwordResetService moved below to avoid duplicate declaration and reference order issues
+export const passwordResetService = {
+    /**
+     * Step 1: Request a password reset.
+     * Looks up user by email and sends a reset link.
+     */
+    requestReset: async (email: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const normalized = email.toLowerCase().trim();
 
+            // Look up user in Firestore
+            const usersRef = collection(db, 'users');
+            const q = query(usersRef, where('email', '==', normalized), limit(1));
+            const snapshot = await getDocs(q);
 
+            if (snapshot.empty) {
+                // Don't reveal user doesn't exist — silently succeed
+                console.warn('[passwordResetService] No user found for email (enumeration guard)');
+                return { success: true };
+            }
+
+            const userDoc = snapshot.docs[0];
+            const userId = userDoc.id;
+            const userName = userDoc.data().name || 'RHIVE User';
+
+            // Generate a cryptographically secure token
+            const tokenBytes = new Uint8Array(32);
+            crypto.getRandomValues(tokenBytes);
+            const token = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            // Store the token in Firestore with expiry
+            const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRY_MS).toISOString();
+            await setDoc(doc(db, 'passwordResets', token), {
+                userId,
+                email: normalized,
+                expiresAt,
+                used: false,
+                createdAt: new Date().toISOString(),
+            });
+
+            // Build the reset URL
+            const resetUrl = `${window.location.origin}/?mode=firestoreReset&token=${token}`;
+
+            // Capture requester IP (best-effort, silent on failure)
+            let clientIp: string | undefined;
+            try {
+                const ipRes = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+                const ipJson = await ipRes.json();
+                clientIp = ipJson.ip;
+            } catch {
+                // silent — IP capture is best-effort
+            }
+
+            // Send via RHIVE email system
+            const { emailService } = await import('./emailService');
+            await emailService.sendPasswordReset(normalized, token, clientIp);
+
+            return { success: true };
+        } catch (error: any) {
+            console.error('[passwordResetService.requestReset] Error:', error);
+            return { success: false, error: 'Unable to send reset email. Please try again later.' };
+        }
+    },
+
+    /**
+     * Step 2: Verify a reset token from the URL.
+     * Returns the email address if valid, or an error if expired/used/invalid.
+     */
+    verifyToken: async (token: string): Promise<{ success: boolean; email?: string; userId?: string; error?: string }> => {
+        try {
+            if (!token) return { success: false, error: 'Invalid reset link.' };
+
+            const tokenDocRef = doc(db, 'passwordResets', token);
+            const tokenSnap = await getDoc(tokenDocRef);
+
+            if (!tokenSnap.exists()) {
+                return { success: false, error: 'This reset link is invalid or has already been used.' };
+            }
+
+            const data = tokenSnap.data();
+
+            if (data.used) {
+                return { success: false, error: 'This reset link has already been used. Please request a new one.' };
+            }
+
+            if (new Date() > new Date(data.expiresAt)) {
+                return { success: false, error: 'This reset link has expired. Links are valid for 1 hour.' };
+            }
+
+            return { success: true, email: data.email, userId: data.userId };
+        } catch (error: any) {
+            console.error('[passwordResetService.verifyToken] Error:', error);
+            return { success: false, error: 'Unable to verify reset link. Please try again.' };
+        }
+    },
+
+    /**
+     * Step 3: Apply the new password.
+     * Hashes the new password and updates password_hash in the users collection.
+     * Marks the reset token as used so it cannot be replayed.
+     */
+    applyNewPassword: async (token: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            // Re-verify token before applying
+            const verification = await passwordResetService.verifyToken(token);
+            if (!verification.success || !verification.userId) {
+                return { success: false, error: verification.error };
+            }
+
+            const { hashPassword } = await import('./utils');
+            const newHash = await hashPassword(newPassword);
+
+            // Update password_hash in the users collection
+            const userRef = doc(db, 'users', verification.userId);
+            await updateDoc(userRef, {
+                password_hash: newHash,
+                updated_at: new Date().toISOString(),
+            });
+
+            // Mark the token as used (single-use enforcement)
+            const tokenRef = doc(db, 'passwordResets', token);
+            await updateDoc(tokenRef, { used: true, usedAt: new Date().toISOString() });
+
+            return { success: true };
+        } catch (error: any) {
+            console.error('[passwordResetService.applyNewPassword] Error:', error);
+            return { success: false, error: 'Failed to update password. Please try again.' };
+        }
+    },
+};
 
 export const firestoreService = {
     // This function automatically creates the collection if it doesn't exist
@@ -199,11 +325,73 @@ export const firestoreService = {
     updateDocument: async (collectionName: string, id: string, data: any) => {
         try {
             const cleanData = JSON.parse(JSON.stringify(data));
+            // Pull current user from session for audit trail (System Rules §7.3)
+            const actor = session.read();
+            const auditFields = {
+                updated_at: new Date().toISOString(),
+                modified_at: new Date().toISOString(),
+                modified_by: actor?.name || 'Unknown',
+                modified_by_id: actor?.id || 'unknown',
+            };
             const docRef = doc(db, collectionName, id);
-            await updateDoc(docRef, { ...cleanData, updated_at: new Date().toISOString() });
-            return { success: true, data: { id, ...cleanData } };
+            await updateDoc(docRef, { ...cleanData, ...auditFields });
+            return { success: true, data: { id, ...cleanData, ...auditFields } };
         } catch (error: any) {
             console.error(`Error updating ${collectionName} ${id}:`, error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Soft-delete: marks a document as deleted without removing it from Firestore.
+     * Writes deleted:true, status:'trashed', plus deletion audit fields.
+     * Per System Rules §7 — must be used instead of deleteDocument for pipeline records.
+     */
+    softDeleteDocument: async (
+        collectionName: string,
+        id: string,
+        meta?: { deletion_reason?: string; deleted_by?: string }
+    ) => {
+        try {
+            const actor = session.read();
+            const now = new Date().toISOString();
+            const docRef = doc(db, collectionName, id);
+            await updateDoc(docRef, {
+                deleted: true,
+                status: 'trashed',
+                deleted_at: now,
+                deleted_by: meta?.deleted_by || actor?.name || 'unknown',
+                deleted_by_id: actor?.id || 'unknown',
+                deletion_reason: meta?.deletion_reason || '',
+                updated_at: now,
+            });
+            return { success: true };
+        } catch (error: any) {
+            console.error(`Error soft-deleting ${collectionName} ${id}:`, error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Restore: clears the deleted flag on a soft-deleted document.
+     * Writes restored_at and restored_by audit fields.
+     */
+    restoreDocument: async (collectionName: string, id: string) => {
+        try {
+            const actor = session.read();
+            const now = new Date().toISOString();
+            const docRef = doc(db, collectionName, id);
+            await updateDoc(docRef, {
+                deleted: false,
+                status: 'active',
+                restored_at: now,
+                restored_by: actor?.name || 'unknown',
+                restored_by_id: actor?.id || 'unknown',
+                updated_at: now,
+            });
+            return { success: true };
+        } catch (error: any) {
+            console.error(`Error restoring ${collectionName} ${id}:`, error);
             return { success: false, error: error.message };
         }
     },
@@ -217,6 +405,89 @@ export const firestoreService = {
             return { success: false, error: error.message };
         }
     },
+
+
+    /**
+     * Bulk soft-delete multiple documents across one or more collections.
+     * Uses writeBatch for atomicity — all updates succeed or none do.
+     */
+    bulkSoftDelete: async (
+        items: Array<{
+            collectionName: string;
+            id: string;
+            metadata?: { deleted_by?: string; deletion_reason?: string };
+        }>
+    ): Promise<{ success: boolean; count: number; error?: string }> => {
+        try {
+            const actor = session.read();
+            const batch = writeBatch(db);
+            const now = new Date().toISOString();
+            items.forEach(({ collectionName, id, metadata = {} }) => {
+                const docRef = doc(db, collectionName, id);
+                batch.update(docRef, {
+                    deleted: true,
+                    status: 'trashed',
+                    deleted_at: now,
+                    deleted_by: metadata.deleted_by || actor?.name || 'unknown',
+                    deleted_by_id: actor?.id || 'unknown',
+                    deletion_reason: metadata.deletion_reason || '',
+                    updated_at: now,
+                });
+            });
+            await batch.commit();
+            return { success: true, count: items.length };
+        } catch (error: any) {
+            return { success: false, count: 0, error: error.message };
+        }
+    },
+
+    /**
+     * Auto-expire trashed records older than `daysThreshold` days.
+     * Hard-deletes them permanently from Firestore via writeBatch.
+     * Returns the list of permanently deleted records for logging.
+     */
+    autoExpireTrash: async (
+        collectionNames: string[],
+        daysThreshold = 90
+    ): Promise<Array<{ id: string; collection: string; name: string }>> => {
+        const expired: Array<{ id: string; collection: string; name: string }> = [];
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - daysThreshold);
+        const cutoffISO = cutoff.toISOString();
+
+        try {
+            const batch = writeBatch(db);
+            for (const collectionName of collectionNames) {
+                const snap = await getDocs(collection(db, collectionName));
+                snap.docs.forEach(d => {
+                    const data = d.data();
+                    if (
+                        data.deleted === true &&
+                        data.deleted_at &&
+                        data.deleted_at < cutoffISO
+                    ) {
+                        batch.delete(doc(db, collectionName, d.id));
+                        expired.push({
+                            id: d.id,
+                            collection: collectionName,
+                            name:
+                                data.name ||
+                                (data.firstName && data.lastName
+                                    ? `${data.firstName} ${data.lastName}`
+                                    : null) ||
+                                data.Deal_Name ||
+                                'Unnamed Record',
+                        });
+                    }
+                });
+            }
+            if (expired.length > 0) await batch.commit();
+        } catch (_e) {
+            // Silently fail — auto-expiry is best-effort
+        }
+        return expired;
+    },
+
 
     createBatch: async (collectionName: string, dataArray: any[]) => {
         try {
@@ -344,8 +615,10 @@ export const projectService = {
         let leads: any[] = [];
         let deals: any[] = [];
 
-        const notify = () => callback([...projects, ...leads, ...deals]);
-
+        // Only surface records that have not been soft-deleted (System Rules §7)
+        const notify = () => callback(
+            [...projects, ...leads, ...deals].filter(r => !r.deleted)
+        );
 
         const unsubProjects = firestoreService.subscribeToDocuments('projects', (data) => {
             projects = data;
@@ -364,11 +637,10 @@ export const projectService = {
                 notify();
             },
             (error) => {
-                console.warn('🔥 Firestore [deals] subscribe error:', error.code);
+                console.warn('Firestore [deals] subscribe error:', error.code);
                 notify();
             }
         );
-
 
         return () => {
             unsubProjects();
@@ -546,7 +818,76 @@ export const leadService = {
     subscribe: (callback: (data: any[]) => void) => firestoreService.subscribeToDocuments('leads', callback),
     getById: (id: string) => firestoreService.getDocument('leads', id),
     update: (id: string, data: any) => firestoreService.updateDocument('leads', id, data),
-    delete: (id: string) => firestoreService.deleteDocument('leads', id)
+    delete: (id: string) => firestoreService.deleteDocument('leads', id),
+
+    /**
+     * Schedules a follow-up for a lead/project, logs the action, and sends
+     * a notification email to the assigned employee.
+     */
+    scheduleFollowUp: async (opts: {
+        projectId: string;
+        projectName: string;
+        type: 'call' | 'visit';
+        date: string;           // YYYY-MM-DD
+        time?: string;          // HH:MM
+        notes?: string;
+        stage?: string;
+        assigneeEmail?: string;
+        assigneeName?: string;
+    }): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const { emailService } = await import('./emailService');
+            const currentUser = session.read();
+
+            // 1. Write follow-up document to Firestore
+            const followUpDoc = {
+                project_id: opts.projectId,
+                project_name: opts.projectName,
+                type: opts.type,
+                date: opts.date,
+                time: opts.time || '',
+                notes: opts.notes || '',
+                stage: opts.stage || 'Lead',
+                assigned_to_email: opts.assigneeEmail || currentUser?.email || '',
+                assigned_to_name: opts.assigneeName || currentUser?.name || '',
+                created_by: currentUser?.name || 'Unknown',
+                created_by_id: currentUser?.id || '',
+            };
+            const writeResult = await firestoreService.addDocument('followups', followUpDoc);
+            if (!writeResult.success) {
+                return { success: false, error: writeResult.error };
+            }
+
+            // 2. Log the action
+            await userLogService.logAction(
+                'MEETING_SCHEDULED',
+                `Follow-up scheduled for ${opts.projectName} on ${opts.date}`,
+                { projectId: opts.projectId, projectName: opts.projectName, date: opts.date, type: opts.type }
+            );
+
+            // 3. Send email notification to assignee (best-effort)
+            const emailTarget = opts.assigneeEmail || currentUser?.email || '';
+            if (emailTarget) {
+                emailService.sendFollowUpScheduled({
+                    assigneeEmail: emailTarget,
+                    assigneeName: opts.assigneeName || currentUser?.name,
+                    leadName: opts.projectName,
+                    followUpDate: opts.date,
+                    followUpTime: opts.time,
+                    followUpType: opts.type,
+                    notes: opts.notes,
+                    stage: opts.stage,
+                }).catch((err: any) => {
+                    console.error('[leadService] Failed to send follow-up email:', err);
+                });
+            }
+
+            return { success: true };
+        } catch (error: any) {
+            console.error('Error in leadService.scheduleFollowUp:', error);
+            return { success: false, error: error.message };
+        }
+    }
 };
 
 export const accountService = {
@@ -697,144 +1038,6 @@ export const passwordResetService = {
     /**
      * Step 1: Request a password reset.
      * Looks up the user in Firestore, generates a secure token,
-     * stores it in the `passwordResets` collection, then sends the email.
-     * SECURITY: Always returns success to prevent email enumeration.
-     */
-    requestReset: async (email: string): Promise<{ success: boolean; error?: string }> => {
-        try {
-            const normalized = email.toLowerCase().trim();
-
-            // Look up user in Firestore
-            const usersRef = collection(db, 'users');
-            const q = query(usersRef, where('email', '==', normalized), limit(1));
-            const snapshot = await getDocs(q);
-
-            if (snapshot.empty) {
-                // Don't reveal user doesn't exist — silently succeed
-                console.warn('[passwordResetService] No user found for email (enumeration guard)');
-                return { success: true };
-            }
-
-            const userDoc = snapshot.docs[0];
-            const userId = userDoc.id;
-            const userName = userDoc.data().name || 'RHIVE User';
-
-            // Generate a cryptographically secure token
-            const tokenBytes = new Uint8Array(32);
-            crypto.getRandomValues(tokenBytes);
-            const token = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-
-            // Store the token in Firestore with expiry
-            const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRY_MS).toISOString();
-            await setDoc(doc(db, 'passwordResets', token), {
-                userId,
-                email: normalized,
-                expiresAt,
-                used: false,
-                createdAt: new Date().toISOString(),
-            });
-
-            // Build the reset URL
-            const resetUrl = `${window.location.origin}/?mode=firestoreReset&token=${token}`;
-
-            // Send email via EmailJS
-            const emailjsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-            const emailjsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-            const emailjsPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-            if (!emailjsServiceId || !emailjsTemplateId || !emailjsPublicKey) {
-                console.error('[passwordResetService] EmailJS env vars not configured. Reset URL:', resetUrl);
-                // In dev, still return success and log the URL so it can be tested
-                return { success: true };
-            }
-
-            const { default: emailjs } = await import('@emailjs/browser');
-            await emailjs.send(
-                emailjsServiceId,
-                emailjsTemplateId,
-                {
-                    to_email: normalized,
-                    to_name: userName,
-                    reset_url: resetUrl,
-                    expires_in: '1 hour',
-                    app_name: 'RHIVE QOS',
-                },
-                emailjsPublicKey
-            );
-
-            return { success: true };
-        } catch (error: any) {
-            console.error('[passwordResetService.requestReset] Error:', error);
-            return { success: false, error: 'Unable to send reset email. Please try again later.' };
-        }
-    },
-
-    /**
-     * Step 2: Verify a reset token from the URL.
-     * Returns the email address if valid, or an error if expired/used/invalid.
-     */
-    verifyToken: async (token: string): Promise<{ success: boolean; email?: string; userId?: string; error?: string }> => {
-        try {
-            if (!token) return { success: false, error: 'Invalid reset link.' };
-
-            const tokenDocRef = doc(db, 'passwordResets', token);
-            const tokenSnap = await getDoc(tokenDocRef);
-
-            if (!tokenSnap.exists()) {
-                return { success: false, error: 'This reset link is invalid or has already been used.' };
-            }
-
-            const data = tokenSnap.data();
-
-            if (data.used) {
-                return { success: false, error: 'This reset link has already been used. Please request a new one.' };
-            }
-
-            if (new Date() > new Date(data.expiresAt)) {
-                return { success: false, error: 'This reset link has expired. Links are valid for 1 hour.' };
-            }
-
-            return { success: true, email: data.email, userId: data.userId };
-        } catch (error: any) {
-            console.error('[passwordResetService.verifyToken] Error:', error);
-            return { success: false, error: 'Unable to verify reset link. Please try again.' };
-        }
-    },
-
-    /**
-     * Step 3: Apply the new password.
-     * Hashes the new password and updates password_hash in the users collection.
-     * Marks the reset token as used so it cannot be replayed.
-     */
-    applyNewPassword: async (token: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
-        try {
-            // Re-verify token before applying
-            const verification = await passwordResetService.verifyToken(token);
-            if (!verification.success || !verification.userId) {
-                return { success: false, error: verification.error };
-            }
-
-            const { hashPassword } = await import('./utils');
-            const newHash = await hashPassword(newPassword);
-
-            // Update password_hash in the users collection
-            const userRef = doc(db, 'users', verification.userId);
-            await updateDoc(userRef, {
-                password_hash: newHash,
-                updated_at: new Date().toISOString(),
-            });
-
-            // Mark the token as used (single-use enforcement)
-            const tokenRef = doc(db, 'passwordResets', token);
-            await updateDoc(tokenRef, { used: true, usedAt: new Date().toISOString() });
-
-            return { success: true };
-        } catch (error: any) {
-            console.error('[passwordResetService.applyNewPassword] Error:', error);
-            return { success: false, error: 'Failed to update password. Please try again.' };
-        }
-    },
-    /**
      * Generates a reset token, stores it on the user document,
      * then queues a password-reset email via the Firestore `mail` collection.
      * The "Trigger Email from Firestore" Firebase extension handles delivery.
@@ -919,8 +1122,10 @@ export const passwordResetService = {
      *    which uses Firebase Admin SDK to update the real Firebase Auth password.
      *  - Firestore token → from email reset flow → updates password_hash on the user document.
      */
-    completePasswordReset: async (token: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    completePasswordReset: async (token: string, newPassword: string): Promise<{ success: boolean; error?: string; email?: string }> => {
         try {
+            const { emailService } = await import('./emailService');
+
             // ── JWT path (SMS OTP forgot-password flow) ───────────────────────
             if (token.startsWith('eyJ')) {
                 const res = await fetch(`${FUNCTIONS_BASE_URL}/completePasswordReset`, {
@@ -932,12 +1137,16 @@ export const passwordResetService = {
                 if (!res.ok) {
                     return { success: false, error: data.error || `HTTP ${res.status}` };
                 }
-                return { success: true };
+                // Send password-changed confirmation (best-effort — JWT path may not have email)
+                if (data.email) {
+                    emailService.sendPasswordChangedConfirmation(data.email).catch(() => {});
+                }
+                return { success: true, email: data.email };
             }
 
             // ── Firestore token path (email reset flow) ───────────────────────
-            // 1. Verify token and get userId directly
-            const verification = await passwordResetService.verifyResetToken(token);
+            // 1. Verify token and get userId + email directly
+            const verification = await passwordResetService.verifyToken(token);
             if (!verification.success || !verification.userId) {
                 return { success: false, error: verification.error || 'Token verification failed.' };
             }
@@ -957,7 +1166,14 @@ export const passwordResetService = {
                 return { success: false, error: updateResult.error || 'Failed to update password.' };
             }
 
-            return { success: true };
+            // 4. Send password-changed security confirmation email
+            if (verification.email) {
+                emailService.sendPasswordChangedConfirmation(verification.email).catch((err: any) => {
+                    console.error('[passwordResetService] Failed to send confirmation email:', err);
+                });
+            }
+
+            return { success: true, email: verification.email };
         } catch (error: any) {
             console.error('Error in completePasswordReset:', error);
             return { success: false, error: error.message };
@@ -1305,17 +1521,25 @@ export const userLogService = {
             userRole,
             actionType,
             description,
-            payload: payload || {},
+            // Ensure required payload fields per System Rules §7.2
+            payload: {
+                recordId: payload?.recordId || '',
+                recordName: payload?.recordName || payload?.name || '',
+                collection: payload?.collection || '',
+                stage: payload?.stage || '',
+                reason: payload?.reason || '',
+                changes: payload?.changes || [],
+                ...(payload || {}),
+            },
             timestamp: new Date().toISOString(),
             read: false
         };
 
         try {
             const result = await firestoreService.addDocument('user_log', logDoc);
-            console.log(`[user_log] Successfully recorded log: ${actionType} - ${description}`, result);
             return result;
         } catch (error: any) {
-            console.warn('🔥 Failed to write user action to Firestore user_log:', error);
+            console.warn('Failed to write user action to user_log:', error);
             return { success: false, error: error.message };
         }
     }

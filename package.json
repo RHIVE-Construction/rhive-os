@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "engines": {
-    "node": "20"
+    "node": ">=22"
   },
   "scripts": {
     "start": "serve -s dist -l tcp://0.0.0.0:$PORT",
     "dev": "vite --port 3002",
-    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 8002"
   },
   "dependencies": {
@@ -29,8 +30,8 @@
     "googleapis": "^171.4.0",
     "gsap": "^3.14.2",
     "lucide-react": "^0.575.0",
-    "nanoid": "3.3.12",
     "matter-js": "^0.20.0",
+    "nanoid": "3.3.12",
     "protobufjs": "^8.4.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -49,6 +50,5 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.4.2"
-  },
-  "optionalDependencies": {}
+  }
 }

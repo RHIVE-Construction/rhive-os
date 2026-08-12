@@ -1,5 +1,6 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { logUserActivity, LOG_ACTIONS, PAGE_NAMES } from './lib/userActivityLogger';
 import { PricingProvider } from './contexts/PricingContext';
 import { MockDatabaseProvider, useMockDB } from './contexts/MockDatabaseContext';
 import { NavigationProvider, useNavigation } from './contexts/NavigationContext';
@@ -40,12 +41,51 @@ let initialDashboardRedirectDone = (() => {
     return false;
 })();
 
+// Detect /map path once at module load — used to short-circuit the entire auth flow
+const IS_MAP_ROUTE = window.location.pathname === '/map';
+
+// Detect CUSTOMER-SIGN-VERIFY page (link-only, no auth, no sidebar)
+const IS_SIGN_VERIFY_ROUTE = ((): boolean => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('page') === 'CUSTOMER-SIGN-VERIFY';
+})();
+
+// ── Customer Sign & Verify Full-Screen Renderer ——————————————————————————————————
+const SignVerifyRenderer: React.FC = () => {
+    const SignVerifyPage = pageComponentMap['CUSTOMER-SIGN-VERIFY'];
+    return (
+        <div className="fixed inset-0 w-screen h-screen overflow-hidden font-sans">
+            {SignVerifyPage && <SignVerifyPage />}
+        </div>
+    );
+};
+
+// ── /map Full-Screen Renderer ─────────────────────────────────────────────────
+// Rendered when the user navigates to /map directly (no auth, no sidebar).
+const BpmMapRenderer: React.FC = () => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    const BpmPage = pageComponentMap['INTERNAL-BPM'];
+    return (
+        <div className={cn(
+            'fixed inset-0 w-screen h-screen overflow-hidden font-sans',
+            isDark ? 'bg-black text-white' : 'bg-black text-white'
+        )}>
+            <CircuitryBackground backgroundColor="#000000" dotColor="#ec028b" lineColor="236, 2, 139" />
+            <main className="relative z-10 w-full h-full overflow-y-auto">
+                {BpmPage && <BpmPage />}
+            </main>
+        </div>
+    );
+};
 const AppContentAuthenticated: React.FC = () => {
     const { activePageId, setActivePageId, showEditorMenu } = useNavigation();
     const { currentUser } = useMockDB();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const mainRef = React.useRef<HTMLElement>(null);
+
+    const pageVisitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Refresh the 24-hour session window on any user activity
     useEffect(() => {
@@ -60,8 +100,26 @@ const AppContentAuthenticated: React.FC = () => {
         };
     }, []);
 
+    // Log page navigation with 2-second debounce to reduce noise from rapid switching
     useEffect(() => {
-        console.log('App: activePageId changed to:', activePageId);
+        if (!activePageId || !currentUser) return;
+        // Skip logging the Log viewer itself to prevent infinite feedback loops
+        if (activePageId === 'A-LOGS') return;
+        if (pageVisitTimer.current) clearTimeout(pageVisitTimer.current);
+        pageVisitTimer.current = setTimeout(() => {
+            const pageName = PAGE_NAMES[activePageId] || activePageId;
+            logUserActivity(
+                LOG_ACTIONS.PAGE_VISITED,
+                `Visited: ${pageName}`,
+                { pageId: activePageId, pageName }
+            );
+        }, 2000);
+        return () => {
+            if (pageVisitTimer.current) clearTimeout(pageVisitTimer.current);
+        };
+    }, [activePageId, currentUser]);
+
+    useEffect(() => {
         if (mainRef.current) {
             mainRef.current.scrollTop = 0;
         }
@@ -113,14 +171,35 @@ const AppContentAuthenticated: React.FC = () => {
         const handleCustomNav = (e: any) => {
             if (e.detail) setActivePageId(e.detail);
         };
+        const handleRoofConfigurator = (e: any) => {
+            if (e.detail?.mode === 'estimate') {
+                sessionStorage.removeItem('estimateAddress');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('estimateAddress', e.detail.address);
+                }
+                setActivePageId('P-12');
+            } else {
+                sessionStorage.removeItem('intakeScopeType');
+                sessionStorage.removeItem('intakePurchaseIntent');
+                sessionStorage.removeItem('globalSearchQuery');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('globalSearchQuery', e.detail.address);
+                }
+                setActivePageId('E-02a');
+            }
+        };
         window.addEventListener('nav-page', handleCustomNav);
-        return () => window.removeEventListener('nav-page', handleCustomNav);
+        window.addEventListener('open-roof-configurator', handleRoofConfigurator);
+        return () => {
+            window.removeEventListener('nav-page', handleCustomNav);
+            window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
+        };
     }, [activePageId, setActivePageId, currentUser]);
 
     useEffect(() => {
-        // Redirect to role dashboard after login from ANY public page (P-xx) or no page
-        if (!initialDashboardRedirectDone && currentUser && (!activePageId || activePageId.startsWith('P-'))) {
-            initialDashboardRedirectDone = true;
+        // Only redirect to role dashboard from the login page (P-06) or when no page is set.
+        // Do NOT redirect from other public pages like Estimate Tool (P-12).
+        if (currentUser && (!activePageId || activePageId === 'P-06')) {
             switch (currentUser.role) {
                 case 'Super Admin': setActivePageId('SA-01'); break;
                 case 'Admin': setActivePageId('E-01'); break;
@@ -128,7 +207,7 @@ const AppContentAuthenticated: React.FC = () => {
                 case 'Customer': setActivePageId('C-01'); break;
                 case 'Contractor': setActivePageId('CO-01'); break;
                 case 'Supplier': setActivePageId('S-01'); break;
-                case 'Public': setActivePageId('P-00-V3'); break;
+                default: setActivePageId('P-00'); break;
             }
         }
     }, [currentUser, setActivePageId, activePageId]);
@@ -150,15 +229,14 @@ const AppContentAuthenticated: React.FC = () => {
                 dotColor={isDark ? "#ec028b" : "#ec028b"}
                 lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
             />
-            {!isPublicRoute && <GlobalHeader />}
+            <GlobalHeader />
 
-            <div className={cn("relative z-10 flex h-full w-full", !isPublicRoute ? "pt-12" : "pt-0")}>
-                {!isPublicRoute && <Sidebar />}
+            <div className="relative z-10 flex h-full w-full pt-12">
+                <Sidebar />
                 <main 
                     ref={mainRef}
                     className={cn(
-                    "flex-1 h-full overflow-y-auto relative transition-colors duration-500",
-                    !isPublicRoute && "border-l",
+                    "flex-1 h-full overflow-y-auto relative transition-colors duration-500 border-l",
                     isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-black/5"
                 )}>
                     <CurrentPage />
@@ -209,11 +287,30 @@ const LoginBridge: React.FC = () => {
         const handleCustomNav = (e: any) => {
             if (e.detail) setActivePageId(e.detail);
         };
+        const handleRoofConfigurator = (e: any) => {
+            if (e.detail?.mode === 'estimate') {
+                sessionStorage.removeItem('estimateAddress');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('estimateAddress', e.detail.address);
+                }
+                setActivePageId('P-12');
+            } else {
+                sessionStorage.removeItem('intakeScopeType');
+                sessionStorage.removeItem('intakePurchaseIntent');
+                sessionStorage.removeItem('globalSearchQuery');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('globalSearchQuery', e.detail.address);
+                }
+                setActivePageId('E-02a');
+            }
+        };
         window.addEventListener('nav-page', handleCustomNav);
+        window.addEventListener('open-roof-configurator', handleRoofConfigurator);
 
         return () => {
             window.removeEventListener('popstate', handleUrlChange);
             window.removeEventListener('nav-page', handleCustomNav);
+            window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
         };
     }, [setActivePageId]);
 
@@ -328,6 +425,24 @@ const LoginBridge: React.FC = () => {
 };
 
 export default function App() {
+    // /sign-verify route — render customer form outside auth (link-only, no sidebar)
+    if (IS_SIGN_VERIFY_ROUTE) {
+        return (
+            <ThemeProvider>
+                <SignVerifyRenderer />
+            </ThemeProvider>
+        );
+    }
+
+    // /map route — render BPM page inside ThemeProvider only (no auth, no sidebar)
+    if (IS_MAP_ROUTE) {
+        return (
+            <ThemeProvider>
+                <BpmMapRenderer />
+            </ThemeProvider>
+        );
+    }
+
     return (
         <ThemeProvider>
             <LanguageProvider>

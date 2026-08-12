@@ -737,7 +737,7 @@ const PropertyProfilePage: React.FC = () => {
                         </h4>
                         
                         <p className="text-gray-400 text-xs leading-relaxed text-center mb-6">
-                            Are you absolutely sure you want to write these modifications to this property profile record? Live Firestore updates will sync to all connected clients.
+                            Are you absolutely sure you want to save these modifications to this property profile?
                         </p>
 
                         <div className="flex gap-4">

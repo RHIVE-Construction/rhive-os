@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Profile list pages — navigating to these clears the matched selectedId
 const PROFILE_LIST_CLEAR_MAP: Record<string, string[]> = {
+    'A-02': ['selectedUserId'],
     'E-08': ['selectedAccountId'],
     'E-10': ['selectedContactId'],
     'E-11': ['selectedPropertyId'],
@@ -35,6 +36,8 @@ interface NavigationContextType {
     setSelectedContactId: (id: string | null) => void;
     selectedAccountId: string | null;
     setSelectedAccountId: (id: string | null) => void;
+    selectedUserId: string | null;
+    setSelectedUserId: (id: string | null) => void;
     showEditorMenu: boolean;
     setShowEditorMenu: (show: boolean) => void;
 }
@@ -69,6 +72,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
     const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [showEditorMenu, setShowEditorMenu] = useState<boolean>(true);
 
     /** Used by Sidebar: clears related selectedId(s) so profile pages show their list */
@@ -78,6 +82,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (toClear.includes('selectedProjectId')) setSelectedProjectId(null);
         if (toClear.includes('selectedContactId')) setSelectedContactId(null);
         if (toClear.includes('selectedAccountId')) setSelectedAccountId(null);
+        if (toClear.includes('selectedUserId')) setSelectedUserId(null);
         setActivePageId(id);
     }, []);
 
@@ -103,6 +108,8 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             setSelectedContactId,
             selectedAccountId,
             setSelectedAccountId,
+            selectedUserId,
+            setSelectedUserId,
             showEditorMenu,
             setShowEditorMenu,
         }}>

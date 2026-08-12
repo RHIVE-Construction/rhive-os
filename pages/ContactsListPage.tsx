@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import PageContainer from '../components/PageContainer';
 import Button from '../components/Button';
 import { useNavigation } from '../contexts/NavigationContext';
-import { firestoreService } from '../lib/firebaseService';
+import { firestoreService, userLogService } from '../lib/firebaseService';
 import { UserIcon, ChevronRightIcon, PlusIcon, MailIcon, PhoneIcon, MapPinIcon, XIcon } from '../components/icons';
 import { cn } from '../lib/utils';
 
@@ -56,9 +56,27 @@ const ContactsListPage: React.FC = () => {
         return () => unsub();
     }, []);
 
-    const handleSelectContact = (id: string) => {
+    const handleSelectContact = (id: string, contact?: any) => {
         setSelectedContactId(id);
         setActivePageId('E-10');
+        if (contact) {
+            const name = [contact.first_name, contact.last_name, contact.full_name, contact.name]
+                .filter(Boolean).join(' ').trim() || 'Unknown';
+            userLogService.logAction(
+                'CONTACT_VIEWED',
+                `Contact profile opened: "${name}" (${contact.email || contact.phone || 'no contact info'})`,
+                {
+                    page: 'Contacts',
+                    action: 'View Contact Profile',
+                    contactId: id,
+                    contactName: name,
+                    contactEmail: contact.email || undefined,
+                    contactPhone: contact.phone || contact.mobile || undefined,
+                    contactRole: contact.role || contact.contactType || undefined,
+                    timestamp: new Date().toISOString()
+                }
+            );
+        }
     };
 
     // Build unique filter labels from role / contactType / leadSource
@@ -159,7 +177,7 @@ const ContactsListPage: React.FC = () => {
     return (
         <PageContainer
             title="Contacts"
-            description={`${contacts.length} contact${contacts.length !== 1 ? 's' : ''} synced from Firestore`}
+            description={`${contacts.length} contact${contacts.length !== 1 ? 's' : ''} synced`}
         >
             {/* Toolbar */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -217,7 +235,6 @@ const ContactsListPage: React.FC = () => {
                 </div>
                 <button 
                     onClick={() => {
-                        console.log("Add Contact button clicked. Opening modal...");
                         setIsModalOpen(true);
                     }}
                     className="flex items-center gap-2 px-5 py-2.5 bg-[#ec028b] text-white hover:bg-pink-600 rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_15px_rgba(236,2,139,0.3)] hover:shadow-[0_0_25px_rgba(236,2,139,0.5)] flex-shrink-0 whitespace-nowrap active:scale-95"
@@ -234,7 +251,7 @@ const ContactsListPage: React.FC = () => {
                     <p className="text-gray-500 text-sm mt-2 text-center max-w-sm">
                         {search
                             ? `No contacts matching "${search}".`
-                            : 'No contacts in Firestore yet. Import contacts using the import script.'}
+                            : 'No contacts found. Import contacts using the import script.'}
                     </p>
                 </div>
             ) : (
@@ -254,7 +271,7 @@ const ContactsListPage: React.FC = () => {
                         return (
                             <div
                                 key={contact.id}
-                                onClick={() => handleSelectContact(contact.id)}
+                                onClick={() => handleSelectContact(contact.id, contact)}
                                 className="group relative bg-gray-900/40 border border-gray-800 rounded-2xl p-6 cursor-pointer hover:border-[#ec028b]/60 transition-all duration-300 hover:shadow-[0_0_30px_rgba(236,2,139,0.1)] overflow-hidden"
                             >
                                 {/* Hover top-line accent */}

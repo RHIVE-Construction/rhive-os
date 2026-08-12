@@ -102,7 +102,6 @@ const RoleManagementPage: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-white group-hover:text-[#ec028b] transition-colors">{user.name}</p>
-                                                    <p className="text-[10px] text-gray-500 font-mono uppercase">UID: {user.id.slice(-8)}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -157,7 +156,7 @@ const RoleManagementPage: React.FC = () => {
                     <div>
                         <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Administrative Security Protocol</h4>
                         <p className="text-xs text-gray-400 leading-relaxed">
-                            Changes to user roles are persistent and synchronized via real-time satellite data link (Firestore). 
+                            Changes to user roles are persistent and synchronized in real time. 
                             Elevating a user to <span className="text-purple-400 font-bold">Super Admin</span> grants complete override authority 
                             over all system modules and record hierarchies. Proceed with caution.
                         </p>

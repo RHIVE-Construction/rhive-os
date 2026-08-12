@@ -118,7 +118,7 @@ const PropertyPage: React.FC = () => {
     return (
         <PageContainer
             title={pageTitle}
-            description={`${allProperties.length} propert${allProperties.length !== 1 ? 'ies' : 'y'} synced from Firestore`}
+            description={`${allProperties.length} propert${allProperties.length !== 1 ? 'ies' : 'y'} synced`}
         >
             {/* Toolbar */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -165,7 +165,7 @@ const PropertyPage: React.FC = () => {
                     <p className="text-gray-500 text-sm mt-2 text-center max-w-sm">
                         {search
                             ? `No properties matching "${search}".`
-                            : 'No properties in Firestore yet. Run the import script to sync from Google Sheets.'}
+                            : 'No properties found. Run the import script to sync from Google Sheets.'}
                     </p>
                 </div>
             ) : (

@@ -126,7 +126,7 @@ const PublicHomepageV3: React.FC = () => {
     const isApiReady = useGoogleMapsApi();
 
     useEffect(() => {
-        if (!isApiReady || !emergencyInputRef.current || !window.google || !window.google.maps.places) return;
+        if (!isApiReady || !emergencyInputRef.current || !window.google?.maps?.places) return;
         if (emergencyAutocompleteRef.current) return;
 
         const autocomplete = new window.google.maps.places.Autocomplete(emergencyInputRef.current, {
@@ -198,18 +198,39 @@ const PublicHomepageV3: React.FC = () => {
             <StickyCTABar />
             <RhiveHeader />
 
+            {/* Background Video Layer */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                    style={{ transform: 'scale(1.12) translate(-3%, -3%)', transformOrigin: 'top left' }}
+                >
+                    <source src="https://rhive-os.web.app/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
+                </video>
+            </div>
+
+            {/* 85% Black Overlay Layer */}
+            <div className="fixed inset-0 bg-black/85 pointer-events-none z-0" />
+
             {/* Living Plexus Background Layer */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-20">
-                <PlexusShape backgroundColor="transparent" dotColor="#ffffff" lineColor="255, 255, 255" density={30} />
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-80">
+                <PlexusShape 
+                    backgroundColor="transparent" 
+                    dotColor="#ec028b" 
+                    lineColor="236, 2, 139" 
+                    density={120} 
+                />
             </div>
 
             {/* ── HERO SECTION (INTAKE) ─────────────────────────────────────── */}
             <section id="hero" className="relative min-h-[90vh] flex flex-col items-center justify-center pt-36 pb-24 overflow-hidden z-10">
                 <div className="container mx-auto px-6 text-center flex flex-col items-center max-w-5xl">
 
-
                     <h1 className="text-6xl md:text-8xl lg:text-9xl font-sans font-normal uppercase leading-[0.85] tracking-tighter mb-8">
-                        <GlitchText text="FINISH ON TOP." className="animate-text-gradient-white drop-shadow-[0_0_30px_rgba(236,2,139,0.3)]" />
+                        <GlitchText text="FINISH ON TOP" className="animate-text-gradient-white drop-shadow-[0_0_30px_rgba(236,2,139,0.3)]" />
                         <img 
                             src="https://firebasestorage.googleapis.com/v0/b/video-qr-automator.firebasestorage.app/o/Website%20Media%20Assets%2FImages%2Frhive%20pink%20icon.png?alt=media&token=a9982468-9ba9-498c-bd49-d2f6c1b9f4d1"
                             alt="RHIVE Icon"
@@ -243,36 +264,36 @@ const PublicHomepageV3: React.FC = () => {
                     </div>
 
                     {/* Interactive Tab Control */}
-                    <div className="w-full max-w-2xl bg-white/5 border border-white/10 p-1.5 rounded-full flex gap-1 mb-2 relative z-20">
+                    <div className="w-full max-w-2xl bg-white/5 border border-white/10 p-1 rounded-2xl sm:rounded-full flex flex-row gap-0.5 sm:gap-1 mb-2 relative z-20">
                         <button
                             onClick={() => setIntakeTab('emergency')}
                             className={cn(
-                                "flex-1 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
+                                "flex-1 py-2 sm:py-3.5 rounded-xl sm:rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-normal sm:tracking-widest transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2",
                                 intakeTab === 'emergency' ? "bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]" : "text-gray-400 hover:text-white"
                             )}
                         >
-                            <AlertTriangle size={14} />
-                            Emergency Leak
+                            <AlertTriangle size={14} className="hidden sm:inline shrink-0" />
+                            <span className="truncate">Emergency Leak</span>
                         </button>
                         <button
                             onClick={() => setIntakeTab('estimate')}
                             className={cn(
-                                "flex-1 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
+                                "flex-1 py-2 sm:py-3.5 rounded-xl sm:rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-normal sm:tracking-widest transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2",
                                 intakeTab === 'estimate' ? "bg-[#ec028b] text-white shadow-[0_0_15px_rgba(236,2,139,0.4)]" : "text-gray-400 hover:text-white"
                             )}
                         >
-                            <Zap size={14} />
-                            Instant Estimate
+                            <Zap size={14} className="hidden sm:inline shrink-0" />
+                            <span className="truncate">Instant Estimate</span>
                         </button>
                         <button
                             onClick={() => setIntakeTab('quote')}
                             className={cn(
-                                "flex-1 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
+                                "flex-1 py-2 sm:py-3.5 rounded-xl sm:rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-normal sm:tracking-widest transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2",
                                 intakeTab === 'quote' ? "bg-[#e2ab49] text-black shadow-[0_0_15px_rgba(226,171,73,0.4)]" : "text-gray-400 hover:text-white"
                             )}
                         >
-                            <CheckCircle2 size={14} />
-                            Certified Quote
+                            <CheckCircle2 size={14} className="hidden sm:inline shrink-0" />
+                            <span className="truncate">Certified Quote</span>
                         </button>
                     </div>
 

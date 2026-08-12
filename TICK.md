@@ -31,6 +31,7 @@ done:
   - "[N1] REMOVE_INITIAL_POLYGON: Removed auto-drawn polygon to allow manual entry/drawing. QA_EXIT:0."
   - "[N1] POLYGON_SNAP_ROTATION_FIX: Fixed coordinate math clockwise rotation in mockData.ts. QA_EXIT:0."
   - "[N1] ESTIMATE_REDIRECT_HOTFIX: Fixed PasswordResetPage syntax, App.tsx redirect loop. QA_EXIT:0."
+  - "[N1] HERO_COMPRESSED_VIDEO_PR: Standardized compressed video path across all homepage variants, ran pre-commit build checks, pushed Michael-Branch, and opened PR #8. QA_EXIT:0."
   - "[N1] INTAKE_PORTAL_UPGRADES_AND_SETTINGS_LIMIT: Moved inline notes to footer editor modal, enriched collapsed summaries, implemented state boundary blocks with bypass, added settings boundary input, and validated builds. QA_EXIT:0."
   - "[N1] BRANCH_CHERRYPICK: Created michael-branch-1.0, cherry-picked 17 UI commits from Michael-Branch. QA_EXIT:0."
   - "[N1] INTAKE_LOOKUP_TAB_AND_SPACING: Prevented lookup modal popup on intake page, implemented tab-to-autofill queries, adjusted homepage lane spacing by 5pt, and captured full walkthrough screenshots. QA_EXIT:0."

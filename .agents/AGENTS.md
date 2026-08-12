@@ -39,6 +39,21 @@ Utilize the following agents when doing research and generating responses and co
 * **Veo 2 (veo-2.0-generate-001)**: Video generation model.
 * **Gemma 4 26B A4B IT (gemma-4-26b-a4b-it)**: MoE open weights model.
 
+## System Rules — Always Enforced
+
+> **CRITICAL**: Before developing any feature, fixing any bug, committing, or pushing — read and follow the System Rules document located at `.agents/rules/SYSTEM_RULES.md`.
+
+The System Rules define:
+- **Button & label conventions** — only `Yes`, `No`, `Submit`, `Send`, `Cancel`, `Close`, `Save`, `Delete`, `Remove`. `Abort` is **strictly prohibited**.
+- **Testing protocol** — ALL features MUST pass `npm run build` and manual testing before any commit or push.
+- **Branch & commit workflow** — conventional commit format, branch naming, merge protocol.
+- **UI/Component standards** — RHIVE Design System, no checkboxes, no hardcoded colors, no debug logs.
+- **Feature development sequence** — review rules → branch → develop → test → commit → test → push → merge → build → deploy.
+
+These rules are permanent, non-negotiable, and apply to every agent and every change.
+
+---
+
 ## JustCall Integration Maintenance
 
 - **API Versioning**: Always use the latest JustCall API version (currently v2.1). Before implementing any JustCall-related changes, check for API updates.

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { Place, BuildingData, SurveyState } from '../types';
 import { getMapsApiKey } from '../lib/mapsConfig';
 import { LandingPage } from './LandingPage';
@@ -264,6 +264,18 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
     }
   }, [isMapsApiReady, handlePlaceSelected]);
 
+  useEffect(() => {
+    if ((appState === 'addressConfirmation' && !selectedPlace) ||
+        (appState === 'roofOptions' && !buildingData) ||
+        (appState === 'gutters' && !buildingData) ||
+        (appState === 'heatTrace' && !buildingData) ||
+        (appState === 'gutterMeasurement' && !selectedPlace) ||
+        (appState === 'heatTraceMeasurement' && !selectedPlace) ||
+        (appState === 'dashboard' && (!buildingData || !selectedPlace))) {
+      onClose();
+    }
+  }, [appState, selectedPlace, buildingData, onClose]);
+
   const handleStartNew = () => {
     setAppState('landing');
     setSelectedPlace(null);
@@ -297,40 +309,37 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
   const renderContent = () => {
     switch (appState) {
       case 'addressConfirmation':
-        if (selectedPlace) {
-            return (
-                <AddressConfirmation
-                    place={selectedPlace}
-                    onConfirm={handleConfirmAddress}
-                    onStartOver={handleStartNew}
-                    streetViewUrl={streetViewUrl}
-                    satelliteViewUrl={satelliteViewUrl}
-                    buildingData={buildingData}
-                    setBuildingData={setBuildingData}
-                    surveyState={surveyState}
-                    onSurveyChange={setSurveyState}
-                />
-            )
-        }
-        handleStartNew();
-        return null;
+        if (!selectedPlace) return null; // guard effect handles reset
+
+        return (
+            <AddressConfirmation
+                place={selectedPlace}
+                onConfirm={handleConfirmAddress}
+                onStartOver={handleStartNew}
+                streetViewUrl={streetViewUrl}
+                satelliteViewUrl={satelliteViewUrl}
+                buildingData={buildingData}
+                setBuildingData={setBuildingData}
+                surveyState={surveyState}
+                onSurveyChange={setSurveyState}
+            />
+        );
 
       case 'roofOptions':
-        if (buildingData) {
-            return (
-                <RoofOptions 
-                    buildingData={buildingData}
-                    setBuildingData={setBuildingData}
-                    surveyState={surveyState}
-                    onSurveyChange={setSurveyState}
-                    onContinue={handleRoofOptionsContinue}
-                    onStartOver={handleStartNew}
-                    onBack={() => setAppState('addressConfirmation')}
-                />
-            )
-        }
-        handleStartNew();
-        return null;
+        if (!buildingData) return null; // guard effect handles reset
+
+        return (
+            <RoofOptions 
+                buildingData={buildingData}
+                setBuildingData={setBuildingData}
+                surveyState={surveyState}
+                onSurveyChange={setSurveyState}
+                onContinue={handleRoofOptionsContinue}
+                onStartOver={handleStartNew}
+                onBack={() => setAppState('addressConfirmation')}
+            />
+        );
+
 
       case 'gutters':
         if (buildingData) {
@@ -371,7 +380,7 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
                     title="Measure Gutter Length"
                     center={{ lat: selectedPlace.latitude, lng: selectedPlace.longitude }}
                     onLengthChange={(length) => {
-                        setSurveyState(prev => ({...prev, gutters: {...prev.gutters, length: length}}));
+                        setSurveyState(prev => ({...prev, gutters: {...prev.gutters, length: Math.round(length)}}));
                     }}
                     onDone={handleGutterMeasurementDone}
                     onStartOver={handleStartNew}
@@ -390,7 +399,7 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
                     title="Measure Heat Trace Length"
                     center={{ lat: selectedPlace.latitude, lng: selectedPlace.longitude }}
                     onLengthChange={(length) => {
-                        setSurveyState(prev => ({...prev, heatTrace: {...prev.heatTrace, length: length}}));
+                        setSurveyState(prev => ({...prev, heatTrace: {...prev.heatTrace, length: Math.round(length)}}));
                     }}
                     onDone={handleHeatTraceMeasurementDone}
                     onStartOver={handleStartNew}
@@ -403,20 +412,16 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
         return null;
       
       case 'dashboard':
-        if (buildingData && selectedPlace) {
-          return (
+        return (
             <Dashboard
-              place={selectedPlace}
-              buildingData={buildingData}
+              place={selectedPlace!}
+              buildingData={buildingData!}
               surveyState={surveyState}
               onSurveyChange={setSurveyState}
               onStartNew={handleStartNew}
               streetViewUrl={streetViewUrl}
             />
-          );
-        }
-        handleStartNew();
-        return null;
+        );
 
       case 'landing':
       default:

@@ -1215,7 +1215,7 @@ const EstimationPreview = () => {
 
             autocomplete.addListener('place_changed', () => {
                 const place = autocomplete.getPlace();
-                console.log("Selected Place:", place);
+
                 if (place.formatted_address) {
                     // You could setState here if you need to store the address address
                     // setAddress(place.formatted_address); 

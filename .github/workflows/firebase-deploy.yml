@@ -6,6 +6,18 @@ on:
       - main
   workflow_dispatch:
 
+# Required for action-hosting-deploy to post preview URL comments on PRs
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+env:
+  # Force GitHub Actions to use Node 24 runtime (resolves action-hosting-deploy
+  # deprecation warning since GH Actions dropped Node 20 in 2026)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+
 jobs:
   deploy:
     name: Build & Deploy
@@ -18,7 +30,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies

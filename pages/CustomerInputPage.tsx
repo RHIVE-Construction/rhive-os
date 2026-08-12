@@ -49,7 +49,7 @@ import { Card, CardContent } from '../components/ui/card';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, Property, EaveOverhang, ProjectStage } from '../types';
 import { createProject as createProjectApi } from '../lib/api';
 import { getMapsApiKey } from '../lib/mapsConfig';
-import { firestoreService } from '../lib/firebaseService';
+import { firestoreService, userLogService } from '../lib/firebaseService';
 import { analyzeLidar, type LidarResult } from '../services/lidarService';
 
 // Mock Data for Utah Companies
@@ -2512,6 +2512,22 @@ const CustomerInputPage: React.FC = () => {
                 addCommunication('file', activeProjectOnProp._id, `Linked contact to project: ${rc.firstName} ${rc.lastName} (${rc.phone})`);
             });
 
+            // Log the merge
+            userLogService.logAction(
+                'LEAD_MERGED_INTO_ACTIVE_PROJECT',
+                `Smart Intake merged into active project "${projectName}" at ${propertyData.address || 'unknown address'}`,
+                {
+                    page: 'New Lead Entry',
+                    action: 'Merge Into Active Project',
+                    projectId: activeProjectOnProp._id,
+                    projectName: projectName,
+                    projectType: projectCategory,
+                    address: propertyData.address,
+                    primaryContact: `${primaryContact.firstName} ${primaryContact.lastName}`.trim(),
+                    contactCount: resolvedContacts.length,
+                    timestamp: new Date().toISOString()
+                }
+            );
             // Redirect smoothly to the existing project dashboard
             setCurrentProjectId(activeProjectOnProp._id);
             setSubmissionSummary({ type: 'Project Merged', name: projectName });
@@ -2531,6 +2547,31 @@ const CustomerInputPage: React.FC = () => {
 
             // Create new project at the correct stage
             const newProjId = createProject(projectName, projectCategory, targetPropertyId, ownerId, initialStage);
+
+            // Log the new lead/project creation
+            userLogService.logAction(
+                'NEW_LEAD_CREATED',
+                `New lead "${projectName}" (${projectCategory} / ${initialStage}) created at ${propertyData.address || 'unknown address'}, ${propertyData.city || ''}`,
+                {
+                    page: 'New Lead Entry',
+                    action: 'Create New Lead',
+                    projectId: newProjId,
+                    projectName: projectName,
+                    projectType: projectCategory,
+                    initialStage: initialStage,
+                    address: propertyData.address,
+                    city: propertyData.city,
+                    state: propertyData.state,
+                    primaryContact: `${primaryContact.firstName} ${primaryContact.lastName}`.trim(),
+                    primaryEmail: primaryContact.email || undefined,
+                    primaryPhone: primaryContact.phone || undefined,
+                    contactCount: resolvedContacts.length,
+                    isInsuranceClaim: isInsurance,
+                    carrier: isInsurance ? insuranceInfo.carrier : undefined,
+                    timestamp: new Date().toISOString()
+                }
+            );
+
             setCurrentProjectId(newProjId);
             setSubmissionSummary({ type: 'Project Created', name: projectName });
             setIsSuccessModalOpen(true);

@@ -196,6 +196,25 @@ export interface User {
     phone?: string;
     avatarUrl?: string;
     password_hash?: string;
+    // Profile fields
+    address?: string;
+    department?: string;
+    // Audit trail — written by system on every profile update (SYSTEM_RULES §7.3)
+    created_at?: string;        // ISO timestamp of initial creation
+    updated_at?: string;        // ISO timestamp of last update
+    updated_by?: string;        // Display name of last editor
+    updated_by_id?: string;     // Firestore ID of last editor
+    password_updated_at?: string; // ISO timestamp of last password change
+    password_history?: string[];  // Last 5 password hashes (oldest first) for repeat-detection
+
+    // Google Calendar sync metadata
+    googleCalendarLinked?: boolean;
+    googleCalendarEmail?: string;
+    lastCalendarSync?: string;  // ISO datetime string
+    calendarEventCount?: number;
+    /** Account-level override: grants password-change rights regardless of role.
+     *  Only Super Admin can set this flag. Currently granted to: james.g@rhiveconstruction.com */
+    can_change_passwords?: boolean;
 }
 
 export interface Project {
@@ -330,6 +349,27 @@ export interface RoofReport {
     pitch: number;
     areaSqFt: number;
   }[];
+}
+
+// ─── Google Calendar Types ───────────────────────────────────────────────────
+
+export interface CalendarEvent {
+    id: string;
+    userId: string;
+    userEmail: string;
+    googleEventId: string;
+    title: string;
+    description: string;
+    location: string;
+    startDateTime: string;  // ISO datetime
+    endDateTime: string;    // ISO datetime
+    isAllDay: boolean;
+    status: 'confirmed' | 'tentative' | 'cancelled';
+    googleLink: string;
+    organizer: string;
+    syncedAt: string;       // ISO datetime of last sync
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Contact {
