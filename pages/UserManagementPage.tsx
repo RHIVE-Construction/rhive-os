@@ -16,7 +16,7 @@ import {
     PhoneIcon,
     LockIcon
 } from '../components/icons';
-import { userService, userLogService } from '../lib/firebaseService';
+import { userService, userLogService, securityNotificationService } from '../lib/firebaseService';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { User, UserType } from '../types';
@@ -188,11 +188,6 @@ const UserManagementPage: React.FC = () => {
         // Final server-side guard — should never reach here without permission
         if (!canChangePasswords) {
             setPwError('Access denied. Only Super Admin can change passwords.');
-            userLogService.logAction(
-                'UNAUTHORIZED_PASSWORD_CHANGE_BLOCKED',
-                `Server-side block: unauthorized password change attempt for "${pwUser.name}"`,
-                { targetUserId: pwUser.id, actorRole: currentUser?.role }
-            );
             return;
         }
         if (newPassword.length < 6) { setPwError('Password must be at least 6 characters.'); return; }
@@ -200,30 +195,18 @@ const UserManagementPage: React.FC = () => {
         setPwError('');
         try {
             const hashed = await hashPassword(newPassword);
-            const now = new Date().toISOString();
-
-            const result = await userService.update(pwUser.id, {
-                password_hash: hashed,
-                password_updated_at: now,
-                updated_at: now
-            });
-
+            const result = await userService.update(pwUser.id, { password_hash: hashed, updated_at: new Date().toISOString() });
             if (result.success) {
                 setPwSuccess(true);
                 userLogService.logAction(
                     'USER_PASSWORD_CHANGED',
-                    `Password successfully changed for user "${pwUser.name}" (${pwUser.role}) by ${currentUser?.name ?? 'Admin'}`,
-                    {
-                        targetUserId: pwUser.id,
-                        targetUserName: pwUser.name,
-                        targetUserRole: pwUser.role,
-                        targetUserEmail: pwUser.email,
-                        changedBy: currentUser?.id,
-                        changedByName: currentUser?.name,
-                        changedByRole: currentUser?.role,
-                        passwordUpdatedAt: now
-                    }
+                    `Password changed for user "${pwUser.name}" (${pwUser.role})`,
+                    { targetUserId: pwUser.id, targetUserName: pwUser.name, targetUserRole: pwUser.role, targetUserEmail: pwUser.email }
                 );
+                // Send security notification email (non-blocking)
+                if (pwUser.email) {
+                    securityNotificationService.sendPasswordChangedEmail(pwUser.email, pwUser.name);
+                }
             } else {
                 setPwError(result.error || 'Update failed. Please try again.');
                 userLogService.logAction(
@@ -238,6 +221,7 @@ const UserManagementPage: React.FC = () => {
             setPwSubmitting(false);
         }
     };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -258,40 +242,38 @@ const UserManagementPage: React.FC = () => {
 
         try {
             if (editingUser) {
-                // ── EDIT: if email changed, route to confirmation modal first ──
-                const emailChanged = formData.email.trim().toLowerCase() !== (editingUser.email || '').toLowerCase();
-                if (emailChanged) {
-                    setPendingEmailChange(formData.email.trim().toLowerCase());
-                    setEmailConfirmUser(editingUser);
-                    setEmailConfirmError('');
-                    setSubmitting(false);
-                    return;
-                }
+                // ── EDIT: update Firestore profile ──────────────────────────────
+                const oldEmail = (editingUser.email || '').toLowerCase().trim();
+                const newEmailVal = (formData.email || '').toLowerCase().trim();
+                const emailChanged = oldEmail !== newEmailVal && newEmailVal !== '';
 
-                // Email unchanged — save name, role, phone only
-                const now = new Date().toISOString();
-                const payload: Record<string, any> = {
-                    name: formData.name.trim(),
+                const payload: any = {
+                    name: formData.name,
                     role: formData.role,
+                    email: formData.email,
                     phone: formData.phone,
-                    updated_at: now
+                    updated_at: new Date().toISOString()
                 };
-                const result = await userService.update(editingUser.id, payload);
-                if (!result?.success && result?.error) {
-                    throw new Error(result.error);
+                if (formData.password) {
+                    payload.password_hash = await hashPassword(formData.password);
                 }
+                await userService.update(editingUser.id, payload);
                 userLogService.logAction(
-                    'USER_PROFILE_UPDATED',
-                    `Profile for "${formData.name}" (${formData.role}) was updated by ${currentUser?.name ?? 'Admin'}`,
+                    'USER_UPDATED',
+                    `User "${formData.name}" (${formData.role}) profile was updated`,
                     {
                         targetUserId: editingUser.id,
                         updatedFields: { name: formData.name, role: formData.role, phone: formData.phone },
-                        updatedBy: currentUser?.id,
-                        updatedByName: currentUser?.name,
-                        updatedByRole: currentUser?.role,
-                        updatedAt: now
+                        passwordChanged: !!formData.password
                     }
                 );
+                // Send security notification emails (non-blocking)
+                if (emailChanged) {
+                    securityNotificationService.sendEmailChangedEmail(oldEmail, newEmailVal, formData.name);
+                }
+                if (formData.password && newEmailVal) {
+                    securityNotificationService.sendPasswordChangedEmail(newEmailVal, formData.name);
+                }
             } else {
                 // ── CREATE: all roles stored in Firestore with password_hash ──
                 const now = new Date().toISOString();
@@ -438,7 +420,12 @@ const UserManagementPage: React.FC = () => {
                     ) : filteredUsers.map((user) => (
                         <div
                             key={user.id}
-                            className="group relative bg-gray-900/40 border border-gray-800 rounded-2xl p-6 hover:border-[#ec028b]/50 transition-all duration-300 cursor-pointer"
+                            className={cn(
+                                "group relative bg-gray-900/40 border rounded-2xl p-6 transition-all duration-300 cursor-pointer",
+                                user.id === currentUser?.id
+                                    ? "border-[#ec028b]/40 hover:border-[#ec028b]/80 shadow-[0_0_20px_rgba(236,2,139,0.08)]"
+                                    : "border-gray-800 hover:border-[#ec028b]/50"
+                            )}
                             onClick={() => handleViewProfile(user)}
                             id={`user-card-${user.id}`}
                             role="button"
@@ -447,42 +434,74 @@ const UserManagementPage: React.FC = () => {
                             aria-label={`View profile for ${user.name}`}
                         >
                             {/* Actions Overlay */}
-                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleOpenEdit(user); }}
-                                    className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-all"
-                                    title="Edit user"
-                                    id={`edit-user-btn-${user.id}`}
-                                    aria-label={`Edit ${user.name}`}
-                                >
-                                    <PencilSquareIcon className="w-4 h-4" />
-                                </button>
-                                {/* Change Password: only visible to Super Admin */}
-                                {canChangePasswords && (
+                            {user.id === currentUser?.id ? (
+                                /* Current user's own card — redirect to My Profile instead */
+                                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                    <span className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#ec028b]/10 border border-[#ec028b]/30 text-[#ec028b] text-[9px] font-black uppercase tracking-widest rounded-lg cursor-default select-none">
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        Go to My Profile
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </span>
+                                </div>
+                            ) : (
+                                /* Other users — show normal action icons */
+                                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); openChangePw(user); }}
-                                        className="p-2 bg-[#ec028b]/10 rounded-lg text-[#ec028b]/60 hover:text-[#ec028b] hover:bg-[#ec028b]/20 transition-all"
-                                        title="Change password (Super Admin only)"
-                                        id={`change-pw-btn-${user.id}`}
-                                        aria-label={`Change password for ${user.name}`}
+                                        onClick={(e) => { e.stopPropagation(); handleOpenEdit(user); }}
+                                        className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-all"
+                                        title="Edit user"
+                                        id={`edit-user-btn-${user.id}`}
+                                        aria-label={`Edit ${user.name}`}
                                     >
-                                        <LockIcon className="w-4 h-4" />
+                                        <PencilSquareIcon className="w-4 h-4" />
                                     </button>
-                                )}
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleDelete(user.id); }}
-                                    className="p-2 bg-red-900/20 rounded-lg text-red-500/70 hover:text-red-500 hover:bg-red-900/40 transition-all"
-                                    title="Delete user"
-                                    id={`delete-user-btn-${user.id}`}
-                                    aria-label={`Delete ${user.name}`}
-                                >
-                                    <TrashIcon className="w-4 h-4" />
-                                </button>
-                            </div>
+                                    {/* Change Password: only visible to Super Admin */}
+                                    {canChangePasswords && (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); openChangePw(user); }}
+                                            className="p-2 bg-[#ec028b]/10 rounded-lg text-[#ec028b]/60 hover:text-[#ec028b] hover:bg-[#ec028b]/20 transition-all"
+                                            title="Change password (Super Admin only)"
+                                            id={`change-pw-btn-${user.id}`}
+                                            aria-label={`Change password for ${user.name}`}
+                                        >
+                                            <LockIcon className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(user.id); }}
+                                        className="p-2 bg-red-900/20 rounded-lg text-red-500/70 hover:text-red-500 hover:bg-red-900/40 transition-all"
+                                        title="Delete user"
+                                        id={`delete-user-btn-${user.id}`}
+                                        aria-label={`Delete ${user.name}`}
+                                    >
+                                        <TrashIcon className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
 
                             <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-800 to-black border border-gray-700 flex items-center justify-center font-black text-[#ec028b] text-lg uppercase select-none">
-                                    {user.name.charAt(0)}
+                                {/* Avatar — show photo if available, else initial, with YOU badge for current user */}
+                                <div className="relative flex-shrink-0">
+                                    {user.avatarUrl ? (
+                                        <img
+                                            src={user.avatarUrl}
+                                            alt={user.name}
+                                            className="w-12 h-12 rounded-xl object-cover border border-gray-700"
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-800 to-black border border-gray-700 flex items-center justify-center font-black text-[#ec028b] text-lg uppercase select-none">
+                                            {user.name.charAt(0)}
+                                        </div>
+                                    )}
+                                    {user.id === currentUser?.id && (
+                                        <span className="absolute -bottom-1 -right-1 bg-[#ec028b] text-white text-[7px] font-black px-1 py-0.5 rounded uppercase tracking-widest leading-none shadow-[0_0_8px_rgba(236,2,139,0.6)]">
+                                            You
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h4 className="text-white font-bold truncate leading-none mb-1">{user.name}</h4>

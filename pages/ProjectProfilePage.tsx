@@ -68,9 +68,6 @@ const ProjectProfilePage: React.FC = () => {
                     <span className="text-[10px] uppercase font-bold tracking-widest bg-gray-900 border border-gray-800 px-3 py-1 rounded text-gray-400">
                         {project.project_type || 'General'}
                     </span>
-                    <span className="text-xs text-gray-500 font-mono">
-                        ID: {project.id?.slice(-8)}
-                    </span>
                 </div>
                 <Button onClick={handleOpenStage} className="shadow-[0_0_15px_rgba(236,2,139,0.3)]">
                     Open Pipeline Stage View

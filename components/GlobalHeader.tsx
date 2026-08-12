@@ -5,8 +5,8 @@ import { cn } from '../lib/utils';
 import { getStagePageId } from '../lib/utils';
 import { RhiveLogo, SunIcon2 as SunIcon, MoonIcon2 as MoonIcon, GlobeAlt as Globe, MagnifyingGlassIcon, BellIcon } from './icons';
 import WeatherForecastStrip from './WeatherForecastStrip';
-import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useMockDB } from '../contexts/MockDatabaseContext';
 import { User, Sparkles as SparklesIcon, Check, CheckCheck, RotateCcw, ExternalLink } from 'lucide-react';
 import AIChatPanel from './AIChatPanel';
 import { useNotifications, getActivityIcon, ActivityNotification } from '../contexts/NotificationContext';
@@ -315,7 +315,7 @@ export const GlobalHeader: React.FC = () => {
     const { theme, setTheme } = useTheme();
     const { locale, setLocale, t } = useLanguage();
     const { currentUser, login, logout } = useMockDB();
-    const { activePageId, setActivePageId } = useNavigation();
+    const { activePageId, setActivePageId, setSelectedUserId } = useNavigation();
     const isDark = theme === 'dark';
 
     const [isProfileOpen, setIsProfileOpen] = React.useState(false);
@@ -545,11 +545,14 @@ export const GlobalHeader: React.FC = () => {
                                             <button
                                                 onClick={() => {
                                                     setIsProfileOpen(false);
-                                                    setActivePageId('E-03');
+                                                    if (currentUser) {
+                                                        setSelectedUserId(currentUser.id);
+                                                        setActivePageId('A-02-profile');
+                                                    }
                                                 }}
                                                 className={cn(
                                                     "w-full px-3 py-1.5 rounded-lg border text-[9px] font-extrabold uppercase tracking-widest text-left transition-all",
-                                                    activePageId === 'E-03'
+                                                    activePageId === 'A-02-profile'
                                                         ? "bg-[#ec028b]/20 border-[#ec028b]/45 text-white"
                                                         : cn("border-transparent text-gray-400 hover:text-white", isDark ? "bg-white/5 hover:bg-white/10" : "bg-black/5 hover:bg-black/10")
                                                 )}

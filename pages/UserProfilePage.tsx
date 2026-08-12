@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PageContainer from '../components/PageContainer';
 import { Button } from '../components/ui/button';
 import {
@@ -140,6 +140,10 @@ const UserProfilePage: React.FC = () => {
     const [editDepartment, setEditDepartment] = useState('');
     const [editRole, setEditRole] = useState<UserType>('Employee');
     const [editAvatarUrl, setEditAvatarUrl] = useState('');
+    const [avatarFileName, setAvatarFileName] = useState('');
+    const photoInputRef = useRef<HTMLInputElement>(null);
+    const avatarQuickInputRef = useRef<HTMLInputElement>(null);
+    const [quickUploadLoading, setQuickUploadLoading] = useState(false);
 
     // ── Email confirmation modal state ─────────────────────────────────────────
     const [pendingEmailChange, setPendingEmailChange] = useState<{ oldEmail: string; newEmail: string } | null>(null);
@@ -214,6 +218,7 @@ const UserProfilePage: React.FC = () => {
         setEditDepartment(user.department || '');
         setEditRole(user.role);
         setEditAvatarUrl(user.avatarUrl || '');
+        setAvatarFileName('');
         setSaveError('');
         setSaveSuccess(false);
         setIsEditing(true);
@@ -479,22 +484,98 @@ const UserProfilePage: React.FC = () => {
                             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#ec028b] to-transparent" />
 
                             <div className="p-8 flex flex-col items-center text-center gap-4">
-                                {/* Avatar */}
-                                {user.avatarUrl ? (
-                                    <div className="relative">
+                                {/* Avatar — clickable upload zone for admins */}
+                                <div className="relative group">
+                                    {user.avatarUrl ? (
                                         <img
                                             src={user.avatarUrl}
                                             alt={user.name}
                                             className="w-24 h-24 rounded-2xl object-cover border-2 border-[#ec028b]/40"
                                         />
-                                        <div className="absolute inset-0 rounded-2xl shadow-[inset_0_0_0_1px_rgba(236,2,139,0.3)]" />
-                                    </div>
-                                ) : (
-                                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#ec028b]/20 via-black to-gray-900 border border-[#ec028b]/30 flex items-center justify-center shadow-[0_0_30px_rgba(236,2,139,0.15)]">
-                                        <span className="text-3xl font-black text-[#ec028b] select-none">
-                                            {getInitials(user.name)}
-                                        </span>
-                                    </div>
+                                    ) : (
+                                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#ec028b]/20 via-black to-gray-900 border border-[#ec028b]/30 flex items-center justify-center shadow-[0_0_30px_rgba(236,2,139,0.15)]">
+                                            <span className="text-3xl font-black text-[#ec028b] select-none">
+                                                {getInitials(user.name)}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {/* Upload overlay — visible on hover for admins */}
+                                    {canEdit && (
+                                        <button
+                                            type="button"
+                                            id="avatar-upload-overlay"
+                                            onClick={() => avatarQuickInputRef.current?.click()}
+                                            disabled={quickUploadLoading}
+                                            className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-all duration-200 cursor-pointer border-2 border-[#ec028b]/60"
+                                        >
+                                            {quickUploadLoading ? (
+                                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            ) : (
+                                                <>
+                                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                    </svg>
+                                                    <span className="text-[9px] font-black text-white uppercase tracking-widest">Upload</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+                                {/* Hidden quick-upload input */}
+                                {canEdit && (
+                                    <input
+                                        ref={avatarQuickInputRef}
+                                        id="avatar-quick-file-input"
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file || !user) return;
+                                            setQuickUploadLoading(true);
+                                            const reader = new FileReader();
+                                            reader.onload = async (ev) => {
+                                                const dataUrl = ev.target?.result as string;
+                                                const now = new Date().toISOString();
+                                                const result = await userService.update(user.id, {
+                                                    avatarUrl: dataUrl,
+                                                    updated_at: now,
+                                                    updated_by: currentUser?.name ?? 'Unknown',
+                                                    updated_by_id: currentUser?.id ?? '',
+                                                });
+                                                if (result.success) {
+                                                    userLogService.logAction(
+                                                        'USER_PROFILE_UPDATED',
+                                                        `Profile photo updated for "${user.name}" by ${currentUser?.name ?? 'Unknown'}`,
+                                                        { recordId: user.id, recordName: user.name, collection: 'users', changes: ['avatarUrl'] }
+                                                    );
+                                                    setSaveSuccess(true);
+                                                    setTimeout(() => setSaveSuccess(false), 3000);
+                                                } else {
+                                                    setSaveError(result.error || 'Photo upload failed.');
+                                                    setTimeout(() => setSaveError(''), 4000);
+                                                }
+                                                setQuickUploadLoading(false);
+                                            };
+                                            reader.readAsDataURL(file);
+                                            e.target.value = '';
+                                        }}
+                                    />
+                                )}
+                                {/* Upload Photo button — always visible for admins */}
+                                {canEdit && (
+                                    <button
+                                        type="button"
+                                        id="upload-photo-card-btn"
+                                        onClick={() => avatarQuickInputRef.current?.click()}
+                                        disabled={quickUploadLoading}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ec028b]/10 hover:bg-[#ec028b]/20 border border-[#ec028b]/30 hover:border-[#ec028b]/60 text-[#ec028b] text-[10px] font-black uppercase tracking-widest rounded-lg transition-all duration-200 disabled:opacity-50"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                        </svg>
+                                        Upload Photo
+                                    </button>
                                 )}
 
                                 <div>
@@ -665,12 +746,77 @@ const UserProfilePage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <EditField
-                                        label="Avatar URL (optional)"
-                                        value={editAvatarUrl}
-                                        onChange={setEditAvatarUrl}
-                                        placeholder="https://..."
-                                    />
+                                    {/* ── Photo Upload ─────────────────────── */}
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Profile Photo</p>
+                                        <div className="flex items-center gap-4 p-4 bg-black/40 border border-gray-800 rounded-xl">
+                                            {/* Preview */}
+                                            <div className="flex-shrink-0">
+                                                {editAvatarUrl ? (
+                                                    <img
+                                                        src={editAvatarUrl}
+                                                        alt="Preview"
+                                                        className="w-16 h-16 rounded-xl object-cover border-2 border-[#ec028b]/40 shadow-[0_0_12px_rgba(236,2,139,0.2)]"
+                                                    />
+                                                ) : (
+                                                    <div className="w-16 h-16 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center">
+                                                        <UserIcon className="w-7 h-7 text-gray-600" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {/* Controls */}
+                                            <div className="flex-1 min-w-0">
+                                                {avatarFileName ? (
+                                                    <p className="text-xs text-green-400 font-mono truncate mb-2">{avatarFileName}</p>
+                                                ) : (
+                                                    <p className="text-xs text-gray-500 mb-2">No photo selected</p>
+                                                )}
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        id="upload-photo-btn"
+                                                        onClick={() => photoInputRef.current?.click()}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#ec028b]/10 hover:bg-[#ec028b]/20 border border-[#ec028b]/30 hover:border-[#ec028b]/60 text-[#ec028b] text-[10px] font-black uppercase tracking-widest rounded-lg transition-all duration-200"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                                        </svg>
+                                                        Upload Photo
+                                                    </button>
+                                                    {editAvatarUrl && (
+                                                        <button
+                                                            type="button"
+                                                            id="remove-photo-btn"
+                                                            onClick={() => { setEditAvatarUrl(''); setAvatarFileName(''); }}
+                                                            className="px-3 py-1.5 bg-gray-900 hover:bg-red-500/10 border border-gray-800 hover:border-red-500/40 text-gray-500 hover:text-red-400 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all duration-200"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Hidden file input */}
+                                        <input
+                                            ref={photoInputRef}
+                                            id="photo-file-input"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                setAvatarFileName(file.name);
+                                                const reader = new FileReader();
+                                                reader.onload = (ev) => {
+                                                    setEditAvatarUrl(ev.target?.result as string);
+                                                };
+                                                reader.readAsDataURL(file);
+                                                // Reset input so same file can be re-selected
+                                                e.target.value = '';
+                                            }}
+                                        />
+                                    </div>
 
                                     {saveError && (
                                         <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">

@@ -5,6 +5,35 @@ import { contactService, userService, userLogService, firestoreService } from '.
 import { session, initialUser } from '../lib/session';
 import { logUserActivity, LOG_ACTIONS } from '../lib/userActivityLogger';
 
+// ── Server-side login event logger ───────────────────────────────────────────
+// Calls the logLoginEvent Cloud Function which resolves the REAL client IP
+// server-side (from request headers) and writes the full log to Firestore.
+const FIREBASE_PROJECT_ID = (import.meta as any).env?.VITE_FIREBASE_PROJECT_ID || 'rhive-os';
+const LOG_LOGIN_URL = `https://us-central1-${FIREBASE_PROJECT_ID}.cloudfunctions.net/logLoginEvent`;
+
+function callLogLoginEvent(
+    actionType: string,
+    description: string,
+    userId: string,
+    userName: string,
+    userRole: string,
+    extraPayload?: Record<string, any>
+): void {
+    // Fire-and-forget — never blocks login, never throws
+    fetch(LOG_LOGIN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            actionType,
+            description,
+            userId,
+            userName,
+            userRole,
+            payload: extraPayload || {},
+        }),
+    }).catch(() => { /* best-effort — silently ignore network errors */ });
+}
+
 interface MockDatabaseContextType {
     users: User[];
     properties: Property[];
@@ -141,24 +170,6 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // initialUser is read at MODULE LOAD TIME (before React) — guaranteed no timing issues
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const bypassRole = params.get('bypass');
-            if (bypassRole) {
-                const normalized = bypassRole.toLowerCase();
-                let candidate: User | undefined;
-                if (normalized === 'admin' || normalized === 'super admin') {
-                    candidate = SEED_USERS.find(u => u.name === 'Michael Robinson' && (u.role === 'Admin' || u.role === 'Super Admin')) ||
-                                SEED_USERS.find(u => u.role.toLowerCase() === normalized);
-                } else {
-                    candidate = SEED_USERS.find(u => u.role.toLowerCase() === normalized);
-                }
-                if (candidate) {
-                    session.write(candidate);
-                    return candidate;
-                }
-            }
-        }
         return initialUser;
     });
     const [currentProjectId, setCurrentProjectId] = useState<string | null>(localStorage.getItem('rhive_project_id'));
@@ -253,7 +264,8 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     sessionUser.role = role as any;
                 }
                 setSessionUser(sessionUser);
-                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in via developer bypass`, { role: sessionUser.role }, sessionUser);
+                // Log via Cloud Function (server-side IP resolution)
+                callLogLoginEvent('LOGIN', `User ${sessionUser.name} logged in via developer bypass`, sessionUser.id, sessionUser.name, sessionUser.role, { role: sessionUser.role });
                 return { success: true };
             }
         }
@@ -355,8 +367,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
 
         if (!foundUser) {
-            logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — account not found`, {
-                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown'
+            // Log failed login via Cloud Function (server resolves real IP)
+            callLogLoginEvent(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — account not found`, 'anonymous', 'anonymous', 'Guest', {
+                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
             });
             return { success: false, error: 'No account found with this email address.' };
         }
@@ -374,8 +387,8 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // 3. Verify password — MUST come from Firestore (fromFirestore = true).
         //    If user was found from seed fallback (no password_hash), reject with a clear message.
         if (!fromFirestore && !foundUser?.password_hash) {
-            logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login — credentials could not be verified (offline or seed user)`, {
-                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown'
+            callLogLoginEvent(LOG_ACTIONS.FAILED_LOGIN, `Failed login — credentials could not be verified (offline or seed user)`, 'anonymous', 'anonymous', 'Guest', {
+                email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
             });
             return { success: false, error: 'Could not verify credentials. Please check your connection and try again.' };
         }
@@ -387,16 +400,16 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     sessionUser.role = role as any;
                 }
                 setSessionUser(sessionUser);
-                userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, { email: sessionUser.email }, sessionUser);
+                callLogLoginEvent('LOGIN', `User ${sessionUser.name} logged in successfully (using default password)`, sessionUser.id, sessionUser.name, sessionUser.role, { email: sessionUser.email });
                 return { success: true };
             }
             return { success: false, error: 'Invalid email or password.' };
         }
         const hashed = await hashPassword(password!);
         if (foundUser.password_hash !== hashed) {
-            logUserActivity(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — incorrect password`, {
+            callLogLoginEvent(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — incorrect password`, 'anonymous', foundUser.name, foundUser.role, {
                 email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
-                role: foundUser.role
+                role: foundUser.role,
             });
             return { success: false, error: 'Invalid email or password.' };
         }
@@ -406,7 +419,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             sessionUser.role = role as any;
         }
         setSessionUser(sessionUser);
-        userLogService.logAction('LOGIN', `User ${sessionUser.name} logged in successfully`, { email: sessionUser.email }, sessionUser);
+        callLogLoginEvent('LOGIN', `User ${sessionUser.name} logged in successfully`, sessionUser.id, sessionUser.name, sessionUser.role, { email: sessionUser.email });
         return { success: true };
     };
 

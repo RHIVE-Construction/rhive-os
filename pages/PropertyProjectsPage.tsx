@@ -104,7 +104,7 @@ const PropertyProjectsPage: React.FC = () => {
                                             )}
                                         </div>
                                         <p className="text-[10px] text-gray-600 font-mono mt-1">
-                                            ID: {project.id.slice(-10)} • {timeAgo(project.updated_at || project.created_at)}
+                                            {timeAgo(project.updated_at || project.created_at)}
                                         </p>
                                     </div>
                                 </div>

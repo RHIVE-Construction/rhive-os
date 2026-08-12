@@ -17,6 +17,7 @@ import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
 import { GlobalChatWidget } from './components/chat/GlobalChatWidget';
 import HunniChatWidget from './components/website/HunniChatWidget';
+import PublicWebHeader from './components/website/PublicWebHeader';
 import { DevNavigator } from './components/DevNavigator';
 import { FloatingBackButton } from './components/FloatingBackButton';
 import { GlobalCustomerLookupModal } from './components/GlobalCustomerLookupModal';
@@ -41,8 +42,20 @@ let initialDashboardRedirectDone = (() => {
     return false;
 })();
 
-// Detect /map path once at module load — used to short-circuit the entire auth flow
-const IS_MAP_ROUTE = window.location.pathname === '/map';
+// ── Clean URL Path Registry ────────────────────────────────────────────────────
+// Maps a URL pathname to a pageComponentMap key.
+// Pages listed here are rendered as standalone website pages (no CRM chrome, no login required).
+// To add a new public URL: add an entry below and deploy — no other changes needed.
+const PATH_ROUTES: Record<string, string> = {
+    '/estimate-tool': 'estimate-tool',
+    '/map':           'INTERNAL-BPM',
+    // Uncomment to add more public URL pages:
+    // '/insurance':   'P-13',
+    // '/maintenance': 'P-14',
+};
+
+// Resolved on module load — null means this is a normal app route
+const CLEAN_PATH_PAGE: string | null = PATH_ROUTES[window.location.pathname] ?? null;
 
 // Detect CUSTOMER-SIGN-VERIFY page (link-only, no auth, no sidebar)
 const IS_SIGN_VERIFY_ROUTE = ((): boolean => {
@@ -60,22 +73,41 @@ const SignVerifyRenderer: React.FC = () => {
     );
 };
 
-// ── /map Full-Screen Renderer ─────────────────────────────────────────────────
-// Rendered when the user navigates to /map directly (no auth, no sidebar).
-const BpmMapRenderer: React.FC = () => {
+// ── Clean Path Full-Screen Renderer ───────────────────────────────────────────
+// Rendered when the URL pathname matches a PATH_ROUTES entry.
+// COMPLETELY ISOLATED from the CRM provider tree:
+//   - No NavigationContext, no MockDatabaseContext, no NotificationContext
+//   - PricingProvider only (estimate tool needs pricing data)
+//   - PublicWebHeader: context-free website nav (window.location.href links)
+// A customer arriving via QR code will never touch or see any CRM state.
+const CleanPathRenderer: React.FC<{ pageId: string }> = ({ pageId }) => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
-    const BpmPage = pageComponentMap['INTERNAL-BPM'];
+    const PageComponent = pageComponentMap[pageId];
     return (
-        <div className={cn(
-            'fixed inset-0 w-screen h-screen overflow-hidden font-sans',
-            isDark ? 'bg-black text-white' : 'bg-black text-white'
-        )}>
-            <CircuitryBackground backgroundColor="#000000" dotColor="#ec028b" lineColor="236, 2, 139" />
-            <main className="relative z-10 w-full h-full overflow-y-auto">
-                {BpmPage && <BpmPage />}
-            </main>
-        </div>
+        <PricingProvider>
+            <div className={cn(
+                'fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500',
+                isDark ? 'bg-black text-white' : 'bg-[#F8F9FA] text-black'
+            )}>
+                <CircuitryBackground
+                    backgroundColor={isDark ? '#000000' : '#F8F9FA'}
+                    dotColor="#ec028b"
+                    lineColor="236, 2, 139"
+                />
+                {/* Website nav header — context-free, no CRM hooks */}
+                <PublicWebHeader />
+                <main className="relative z-10 w-full h-full overflow-y-auto pt-12">
+                    {PageComponent ? <PageComponent /> : (
+                        <div className="flex items-center justify-center h-full">
+                            <p className="text-gray-400 font-mono">Page not found.</p>
+                        </div>
+                    )}
+                </main>
+                {/* FloatingBackButton and DevNavigator intentionally excluded —
+                    both use useNavigation() which is not available in the public zone. */}
+            </div>
+        </PricingProvider>
     );
 };
 const AppContentAuthenticated: React.FC = () => {
@@ -421,6 +453,29 @@ const LoginBridge: React.FC = () => {
         );
     }
 
+    // ── Authenticated users on Estimate Tool ──────────────────────────────────
+    // Render the estimate tool in the public layout when logged in to prevent the
+    // double CircuitryBackground conflict that causes a black screen.
+    if (currentUser && (activePageId === 'P-12' || activePageId === 'estimate-tool')) {
+        const EstimatePageComponent = pageComponentMap['estimate-tool'] ?? pageComponentMap['P-12'];
+        return (
+            <div className={cn(
+                "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
+                isDark ? "bg-black text-white" : "bg-[#F8F9FA] text-black"
+            )}>
+                <CircuitryBackground
+                    backgroundColor={isDark ? "#000000" : "#F8F9FA"}
+                    dotColor={isDark ? "#ec028b" : "#ec028b"}
+                    lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
+                />
+                <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto">
+                    {EstimatePageComponent && <EstimatePageComponent />}
+                </main>
+                <FloatingBackButton />
+                {window.location.hostname === 'localhost' && <DevNavigator />}
+            </div>
+        );
+    }
     return <AppContentAuthenticated />;
 };
 
@@ -434,11 +489,11 @@ export default function App() {
         );
     }
 
-    // /map route — render BPM page inside ThemeProvider only (no auth, no sidebar)
-    if (IS_MAP_ROUTE) {
+    // Clean URL path routes (e.g. /estimate-tool, /map) — no auth, no CRM chrome
+    if (CLEAN_PATH_PAGE) {
         return (
             <ThemeProvider>
-                <BpmMapRenderer />
+                <CleanPathRenderer pageId={CLEAN_PATH_PAGE} />
             </ThemeProvider>
         );
     }

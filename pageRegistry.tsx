@@ -38,7 +38,8 @@ import IncomeActionatorPage from './pages/IncomeActionatorPage'; // E-16
 import ReportingPage from './pages/ReportingPage'; // E-18
 import EmployeeInfoPage from './pages/EmployeeInfoPage'; // E-21
 import EmployeeTimeoffPage from './pages/EmployeeTimeoffPage'; // E-22 / E-04
-import EstimateToolPage from './pages/EstimateToolPage'; // E-27 / P-12
+import EstimateToolPage from './pages/EstimateToolPage'; // E-27 / P-12 (CRM variant — uses NavigationContext)
+import EstimateToolPublicPage from './pages/EstimateToolPublicPage'; // estimate-tool (public clean URL — context-free)
 import EstimatePricingPage from './pages/EstimatePricingPage'; // A-03
 import EstimateBackendApiPage from './pages/EstimateBackendApiPage'; // A-04
 import QuoteBuilderToolPage from './pages/QuoteBuilderToolPage'; // E-23
@@ -130,7 +131,8 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-09': ContractorSignupPage,
   'P-10': PublicCareersPage,
   'P-11': JobApplicationPage,
-  'P-12': EstimateToolPage,
+  'estimate-tool': EstimateToolPublicPage, // Canonical key — maps to /estimate-tool clean URL (context-free)
+  'P-12': EstimateToolPage,                // Alias kept for backward-compat (setActivePageId call sites, CRM users)
   'P-13': InsurancePage,
   'P-14': MaintenancePage,
   'P-Landing': UniversalLandingPage,
@@ -173,7 +175,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-24': ContactsVendorsPage,
   'E-25': ContactVendorProfilePage,
   'E-26': LeadPage,
-  'E-27': EstimateToolPage,
+  'E-27': EstimateToolPage,  // Sidebar entry (employee route — aliases to estimate-tool)
   'E-28': QuotePage,
   'E-29': SignAndVerifyPage,
   'E-30': SchedulePage,

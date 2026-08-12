@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { projectService, firestoreService, userLogService } from '../lib/firebaseService';
 import { cn, getStagePageId } from '../lib/utils';
-import { ArrowLeftIcon, MapPinIcon, BriefcaseIcon, ArrowRightIcon, CheckCircleIcon, CalendarIcon } from './icons';
+import { ArrowLeftIcon, MapPinIcon, BriefcaseIcon, ArrowRightIcon, CheckCircleIcon, CalendarIcon, TrashIcon } from './icons';
 import Button from './Button';
 import FollowUpModal from './FollowUpModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 interface ProjectStageLayoutProps {
     stageLabel: string;
@@ -75,6 +76,8 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
     const [loading, setLoading] = useState(true);
     const [advancing, setAdvancing] = useState(false);
     const [showFollowUp, setShowFollowUp] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         const unsub = projectService.subscribe((data: any[]) => {
@@ -90,7 +93,40 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
 
         const handleBack = () => {
             setSelectedProjectId(null);
-            setActivePageId('E-05'); // Back to pipeline kanban
+            setActivePageId(stagePageId); // Back to this stage's list view
+        };
+
+        const handleDelete = async (reason: string) => {
+            if (!project || deleting) return;
+            setDeleting(true);
+            try {
+                const collection = project._source === 'leads' ? 'leads' : 'projects';
+                await firestoreService.updateDocument(collection, project.id, {
+                    deleted: true,
+                    deleted_at: new Date().toISOString(),
+                    delete_reason: reason || null,
+                    updated_at: new Date().toISOString(),
+                });
+                userLogService.logAction(
+                    'RECORD_DELETED',
+                    `Record "${project.name || project.id}" moved to Trash from ${stageLabel}`,
+                    {
+                        page: stageLabel,
+                        action: 'Delete Record',
+                        projectId: project.id,
+                        projectName: project.name || 'Unknown',
+                        stage: project.current_stage,
+                        reason: reason || 'No reason given',
+                        timestamp: new Date().toISOString(),
+                    }
+                );
+                setShowDeleteModal(false);
+                handleBack();
+            } catch (err) {
+                console.error('[ProjectStageLayout] Delete failed:', err);
+            } finally {
+                setDeleting(false);
+            }
         };
 
         const getAddress = (p: any) => {
@@ -226,15 +262,24 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                             <div className="flex items-center gap-1 text-base text-gray-500 mt-0.5">
                                 <MapPinIcon className="w-3 h-3 flex-none" />
                                 <span className="truncate">{getAddress(project)}</span>
-                                <span className="text-gray-700 ml-2 font-mono text-base">
-                                    ID: {project.id?.slice(-8)}
-                                </span>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3 flex-none">
                         {headerActions?.(project)}
+
+                        {/* ── Delete Record button ── */}
+                        <button
+                            id="stage-record-delete-btn"
+                            onClick={() => setShowDeleteModal(true)}
+                            disabled={deleting}
+                            className="group flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 font-black text-base uppercase tracking-wider hover:bg-red-500/20 hover:border-red-500/60 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] transition-all duration-300 disabled:opacity-40 disabled:pointer-events-none"
+                            title="Move this record to Trash"
+                        >
+                            <TrashIcon className="w-3.5 h-3.5" />
+                            Delete
+                        </button>
 
                         {/* ── Schedule Follow-Up button ── */}
                         <button
@@ -312,6 +357,15 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                     <FollowUpModal
                         project={project}
                         onClose={() => setShowFollowUp(false)}
+                    />
+                )}
+
+                {/* ── Delete Confirm Modal ── */}
+                {showDeleteModal && (
+                    <DeleteConfirmModal
+                        recordName={project.name || 'This record'}
+                        onClose={() => setShowDeleteModal(false)}
+                        onConfirm={handleDelete}
                     />
                 )}
             </div>
