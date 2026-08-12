@@ -9,7 +9,7 @@
  * 5. Verify email was sent
  *
  * Usage:
- *   node e2e_crm_lead_to_sign_verify.mjs [recipientEmail]
+ *   node e2e_crm_lead_to_sign_verify.mjs james.g@rhiveconstruction.com
  *
  * Example:
  *   node e2e_crm_lead_to_sign_verify.mjs victor.v@rhiveconstruction.com
@@ -32,7 +32,7 @@ const TEST_ZIP = '84401';
 const TEST_FULL_ADDRESS = `${TEST_ADDRESS}, ${TEST_CITY}, ${TEST_STATE} ${TEST_ZIP}`;
 
 // Test email recipient
-const recipientEmail = process.argv[2] || 'victor.v@rhiveconstruction.com';
+const recipientEmail = process.argv[2] || 'james.g@rhiveconstruction.com';
 const timestamp = Date.now();
 const TEST_LEAD_ID = `test-lead-${timestamp}`;
 

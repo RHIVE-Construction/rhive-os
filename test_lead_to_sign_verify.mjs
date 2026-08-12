@@ -19,7 +19,7 @@ const BASE_URL = 'http://localhost:3000';
 const SCREENSHOT_DIR = './test-results/sign-verify-flow/';
 
 // Test credentials
-const TEST_EMAIL = 'victor.v@rhiveconstruction.com';
+const TEST_EMAIL = 'james.g@rhiveconstruction.com';
 
 // Utah address that should NOT be in the system
 const TEST_ADDRESS = '742 Evergreen Terrace, Springfield, UT 84601';
