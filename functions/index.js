@@ -2547,6 +2547,10 @@ exports.consolidateAllContacts = functions.https.onRequest((req, res) => {
 
         } catch (error) {
             console.error("Error in consolidateAllContacts:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
 
 exports.sendEmailChangeNotification = functions.https.onRequest((req, res) => {
     cors(req, res, async () => {
@@ -2644,7 +2648,6 @@ exports.sendEmailChangeNotification = functions.https.onRequest((req, res) => {
             return res.status(200).json({ success: true, notified: emailTasks.length });
         } catch (error) {
             console.error('[sendEmailChangeNotification]', error);
->>>>>>> rhive-construction/main
             return res.status(500).json({ error: error.message });
         }
     });
