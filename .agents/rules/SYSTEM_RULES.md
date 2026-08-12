@@ -475,4 +475,44 @@ If **any** check fails:
 
 ---
 
-*Last updated: 2026-08-12 | Branch: system-rules | Maintained in `.agents/rules/SYSTEM_RULES.md`*
+## 10. EMAIL RECIPIENT RULE — ABSOLUTE AND PERMANENT
+
+> **CRITICAL: All emails sent by this system must go to `james.g@rhiveconstruction.com` ONLY.**
+> Sending to any other email address is strictly prohibited without explicit written approval from the project owner.
+
+### 10.1 The Rule
+
+- **Every email sent** — whether triggered by a test, a feature, a Cloud Function, a form submission, a notification, a password reset, a sign-and-verify flow, or any other system action — **must be addressed to `james.g@rhiveconstruction.com`.**
+- This applies to: development, staging, and production environments.
+- **No other recipient is permitted** under any circumstance unless the project owner has given explicit written approval for that specific recipient and purpose.
+
+### 10.2 Hardcoded Default
+
+- Any component, function, form, or Cloud Function that sends email **must default to `james.g@rhiveconstruction.com`** as the recipient.
+- Do not use `victor.v@rhiveconstruction.com`, any other team member's address, or any external address as a default or fallback.
+- If a form has a "Send To" field, pre-populate it with `james.g@rhiveconstruction.com` and do not allow it to be changed without explicit gating.
+
+```ts
+// ❌ WRONG — sending to an arbitrary or hardcoded different address
+await sendEmail({ to: 'victor.v@rhiveconstruction.com', ... });
+await sendEmail({ to: formData.email, ... }); // unvalidated recipient
+
+// ✅ CORRECT — always james.g
+await sendEmail({ to: 'james.g@rhiveconstruction.com', ... });
+```
+
+### 10.3 Testing Emails
+
+- When testing any email flow (password reset, OTP, sign-and-verify, notifications), **always send the test email to `james.g@rhiveconstruction.com`.**
+- Never send test emails to personal or external addresses.
+- Test scripts (`*.mjs`, `*.cjs`) must hardcode `james.g@rhiveconstruction.com` as the recipient — no dynamic or environment-based overrides that could resolve to a different address.
+
+### 10.4 Enforcement
+
+- Before committing any code that touches email sending, **grep for the recipient address** and confirm it resolves to `james.g@rhiveconstruction.com`.
+- Code review must reject any PR where a non-approved email address appears as a recipient in email-sending logic.
+- This rule cannot be overridden by a comment, a config flag, or an agent decision. Only the project owner can grant an exception in writing.
+
+---
+
+*Last updated: 2026-08-13 | Branch: system-rules | Maintained in `.agents/rules/SYSTEM_RULES.md`*
