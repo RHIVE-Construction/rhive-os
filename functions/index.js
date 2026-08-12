@@ -1909,3 +1909,238 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
         }
     });
 });
+
+exports.consolidateEllieSkinner = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        try {
+            const db = admin.firestore();
+            const contactsRef = db.collection('contacts');
+            const snapshot = await contactsRef.get();
+            
+            let ellieDocs = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.name || '';
+                const phone = String(data.phone || data.mobile || '').replace(/\D/g, '');
+                if ((fullName.toLowerCase().includes('ellie') && fullName.toLowerCase().includes('skinner')) || phone.endsWith('8012016287')) {
+                    ellieDocs.push({ id: doc.id, ...data });
+                }
+            });
+
+            if (ellieDocs.length < 2) {
+                return res.status(200).json({ success: true, message: `Found only ${ellieDocs.length} Ellie Skinner contacts. No consolidation needed.`, contacts: ellieDocs });
+            }
+
+            // Determine Master (keep the one with a valid email and tags)
+            ellieDocs.sort((a, b) => {
+                const aHasEmail = a.email && a.email.includes('@');
+                const bHasEmail = b.email && b.email.includes('@');
+                if (aHasEmail && !bHasEmail) return -1;
+                if (!aHasEmail && bHasEmail) return 1;
+                return 0;
+            });
+
+            const master = ellieDocs[0];
+            const duplicates = ellieDocs.slice(1);
+
+            const results = {
+                masterId: master.id,
+                masterName: `${master.first_name || ''} ${master.last_name || ''}`.trim(),
+                masterPhone: master.phone,
+                duplicatesRemoved: [],
+                updates: []
+            };
+
+            // Merge details from duplicates into master
+            const updatedFields = {};
+            duplicates.forEach(dup => {
+                if (!master.address && dup.address) {
+                    updatedFields.address = dup.address;
+                    master.address = dup.address;
+                }
+                if (!master.company && dup.email && !dup.email.includes('@')) {
+                    updatedFields.company = dup.email;
+                    master.company = dup.email;
+                }
+                const masterTags = master.tags || [];
+                const dupTags = dup.tags || [];
+                if (dup._source === 'justcall-sync' && !masterTags.includes('Imported')) {
+                    masterTags.push('Imported');
+                }
+                dupTags.forEach(t => {
+                    if (!masterTags.includes(t)) masterTags.push(t);
+                });
+                updatedFields.tags = masterTags;
+            });
+
+            if (Object.keys(updatedFields).length > 0) {
+                await contactsRef.doc(master.id).update(updatedFields);
+            }
+
+            // Update references in other collections
+            const collections = ['leads', 'projects', 'properties', 'sms_logs', 'call_logs', 'proposals', 'user_log'];
+            for (const colName of collections) {
+                const colRef = db.collection(colName);
+                const fieldsToCheck = ['contactId', 'customerId', 'userId', 'ownerId', 'primaryContactId'];
+                
+                for (const field of fieldsToCheck) {
+                    for (const dup of duplicates) {
+                        const snap = await colRef.where(field, '==', dup.id).get();
+                        for (const doc of snap.docs) {
+                            await colRef.doc(doc.id).update({ [field]: master.id });
+                            results.updates.push({ collection: colName, docId: doc.id, field, oldVal: dup.id, newVal: master.id });
+                        }
+                    }
+                }
+            }
+
+            // Delete the duplicate contacts
+            for (const dup of duplicates) {
+                await contactsRef.doc(dup.id).delete();
+                results.duplicatesRemoved.push({ id: dup.id, name: `${dup.first_name || ''} ${dup.last_name || ''}`.trim(), phone: dup.phone });
+            }
+
+            return res.status(200).json({ success: true, message: "Consolidation complete!", results });
+
+        } catch (error) {
+            console.error("Error in consolidateEllieSkinner:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+exports.consolidateAllContacts = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        try {
+            const db = admin.firestore();
+            const contactsRef = db.collection('contacts');
+            const snapshot = await contactsRef.get();
+
+            // Group contacts by last 10 digits
+            const groups = {};
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const cleanPhone = String(data.phone || data.mobile || '').replace(/\D/g, '');
+                const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+                if (!last10 || last10.length < 10) return; // Skip invalid numbers
+
+                if (!groups[last10]) groups[last10] = [];
+                groups[last10].push({ id: doc.id, ...data });
+            });
+
+            const results = {
+                totalGroupsAnalyzed: Object.keys(groups).length,
+                duplicatesMergedCount: 0,
+                details: []
+            };
+
+            const collections = ['leads', 'projects', 'properties', 'sms_logs', 'call_logs', 'proposals', 'user_log'];
+            const fieldsToCheck = ['contactId', 'customerId', 'userId', 'ownerId', 'primaryContactId'];
+
+            for (const last10 of Object.keys(groups)) {
+                const list = groups[last10];
+                if (list.length < 2) continue; // No duplicates for this number
+
+                // Score contacts to determine the master (higher score is better)
+                const scoreContact = (c) => {
+                    let score = 0;
+                    if (c.email && c.email.includes('@') && !c.email.includes('@justcall.io')) score += 10;
+                    if (c.tags && c.tags.length > 0) score += 5;
+                    if (c.address && c.address !== 'Unknown Address' && c.address.length > 5) score += 3;
+                    if (c.role && c.role !== 'Property Owner') score += 2;
+                    if (c.created_at) score += 1;
+                    return score;
+                };
+
+                list.sort((a, b) => scoreContact(b) - scoreContact(a));
+                const master = list[0];
+                const duplicates = list.slice(1);
+
+                const mergeRecord = {
+                    phoneKey: last10,
+                    masterId: master.id,
+                    masterName: `${master.first_name || ''} ${master.last_name || ''}`.trim(),
+                    masterEmail: master.email,
+                    duplicatesCleaned: [],
+                    fieldsMerged: {},
+                    referencesUpdated: []
+                };
+
+                // Merge details
+                const updatedFields = {};
+                duplicates.forEach(dup => {
+                    if (!master.address && dup.address) {
+                        updatedFields.address = dup.address;
+                        master.address = dup.address;
+                        mergeRecord.fieldsMerged.address = dup.address;
+                    }
+                    if (!master.email && dup.email) {
+                        updatedFields.email = dup.email;
+                        master.email = dup.email;
+                        mergeRecord.fieldsMerged.email = dup.email;
+                    }
+                    const masterTags = master.tags || [];
+                    const dupTags = dup.tags || [];
+                    let tagsChanged = false;
+                    
+                    if (dup._source === 'justcall-sync' && !masterTags.includes('Imported')) {
+                        masterTags.push('Imported');
+                        tagsChanged = true;
+                    }
+                    dupTags.forEach(t => {
+                        if (!masterTags.includes(t)) {
+                            masterTags.push(t);
+                            tagsChanged = true;
+                        }
+                    });
+                    if (tagsChanged) {
+                        updatedFields.tags = masterTags;
+                        mergeRecord.fieldsMerged.tags = masterTags;
+                    }
+                });
+
+                if (Object.keys(updatedFields).length > 0) {
+                    await contactsRef.doc(master.id).update(updatedFields);
+                }
+
+                // Update references in other collections
+                for (const colName of collections) {
+                    const colRef = db.collection(colName);
+                    for (const field of fieldsToCheck) {
+                        for (const dup of duplicates) {
+                            const snap = await colRef.where(field, '==', dup.id).get();
+                            for (const doc of snap.docs) {
+                                await colRef.doc(doc.id).update({ [field]: master.id });
+                                mergeRecord.referencesUpdated.push({
+                                    collection: colName,
+                                    docId: doc.id,
+                                    field,
+                                    oldVal: dup.id,
+                                    newVal: master.id
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // Delete the duplicate contacts
+                for (const dup of duplicates) {
+                    await contactsRef.doc(dup.id).delete();
+                    mergeRecord.duplicatesCleaned.push({
+                        id: dup.id,
+                        name: `${dup.first_name || ''} ${dup.last_name || ''}`.trim()
+                    });
+                    results.duplicatesMergedCount++;
+                }
+
+                results.details.push(mergeRecord);
+            }
+
+            return res.status(200).json({ success: true, message: `Successfully scanned and merged duplicates.`, results });
+
+        } catch (error) {
+            console.error("Error in consolidateAllContacts:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});

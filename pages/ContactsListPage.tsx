@@ -538,6 +538,22 @@ const ContactsListPage: React.FC = () => {
                                         alert("First Name, Last Name, and Phone Number are required.");
                                         return;
                                     }
+                                    
+                                    // Frontend duplicate safeguard (matching trailing 10 digits)
+                                    const cleanNew = formData.phone.replace(/\D/g, '');
+                                    const last10New = cleanNew.slice(-10);
+                                    if (last10New.length >= 10) {
+                                        const duplicate = contacts.find(c => {
+                                            const cleanExist = String(c.phone || c.mobile || '').replace(/\D/g, '');
+                                            const last10Exist = cleanExist.slice(-10);
+                                            return last10Exist === last10New;
+                                        });
+                                        if (duplicate) {
+                                            alert(`Cannot save: A contact with this phone number already exists under the name: ${duplicate.full_name || duplicate.name || 'Unknown'}.`);
+                                            return;
+                                        }
+                                    }
+
                                     setIsSaving(true);
                                     try {
                                         const now = new Date().toISOString();
