@@ -1890,7 +1890,7 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
                 }
             }
 
-            // 2. Queue email via Firestore 'mail' collection (Firebase Trigger Email extension)
+            // 2. Send email directly via Nodemailer (Gmail SMTP + App Password)
             if (customerEmail) {
                 const name = customerName || 'Valued Customer';
                 const proj = projectName || 'Your Roofing Project';
@@ -1972,18 +1972,34 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
                     '- RHIVE Construction - Brisbane, QLD - Australia'
                 ].join('\n');
 
-                await db.collection('mail').add({
-                    to: [customerEmail],          // array format is more reliable
-                    replyTo: 'support@rhiveconstruction.com',
-                    message: {
-                        subject: `Action Required: Complete Your Sign & Verify - ${proj}`,
-                        text: plainText,
-                        html: htmlParts.join(''),
+                // Send directly via Nodemailer (Gmail SMTP + App Password)
+                const nodemailer = require('nodemailer');
+                const smtpPass = process.env.SMTP_PASSWORD;
+                if (!smtpPass) {
+                    console.error('[sendSignVerifyEmail] SMTP_PASSWORD env var not set');
+                    return res.status(500).json({ error: 'SMTP credentials not configured' });
+                }
+
+                const transporter = nodemailer.createTransport({
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    secure: true,
+                    auth: {
+                        user: 'noreply@rhiveconstruction.com',
+                        pass: smtpPass,
+
                     },
-                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
                 });
 
-                console.log(`[sendSignVerifyEmail] Email queued via 'mail' collection for: ${customerEmail}`);
+                await transporter.sendMail({
+                    from: '"RHIVE Construction" <noreply@rhiveconstruction.com>',
+                    to: customerEmail,
+                    subject: `Action Required: Complete Your Sign & Verify - ${proj}`,
+                    text: plainText,
+                    html: htmlParts.join(''),
+                });
+
+                console.log(`[sendSignVerifyEmail] Email sent directly via SMTP to: ${customerEmail}`);
                 return res.status(200).json({ success: true, emailSent: true, link });
             }
 
