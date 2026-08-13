@@ -31,8 +31,8 @@ export const CircuitryBackground: React.FC<PlexusShapeProps> = ({
   const mouse = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
   const [, forceUpdate] = useState({});
 
-  const updateFnRef = useRef<() => void>(() => {});
-  if (!updateFnRef.current || Object.keys(updateFnRef.current).length === 0) {
+  const updateFnRef = useRef<(() => void) | null>(null);
+  if (!updateFnRef.current) {
     updateFnRef.current = () => forceUpdate({});
   }
 
