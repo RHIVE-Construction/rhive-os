@@ -89,6 +89,14 @@ export function calculateEstimate(inputs: CalculationInputs, pricing: Pricing, l
     });
 
     // Handle scaling factor if totalSq is overridden
+    let apiTotal3DSqRaw = 0;
+    includedBuildings.forEach(building => {
+        building.facets.forEach(facet => {
+            const facet3DSq = facet.areaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
+            apiTotal3DSqRaw += facet3DSq;
+        });
+    });
+
     const initialAsphaltSqRaw = Object.entries(pitchSQRaw)
         .filter(([p]) => Number(p) >= 3)
         .reduce((sum, [_, sq]) => sum + sq, 0);
@@ -96,8 +104,9 @@ export function calculateEstimate(inputs: CalculationInputs, pricing: Pricing, l
         .filter(([p]) => Number(p) < 3)
         .reduce((sum, [_, sq]) => sum + sq, 0);
     const apiTotalSqRaw = initialAsphaltSqRaw + initialFlatSqRaw;
-    const finalSq = surveyState.totalSq > 0 ? surveyState.totalSq : apiTotalSqRaw;
-    const scalingFactor = apiTotalSqRaw > 0 ? finalSq / apiTotalSqRaw : 1;
+
+    const finalSq = surveyState.totalSq > 0 ? surveyState.totalSq : apiTotal3DSqRaw;
+    const scalingFactor = apiTotal3DSqRaw > 0 ? finalSq / apiTotal3DSqRaw : 1;
 
     // Initialize spreadsheet state from default cells template
     const sheet: SpreadsheetState = JSON.parse(JSON.stringify(DEFAULT_SHEET_STATE));
@@ -493,7 +502,7 @@ export function calculateEstimate(inputs: CalculationInputs, pricing: Pricing, l
         ?? (isNephi ? 6 : (isEmerson ? 9 : (isMemorial ? 8 : totalFacets)));
 
     return {
-        baseSq: apiTotalSqRaw,
+        baseSq: apiTotal3DSqRaw,
         finalSq,
         asphaltSq: asphaltSqRaw,
         flatRoofSq: flatSqRaw,
