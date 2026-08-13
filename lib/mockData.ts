@@ -171,6 +171,24 @@ export function generateMockBuildingData(place: Place): BuildingData {
       yearConstructed: 1965,
     };
   }
+  if (lowerCaseAddress.includes('tortellini')) {
+    const baseArea = 208.76; // ~22.47 SQ actual 3D area with slope
+    const facets = [
+      { id: 'gen_f1', areaMeters: 104.38, pitchDegrees: 22.62 },
+      { id: 'gen_f2', areaMeters: 104.38, pitchDegrees: 22.62 }
+    ];
+    return {
+      buildings: [{
+        id: 'Main Structure',
+        totalAreaMeters: baseArea,
+        facets: facets,
+        lat,
+        lng,
+        polygonVertices: getInitialPolygonVertices(lat, lng, place.address, 1)
+      }],
+      yearConstructed: 1999
+    };
+  }
 
   const random = pseudoRandom(lat, lng);
   const yearConstructed = 1970 + Math.floor(random * 50);
