@@ -10,7 +10,6 @@ import {
 import { useNavigation } from '../contexts/NavigationContext';
 import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 import PlexusShape from '../components/PlexusShape';
-import RhiveHeader from '../components/website/RhiveHeader';
 import AddressScanInput from '../components/AddressScanInput';
 import { GoogleTestimonials } from '../components/GoogleTestimonials';
 import FinancingCalculator from '../components/FinancingCalculator';
@@ -126,7 +125,7 @@ const PublicHomepageV3: React.FC = () => {
     const isApiReady = useGoogleMapsApi();
 
     useEffect(() => {
-        if (!isApiReady || !emergencyInputRef.current || !window.google || !window.google.maps.places) return;
+        if (!isApiReady || !emergencyInputRef.current || !window.google?.maps?.places) return;
         if (emergencyAutocompleteRef.current) return;
 
         const autocomplete = new window.google.maps.places.Autocomplete(emergencyInputRef.current, {
@@ -167,7 +166,6 @@ const PublicHomepageV3: React.FC = () => {
     return (
         <div className="relative w-full min-h-screen font-sans bg-black text-white overflow-x-hidden">
             <StickyCTABar />
-            <RhiveHeader />
 
             {/* Background Video Layer */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -235,36 +233,36 @@ const PublicHomepageV3: React.FC = () => {
                     </div>
 
                     {/* Interactive Tab Control */}
-                    <div className="w-full max-w-2xl bg-white/5 border border-white/10 p-1.5 rounded-full flex gap-1 mb-2 relative z-20">
+                    <div className="w-full max-w-2xl bg-white/5 border border-white/10 p-1 rounded-2xl sm:rounded-full flex flex-row gap-0.5 sm:gap-1 mb-2 relative z-20">
                         <button
                             onClick={() => setIntakeTab('emergency')}
                             className={cn(
-                                "flex-1 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
+                                "flex-1 py-2 sm:py-3.5 rounded-xl sm:rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-normal sm:tracking-widest transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2",
                                 intakeTab === 'emergency' ? "bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]" : "text-gray-400 hover:text-white"
                             )}
                         >
-                            <AlertTriangle size={14} />
-                            Emergency Leak
+                            <AlertTriangle size={14} className="hidden sm:inline shrink-0" />
+                            <span className="truncate">Emergency Leak</span>
                         </button>
                         <button
                             onClick={() => setIntakeTab('estimate')}
                             className={cn(
-                                "flex-1 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
+                                "flex-1 py-2 sm:py-3.5 rounded-xl sm:rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-normal sm:tracking-widest transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2",
                                 intakeTab === 'estimate' ? "bg-[#ec028b] text-white shadow-[0_0_15px_rgba(236,2,139,0.4)]" : "text-gray-400 hover:text-white"
                             )}
                         >
-                            <Zap size={14} />
-                            Instant Estimate
+                            <Zap size={14} className="hidden sm:inline shrink-0" />
+                            <span className="truncate">Instant Estimate</span>
                         </button>
                         <button
                             onClick={() => setIntakeTab('quote')}
                             className={cn(
-                                "flex-1 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2",
+                                "flex-1 py-2 sm:py-3.5 rounded-xl sm:rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-normal sm:tracking-widest transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2",
                                 intakeTab === 'quote' ? "bg-[#e2ab49] text-black shadow-[0_0_15px_rgba(226,171,73,0.4)]" : "text-gray-400 hover:text-white"
                             )}
                         >
-                            <CheckCircle2 size={14} />
-                            Certified Quote
+                            <CheckCircle2 size={14} className="hidden sm:inline shrink-0" />
+                            <span className="truncate">Certified Quote</span>
                         </button>
                     </div>
 

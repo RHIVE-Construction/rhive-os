@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, CheckCircle2, Building2, Shield, Droplets, ChevronRight, ArrowRight, Eye, ListChecks, FileText, Activity, TrendingUp, ShieldCheck, Building, HardHat, Target } from 'lucide-react';
 import PlexusShape from '../components/PlexusShape';
-import RhiveHeader from '../components/website/RhiveHeader';
 import Card from '../components/Card';
 import { cn } from '../lib/utils';
 import { useNavigation } from '../contexts/NavigationContext';
@@ -89,7 +88,6 @@ const UniversalLandingPage: React.FC = () => {
                 </defs>
             </svg>
             <div className="fixed inset-0 bg-circuit-pattern opacity-5 pointer-events-none z-0" />
-            <RhiveHeader />
 
             {/* DOMINANCE: Hero Section & Immediate CTA */}
             <section className="relative w-full min-h-[90vh] flex flex-col items-center justify-center pt-32 pb-24 overflow-hidden snap-start shrink-0">
