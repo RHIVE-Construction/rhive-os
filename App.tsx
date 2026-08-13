@@ -457,7 +457,7 @@ const LoginBridge: React.FC = () => {
     // Render the estimate tool in the public layout when logged in to prevent the
     // double CircuitryBackground conflict that causes a black screen.
     if (currentUser && (activePageId === 'P-12' || activePageId === 'estimate-tool')) {
-        const EstimatePageComponent = pageComponentMap['estimate-tool'] ?? pageComponentMap['P-12'];
+        const EstimatePageComponent = pageComponentMap[activePageId];
         return (
             <div className={cn(
                 "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
