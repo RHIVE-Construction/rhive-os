@@ -94,6 +94,9 @@ export interface SurveyState {
     highProfileHipRidge: boolean;
     wValleyMetal: boolean;
   };
+  isManualCalculator?: boolean;
+  manualPitches?: Record<string, number>;
+  manualMembranePitches?: Record<string, number> & { parapetSq?: number };
 }
 
 export interface CostBreakdown {
@@ -149,6 +152,7 @@ export interface Pricing {
     labor: number;
     overhead: number;
   }>;
+  removeOnlyByPitch?: Record<string, number>;
   profitMargin: number;
   addons: {
     layers: Record<string, number>;
@@ -174,6 +178,11 @@ export interface Pricing {
     downspout4Story: number;
     styleMultipliers: Record<GutterStyle, number>;
     sizeMultipliers: Record<GutterSize, number>;
+    overhead: number;
+    profit: number;
+    removePerFoot: number;
+    cleanoutPerFoot: number;
+    minOrder: number;
   };
   heatTrace: {
     perFoot: number;
@@ -182,6 +191,10 @@ export interface Pricing {
     downspout3Story: number;
     downspout4Story: number;
     eaveOverhang: Record<string, number>;
+    overhead: number;
+    profit: number;
+    flatExtensionCord: number;
+    projectBase: number;
   };
 }
 

@@ -75,7 +75,12 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
           if (!apiK) return;
 
           const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${place.latitude}&location.longitude=${place.longitude}&requiredQuality=HIGH&key=${apiK}`;
-          const response = await fetch(url);
+          let response = await fetch(url);
+          if (response.status === 404) {
+            console.warn("Solar API HIGH quality not available, retrying with LOW");
+            const fallbackUrl = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${place.latitude}&location.longitude=${place.longitude}&requiredQuality=LOW&key=${apiK}`;
+            response = await fetch(fallbackUrl);
+          }
           if (!response.ok) {
             throw new Error(`Solar API returned status ${response.status}`);
           }

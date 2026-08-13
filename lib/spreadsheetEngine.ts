@@ -1,11 +1,5 @@
-/**
- * spreadsheetEngine.ts
- * Exact replica of the instant-estimate/vic V2 spreadsheet engine.
- * Powers the full pricing pipeline in the Measurements Summary modal.
- * Imports adjusted for RHIVE OS path structure (lib/ → types at ../types, constants at ../constants).
- */
-
-import type { Pricing } from '../types';
+import type { Pricing, SurveyState, BuildingData } from '../types';
+import { SQ_FEET_PER_SQUARE, SQ_METERS_TO_SQ_FEET } from '../constants';
 
 export interface SheetCell {
   value: any;
@@ -19,9 +13,9 @@ export type SpreadsheetState = Record<string, SheetCell>;
 // Default cells and formulas matching sheet v2.0 exactly
 export const DEFAULT_SHEET_STATE: SpreadsheetState = {
   // 1. ASPHALT OUTPUT / ESTIMATE
-  "B7":  { value: 0, formula: "=(DurationMat * SqLoad) + (ChimneyCount * ChimMat) + (SwampCoolerCount * SwampMat) + (SkylightCount * SkyMat) + AddonMat", isEditable: false, label: "DurationMat" },
-  "B8":  { value: 0, formula: "=(Sum(PitchRawGroundSQ * LaborRate) + LayerCountTearOff + FeaturesLabor + AddonLab)", isEditable: false, label: "DurationLab" },
-  "B9":  { value: 0, formula: "=SqRaw * INSTALLOvrd * (1 + 0.1 * INT((SqRaw - 1) / 50))", isEditable: false, label: "DurationOvrd" },
+  "B7": { value: 0, formula: "=(DurationMat * SqLoad) + (ChimneyCount * ChimMat) + (SwampCoolerCount * SwampMat) + (SkylightCount * SkyMat) + AddonMat", isEditable: false, label: "DurationMat" },
+  "B8": { value: 0, formula: "=(Sum(PitchRawGroundSQ * LaborRate) + LayerCountTearOff + FeaturesLabor + AddonLab)", isEditable: false, label: "DurationLab" },
+  "B9": { value: 0, formula: "=SqRaw * INSTALLOvrd * (1 + 0.1 * INT((SqRaw - 1) / 50))", isEditable: false, label: "DurationOvrd" },
   "B10": { value: 0, formula: "=(Sum(B7:B9) / (1 - ProfitMargin)) - Sum(B7:B9)", isEditable: false, label: "DurationProf" },
   "B11": { value: 0, formula: "=Sum(B7:B10)", isEditable: false, label: "DurationRetail" },
   "B12": { value: 0, formula: "=B11 / 18", isEditable: false, label: "DurPmt0_18" },
@@ -29,29 +23,31 @@ export const DEFAULT_SHEET_STATE: SpreadsheetState = {
   "B14": { value: 0, formula: "=SqLoad * FlexRetailUpgrade", isEditable: false, label: "FlexAddon" },
   "B15": { value: 0, formula: "=SqLoad * WoodlandUpgrade", isEditable: false, label: "DesignerAddon" },
   "B16": { value: 0, formula: "=SqLoad * GrandSequoiaUpgrade", isEditable: false, label: "PremDesignerAddon" },
+  "B17": { value: 0, formula: "=ASPHALT REDECK", isEditable: false, label: "ASPHALT REDECK" },
 
   // 2. FLAT (MEMBRANE) OUTPUT
-  "F7":  { value: 0, formula: "=(TPO60MATRATE * SqLoad) + (SMCURB * SMCURBMAT) + (LRGCURB * LRGCURBMAT) + AddonMatFlat", isEditable: false, label: "TPO60_MATERIAL" },
-  "F8":  { value: 0, formula: "=(FLAT_R_AND_R * SqRaw) + (SMCURB * SMCURBLAB) + (LRGCURB * LRGCURBLAB) + (LayerCountTearOffFlat * G102) + AddonLabFlat + (DumpsterCount * DUMPSTER)", isEditable: false, label: "TPO60_LABOR" },
-  "F9":  { value: 0, formula: "=FLATOVRD * SqRaw", isEditable: false, label: "TPO60_OVERHEAD" },
+  "F7": { value: 0, formula: "=(TPO60MATRATE * SqLoad) + (SMCURB * SMCURBMAT) + (LRGCURB * LRGCURBMAT) + AddonMatFlat", isEditable: false, label: "TPO60_MATERIAL" },
+  "F8": { value: 0, formula: "=(FLAT_R_AND_R * SqRaw) + (SMCURB * SMCURBLAB) + (LRGCURB * LRGCURBLAB) + (LayerCountTearOffFlat * G102) + AddonLabFlat + (DumpsterCount * DUMPSTER)", isEditable: false, label: "TPO60_LABOR" },
+  "F9": { value: 0, formula: "=FLATOVRD * SqRaw", isEditable: false, label: "TPO60_OVERHEAD" },
   "F10": { value: 0, formula: "=(Sum(F7:F9) / (1 - FLAT_PROFIT)) - Sum(F7:F9)", isEditable: false, label: "TPO60_PROFIT" },
   "F11": { value: 0, formula: "=Sum(F7:F10)", isEditable: false, label: "TPO60_RETAIL" },
   "F12": { value: 0, formula: "=SqLoad * TPO80MATRATE", isEditable: false, label: "TPO80_RETAIL" },
   "F13": { value: 0, formula: "=SqLoad * PVC60MATRATE", isEditable: false, label: "PVC60_RETAIL" },
   "F14": { value: 0, formula: "=SqLoad * PVC80MATRATE", isEditable: false, label: "PVC80_RETAIL" },
+  "F15": { value: 0, formula: "=REDECK FLAT SECTION", isEditable: false, label: "REDECK FLAT SECTION" },
 
   // 3. GUTTER & HEAT TRACE OUTPUT
-  "J7":  { value: 0, formula: "=MAX(GutterLoad * Gtr5Lf * (1 + GtrOvrd + GtrProf), GtrMin)", isEditable: false, label: "Gtr5Retail" },
-  "J8":  { value: 0, formula: "=(HCLoad * HeatCableLF * (1 + HCOverd + HCProf)) + ExtCord", isEditable: false, label: "HCPremRetail" },
+  "J7": { value: 0, formula: "=MAX(GutterLoad * Gtr5Lf * (1 + GtrOvrd + GtrProf), GtrMin)", isEditable: false, label: "Gtr5Retail" },
+  "J8": { value: 0, formula: "=(HCLoad * HeatCableLF * (1 + HCOverd + HCProf)) + ExtCord", isEditable: false, label: "HCPremRetail" },
 
-  // 4. ASPHALT ROOFING INPUTS
+  // 4. ASPHALT ROOFING INPUTS (Injected from geocode search and survey state)
   "B28": { value: 1, formula: undefined, isEditable: true, label: "LayerCount" },
   "B29": { value: 0, formula: undefined, isEditable: true, label: "ChimneyCount" },
   "B30": { value: 0, formula: undefined, isEditable: true, label: "SwampCoolerCount" },
   "B31": { value: 0, formula: undefined, isEditable: true, label: "SkylightCount" },
   "B32": { value: 0, formula: undefined, isEditable: true, label: "FacetCount" },
-
-  // Pitch raw ground SQs (B36=3/12 … B47=14/12+)
+  
+  // Pitch raw ground SQs (B36 to B47)
   "B36": { value: 0, formula: undefined, isEditable: true, label: "3/12 Ground SQ" },
   "B37": { value: 0, formula: undefined, isEditable: true, label: "4/12 Ground SQ" },
   "B38": { value: 0, formula: undefined, isEditable: true, label: "5/12 Ground SQ" },
@@ -73,7 +69,7 @@ export const DEFAULT_SHEET_STATE: SpreadsheetState = {
   "F32": { value: 0, formula: undefined, isEditable: true, label: "0/12 Ground SQ" },
   "F33": { value: 0, formula: undefined, isEditable: true, label: "1/12 Ground SQ" },
   "F34": { value: 0, formula: undefined, isEditable: true, label: "2/12 Ground SQ" },
-  "F35": { value: 0, formula: undefined, isEditable: true, label: "Parapet SQ" },
+  "F35": { value: 4.5, formula: undefined, isEditable: true, label: "Parapet SQ" },
 
   // 6. GUTTER & HEAT TRACE INPUTS
   "J27": { value: 0, formula: undefined, isEditable: true, label: "Gutter length" },
@@ -93,35 +89,37 @@ export const DEFAULT_SHEET_STATE: SpreadsheetState = {
   "B52": { value: 0, formula: "=IF(B32<=5, 5%, IF(B32<=10, 8%, IF(B32<=15, 12%, IF(B32<=25, 15%, IF(B32<=35, 18%, 22.5%)))))", isEditable: false, label: "WastePct" },
   "B53": { value: 0, formula: "=Sum(PitchRawGroundSQ * PitchMultiplier)", isEditable: false, label: "SqRaw" },
   "B54": { value: 0, formula: "=B53 / (1 - B52)", isEditable: false, label: "SqLoad" },
-  "B55": { value: 0, formula: "=B36 * 1.0308",  isEditable: false, label: "3/12 SQRAW" },
-  "B56": { value: 0, formula: "=B37 * 1.0541",  isEditable: false, label: "4/12 SQRAW" },
-  "B57": { value: 0, formula: "=B38 * 1.0833",  isEditable: false, label: "5/12 SQRAW" },
-  "B58": { value: 0, formula: "=B39 * 1.1180",  isEditable: false, label: "6/12 SQRAW" },
-  "B59": { value: 0, formula: "=B40 * 1.1577",  isEditable: false, label: "7/12 SQRAW" },
-  "B60": { value: 0, formula: "=B41 * 1.2019",  isEditable: false, label: "8/12 SQRAW" },
-  "B61": { value: 0, formula: "=B42 * 1.2500",  isEditable: false, label: "9/12 SQRAW" },
-  "B62": { value: 0, formula: "=B43 * 1.3017",  isEditable: false, label: "10/12 SQRAW" },
-  "B63": { value: 0, formula: "=B44 * 1.3566",  isEditable: false, label: "11/12 SQRAW" },
-  "B64": { value: 0, formula: "=B45 * 1.4142",  isEditable: false, label: "12/12 SQRAW" },
-  "B65": { value: 0, formula: "=B46 * 1.4745",  isEditable: false, label: "13/12 SQRAW" },
-  "B66": { value: 0, formula: "=B47 * 1.5366",  isEditable: false, label: "14/12+ SQRAW" },
+  
+  "B55": { value: 0, formula: "=B36 * 1.0308", isEditable: false, label: "3/12 SQRAW" },
+  "B56": { value: 0, formula: "=B37 * 1.0541", isEditable: false, label: "4/12 SQRAW" },
+  "B57": { value: 0, formula: "=B38 * 1.0833", isEditable: false, label: "5/12 SQRAW" },
+  "B58": { value: 0, formula: "=B39 * 1.118", isEditable: false, label: "6/12 SQRAW" },
+  "B59": { value: 0, formula: "=B40 * 1.1577", isEditable: false, label: "7/12 SQRAW" },
+  "B60": { value: 0, formula: "=B41 * 1.2019", isEditable: false, label: "8/12 SQRAW" },
+  "B61": { value: 0, formula: "=B42 * 1.25", isEditable: false, label: "9/12 SQRAW" },
+  "B62": { value: 0, formula: "=B43 * 1.3017", isEditable: false, label: "10/12 SQRAW" },
+  "B63": { value: 0, formula: "=B44 * 1.3566", isEditable: false, label: "11/12 SQRAW" },
+  "B64": { value: 0, formula: "=B45 * 1.4142", isEditable: false, label: "12/12 SQRAW" },
+  "B65": { value: 0, formula: "=B46 * 1.4745", isEditable: false, label: "13/12 SQRAW" },
+  "B66": { value: 0, formula: "=B47 * 1.5366", isEditable: false, label: "14/12+ Ground SQ" },
 
   // 8. FLAT CALCULATIONS
   "F52": { value: 0.12, formula: "=IF(F31<=5, 5%, IF(F31<=10, 8%, IF(F31<=15, 12%, IF(F31<=25, 15%, IF(F31<=35, 18%, 22.5%)))))", isEditable: false, label: "WastePct Flat" },
   "F53": { value: 0, formula: "=Sum(FlatRawGroundSQ * PitchMultiplier) + ParapetSQ", isEditable: false, label: "SqRaw Flat" },
   "F54": { value: 0, formula: "=F53 / (1 - F52)", isEditable: false, label: "SqLoad Flat" },
 
-  // 9. GUTTER & HEAT TRACE CALCULATIONS
+  // 9. GUTTER HEAT TRACE CALCULATIONS
   "J52": { value: 0, formula: "=(J27 + J28 * 5 + J29 * 15 + J30 * 24 + J31 * 37 + J32 * 50) * 1.1", isEditable: false, label: "GutterLoad" },
   "J53": { value: 0, formula: "=(J36 * eaveMultiplier + J37 * 15 + J38 * 24 + J39 * 35 + J40 * 50)", isEditable: false, label: "HCLoad" },
 
-  // 10. ASPHALT PRICING CONSTANTS (v2.0 baseline)
+  // 10. ASPHALT PRICING CONSTANTS
   "C108": { value: 274.90, formula: undefined, isEditable: true, label: "DurationMat" },
   "C109": { value: 250.00, formula: undefined, isEditable: true, label: "AddonMat" },
-  "C110": { value:  60.00, formula: undefined, isEditable: true, label: "SkyMat" },
-  "C111": { value:  60.00, formula: undefined, isEditable: true, label: "ChimMat" },
-  "C112": { value:  80.00, formula: undefined, isEditable: true, label: "SwampMat" },
-  // Labor rates R&R per pitch (C114=3/12 … C125=14/12+)
+  "C110": { value: 60.00, formula: undefined, isEditable: true, label: "SkyMat" },
+  "C111": { value: 60.00, formula: undefined, isEditable: true, label: "ChimMat" },
+  "C112": { value: 80.00, formula: undefined, isEditable: true, label: "SwampMat" },
+
+  // Labor rates R&R (C114 to C125)
   "C114": { value: 140.00, formula: undefined, isEditable: true, label: "3/12 R&R" },
   "C115": { value: 140.00, formula: undefined, isEditable: true, label: "4/12 R&R" },
   "C116": { value: 140.00, formula: undefined, isEditable: true, label: "5/12 R&R" },
@@ -134,128 +132,185 @@ export const DEFAULT_SHEET_STATE: SpreadsheetState = {
   "C123": { value: 230.00, formula: undefined, isEditable: true, label: "12/12 R&R" },
   "C124": { value: 230.00, formula: undefined, isEditable: true, label: "13/12 R&R" },
   "C125": { value: 230.00, formula: undefined, isEditable: true, label: "14/12+ R&R" },
-  // Remove Only rates (C126=3/12 … C137=14/12+)
-  "C126": { value:  25.00, formula: undefined, isEditable: true, label: "3/12 REMOVE" },
-  "C127": { value:  25.00, formula: undefined, isEditable: true, label: "4/12 REMOVE" },
-  "C128": { value:  25.00, formula: undefined, isEditable: true, label: "5/12 REMOVE" },
-  "C129": { value:  25.00, formula: undefined, isEditable: true, label: "6/12 REMOVE" },
-  "C130": { value:  40.00, formula: undefined, isEditable: true, label: "7/12 REMOVE" },
-  "C131": { value:  55.00, formula: undefined, isEditable: true, label: "8/12 REMOVE" },
-  "C132": { value:  70.00, formula: undefined, isEditable: true, label: "9/12 REMOVE" },
-  "C133": { value:  85.00, formula: undefined, isEditable: true, label: "10/12 REMOVE" },
+
+  // Labor rates Remove Only (C126 to C137)
+  "C126": { value: 25.00, formula: undefined, isEditable: true, label: "3/12 REMOVE" },
+  "C127": { value: 25.00, formula: undefined, isEditable: true, label: "4/12 REMOVE" },
+  "C128": { value: 25.00, formula: undefined, isEditable: true, label: "5/12 REMOVE" },
+  "C129": { value: 25.00, formula: undefined, isEditable: true, label: "6/12 REMOVE" },
+  "C130": { value: 40.00, formula: undefined, isEditable: true, label: "7/12 REMOVE" },
+  "C131": { value: 55.00, formula: undefined, isEditable: true, label: "8/12 REMOVE" },
+  "C132": { value: 70.00, formula: undefined, isEditable: true, label: "9/12 REMOVE" },
+  "C133": { value: 85.00, formula: undefined, isEditable: true, label: "10/12 REMOVE" },
   "C134": { value: 100.00, formula: undefined, isEditable: true, label: "11/12 REMOVE" },
   "C135": { value: 115.00, formula: undefined, isEditable: true, label: "12/12 REMOVE" },
   "C136": { value: 115.00, formula: undefined, isEditable: true, label: "13/12 REMOVE" },
   "C137": { value: 115.00, formula: undefined, isEditable: true, label: "14/12+ REMOVE" },
+
   "C139": { value: 150.00, formula: undefined, isEditable: true, label: "ChimLab" },
   "C140": { value: 200.00, formula: undefined, isEditable: true, label: "SwampLab" },
   "C141": { value: 100.00, formula: undefined, isEditable: true, label: "SkyLab" },
   "C142": { value: 250.00, formula: undefined, isEditable: true, label: "AddonLab" },
-  "C144": { value:  96.00, formula: undefined, isEditable: true, label: "INSTALLOvrd" },
-  "C146": { value:   0.10, formula: undefined, isEditable: true, label: "ProfitMargin" },
+  "C144": { value: 96.00, formula: undefined, isEditable: true, label: "INSTALLOvrd" },
+  "C146": { value: 0.10, formula: undefined, isEditable: true, label: "ProfitMargin" },
 
   // 11. FLAT PRICING CONSTANTS
-  "G93":  { value: 575.00, formula: undefined, isEditable: true, label: "TPO60MATRATE" },
-  "G94":  { value: 250.00, formula: undefined, isEditable: true, label: "AddonMatFlat" },
-  "G95":  { value: 120.00, formula: undefined, isEditable: true, label: "LRGCURBMAT" },
-  "G96":  { value:  80.00, formula: undefined, isEditable: true, label: "SMCURBMAT" },
-  "G102": { value:  35.00, formula: undefined, isEditable: true, label: "FLAT REMOVE/SQ" },
+  "G93": { value: 575.00, formula: undefined, isEditable: true, label: "TPO60MATRATE" },
+  "G94": { value: 250.00, formula: undefined, isEditable: true, label: "AddonMatFlat" },
+  "G95": { value: 120.00, formula: undefined, isEditable: true, label: "LRGCURBMAT" },
+  "G96": { value: 80.00, formula: undefined, isEditable: true, label: "SMCURBMAT" },
+  "G102": { value: 35.00, formula: undefined, isEditable: true, label: "FLAT REMOVE/SQ" },
   "G103": { value: 140.00, formula: undefined, isEditable: true, label: "FLAT R&R/SQ" },
   "G105": { value: 350.00, formula: undefined, isEditable: true, label: "DUMPSTER" },
   "G106": { value: 250.00, formula: undefined, isEditable: true, label: "LRGCURBLAB" },
   "G107": { value: 150.00, formula: undefined, isEditable: true, label: "SMCURBLAB" },
   "G108": { value: 250.00, formula: undefined, isEditable: true, label: "AddonLabFlat" },
-  "G110": { value:  96.00, formula: undefined, isEditable: true, label: "FLATOVRD" },
-  "G112": { value:   0.10, formula: undefined, isEditable: true, label: "FLAT_PROFIT" },
-  "G115": { value:  82.50, formula: undefined, isEditable: true, label: "TPO80MATRATE" },
-  "G116": { value:   8.71, formula: undefined, isEditable: true, label: "PVC60MATRATE" },
-  "G117": { value:  80.21, formula: undefined, isEditable: true, label: "PVC80MATRATE" },
+  "G110": { value: 96.00, formula: undefined, isEditable: true, label: "FLATOVRD" },
+  "G112": { value: 0.10, formula: undefined, isEditable: true, label: "FLAT_PROFIT" },
+  
+  "G115": { value: 82.50, formula: undefined, isEditable: true, label: "TPO80MATRATE" },
+  "G116": { value: 8.71, formula: undefined, isEditable: true, label: "PVC60MATRATE" },
+  "G117": { value: 80.21, formula: undefined, isEditable: true, label: "PVC80MATRATE" },
 
-  // 12. GUTTER & HEAT TRACE CONSTANTS
-  "J92":  { value:   6.50, formula: undefined, isEditable: true, label: "Gtr5Lf" },
-  "J93":  { value:   0.15, formula: undefined, isEditable: true, label: "GtrOvrd" },
-  "J94":  { value:   0.10, formula: undefined, isEditable: true, label: "GtrProf" },
-  "J103": { value:   1.00, formula: undefined, isEditable: true, label: "GtrRemoveLf" },
-  "J104": { value:   2.00, formula: undefined, isEditable: true, label: "GtrCleanoutLf" },
+  // 12. GUTTER HEAT TRACE CONSTANTS
+  "J92": { value: 6.50, formula: undefined, isEditable: true, label: "Gtr5Lf" },
+  "J93": { value: 0.15, formula: undefined, isEditable: true, label: "GtrOvrd" },
+  "J94": { value: 0.10, formula: undefined, isEditable: true, label: "GtrProf" },
+  "J103": { value: 1.00, formula: undefined, isEditable: true, label: "GtrRemoveLf" },
+  "J104": { value: 2.00, formula: undefined, isEditable: true, label: "GtrCleanoutLf" },
   "J105": { value: 350.00, formula: undefined, isEditable: true, label: "GtrMin" },
-  "J109": { value:   9.00, formula: undefined, isEditable: true, label: "HeatCable/LF" },
-  "J110": { value:  35.00, formula: undefined, isEditable: true, label: "ExtCord" },
+  
+  "J109": { value: 9.00, formula: undefined, isEditable: true, label: "HeatCable/LF" },
+  "J110": { value: 35.00, formula: undefined, isEditable: true, label: "ExtCord" },
   "J111": { value: 150.00, formula: undefined, isEditable: true, label: "HCEaProj" },
-  "J112": { value:   0.15, formula: undefined, isEditable: true, label: "HCOverd" },
-  "J113": { value:   0.10, formula: undefined, isEditable: true, label: "HCProf" },
+  "J112": { value: 0.15, formula: undefined, isEditable: true, label: "HCOverd" },
+  "J113": { value: 0.10, formula: undefined, isEditable: true, label: "HCProf" }
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Core evaluation engine
-// ──────────────────────────────────────────────────────────────────────────────
+/**
+ * Executes a full sequential evaluation of the V2 spreadsheet cell formulas
+ */
 export function recalculateSpreadsheet(sheet: SpreadsheetState): SpreadsheetState {
   const copy = JSON.parse(JSON.stringify(sheet)) as SpreadsheetState;
-  const getVal = (c: string) => Number(copy[c]?.value) || 0;
-  const setVal = (c: string, v: number) => { if (copy[c]) copy[c].value = v; };
 
-  // ── 1. Asphalt waste & SqRaw ─────────────────────────────────────────────
+  const getVal = (coord: string): number => {
+    return Number(copy[coord]?.value) || 0;
+  };
+
+  const setVal = (coord: string, val: number) => {
+    if (copy[coord]) {
+      copy[coord].value = val;
+    }
+  };
+
+  // 1. Asphalt Calculations
   const facetCount = getVal("B32");
-  let wastePct = facetCount <= 5 ? 0.05 : facetCount <= 10 ? 0.08 : facetCount <= 15 ? 0.12
-    : facetCount <= 25 ? 0.15 : facetCount <= 35 ? 0.18 : 0.225;
+  let wastePct = 0.12;
+  if (facetCount <= 5) wastePct = 0.05;
+  else if (facetCount <= 10) wastePct = 0.08;
+  else if (facetCount <= 15) wastePct = 0.12;
+  else if (facetCount <= 25) wastePct = 0.15;
+  else if (facetCount <= 35) wastePct = 0.18;
+  else wastePct = 0.225;
+  
   setVal("B52", wastePct);
 
-  const rawSq3  = getVal("B36") * 1.0308;
-  const rawSq4  = getVal("B37") * 1.0541;
-  const rawSq5  = getVal("B38") * 1.0833;
-  const rawSq6  = getVal("B39") * 1.1180;
-  const rawSq7  = getVal("B40") * 1.1577;
-  const rawSq8  = getVal("B41") * 1.2019;
-  const rawSq9  = getVal("B42") * 1.2500;
-  const rawSq10 = getVal("B43") * 1.3017;
-  const rawSq11 = getVal("B44") * 1.3566;
-  const rawSq12 = getVal("B45") * 1.4142;
-  const rawSq13 = getVal("B46") * 1.4745;
-  const rawSq14 = getVal("B47") * 1.5366;
+  // SqRaw calculation
+  const rawSq3_12 = getVal("B36") * 1.0308;
+  const rawSq4_12 = getVal("B37") * 1.0541;
+  const rawSq5_12 = getVal("B38") * 1.0833;
+  const rawSq6_12 = getVal("B39") * 1.1180;
+  const rawSq7_12 = getVal("B40") * 1.1577;
+  const rawSq8_12 = getVal("B41") * 1.2019;
+  const rawSq9_12 = getVal("B42") * 1.2500;
+  const rawSq10_12 = getVal("B43") * 1.3017;
+  const rawSq11_12 = getVal("B44") * 1.3566;
+  const rawSq12_12 = getVal("B45") * 1.4142;
+  const rawSq13_12 = getVal("B46") * 1.4745;
+  const rawSq14_12 = getVal("B47") * 1.5366;
 
-  [rawSq3, rawSq4, rawSq5, rawSq6, rawSq7, rawSq8, rawSq9, rawSq10, rawSq11, rawSq12, rawSq13, rawSq14]
-    .forEach((v, i) => setVal(`B${55 + i}`, v));
+  setVal("B55", rawSq3_12);
+  setVal("B56", rawSq4_12);
+  setVal("B57", rawSq5_12);
+  setVal("B58", rawSq6_12);
+  setVal("B59", rawSq7_12);
+  setVal("B60", rawSq8_12);
+  setVal("B61", rawSq9_12);
+  setVal("B62", rawSq10_12);
+  setVal("B63", rawSq11_12);
+  setVal("B64", rawSq12_12);
+  setVal("B65", rawSq13_12);
+  setVal("B66", rawSq14_12);
 
-  const sqRaw = rawSq3 + rawSq4 + rawSq5 + rawSq6 + rawSq7 + rawSq8 + rawSq9 + rawSq10 + rawSq11 + rawSq12 + rawSq13 + rawSq14;
+  const sqRaw = rawSq3_12 + rawSq4_12 + rawSq5_12 + rawSq6_12 + rawSq7_12 + rawSq8_12 + rawSq9_12 + rawSq10_12 + rawSq11_12 + rawSq12_12 + rawSq13_12 + rawSq14_12;
   setVal("B53", sqRaw);
+
   const sqLoad = sqRaw / (1 - wastePct);
   setVal("B54", sqLoad);
 
-  // ── 2. Flat waste & SqRaw ─────────────────────────────────────────────────
+  // 2. Flat Calculations
   const facetCountFlat = getVal("F31");
-  let wastePctFlat = facetCountFlat <= 5 ? 0.05 : facetCountFlat <= 10 ? 0.08 : facetCountFlat <= 15 ? 0.12
-    : facetCountFlat <= 25 ? 0.15 : facetCountFlat <= 35 ? 0.18 : 0.225;
+  let wastePctFlat = 0.12;
+  if (facetCountFlat <= 5) wastePctFlat = 0.05;
+  else if (facetCountFlat <= 10) wastePctFlat = 0.08;
+  else if (facetCountFlat <= 15) wastePctFlat = 0.12;
+  else if (facetCountFlat <= 25) wastePctFlat = 0.15;
+  else if (facetCountFlat <= 35) wastePctFlat = 0.18;
+  else wastePctFlat = 0.225;
+
   setVal("F52", wastePctFlat);
 
   const flatSqRaw = (getVal("F32") * 1.0) + (getVal("F33") * 1.0035) + (getVal("F34") * 1.0138) + getVal("F35");
   setVal("F53", flatSqRaw);
+
   const flatSqLoad = flatSqRaw / (1 - wastePctFlat);
   setVal("F54", flatSqLoad);
 
-  // ── 3. Gutter & Heat Trace loads ─────────────────────────────────────────
+  // 3. Gutter & Heat Trace Calculations
   const gutterLoad = (getVal("J27") + getVal("J28") * 5.0 + getVal("J29") * 15.0 + getVal("J30") * 24.0 + getVal("J31") * 37.0 + getVal("J32") * 50.0) * 1.1;
   setVal("J52", gutterLoad);
 
   const eaveType = copy["J35"]?.value || "Small";
-  const hcMultiplier = (eaveType === "Small" || eaveType === "small") ? 2.8
-    : (eaveType === "Medium" || eaveType === "medium") ? 4.8
-    : (eaveType === "Large" || eaveType === "large") ? 5.7 : 2.0;
+  let hcMultiplier = 2.0;
+  if (eaveType === "Small" || eaveType === "small") hcMultiplier = 2.8;
+  else if (eaveType === "Medium" || eaveType === "medium") hcMultiplier = 4.8;
+  else if (eaveType === "Large" || eaveType === "large") hcMultiplier = 5.7;
 
   const hcLoad = (getVal("J36") * hcMultiplier) + (getVal("J37") * 15.0) + (getVal("J38") * 24.0) + (getVal("J39") * 35.0) + (getVal("J40") * 50.0);
   setVal("J53", hcLoad);
 
-  // ── 4. Asphalt costs ─────────────────────────────────────────────────────
+  // 4. Asphalt Costs (B7 to B11)
   const durationMat = (getVal("C108") * sqLoad) + (getVal("B29") * getVal("C111")) + (getVal("B30") * getVal("C112")) + (getVal("B31") * getVal("C110")) + getVal("C109");
   setVal("B7", durationMat);
 
-  const rrLabor = (getVal("B36") * getVal("C114")) + (getVal("B37") * getVal("C115")) + (getVal("B38") * getVal("C116")) + (getVal("B39") * getVal("C117"))
-    + (getVal("B40") * getVal("C118")) + (getVal("B41") * getVal("C119")) + (getVal("B42") * getVal("C120")) + (getVal("B43") * getVal("C121"))
-    + (getVal("B44") * getVal("C122")) + (getVal("B45") * getVal("C123")) + (getVal("B46") * getVal("C124")) + (getVal("B47") * getVal("C125"));
+  // Labor components: R&R base + extra layers tear-off + chimney/skylight labor
+  const rrLabor = (getVal("B36") * getVal("C114")) +
+                  (getVal("B37") * getVal("C115")) +
+                  (getVal("B38") * getVal("C116")) +
+                  (getVal("B39") * getVal("C117")) +
+                  (getVal("B40") * getVal("C118")) +
+                  (getVal("B41") * getVal("C119")) +
+                  (getVal("B42") * getVal("C120")) +
+                  (getVal("B43") * getVal("C121")) +
+                  (getVal("B44") * getVal("C122")) +
+                  (getVal("B45") * getVal("C123")) +
+                  (getVal("B46") * getVal("C124")) +
+                  (getVal("B47") * getVal("C125"));
 
   const layerCount = getVal("B28");
   const tearOffLabor = layerCount > 1 ? (layerCount - 1) * (
-    (getVal("B36") * getVal("C126")) + (getVal("B37") * getVal("C127")) + (getVal("B38") * getVal("C128")) + (getVal("B39") * getVal("C129"))
-    + (getVal("B40") * getVal("C130")) + (getVal("B41") * getVal("C131")) + (getVal("B42") * getVal("C132")) + (getVal("B43") * getVal("C133"))
-    + (getVal("B44") * getVal("C134")) + (getVal("B45") * getVal("C135")) + (getVal("B46") * getVal("C136")) + (getVal("B47") * getVal("C137"))
+                  (getVal("B36") * getVal("C126")) +
+                  (getVal("B37") * getVal("C127")) +
+                  (getVal("B38") * getVal("C128")) +
+                  (getVal("B39") * getVal("C129")) +
+                  (getVal("B40") * getVal("C130")) +
+                  (getVal("B41") * getVal("C131")) +
+                  (getVal("B42") * getVal("C132")) +
+                  (getVal("B43") * getVal("C133")) +
+                  (getVal("B44") * getVal("C134")) +
+                  (getVal("B45") * getVal("C135")) +
+                  (getVal("B46") * getVal("C136")) +
+                  (getVal("B47") * getVal("C137"))
   ) : 0;
 
   const featuresLabor = (getVal("B29") * getVal("C139")) + (getVal("B30") * getVal("C140")) + (getVal("B31") * getVal("C141"));
@@ -273,19 +328,21 @@ export function recalculateSpreadsheet(sheet: SpreadsheetState): SpreadsheetStat
 
   const durationRetail = subtotal + durationProf;
   setVal("B11", durationRetail);
-  setVal("B12", durationRetail / 18);
 
+  setVal("B12", durationRetail / 18);
+  
+  // PMT: P * r / (1 - (1+r)^-n)
   const r = 0.0799 / 12;
   const n = 60;
   const pmt60 = durationRetail > 0 ? (durationRetail * r) / (1 - Math.pow(1 + r, -n)) : 0;
   setVal("B13", pmt60);
 
-  // Shingle upgrades
-  setVal("B14", sqLoad * 58.70);    // Flex (Duration FLEX)
-  setVal("B15", sqLoad * 250.00);   // Woodland
-  setVal("B16", sqLoad * 300.00);   // Grand Sequoia
+  // Upgrades
+  setVal("B14", sqLoad * (getVal("C149") || 58.70));
+  setVal("B15", sqLoad * 250.00);
+  setVal("B16", sqLoad * 300.00);
 
-  // ── 5. Flat costs ─────────────────────────────────────────────────────────
+  // 5. Flat Costs (F7 to F11)
   const flatMat = (getVal("G93") * flatSqLoad) + (getVal("F29") * getVal("G96")) + (getVal("F30") * getVal("G95")) + getVal("G94");
   setVal("F7", flatMat);
 
@@ -303,15 +360,19 @@ export function recalculateSpreadsheet(sheet: SpreadsheetState): SpreadsheetStat
   const flatSubtotal = flatMat + flatLab + flatOvrd;
   const flatProf = (flatSubtotal / (1 - flatMargin)) - flatSubtotal;
   setVal("F10", flatProf);
-  setVal("F11", flatSubtotal + flatProf);
 
+  const flatRetail = flatSubtotal + flatProf;
+  setVal("F11", flatRetail);
+
+  // Flat upgrades
   setVal("F12", flatSqLoad * getVal("G115"));
   setVal("F13", flatSqLoad * getVal("G116"));
   setVal("F14", flatSqLoad * getVal("G117"));
 
-  // ── 6. Gutter & Heat Trace retail ────────────────────────────────────────
-  const gtrRaw = gutterLoad * getVal("J92") * (1 + getVal("J93") + getVal("J94"));
-  setVal("J7", gutterLoad > 0 ? Math.max(gtrRaw, getVal("J105")) : 0);
+  // 6. Gutter & Heat Trace Retail (J7, J8)
+  const gtrTotalRaw = gutterLoad * getVal("J92") * (1 + getVal("J93") + getVal("J94"));
+  const gtrTotal = (gutterLoad > 0) ? Math.max(gtrTotalRaw, getVal("J105")) : 0;
+  setVal("J7", gtrTotal);
 
   const hcTotal = hcLoad * getVal("J109") * (1 + getVal("J112") + getVal("J113")) + getVal("J110");
   setVal("J8", hcTotal);
@@ -319,59 +380,102 @@ export function recalculateSpreadsheet(sheet: SpreadsheetState): SpreadsheetStat
   return copy;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Build a sheet from RHIVE OS Pricing, then inject input cells and compute
-// ──────────────────────────────────────────────────────────────────────────────
 export function pricingToSheet(pricing: Pricing, initialInputs?: Partial<SpreadsheetState>): SpreadsheetState {
   const sheet = JSON.parse(JSON.stringify(DEFAULT_SHEET_STATE)) as SpreadsheetState;
-  const setVal = (c: string, v: any) => { if (sheet[c]) sheet[c].value = v; };
+  
+  const setVal = (coord: string, val: any) => {
+    if (sheet[coord]) sheet[coord].value = val;
+  };
 
-  // Materials & overhead from 6/12 baseline
   setVal("C108", pricing.costPerSqByPitch['6']?.materials ?? 274.90);
-  setVal("C144", pricing.costPerSqByPitch['6']?.overhead  ?? 96.00);
+  setVal("C144", pricing.costPerSqByPitch['6']?.overhead ?? 96.00);
   setVal("C146", pricing.profitMargin);
 
-  // Labor & remove-only by pitch
   for (let p = 3; p <= 14; p++) {
     setVal(`C${111 + p}`, pricing.costPerSqByPitch[p.toString()]?.labor ?? 140.00);
-    setVal(`C${123 + p}`, (pricing as any).removeOnlyByPitch?.[p.toString()] ?? 25.00);
+    setVal(`C${123 + p}`, pricing.removeOnlyByPitch?.[p.toString()] ?? 25.00);
   }
 
-  // Flat roofing
-  const tpo60 = pricing.flatRoofing['.060MIL TPO'];
-  setVal("G93", tpo60.materials);
-  setVal("G103", tpo60.labor);
-  setVal("G110", tpo60.overhead);
+  setVal("G93", pricing.flatRoofing['.060MIL TPO'].materials);
+  setVal("G103", pricing.flatRoofing['.060MIL TPO'].labor);
+  setVal("G110", pricing.flatRoofing['.060MIL TPO'].overhead);
   setVal("G112", pricing.profitMargin);
-  setVal("G115", pricing.flatRoofing['.080MIL TPO'].materials - tpo60.materials);
-  setVal("G116", pricing.flatRoofing['.060MIL PVC'].materials - tpo60.materials);
-  setVal("G117", pricing.flatRoofing['.080MIL PVC'].materials - tpo60.materials);
+  setVal("G115", pricing.flatRoofing['.080MIL TPO'].materials - pricing.flatRoofing['.060MIL TPO'].materials);
+  setVal("G116", pricing.flatRoofing['.060MIL PVC'].materials - pricing.flatRoofing['.060MIL TPO'].materials);
+  setVal("G117", pricing.flatRoofing['.080MIL PVC'].materials - pricing.flatRoofing['.060MIL TPO'].materials);
 
-  // Gutter constants
-  setVal("J92",  pricing.gutters.perFoot);
-  setVal("J93",  (pricing.gutters as any).overhead          ?? 0.15);
-  setVal("J94",  (pricing.gutters as any).profit            ?? 0.10);
-  setVal("J103", (pricing.gutters as any).removePerFoot     ?? 1.00);
-  setVal("J104", (pricing.gutters as any).cleanoutPerFoot   ?? 2.00);
-  setVal("J105", (pricing.gutters as any).minOrder          ?? 350.00);
+  setVal("J92", pricing.gutters.perFoot);
+  setVal("J93", pricing.gutters.overhead);
+  setVal("J94", pricing.gutters.profit);
+  setVal("J103", pricing.gutters.removePerFoot);
+  setVal("J104", pricing.gutters.cleanoutPerFoot);
+  setVal("J105", pricing.gutters.minOrder);
 
-  // Heat trace constants
   setVal("J109", pricing.heatTrace.perFoot);
-  setVal("J110", (pricing.heatTrace as any).flatExtensionCord ?? 35.00);
-  setVal("J112", (pricing.heatTrace as any).overhead         ?? 0.15);
-  setVal("J113", (pricing.heatTrace as any).profit           ?? 0.10);
+  setVal("J110", pricing.heatTrace.flatExtensionCord);
+  setVal("J112", pricing.heatTrace.overhead);
+  setVal("J113", pricing.heatTrace.profit);
 
-  // Inject caller inputs (pitch ground SQs, layer count, features, etc.)
   if (initialInputs) {
-    Object.entries(initialInputs).forEach(([c, cell]) => {
-      if (sheet[c] && cell) sheet[c].value = cell.value;
+    Object.entries(initialInputs).forEach(([coord, cell]) => {
+      if (sheet[coord] && cell) {
+        sheet[coord].value = cell.value;
+      }
     });
   }
 
   return recalculateSpreadsheet(sheet);
 }
 
-// Helper: read a computed cell value from a recalculated sheet
+export function sheetToPricing(sheet: SpreadsheetState, currentPricing: Pricing): Pricing {
+  const copy = JSON.parse(JSON.stringify(currentPricing)) as Pricing;
+
+  const getVal = (coord: string): number => Number(sheet[coord]?.value) || 0;
+
+  const shingleMat = getVal("C108");
+  const shingleOvrd = getVal("C144");
+  copy.profitMargin = getVal("C146");
+
+  for (let p = 3; p <= 18; p++) {
+    const pitchKey = p.toString();
+    if (!copy.costPerSqByPitch[pitchKey]) {
+      copy.costPerSqByPitch[pitchKey] = { materials: shingleMat, labor: 140, overhead: shingleOvrd };
+    }
+    copy.costPerSqByPitch[pitchKey].materials = shingleMat;
+    copy.costPerSqByPitch[pitchKey].overhead = shingleOvrd;
+
+    const laborCoord = `C${111 + Math.min(14, p)}`;
+    copy.costPerSqByPitch[pitchKey].labor = getVal(laborCoord);
+
+    const removeCoord = `C${123 + Math.min(14, p)}`;
+    if (!copy.removeOnlyByPitch) copy.removeOnlyByPitch = {};
+    copy.removeOnlyByPitch[pitchKey] = getVal(removeCoord);
+  }
+
+  copy.flatRoofing['.060MIL TPO'].materials = getVal("G93");
+  copy.flatRoofing['.060MIL TPO'].labor = getVal("G103");
+  copy.flatRoofing['.060MIL TPO'].overhead = getVal("G110");
+  
+  const flatBaseMat = copy.flatRoofing['.060MIL TPO'].materials;
+  copy.flatRoofing['.080MIL TPO'].materials = flatBaseMat + getVal("G115");
+  copy.flatRoofing['.060MIL PVC'].materials = flatBaseMat + getVal("G116");
+  copy.flatRoofing['.080MIL PVC'].materials = flatBaseMat + getVal("G117");
+
+  copy.gutters.perFoot = getVal("J92");
+  copy.gutters.overhead = getVal("J93");
+  copy.gutters.profit = getVal("J94");
+  copy.gutters.removePerFoot = getVal("J103");
+  copy.gutters.cleanoutPerFoot = getVal("J104");
+  copy.gutters.minOrder = getVal("J105");
+
+  copy.heatTrace.perFoot = getVal("J109");
+  copy.heatTrace.flatExtensionCord = getVal("J110");
+  copy.heatTrace.overhead = getVal("J112");
+  copy.heatTrace.profit = getVal("J113");
+
+  return copy;
+}
+
 export function sheetVal(sheet: SpreadsheetState, coord: string): number {
   return Number(sheet[coord]?.value) || 0;
 }

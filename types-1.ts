@@ -75,6 +75,9 @@ export interface SurveyState {
   };
   gutterStyle: GutterStyle;
   gutterSize: GutterSize;
+  isManualCalculator?: boolean;
+  manualPitches?: Record<string, number>;
+  manualMembranePitches?: Record<string, number> & { parapetSq?: number };
 }
 
 export interface CostBreakdown {
@@ -122,6 +125,7 @@ export interface Pricing {
     labor: number;
     overhead: number;
   }>;
+  removeOnlyByPitch?: Record<string, number>;
   profitMargin: number;
   addons: {
     layers: {
@@ -159,6 +163,11 @@ export interface Pricing {
     downspout4Story: number;
     styleMultipliers: Record<GutterStyle, number>;
     sizeMultipliers: Record<GutterSize, number>;
+    overhead: number;
+    profit: number;
+    removePerFoot: number;
+    cleanoutPerFoot: number;
+    minOrder: number;
   };
   heatTrace: {
     perFoot: number;
@@ -171,7 +180,11 @@ export interface Pricing {
       'Small': number;
       'Medium': number;
       'Large': number;
-    }
+    };
+    overhead: number;
+    profit: number;
+    flatExtensionCord: number;
+    projectBase: number;
   };
 }
 
