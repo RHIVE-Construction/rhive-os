@@ -18,22 +18,7 @@ import { chromium } from 'playwright';
         
         console.log("Waiting for map confirmation page...");
         await page.waitForSelector('button:has-text("CONFIRM ADDRESS")', { timeout: 25000 });
-        await page.waitForTimeout(3000); // Wait for solar data to fetch and load
-
-        console.log("Locating the BLDG 1 input field...");
-        const inputVal = await page.$eval('input[type="text"]', el => el.value);
-        console.log(`BLDG 1 input value is currently: "${inputVal}"`);
-
-        if (inputVal === '22.47') {
-            console.log("SUCCESS: Onset value is correctly set to Google Solar API value 22.47!");
-        } else {
-            console.error(`FAILED: Onset value is "${inputVal}", expected "22.47"`);
-        }
-
-        console.log("Capturing screenshot of the confirmation page...");
-        const path = 'C:/Users/Victor/.gemini/antigravity/brain/1856e6a8-b72c-4520-be85-08bb0ab4ff14/solar_onset_value.png';
-        await page.screenshot({ path });
-        console.log(`Screenshot saved to ${path}`);
+        await page.waitForTimeout(3000);
 
         console.log("Clicking CONFIRM ADDRESS...");
         await page.click('button:has-text("CONFIRM ADDRESS")');
@@ -53,26 +38,31 @@ import { chromium } from 'playwright';
         await page.waitForSelector('button:has-text("No thanks, I\'ll risk it.")', { timeout: 15000 });
         await page.click('button:has-text("No thanks, I\'ll risk it.")');
 
-        console.log("Waiting for the Shingle Options page...");
+        console.log("Waiting for Dashboard Shingle Options page...");
         await page.waitForTimeout(2000);
-        await page.waitForSelector('input[type="number"]', { timeout: 15000 });
-        await page.waitForTimeout(2000); // Wait for calculations to stabilize
+        await page.waitForSelector('button:has-text("MEASUREMENTS SUMMARY")', { timeout: 20000 });
 
-        const optionsVal = await page.$eval('input[type="number"]', el => el.value);
-        console.log(`Options page Total Roof Squares value is currently: "${optionsVal}"`);
+        console.log("Clicking MEASUREMENTS SUMMARY...");
+        await page.click('button:has-text("MEASUREMENTS SUMMARY")');
 
-        if (optionsVal === '22.47') {
-            console.log("SUCCESS: Options page Total Roof Squares matches Google Solar API value 22.47 SQ!");
-        } else {
-            console.error(`FAILED: Options page Total Roof Squares is "${optionsVal}", expected "22.47"`);
-        }
+        console.log("Waiting for Measurements Summary Modal...");
+        await page.waitForTimeout(2500);
+        await page.waitForSelector('button:has-text("Pricing")', { timeout: 15000 });
 
-        const path2 = 'C:/Users/Victor/.gemini/antigravity/brain/1856e6a8-b72c-4520-be85-08bb0ab4ff14/options_page_squares.png';
-        await page.screenshot({ path: path2 });
-        console.log(`Screenshot saved to ${path2}`);
+        console.log("Clicking Pricing tab...");
+        await page.click('button:has-text("Pricing")');
+        await page.waitForTimeout(2500);
+
+        console.log("Capturing screenshot of the Measurements Summary modal (Pricing tab)...");
+        const path = 'C:/Users/Victor/.gemini/antigravity/brain/1856e6a8-b72c-4520-be85-08bb0ab4ff14/measurements_summary_scroll.png';
+        await page.screenshot({ path });
+        console.log(`Screenshot saved to ${path}`);
 
     } catch (err) {
         console.error("Error during navigation verification:", err);
+        const failPath = 'C:/Users/Victor/.gemini/antigravity/brain/1856e6a8-b72c-4520-be85-08bb0ab4ff14/verify_scroll_failure.png';
+        await page.screenshot({ path: failPath });
+        console.log(`Failure screenshot saved to ${failPath}`);
     } finally {
         await browser.close();
     }
