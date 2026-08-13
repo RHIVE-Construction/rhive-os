@@ -15,7 +15,7 @@ interface ChatMessage {
 }
 
 export default function ChatbotTestingPage() {
-  const [activeTab, setActiveTab] = useState<'prompt' | 'logic' | 'webhooks'>('prompt');
+  const [activeTab, setActiveTab] = useState<'prompt' | 'logic'>('prompt');
   
   // API Key State
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('gemini_api_key_sandbox') || '');
@@ -227,7 +227,6 @@ If there is no meta command, carry on the roleplay as Honey naturally.`
           <div className="flex border-b border-[var(--rhive-blue)]/20">
             <button onClick={() => setActiveTab('prompt')} className={`flex-1 py-3 text-xs lg:text-sm tracking-wider uppercase ${activeTab === 'prompt' ? 'bg-[var(--rhive-blue)]/20 text-[var(--rhive-blue)] border-b-2 border-[var(--rhive-blue)]' : 'text-gray-400 hover:text-white'}`}>System Prompt</button>
             <button onClick={() => setActiveTab('logic')} className={`flex-1 py-3 text-xs lg:text-sm tracking-wider uppercase ${activeTab === 'logic' ? 'bg-[var(--rhive-blue)]/20 text-[var(--rhive-blue)] border-b-2 border-[var(--rhive-blue)]' : 'text-gray-400 hover:text-white'}`}>11-Node Logic</button>
-            <button onClick={() => setActiveTab('webhooks')} className={`flex-1 py-3 text-xs lg:text-sm tracking-wider uppercase ${activeTab === 'webhooks' ? 'bg-[var(--rhive-blue)]/20 text-[var(--rhive-blue)] border-b-2 border-[var(--rhive-blue)]' : 'text-gray-400 hover:text-white'}`}>Webhooks</button>
           </div>
 
           <div className="flex-1 p-4 relative">
@@ -237,14 +236,7 @@ If there is no meta command, carry on the roleplay as Honey naturally.`
             {activeTab === 'logic' && (
               <textarea value={logicConfig} onChange={e => setLogicConfig(e.target.value)} className="w-full h-full bg-black/50 border border-[var(--rhive-blue)]/30 rounded p-4 text-[var(--rhive-blue)] font-mono text-xs lg:text-sm focus:border-[var(--rhive-blue)] focus:outline-none focus:ring-1 focus:ring-[var(--rhive-blue)] resize-none" spellCheck={false}/>
             )}
-             {activeTab === 'webhooks' && (
-              <div className="w-full h-full bg-black/50 border border-[var(--rhive-blue)]/30 rounded p-4 text-amber-400 font-mono text-xs lg:text-sm flex resize-none overflow-y-auto">
-                <pre>
-                {"// Webhook mapping simulated via chatbotMockDB.json\n"}
-                {"{\n  \"endpoint\": \"/api/v1/crm?phone={{phone}}\",\n  \"auth\": \"Bearer LOCAL_SIM_TOKEN\"\n}"}
-                </pre>
-              </div>
-            )}
+
           </div>
         </div>
 
