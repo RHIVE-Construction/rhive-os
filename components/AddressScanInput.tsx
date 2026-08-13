@@ -56,7 +56,7 @@ export const AddressScanInput = ({
     const autocompleteRef = useRef<any>(null);
 
     useEffect(() => {
-        if (!isApiReady || !inputRef.current || !window.google || !window.google.maps.places) {
+        if (!isApiReady || !inputRef.current || !window.google?.maps?.places) {
             return;
         }
 
