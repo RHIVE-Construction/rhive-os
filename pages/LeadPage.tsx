@@ -148,7 +148,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ project, onClose, onConvert
                         onClick={onClose}
                         className="text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-gray-400 transition-colors"
                     >
-                        Cancel Ã¢â‚¬â€ Keep as Lead
+                        Cancel — Keep as Lead
                     </button>
                 </div>
             </div>
@@ -189,7 +189,7 @@ const LeadPage: React.FC = () => {
     const [editTarget, setEditTarget] = useState<any | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Multi-select state Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // Multi-select state
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
@@ -286,7 +286,7 @@ const LeadPage: React.FC = () => {
                     });
                 }
             } else {
-                // Wasn't in leads collection Ã¢â‚¬â€ update directly in projects
+                // Wasn't in leads collection — update directly in projects
                 await firestoreService.updateDocument('projects', selectedProjectId, {
                     current_stage: newStage,
                     status: 'Active',
@@ -563,7 +563,7 @@ const LeadPage: React.FC = () => {
                                         View Account
                                     </Button>
 
-                                    {/* Ã¢â€â‚¬Ã¢â€â‚¬ Schedule Follow-Up Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                                    {/* Schedule Follow-Up */}
                                     <button
                                         onClick={() => setShowFollowUp(true)}
                                         className="group relative w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400 font-black text-sm uppercase tracking-wider hover:bg-purple-500/20 hover:border-purple-500/60 hover:shadow-[0_0_20px_rgba(168,85,247,0.2)] transition-all duration-300 overflow-hidden"
@@ -623,7 +623,7 @@ const LeadPage: React.FC = () => {
     return (
         <>
         <PageContainer 
-            title="Stage 1 Ã¢â‚¬â€ Leads"
+            title="Stage 1 - Leads"
             description="All intake leads grouped by assigned employee or sales rep. Unassigned leads appear at the bottom."
             headerAction={
                 <div className="flex items-center gap-2">
@@ -658,7 +658,7 @@ const LeadPage: React.FC = () => {
                         loading ? "text-yellow-400 animate-pulse" : "text-green-400"
                     )}>
                         <span className={cn("w-1.5 h-1.5 rounded-full", loading ? "bg-yellow-400" : "bg-green-400 shadow-[0_0_8px_#4ade80]")} />
-                        {loading ? 'SyncingÃ¢â‚¬Â¦' : 'Live'}
+                        {loading ? 'Syncing…' : 'Live'}
                     </div>
                 </div>
             }
@@ -726,7 +726,7 @@ const LeadPage: React.FC = () => {
                                             selectionMode && isSelected && 'ring-1 ring-[#ec028b]/60'
                                         )}
                                     >
-                                        {/* Selection toggle pill Ã¢â‚¬â€ shown in selection mode */}
+                                        {/* Selection toggle pill — shown in selection mode */}
                                         {selectionMode && (
                                             <button
                                                 id={`lead-select-pill-${project.id}`}
@@ -797,7 +797,7 @@ const LeadPage: React.FC = () => {
                                             </div>
                                         </Card>
 
-                                        {/* Edit / Delete action buttons Ã¢â‚¬â€ appear on card hover (hidden in selection mode) */}
+                                        {/* Edit / Delete action buttons — appear on card hover (hidden in selection mode) */}
                                         {!selectionMode && (
                                             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 z-10">
                                                 <button
@@ -831,7 +831,7 @@ const LeadPage: React.FC = () => {
             </div>
         </PageContainer>
 
-        {/* Floating bulk-action bar Ã¢â‚¬â€ visible in selection mode with items selected */}
+        {/* Floating bulk-action bar — visible in selection mode with items selected */}
         {selectionMode && selectedIds.size > 0 && (
             <div
                 className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-5 py-3 bg-[#0a0a0a] border border-[#ec028b]/40 shadow-[0_0_40px_rgba(236,2,139,0.2)]"
