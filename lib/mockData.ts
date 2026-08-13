@@ -366,9 +366,11 @@ export function buildBuildingFromSolarData(solarData: any, clickedLat: number, c
         { id: `BLD_${index}_f2`, areaMeters: area / 2, pitchDegrees: 18.43 }
       ];
       
+  const total3DArea = facets.reduce((sum, f) => sum + f.areaMeters, 0);
+
   return {
     id: `BLD_${index}`,
-    totalAreaMeters: area,
+    totalAreaMeters: total3DArea || area,
     facets,
     lat: centerLat,
     lng: centerLng,
