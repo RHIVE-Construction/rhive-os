@@ -16,7 +16,15 @@ const EstimateToolPage: React.FC = () => {
 
     const handleClose = () => {
         if (currentUser) {
-            setActivePageId('E-01');
+            switch (currentUser.role) {
+                case 'Super Admin': setActivePageId('SA-01'); break;
+                case 'Admin': setActivePageId('E-01'); break;
+                case 'Employee': setActivePageId('E-01'); break;
+                case 'Customer': setActivePageId('C-01'); break;
+                case 'Contractor': setActivePageId('CO-01'); break;
+                case 'Supplier': setActivePageId('S-01'); break;
+                default: setActivePageId('E-01'); break;
+            }
         } else {
             setActivePageId('P-00-V3');
         }
