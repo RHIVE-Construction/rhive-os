@@ -16,7 +16,6 @@ export const LiveEstimateBreakdown: React.FC<LiveEstimateBreakdownProps> = ({ ca
     heatTraceEstimate,
     flatRoofingUpgrades,
     flatRoofColorAddonCost,
-    liveTotal,
   } = calcResult;
 
   const { upgrades } = roofEstimate;
@@ -30,6 +29,31 @@ export const LiveEstimateBreakdown: React.FC<LiveEstimateBreakdownProps> = ({ ca
     surveyState.gutters.enabled ||
     surveyState.heatTrace.enabled;
 
+  // Sum pre-rounded line items to eliminate visual rounding discrepancy in the UI
+  const displayMaterials = Math.round(roofEstimate.breakdown.materials);
+  const displayLabor = Math.round(roofEstimate.breakdown.labor);
+  const displayOverhead = Math.round(roofEstimate.breakdown.overhead);
+  const displayProfit = Math.round(roofEstimate.breakdown.profit);
+
+  const displayShingleUpgrade = surveyState.asphaltRoofingEnabled && selectedShingleUpgradeCost > 0
+    ? Math.round(selectedShingleUpgradeCost)
+    : 0;
+  const displayFlatUpgrade = surveyState.flatRoofingEnabled && selectedFlatUpgradeCost > 0
+    ? Math.round(selectedFlatUpgradeCost)
+    : 0;
+  const displayFlatColorAddon = surveyState.flatRoofingEnabled && flatRoofColorAddonCost > 0
+    ? Math.round(flatRoofColorAddonCost)
+    : 0;
+  const displayGutter = surveyState.gutters.enabled
+    ? Math.round(gutterEstimate.total)
+    : 0;
+  const displayHeatTrace = surveyState.heatTrace.enabled
+    ? Math.round(heatTraceEstimate.total)
+    : 0;
+
+  const displayTotal = displayMaterials + displayLabor + displayOverhead + displayProfit +
+    displayShingleUpgrade + displayFlatUpgrade + displayFlatColorAddon + displayGutter + displayHeatTrace;
+
   return (
     <div className="w-full">
       <Card className="bg-gray-900/80 backdrop-blur-md border-pink-500/50">
@@ -38,19 +62,19 @@ export const LiveEstimateBreakdown: React.FC<LiveEstimateBreakdownProps> = ({ ca
           <div className="mt-2 text-base space-y-1">
             <div className="flex justify-between">
               <span className="text-gray-400">Materials</span>
-              <span>{formatCurrency(roofEstimate.breakdown.materials)}</span>
+              <span>{formatCurrency(displayMaterials)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Labor</span>
-              <span>{formatCurrency(roofEstimate.breakdown.labor)}</span>
+              <span>{formatCurrency(displayLabor)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Overhead</span>
-              <span>{formatCurrency(roofEstimate.breakdown.overhead)}</span>
+              <span>{formatCurrency(displayOverhead)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Profit</span>
-              <span>{formatCurrency(roofEstimate.breakdown.profit)}</span>
+              <span>{formatCurrency(displayProfit)}</span>
             </div>
 
             {hasLineItems && (
@@ -58,7 +82,7 @@ export const LiveEstimateBreakdown: React.FC<LiveEstimateBreakdownProps> = ({ ca
                 {surveyState.asphaltRoofingEnabled && selectedShingleUpgradeCost > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-400">{surveyState.roofUpgrade}</span>
-                    <span>{formatCurrency(selectedShingleUpgradeCost)}</span>
+                    <span>{formatCurrency(displayShingleUpgrade)}</span>
                   </div>
                 )}
                  {surveyState.asphaltRoofingEnabled && (
@@ -70,15 +94,15 @@ export const LiveEstimateBreakdown: React.FC<LiveEstimateBreakdownProps> = ({ ca
                 {surveyState.flatRoofingEnabled && selectedFlatUpgradeCost > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-400">{surveyState.flatRoofingType}</span>
-                    <span>{formatCurrency(selectedFlatUpgradeCost)}</span>
+                    <span>{formatCurrency(displayFlatUpgrade)}</span>
                   </div>
                 )}
                 {surveyState.flatRoofingEnabled && (
                   <div className="flex justify-between">
                     <span className="text-gray-400">Flat Roof Color ({surveyState.flatRoofingColor})</span>
                     <span>
-                      {flatRoofColorAddonCost > 0
-                        ? formatCurrency(flatRoofColorAddonCost)
+                      {displayFlatColorAddon > 0
+                        ? formatCurrency(displayFlatColorAddon)
                         : 'Included'}
                     </span>
                   </div>
@@ -86,13 +110,13 @@ export const LiveEstimateBreakdown: React.FC<LiveEstimateBreakdownProps> = ({ ca
                 {surveyState.gutters.enabled && (
                   <div className="flex justify-between">
                     <span className="text-gray-400">{`Gutter System (${surveyState.gutters.size})`}</span>
-                    <span>{formatCurrency(gutterEstimate.total)}</span>
+                    <span>{formatCurrency(displayGutter)}</span>
                   </div>
                 )}
                 {surveyState.heatTrace.enabled && (
                   <div className="flex justify-between">
                     <span className="text-gray-400">Heat Trace System</span>
-                    <span>{formatCurrency(heatTraceEstimate.total)}</span>
+                    <span>{formatCurrency(displayHeatTrace)}</span>
                   </div>
                 )}
               </div>
@@ -101,7 +125,7 @@ export const LiveEstimateBreakdown: React.FC<LiveEstimateBreakdownProps> = ({ ca
             <div className="border-t border-gray-700 my-2"></div>
             <div className="flex justify-between font-bold text-lg">
               <span className="text-pink-400">Total</span>
-              <span className="text-pink-400">{formatCurrency(liveTotal)}</span>
+              <span className="text-pink-400">{formatCurrency(displayTotal)}</span>
             </div>
           </div>
         </CardContent>
