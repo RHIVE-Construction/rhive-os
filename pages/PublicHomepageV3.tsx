@@ -10,7 +10,6 @@ import {
 import { useNavigation } from '../contexts/NavigationContext';
 import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 import PlexusShape from '../components/PlexusShape';
-import RhiveHeader from '../components/website/RhiveHeader';
 import AddressScanInput from '../components/AddressScanInput';
 import { GoogleTestimonials } from '../components/GoogleTestimonials';
 import FinancingCalculator from '../components/FinancingCalculator';
@@ -167,7 +166,6 @@ const PublicHomepageV3: React.FC = () => {
     return (
         <div className="relative w-full min-h-screen font-sans bg-black text-white overflow-x-hidden">
             <StickyCTABar />
-            <RhiveHeader />
 
             {/* Background Video Layer */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">

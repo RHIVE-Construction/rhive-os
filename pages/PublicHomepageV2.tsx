@@ -19,7 +19,6 @@ import {
 import { useNavigation } from '../contexts/NavigationContext';
 import PlexusShape from '../components/PlexusShape';
 import { cn } from '../lib/utils';
-import RhiveHeader from '../components/website/RhiveHeader';
 import Card from '../components/Card';
 import GranulePhysicsOverlay from '../components/GranulePhysicsOverlay';
 
@@ -183,7 +182,6 @@ const PublicHomepageV2: React.FC = () => {
             </motion.div>
 
             <div className="fixed inset-0 bg-circuit-pattern opacity-5 pointer-events-none z-0" />
-            <RhiveHeader />
 
             {/* SECTION 1: THE HERO (D - Dominance) */}
             <section id="hero-d" className="relative w-full min-h-[85vh] flex items-center justify-center pt-32 pb-24 overflow-hidden shrink-0">

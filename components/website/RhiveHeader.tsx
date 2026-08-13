@@ -6,6 +6,7 @@ import { useNavigation } from '../../contexts/NavigationContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMockDB } from '../../contexts/MockDatabaseContext';
 import PlexusShape from '../PlexusShape';
+import { getPathForPageId } from '../../lib/routing';
 
 
 
@@ -61,65 +62,28 @@ const RhiveHeader: React.FC = () => {
             { label: 'CONTACT', target: 'contact' },
           ];
 
-    const scrollToSection = (id: string) => {
-        if (id === 'hero' || id === 'about') {
-            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'about' } }));
-            return;
-        }
-        if (id === 'services') {
-            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'roofing' } }));
-            return;
-        }
-        if (id === 'process' || id === 'financing' || id === 'faq' || id === 'contact') {
-            window.dispatchEvent(new CustomEvent('rhive-virtual-nav', { detail: { page: 'home' } }));
-            setTimeout(() => {
-                const element = document.getElementById(id);
-                element?.scrollIntoView({ behavior: 'smooth' });
-            }, 150);
-            return;
-        }
-
-        // Standard scrolling logic for live mode / external pages
-        if (activePageId !== 'P-00' && activePageId !== 'P-00-V2' && activePageId !== 'P-00-V3' && activePageId !== 'P-01') {
-            setActivePageId('P-00-V3');
-            // Give it a moment to mount before scrolling
-            setTimeout(() => {
-                const element = document.getElementById(id);
-                element?.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-        } else {
-            let targetId = id;
-            if (activePageId === 'P-00-V2') {
-                if (id === 'about') targetId = 'hero-d';
-                else if (id === 'services') targetId = 'protection-s';
-                else if (id === 'process') targetId = 'vision-i';
-                else if (id === 'financing') targetId = 'tech-c';
-            }
-            const element = document.getElementById(targetId);
-            element?.scrollIntoView({ behavior: 'smooth' });
-        }
+    const TARGET_TO_PAGE_ID: Record<string, string> = {
+        'about': 'P-01',
+        'services': 'P-02',
+        'process': 'P-03',
+        'financing': 'P-04',
+        'careers': 'P-10',
+        'contact': 'P-05',
+        'insurance': 'P-13',
+        'faq': 'P-15',
     };
 
-    const handleLinkClick = (id: string) => {
-        if (activePageId === 'P-00-V3') {
-            if (id === 'contact') {
-                const element = document.getElementById('contact');
-                element?.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                window.dispatchEvent(new CustomEvent('v3-open-lightbox', { detail: id }));
-            }
-        } else if (currentHomeId === 'P-00-V3') {
-            setActivePageId('P-00-V3');
-            setTimeout(() => {
-                if (id === 'contact') {
-                    const element = document.getElementById('contact');
-                    element?.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    window.dispatchEvent(new CustomEvent('v3-open-lightbox', { detail: id }));
-                }
-            }, 150);
+    const getPagePath = (target: string): string => {
+        const pageId = TARGET_TO_PAGE_ID[target];
+        return pageId ? getPathForPageId(pageId) : '/';
+    };
+
+    const handleLinkClick = (target: string) => {
+        const pageId = TARGET_TO_PAGE_ID[target];
+        if (pageId) {
+            setActivePageId(pageId);
         } else {
-            scrollToSection(id);
+            setActivePageId('P-00-V3');
         }
     };
 
@@ -171,13 +135,17 @@ const RhiveHeader: React.FC = () => {
             {/* Desktop Navigation Links (Left side of notch) */}
             <nav className="hidden lg:flex flex-1 justify-end items-center gap-8 z-10 ml-[180px]">
                 {navLinks.slice(0, 3).map((link) => (
-                    <button
+                    <a
                         key={link.target}
-                        onClick={() => handleLinkClick(link.target)}
-                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300"
+                        href={getPagePath(link.target)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleLinkClick(link.target);
+                        }}
+                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 cursor-pointer"
                     >
                         {link.label}
-                    </button>
+                    </a>
                 ))}
             </nav>
  
@@ -187,39 +155,43 @@ const RhiveHeader: React.FC = () => {
             {/* Desktop Navigation Links (Right side of notch) */}
             <nav className="hidden lg:flex flex-1 justify-start items-center gap-8 z-10 mr-[180px]">
                 {navLinks.slice(3).map((link) => (
-                    <button
+                    <a
                         key={link.target}
-                        onClick={() => handleLinkClick(link.target)}
-                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300"
+                        href={getPagePath(link.target)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleLinkClick(link.target);
+                        }}
+                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 cursor-pointer"
                     >
                         {link.label}
-                    </button>
+                    </a>
                 ))}
             </nav>
 
             {/* CENTRAL LOGO (Absolute Alignment for Perfect Spacing) */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[180px] md:w-[280px] h-[75px] md:h-[110px] flex items-center justify-center z-20 pointer-events-none">
-                <motion.button
+                <motion.a
+                    href="/"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => {
+                    onClick={(e) => {
+                        e.preventDefault();
                         setIsMenuOpen(false);
-                        if (currentHomeId === 'P-00-V3') {
-                            setActivePageId('P-00-V3');
-                        } else if (currentHomeId === 'P-00-V2') {
+                        if (currentHomeId === 'P-00-V2') {
                             setActivePageId('P-00-V2');
                         } else {
                             setActivePageId('P-00-V3');
                         }
                     }}
-                    className="relative flex items-center justify-center mt-0 md:mt-1 pointer-events-auto"
+                    className="relative flex items-center justify-center mt-0 md:mt-1 pointer-events-auto cursor-pointer"
                 >
                     <img
                         src="https://i.imgur.com/t0VcSgJ.png"
                         alt="RHIVE Logo"
                         className="h-[50px] md:h-[80px] w-auto object-contain transition-opacity duration-300 drop-shadow-[0_0_8px_rgba(255,255,255,0.25)]"
                     />
-                </motion.button>
+                </motion.a>
             </div>
 
             {/* THEME & PHONE CONTROLS (Far Right Symmetrical absolute alignment) */}
@@ -259,18 +231,20 @@ const RhiveHeader: React.FC = () => {
                     </svg>
                 </motion.a>
 
-                <motion.button
-                    onClick={() => {
+                <motion.a
+                    href="/login"
+                    onClick={(e) => {
+                        e.preventDefault();
                         setIsMenuOpen(false);
                         setActivePageId('P-06');
                     }}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-2 md:p-2.5 rounded-full border border-white/10 hover:border-rhive-pink/50 transition-all text-white/70 hover:text-rhive-pink bg-[#000000]/60"
+                    className="p-2 md:p-2.5 rounded-full border border-white/10 hover:border-rhive-pink/50 transition-all text-white/70 hover:text-rhive-pink bg-[#000000]/60 cursor-pointer"
                     title="Sign In / Portal"
                 >
                     <User size={16} />
-                </motion.button>
+                </motion.a>
             </div>
 
             {/* Mobile Menu Drawer */}
@@ -295,16 +269,18 @@ const RhiveHeader: React.FC = () => {
                         </div>
                         <div className="relative z-10 flex flex-col items-center gap-6 w-full max-w-sm">
                             {navLinks.map((link) => (
-                                <button
+                                <a
                                     key={link.target}
-                                    onClick={() => {
+                                    href={getPagePath(link.target)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
                                         setIsMenuOpen(false);
                                         handleLinkClick(link.target);
                                     }}
-                                    className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-4 border-b border-white/5 hover:border-rhive-pink/30 text-center"
+                                    className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-4 border-b border-white/5 hover:border-rhive-pink/30 text-center cursor-pointer"
                                 >
                                     {link.label}
-                                </button>
+                                </a>
                             ))}
                         </div>
                     </motion.div>

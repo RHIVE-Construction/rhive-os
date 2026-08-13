@@ -15,17 +15,22 @@ import {
     Zap,
     MessageSquare,
     Send,
-    Bot
+    Bot,
+    Check
 } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { generateMockBuildingData } from '../lib/mockData';
+import { cn, formatCurrency } from '../lib/utils';
+import { generateMockBuildingData, buildBuildingFromSolarData } from '../lib/mockData';
 import { usePricing } from '../contexts/PricingContext';
-import type { Place, BuildingData } from '../types';
+import { getMapsApiKey } from '../lib/mapsConfig';
+import { calculateEstimate } from '../lib/calculations';
+import { INITIAL_SURVEY_STATE } from '../lib/constants';
+import { Switch } from './ui/switch';
+import type { Place, BuildingData, SurveyState, CalculationResult } from '../types';
 
-type Step = 'address' | 'specs' | 'lead' | 'result' | 'chat';
+type Step = 'address' | 'confirm' | 'specs' | 'gutters' | 'heattrace' | 'lead' | 'result' | 'chat';
 
 export const FloatingEstimator: React.FC = () => {
-    const { activePageId } = useNavigation();
+    const { activePageId, setActivePageId } = useNavigation();
     const [isOpen, setIsOpen] = useState(false);
     const [step, setStep] = useState<Step>('address');
     const [address, setAddress] = useState('');
@@ -35,72 +40,108 @@ export const FloatingEstimator: React.FC = () => {
     // Dynamic Estimation States
     const [placeCoords, setPlaceCoords] = useState<Place | null>(null);
     const [buildingData, setBuildingData] = useState<BuildingData | null>(null);
-    const [shingleProfile, setShingleProfile] = useState<'Duration' | 'Designer' | 'Metal' | 'Slate'>('Duration');
-    const [pitch, setPitch] = useState<'Low' | 'Medium' | 'Steep'>('Medium');
+    const [surveyState, setSurveyState] = useState<SurveyState>(INITIAL_SURVEY_STATE);
+    const [streetViewUrl, setStreetViewUrl] = useState<string>('');
+    const [satelliteViewUrl, setSatelliteViewUrl] = useState<string>('');
+    const [overrideInputs, setOverrideInputs] = useState<Record<string, string>>({});
     const [priceRange, setPriceRange] = useState<{ low: number; high: number } | null>(null);
+    const [detailedCalc, setDetailedCalc] = useState<CalculationResult | null>(null);
+    const [leadName, setLeadName] = useState('');
+    const [leadEmail, setLeadEmail] = useState('');
+    const [leadPhone, setLeadPhone] = useState('');
 
     const { pricing } = usePricing();
+
+    const handleExecuteDelivery = () => {
+        if (!buildingData || !pricing) return;
+
+        const calcResult = calculateEstimate({ buildingData, surveyState }, pricing);
+        setDetailedCalc(calcResult);
+
+        // Apply 10% RPSP Efficiency Credit
+        const finalPrice = calcResult.liveTotal * 0.90;
+
+        // Ballpark range
+        const low = Math.round(finalPrice * 0.95);
+        const high = Math.round(finalPrice * 1.05);
+
+        setPriceRange({ low, high });
+        setStep('result');
+    };
 
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<any>(null);
     const isApiReady = useGoogleMapsApi();
 
-    const calculateBallparkRange = (bldgData: BuildingData, selectedProf: string, selectedPitch: string) => {
-        if (!bldgData || !pricing) return;
-
-        let totalSq = 0;
-        const SQ_METERS_TO_SQ_FEET = 10.7639;
-        const SQ_FEET_PER_SQUARE = 100;
-
-        bldgData.buildings.forEach(b => {
-            let bldgSq = 0;
-            b.facets.forEach(f => {
-                bldgSq += f.areaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
-            });
-            if (b.isOverridden && b.overrideSq !== undefined) {
-                bldgSq = b.overrideSq;
-            }
-            totalSq += bldgSq;
-        });
-
-        if (totalSq <= 0) {
-            totalSq = 30; // Fallback standard squares
-        }
-
-        const pitchKey = selectedPitch === 'Low' ? '4' : (selectedPitch === 'Steep' ? '10' : '6');
-        const pitchRates = pricing.costPerSqByPitch[pitchKey] || pricing.costPerSqByPitch['6'];
-        let ratePerSq = pitchRates.materials + pitchRates.labor + pitchRates.overhead;
-
-        if (selectedProf === 'Designer') {
-            ratePerSq += pricing.upgrades['GAF Grand Sequoia®'] || 35;
-        } else if (selectedProf === 'Metal') {
-            ratePerSq += 600; // Metal premium
-        } else if (selectedProf === 'Slate') {
-            ratePerSq += 1000; // Slate premium
-        }
-
-        const baseCost = ratePerSq * totalSq;
-        // Apply 15% platform margin
-        const retailPrice = baseCost / (1 - 0.15);
-
-        // Apply 10% RPSP Efficiency Credit
-        const finalPrice = retailPrice * 0.90;
-
-        // Generate range
-        const low = Math.round(finalPrice * 0.95);
-        const high = Math.round(finalPrice * 1.05);
-
-        setPriceRange({ low, high });
-    };
-
-    const fetchBuildingAndProceed = (place: Place) => {
-        const bData = generateMockBuildingData(place);
-        setBuildingData(bData);
-        setStep('specs');
-    };
-
     const handleInitializeAnalysis = () => {
         if (!address) return;
+
+        const startFetch = async (place: Place) => {
+            try {
+                // Initialize default state with coords
+                setSurveyState(prev => ({
+                    ...INITIAL_SURVEY_STATE,
+                    latitude: place.latitude,
+                    longitude: place.longitude
+                }));
+
+                const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
+                
+                // Static maps URLs
+                const satUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${place.latitude},${place.longitude}&zoom=20&size=640x480&maptype=satellite&markers=color:0xec028b%7C${place.latitude},${place.longitude}&key=${apiKey}`;
+                setSatelliteViewUrl(satUrl);
+
+                const metadataUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${place.latitude},${place.longitude}&key=${apiKey}`;
+                try {
+                    const res = await fetch(metadataUrl);
+                    const meta = await res.json();
+                    if (meta.status === 'OK') {
+                        setStreetViewUrl(`https://maps.googleapis.com/maps/api/streetview?size=640x480&location=${place.latitude},${place.longitude}&heading=120&fov=90&pitch=10&key=${apiKey}`);
+                    } else {
+                        setStreetViewUrl('https://picsum.photos/seed/roof/640/480');
+                    }
+                } catch {
+                    setStreetViewUrl('https://picsum.photos/seed/roof/640/480');
+                }
+
+                // Call Solar API (with fallback)
+                let apiK = apiKey;
+                if (!apiK) {
+                    apiK = await getMapsApiKey();
+                }
+                if (!apiK) throw new Error("No Google Maps API Key");
+
+                const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${place.latitude}&location.longitude=${place.longitude}&requiredQuality=HIGH&key=${apiK}`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Solar API returned status ${response.status}`);
+                }
+                const solarData = await response.json();
+                if (solarData && solarData.boundingBox) {
+                    const snapped = buildBuildingFromSolarData(solarData, place.latitude, place.longitude, 1);
+                    const bData: BuildingData = {
+                        buildings: [snapped],
+                        yearConstructed: 2026
+                    };
+                    setBuildingData(bData);
+                    setSurveyState(prev => ({
+                        ...prev,
+                        includedBuildingIds: [snapped.id],
+                    }));
+                } else {
+                    throw new Error("No building insights found");
+                }
+            } catch (err) {
+                console.warn("Failed to fetch Solar API for primary address, falling back to mock data:", err);
+                const bData = generateMockBuildingData(place);
+                setBuildingData(bData);
+                setSurveyState(prev => ({
+                    ...prev,
+                    includedBuildingIds: bData.buildings.map(b => b.id),
+                }));
+            }
+            setStep('confirm');
+        };
 
         if (!placeCoords && window.google?.maps?.Geocoder) {
             const geocoder = new window.google.maps.Geocoder();
@@ -114,7 +155,7 @@ export const FloatingEstimator: React.FC = () => {
                     };
                     setPlaceCoords(resolvedPlace);
                     setAddress(results[0].formatted_address || address);
-                    fetchBuildingAndProceed(resolvedPlace);
+                    startFetch(resolvedPlace);
                 } else {
                     const fallbackPlace = {
                         address: address,
@@ -122,7 +163,7 @@ export const FloatingEstimator: React.FC = () => {
                         longitude: -111.8910
                     };
                     setPlaceCoords(fallbackPlace);
-                    fetchBuildingAndProceed(fallbackPlace);
+                    startFetch(fallbackPlace);
                 }
             });
         } else {
@@ -131,16 +172,11 @@ export const FloatingEstimator: React.FC = () => {
                 latitude: 40.7608,
                 longitude: -111.8910
             };
-            fetchBuildingAndProceed(placeToUse);
+            startFetch(placeToUse);
         }
     };
 
-    const handleGenerateRange = () => {
-        if (buildingData) {
-            calculateBallparkRange(buildingData, shingleProfile, pitch);
-        }
-        setStep('lead');
-    };
+
 
     useEffect(() => {
         const isHomepage = ['P-00', 'P-00-V2', 'P-00-V3', 'P-Landing'].includes(activePageId);
@@ -182,6 +218,9 @@ export const FloatingEstimator: React.FC = () => {
         const handleOpen = (e: any) => {
             setActiveProtocol(e.detail?.protocol || null);
             setIsOpen(true);
+            if (e.detail?.step) {
+                setStep(e.detail.step);
+            }
             if (e.detail?.address) {
                 const addr = e.detail.address;
                 setAddress(addr);
@@ -229,7 +268,9 @@ export const FloatingEstimator: React.FC = () => {
                 setPlaceCoords(null);
                 setBuildingData(null);
                 setPriceRange(null);
-                setStep('address');
+                if (!e.detail?.step) {
+                    setStep('address');
+                }
             }
         };
         window.addEventListener('open-estimator', handleOpen);
@@ -280,7 +321,7 @@ export const FloatingEstimator: React.FC = () => {
                 autocompleteRef.current = null;
             }
         };
-    }, [isApiReady, isOpen]);
+    }, [isApiReady, isOpen, step]);
 
 
     const steps = [
@@ -449,7 +490,15 @@ export const FloatingEstimator: React.FC = () => {
                                         <div className="grid grid-cols-3 gap-2 mt-4">
                                             <button onClick={() => setStep('address')} className="text-base font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase">Start Estimate</button>
                                             <button className="text-base font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase">View Process</button>
-                                            <button className="text-base font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase">Insurance FAQ</button>
+                                            <button 
+                                                onClick={() => {
+                                                    setActivePageId('P-15');
+                                                    setIsOpen(false);
+                                                }}
+                                                className="text-base font-black tracking-widest border border-white/10 py-2 hover:border-rhive-pink transition-all uppercase"
+                                            >
+                                                Insurance FAQ
+                                            </button>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -512,57 +561,503 @@ export const FloatingEstimator: React.FC = () => {
                                 </motion.div>
                             )}
 
+                            {step === 'confirm' && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                                    className="space-y-6 animate-fade-in"
+                                >
+                                    <div className="space-y-2">
+                                        <h3 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Geospatial Confirmation</h3>
+                                        <p className="text-[var(--text-muted)] text-base">Verify structural alignment and configure square footage parameters.</p>
+                                    </div>
+
+                                    {satelliteViewUrl && (
+                                        <div className="relative w-full aspect-video bg-gray-950 rounded-xl border border-[var(--rhive-border)] overflow-hidden shadow-pink-glow-sm">
+                                            <img src={satelliteViewUrl} alt="Satellite scan" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-4">
+                                        <label className="text-base font-black uppercase tracking-widest opacity-50 block">Detected Structures</label>
+                                        {buildingData?.buildings.map((building, idx) => {
+                                            const isIncluded = surveyState.includedBuildingIds.includes(building.id);
+                                            const sqValue = (building.totalAreaMeters * 10.7639 / 100).toFixed(2);
+                                            const val = overrideInputs[building.id] !== undefined
+                                                ? overrideInputs[building.id]
+                                                : (building.isOverridden ? building.overrideSq?.toString() || '' : sqValue);
+
+                                            const handleOverrideChange = (valStr: string) => {
+                                                setOverrideInputs(prev => ({ ...prev, [building.id]: valStr }));
+                                                const numVal = parseFloat(valStr);
+                                                setBuildingData(prev => {
+                                                    if (!prev) return prev;
+                                                    return {
+                                                        ...prev,
+                                                        buildings: prev.buildings.map(b => {
+                                                            if (b.id === building.id) {
+                                                                const isOverridden = valStr.trim() !== "";
+                                                                const overrideSq = isOverridden ? (isNaN(numVal) ? 0 : numVal) : undefined;
+                                                                const newTotalAreaMeters = isOverridden ? (overrideSq * 100 / 10.7639) : b.totalAreaMeters;
+                                                                const numFacets = b.facets.length || 1;
+                                                                const newFacets = b.facets.map(f => {
+                                                                    let newFacetArea = f.areaMeters;
+                                                                    if (isOverridden) {
+                                                                        if (b.totalAreaMeters > 0) {
+                                                                            const ratio = newTotalAreaMeters / b.totalAreaMeters;
+                                                                            newFacetArea = f.areaMeters * ratio;
+                                                                        } else {
+                                                                            newFacetArea = newTotalAreaMeters / numFacets;
+                                                                        }
+                                                                    }
+                                                                    return { ...f, areaMeters: newFacetArea };
+                                                                });
+                                                                return {
+                                                                    ...b,
+                                                                    isOverridden,
+                                                                    overrideSq,
+                                                                    totalAreaMeters: newTotalAreaMeters,
+                                                                    facets: newFacets
+                                                                };
+                                                            }
+                                                            return b;
+                                                        })
+                                                    };
+                                                });
+                                            };
+
+                                            const toggleInclusion = (checked: boolean) => {
+                                                setSurveyState(prev => {
+                                                    const current = prev.includedBuildingIds;
+                                                    const updated = checked
+                                                        ? [...current, building.id]
+                                                        : current.filter(id => id !== building.id);
+                                                    return { ...prev, includedBuildingIds: updated };
+                                                });
+                                            };
+
+                                            return (
+                                                <div key={building.id} className="p-4 bg-black/45 border border-[var(--rhive-border)] rounded-xl space-y-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-base font-black uppercase tracking-widest text-white">
+                                                            Building {idx + 1} {idx === 0 && <span className="text-xs text-rhive-pink font-bold lowercase italic">(primary)</span>}
+                                                        </span>
+                                                        <Switch checked={isIncluded} onCheckedChange={toggleInclusion} />
+                                                    </div>
+                                                    {isIncluded && (
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="text-xs font-black uppercase tracking-widest opacity-40 block mb-1">Detected Area</label>
+                                                                <div className="text-base font-bold text-white/70">{sqValue} SQ</div>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs font-black uppercase tracking-widest opacity-40 block mb-1">Override SQ</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    placeholder="0.00"
+                                                                    value={val}
+                                                                    onChange={(e) => handleOverrideChange(e.target.value)}
+                                                                    className="w-full bg-black border border-[var(--rhive-border)] px-3 py-1.5 text-base font-bold outline-none focus:border-rhive-pink text-white"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 pt-4">
+                                        <button
+                                            onClick={() => setStep('address')}
+                                            className="w-full btn-tech-outline py-6 text-base"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={() => setStep('specs')}
+                                            disabled={surveyState.includedBuildingIds.length === 0}
+                                            className="w-full btn-tech py-6 text-base shadow-pink-glow disabled:opacity-20 disabled:grayscale transition-all"
+                                        >
+                                            Next Step
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+
                             {step === 'specs' && (
                                 <motion.div
                                     initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                                    className="space-y-8"
+                                    className="space-y-6"
                                 >
-                                    <h3 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Select Your Infrastructure<span className="text-rhive-pink">.</span></h3>
-
-                                    <div className="space-y-6">
-                                        <div className="space-y-3">
-                                            <label className="text-base font-black uppercase tracking-widest opacity-50">Shingle Profile</label>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                {['Duration', 'Designer', 'Metal', 'Slate'].map(s => (
-                                                    <button 
-                                                        key={s} 
-                                                        onClick={() => setShingleProfile(s as any)}
-                                                        className={cn(
-                                                            "p-4 glass-dark text-base font-black uppercase tracking-widest transition-all",
-                                                            shingleProfile === s ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
-                                                        )}
-                                                    >
-                                                        {s}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <label className="text-base font-black uppercase tracking-widest opacity-50">Pitch Assessment</label>
-                                            <div className="grid grid-cols-3 gap-3">
-                                                {['Low', 'Medium', 'Steep'].map(p => (
-                                                    <button 
-                                                        key={p} 
-                                                        onClick={() => setPitch(p as any)}
-                                                        className={cn(
-                                                            "p-3 glass-dark text-base font-black uppercase tracking-widest transition-all",
-                                                            pitch === p ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
-                                                        )}
-                                                    >
-                                                        {p}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Infrastructure Details</h3>
+                                        <p className="text-[var(--text-muted)] text-base">Select the roofing materials and layered specifications.</p>
                                     </div>
 
-                                    <button
-                                        onClick={handleGenerateRange}
-                                        className="w-full btn-tech py-6 text-base shadow-pink-glow"
-                                    >
-                                        Generate Range
-                                    </button>
+                                    {/* Category Selection */}
+                                    <div className="grid grid-cols-2 gap-3 border-b border-[var(--rhive-border)] pb-6">
+                                        <button
+                                            onClick={() => setSurveyState(prev => ({
+                                                ...prev,
+                                                asphaltRoofingEnabled: true,
+                                                flatRoofingEnabled: false
+                                            }))}
+                                            className={cn(
+                                                "p-4 glass-dark text-base font-black uppercase tracking-widest transition-all",
+                                                surveyState.asphaltRoofingEnabled ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                            )}
+                                        >
+                                            Asphalt
+                                        </button>
+                                        <button
+                                            onClick={() => setSurveyState(prev => ({
+                                                ...prev,
+                                                asphaltRoofingEnabled: false,
+                                                flatRoofingEnabled: true
+                                            }))}
+                                            className={cn(
+                                                "p-4 glass-dark text-base font-black uppercase tracking-widest transition-all",
+                                                surveyState.flatRoofingEnabled ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                            )}
+                                        >
+                                            Flat Membrane
+                                        </button>
+                                    </div>
+
+                                    {surveyState.asphaltRoofingEnabled && (
+                                        <div className="space-y-6">
+                                            {/* Upgrade selection */}
+                                            <div className="space-y-3">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50">Shingle Upgrade Tier</label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    {[
+                                                        { value: 'TruDefinition® Duration®', label: 'Duration' },
+                                                        { value: 'TruDefinition® Duration FLEX®', label: 'Duration FLEX' },
+                                                        { value: 'GAF Woodland®', label: 'GAF Woodland' },
+                                                        { value: 'GAF Grand Sequoia®', label: 'GAF Grand Sequoia' }
+                                                    ].map(opt => (
+                                                        <button
+                                                            key={opt.value}
+                                                            onClick={() => setSurveyState(prev => ({ ...prev, roofUpgrade: opt.value as any }))}
+                                                            className={cn(
+                                                                "p-3 glass-dark text-base font-bold uppercase tracking-wide transition-all text-xs",
+                                                                surveyState.roofUpgrade === opt.value ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                                            )}
+                                                        >
+                                                            {opt.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Layers Count */}
+                                            <div className="space-y-3">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50">Existing Roof Layers</label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {['1', '2', '3', '4', 'IDK', 'Other'].map(l => (
+                                                        <button
+                                                            key={l}
+                                                            onClick={() => setSurveyState(prev => ({ ...prev, roofLayers: l as any }))}
+                                                            className={cn(
+                                                                "p-3 glass-dark text-base font-black uppercase tracking-widest transition-all",
+                                                                surveyState.roofLayers === l ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                                            )}
+                                                        >
+                                                            {l}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Features counters */}
+                                            <div className="space-y-4">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50 block">Roof Features</label>
+                                                {[
+                                                    { key: 'chimneys', label: 'Chimneys' },
+                                                    { key: 'swampCoolers', label: 'Swamp Coolers' },
+                                                    { key: 'skylights', label: 'Skylights' }
+                                                ].map(f => (
+                                                    <div key={f.key} className="flex justify-between items-center bg-black/20 p-3 rounded-lg border border-[var(--rhive-border)]">
+                                                        <span className="text-base font-bold text-white/70">{f.label}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => setSurveyState(prev => ({
+                                                                    ...prev,
+                                                                    roofFeatures: {
+                                                                        ...prev.roofFeatures,
+                                                                        [f.key]: Math.max(0, (prev.roofFeatures as any)[f.key] - 1)
+                                                                    }
+                                                                }))}
+                                                                className="w-8 h-8 rounded border border-[var(--rhive-border)] flex items-center justify-center font-bold text-white hover:border-rhive-pink hover:text-rhive-pink"
+                                                            >
+                                                                -
+                                                            </button>
+                                                            <span className="font-mono text-base font-bold w-6 text-center">
+                                                                {(surveyState.roofFeatures as any)[f.key]}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => setSurveyState(prev => ({
+                                                                    ...prev,
+                                                                    roofFeatures: {
+                                                                        ...prev.roofFeatures,
+                                                                        [f.key]: (prev.roofFeatures as any)[f.key] + 1
+                                                                    }
+                                                                }))}
+                                                                className="w-8 h-8 rounded border border-[var(--rhive-border)] flex items-center justify-center font-bold text-white hover:border-rhive-pink hover:text-rhive-pink"
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {surveyState.flatRoofingEnabled && (
+                                        <div className="space-y-6">
+                                            {/* Flat Membrane Upgrade */}
+                                            <div className="space-y-3">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50">Membrane Thickness & Type</label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    {['.060MIL TPO', '.080MIL TPO', '.060MIL PVC', '.080MIL PVC'].map(t => (
+                                                        <button
+                                                            key={t}
+                                                            onClick={() => setSurveyState(prev => ({ ...prev, flatRoofingType: t as any }))}
+                                                            className={cn(
+                                                                "p-3 glass-dark text-base font-bold uppercase tracking-wide transition-all text-xs",
+                                                                surveyState.flatRoofingType === t ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                                            )}
+                                                        >
+                                                            {t}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Membrane Color */}
+                                            <div className="space-y-3">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50">Membrane Color</label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    {['White', 'Gray', 'Tan', 'Brown'].map(c => (
+                                                        <button
+                                                            key={c}
+                                                            onClick={() => setSurveyState(prev => ({ ...prev, flatRoofingColor: c as any }))}
+                                                            className={cn(
+                                                                "p-3 glass-dark text-base font-bold uppercase tracking-wide transition-all",
+                                                                surveyState.flatRoofingColor === c ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                                            )}
+                                                        >
+                                                            {c}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4 pt-4">
+                                        <button
+                                            onClick={() => setStep('confirm')}
+                                            className="w-full btn-tech-outline py-6 text-base"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={() => setStep('gutters')}
+                                            className="w-full btn-tech py-6 text-base shadow-pink-glow"
+                                        >
+                                            Next Step
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {step === 'gutters' && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="space-y-2">
+                                        <h3 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Drainage Systems</h3>
+                                        <p className="text-[var(--text-muted)] text-base">Configure seamless gutter systems for water management.</p>
+                                    </div>
+
+                                    <div className="flex items-center justify-between bg-black/40 border border-[var(--rhive-border)] p-4 rounded-xl">
+                                        <span className="text-base font-black uppercase tracking-widest text-white">Enable Gutter Integration</span>
+                                        <Switch
+                                            checked={surveyState.gutters.enabled}
+                                            onCheckedChange={(checked) => setSurveyState(prev => ({
+                                                ...prev,
+                                                gutters: { ...prev.gutters, enabled: checked }
+                                            }))}
+                                        />
+                                    </div>
+
+                                    {surveyState.gutters.enabled && (
+                                        <div className="space-y-6">
+                                            {/* Gutter Style */}
+                                            <div className="space-y-3">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50">Gutter Profile</label>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {['K-Style', 'Box/Square', 'Half Round'].map(s => (
+                                                        <button
+                                                            key={s}
+                                                            onClick={() => setSurveyState(prev => ({
+                                                                ...prev,
+                                                                gutters: { ...prev.gutters, style: s as any }
+                                                            }))}
+                                                            className={cn(
+                                                                "p-3 glass-dark text-base font-bold uppercase tracking-wide transition-all text-xs",
+                                                                surveyState.gutters.style === s ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                                            )}
+                                                        >
+                                                            {s}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Gutter Size */}
+                                            <div className="space-y-3">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50">Gutter Size</label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    {['5"', '6"'].map(sz => (
+                                                        <button
+                                                            key={sz}
+                                                            onClick={() => setSurveyState(prev => ({
+                                                                ...prev,
+                                                                gutters: { ...prev.gutters, size: sz as any }
+                                                            }))}
+                                                            className={cn(
+                                                                "p-3 glass-dark text-base font-bold uppercase tracking-wide transition-all",
+                                                                surveyState.gutters.size === sz ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                                            )}
+                                                        >
+                                                            {sz}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Gutter Length */}
+                                            <div className="space-y-3">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50">Total Length (Linear Feet)</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="100"
+                                                    value={surveyState.gutters.length || ''}
+                                                    onChange={(e) => {
+                                                        const val = parseInt(e.target.value) || 0;
+                                                        setSurveyState(prev => ({
+                                                            ...prev,
+                                                            gutters: { ...prev.gutters, length: val }
+                                                        }));
+                                                    }}
+                                                    className="w-full bg-[var(--rhive-bg)] border-2 border-[var(--rhive-border)] p-4 text-base font-bold outline-none focus:border-rhive-pink text-white"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4 pt-4">
+                                        <button
+                                            onClick={() => setStep('specs')}
+                                            className="w-full btn-tech-outline py-6 text-base"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={() => setStep('heattrace')}
+                                            className="w-full btn-tech py-6 text-base shadow-pink-glow"
+                                        >
+                                            Next Step
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {step === 'heattrace' && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="space-y-2">
+                                        <h3 className="text-3xl font-black uppercase tracking-tighter leading-none italic">Thermal Protection</h3>
+                                        <p className="text-[var(--text-muted)] text-base">Configure heat trace cables to prevent ice dams on eaves.</p>
+                                    </div>
+
+                                    <div className="flex items-center justify-between bg-black/40 border border-[var(--rhive-border)] p-4 rounded-xl">
+                                        <span className="text-base font-black uppercase tracking-widest text-white">Enable Heat Trace</span>
+                                        <Switch
+                                            checked={surveyState.heatTrace.enabled}
+                                            onCheckedChange={(checked) => setSurveyState(prev => ({
+                                                ...prev,
+                                                heatTrace: { ...prev.heatTrace, enabled: checked }
+                                            }))}
+                                        />
+                                    </div>
+
+                                    {surveyState.heatTrace.enabled && (
+                                        <div className="space-y-6">
+                                            {/* Eave Overhang */}
+                                            <div className="space-y-3">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50">Eave Overhang</label>
+                                                <div className="grid grid-cols-4 gap-2">
+                                                    {['None', 'Small', 'Medium', 'Large'].map(o => (
+                                                        <button
+                                                            key={o}
+                                                            onClick={() => setSurveyState(prev => ({
+                                                                ...prev,
+                                                                heatTrace: { ...prev.heatTrace, eaveOverhang: o as any }
+                                                            }))}
+                                                            className={cn(
+                                                                "p-3 glass-dark text-base font-bold uppercase tracking-wide transition-all text-xs",
+                                                                surveyState.heatTrace.eaveOverhang === o ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                                            )}
+                                                        >
+                                                            {o}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Heat Trace Length */}
+                                            <div className="space-y-3">
+                                                <label className="text-base font-black uppercase tracking-widest opacity-50">Total Length (Linear Feet)</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="80"
+                                                    value={surveyState.heatTrace.length || ''}
+                                                    onChange={(e) => {
+                                                        const val = parseInt(e.target.value) || 0;
+                                                        setSurveyState(prev => ({
+                                                            ...prev,
+                                                            heatTrace: { ...prev.heatTrace, length: val }
+                                                        }));
+                                                    }}
+                                                    className="w-full bg-[var(--rhive-bg)] border-2 border-[var(--rhive-border)] p-4 text-base font-bold outline-none focus:border-rhive-pink text-white"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4 pt-4">
+                                        <button
+                                            onClick={() => setStep('gutters')}
+                                            className="w-full btn-tech-outline py-6 text-base"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={() => setStep('lead')}
+                                            className="w-full btn-tech py-6 text-base shadow-pink-glow"
+                                        >
+                                            Secure Quote
+                                        </button>
+                                    </div>
                                 </motion.div>
                             )}
 
@@ -575,50 +1070,122 @@ export const FloatingEstimator: React.FC = () => {
                                     <p className="text-[var(--text-muted)] text-base">Where should we deliver the detailed technical analysis and NDL warranty certification?</p>
 
                                     <div className="space-y-4">
-                                        <input type="text" placeholder="FULL NAME" className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-base font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]" />
-                                        <input type="email" placeholder="EMAIL ADDRESS" className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-base font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]" />
-                                        <input type="tel" placeholder="PHONE NUMBER" className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-base font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]" />
+                                        <input
+                                            type="text"
+                                            placeholder="FULL NAME"
+                                            value={leadName}
+                                            onChange={(e) => setLeadName(e.target.value)}
+                                            className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-base font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]"
+                                        />
+                                        <input
+                                            type="email"
+                                            placeholder="EMAIL ADDRESS"
+                                            value={leadEmail}
+                                            onChange={(e) => setLeadEmail(e.target.value)}
+                                            className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-base font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]"
+                                        />
+                                        <input
+                                            type="tel"
+                                            placeholder="PHONE NUMBER"
+                                            value={leadPhone}
+                                            onChange={(e) => setLeadPhone(e.target.value)}
+                                            className="w-full bg-[var(--rhive-bg)] border border-[var(--rhive-border)] p-5 text-base font-bold uppercase tracking-widest outline-none focus:border-rhive-pink transition-all text-[var(--rhive-text)] placeholder-[var(--rhive-text-muted)]"
+                                        />
                                     </div>
 
-                                    <button
-                                        onClick={() => setStep('result')}
-                                        className="w-full btn-tech py-6 text-base shadow-pink-glow"
-                                    >
-                                        Execute Delivery
-                                    </button>
+                                    <div className="grid grid-cols-2 gap-4 pt-4">
+                                        <button
+                                            onClick={() => setStep('heattrace')}
+                                            className="w-full btn-tech-outline py-6 text-base"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={handleExecuteDelivery}
+                                            disabled={!leadName || !leadEmail || !leadPhone}
+                                            className="w-full btn-tech py-6 text-base shadow-pink-glow disabled:opacity-20 disabled:grayscale transition-all"
+                                        >
+                                            Execute Delivery
+                                        </button>
+                                    </div>
                                 </motion.div>
                             )}
 
                             {step === 'result' && (
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                                    className="text-center space-y-10 py-10"
+                                    className="text-center space-y-8 py-4 animate-fade-in"
                                 >
                                     <div className="flex justify-center">
-                                        <div className="w-24 h-24 bg-rhive-pink rounded-full flex items-center justify-center text-white shadow-pink-glow animate-pulse">
-                                            <CheckCircle2 size={48} />
+                                        <div className="w-20 h-20 bg-rhive-pink rounded-full flex items-center justify-center text-white shadow-pink-glow animate-pulse">
+                                            <CheckCircle2 size={40} />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <h3 className="text-5xl font-black uppercase tracking-tighter italic">Analysis <br /> Complete<span className="text-rhive-pink">.</span></h3>
-                                        <p className="text-rhive-pink font-black text-base uppercase tracking-[0.4em]">Integrated Estimate Ready</p>
+                                        <h3 className="text-4xl font-black uppercase tracking-tighter italic">Analysis <br /> Complete<span className="text-rhive-pink">.</span></h3>
+                                        <p className="text-rhive-pink font-black text-sm uppercase tracking-[0.4em]">Integrated Estimate Ready</p>
                                     </div>
 
-                                    <div className="glass-dark p-10 border-rhive-pink/30 relative overflow-hidden">
+                                    <div className="glass-dark p-6 border-rhive-pink/30 relative overflow-hidden rounded-xl">
                                         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent" />
-                                        <span className="text-base font-black uppercase tracking-widest opacity-40 mb-4 block">Calculated Result Range</span>
-                                        <div className="text-6xl font-black tracking-tighter text-white mb-2">
+                                        <span className="text-xs font-black uppercase tracking-widest opacity-40 mb-2 block">Calculated Result Range</span>
+                                        <div className="text-4xl font-black tracking-tighter text-white mb-2">
                                             {priceRange 
                                                 ? `$${(priceRange.low / 1000).toFixed(1)}K - $${(priceRange.high / 1000).toFixed(1)}K`
                                                 : "$14.2K - $16.8K"
                                             }
                                         </div>
-                                        <div className="text-rhive-pink text-base font-bold uppercase tracking-widest">Includes 10% RPSP Efficiency Credit</div>
+                                        <div className="text-rhive-pink text-xs font-bold uppercase tracking-widest">Includes 10% RPSP Efficiency Credit</div>
                                     </div>
 
-                                    <p className="text-base text-[var(--text-muted)] leading-relaxed">
-                                        Your detailed PDF breakdown has been sent. A local engineer will confirm the drone mapping data within 24 hours.
+                                    {detailedCalc && (
+                                        <div className="bg-black/40 border border-[var(--rhive-border)] p-4 rounded-xl text-left space-y-3 text-sm">
+                                            <div className="flex justify-between pb-2 border-b border-white/10 font-bold uppercase tracking-wider opacity-60">
+                                                <span>Breakdown</span>
+                                                <span>Estimated Value</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="opacity-70">Total Area:</span>
+                                                <span className="font-mono">{detailedCalc.finalSq.toFixed(1)} SQ</span>
+                                            </div>
+                                            {surveyState.asphaltRoofingEnabled && (
+                                                <div className="flex justify-between">
+                                                    <span className="opacity-70">Asphalt System:</span>
+                                                    <span className="font-mono">{formatCurrency(detailedCalc.asphaltTotal)}</span>
+                                                </div>
+                                            )}
+                                            {surveyState.flatRoofingEnabled && (
+                                                <div className="flex justify-between">
+                                                    <span className="opacity-70">Flat Membrane:</span>
+                                                    <span className="font-mono">{formatCurrency(detailedCalc.flatTotal)}</span>
+                                                </div>
+                                            )}
+                                            {surveyState.gutters.enabled && (
+                                                <div className="flex justify-between">
+                                                    <span className="opacity-70">Gutter System:</span>
+                                                    <span className="font-mono">{formatCurrency(detailedCalc.gutterEstimate.total)}</span>
+                                                </div>
+                                            )}
+                                            {surveyState.heatTrace.enabled && (
+                                                <div className="flex justify-between">
+                                                    <span className="opacity-70">Heat Trace Thermal:</span>
+                                                    <span className="font-mono">{formatCurrency(detailedCalc.heatTraceEstimate.total)}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between pt-2 border-t border-white/5">
+                                                <span className="opacity-70">Subtotal:</span>
+                                                <span className="font-mono">{formatCurrency(detailedCalc.liveTotal)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-rhive-pink">
+                                                <span>RPSP Commit Savings (10%):</span>
+                                                <span className="font-mono">-{formatCurrency(detailedCalc.liveTotal * 0.10)}</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                                        Your detailed PDF breakdown has been sent to <span className="text-white font-bold">{leadEmail}</span>. A local engineer will confirm the drone mapping data within 24 hours.
                                     </p>
 
                                     <div className="grid grid-cols-2 gap-4">

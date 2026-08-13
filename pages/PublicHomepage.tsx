@@ -26,7 +26,6 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useTheme } from '../contexts/ThemeContext';
 import PlexusShape from '../components/PlexusShape';
 import { cn } from '../lib/utils';
-import RhiveHeader from '../components/website/RhiveHeader';
 import Card from '../components/Card';
 
 // --- Visual Helpers ---
@@ -818,7 +817,6 @@ const PublicHomepage: React.FC = () => {
             {/* REMOVED: Fixed CTA. Moved to relative wrapper below. */}
 
             <div className="fixed inset-0 bg-circuit-pattern opacity-5 pointer-events-none z-0" />
-            <RhiveHeader />
 
             {/* HERO SECTION */}
             <section id="hero" className="relative w-full min-h-[85vh] flex items-center justify-center pt-32 pb-24 overflow-hidden snap-start shrink-0">
