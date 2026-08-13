@@ -256,7 +256,9 @@ export const GlobalCustomerLookupModal: React.FC = () => {
         };
     }, [isOpen, isApiReady]);
 
-    // Suppress pac-container when query is not address-like
+    // Suppress pac-container when query is not address-like.
+    // IMPORTANT: Always clear this style when the modal is closed so it doesn't
+    // bleed into other autocomplete instances (e.g. New Project address field).
     useEffect(() => {
         const styleId = 'pac-container-visibility';
         let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
@@ -265,15 +267,16 @@ export const GlobalCustomerLookupModal: React.FC = () => {
             styleEl.id = styleId;
             document.head.appendChild(styleEl);
         }
-        if (searchQuery && !isAddressLike(searchQuery)) {
+        if (isOpen && searchQuery && !isAddressLike(searchQuery)) {
             styleEl.innerHTML = `.pac-container { display: none !important; }`;
         } else {
+            // Always clear when modal is closed or query is address-like
             styleEl.innerHTML = '';
         }
         return () => {
             if (styleEl) styleEl.innerHTML = '';
         };
-    }, [searchQuery]);
+    }, [searchQuery, isOpen]);
 
     if (!shouldRender) return null;
 

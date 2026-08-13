@@ -1154,8 +1154,20 @@ const AddressSection: React.FC<{
     const isAdminBypass = currentUser?.role === 'Admin' || currentUser?.role === 'Employee';
 
     useEffect(() => {
-        if (!isApiReady || !inputRef.current || !window.google || isCollapsed || readOnly) return;
-        
+        // When section collapses: clean up the autocomplete instance so it
+        // can be freshly re-attached when the section re-expands.
+        if (isCollapsed) {
+            if (autocompleteRef.current) {
+                try {
+                    window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current);
+                } catch {}
+                autocompleteRef.current = null;
+            }
+            return;
+        }
+
+        if (!isApiReady || !inputRef.current || !window.google || readOnly) return;
+
         // Only attach a new Autocomplete instance if one doesn't already exist
         if (!autocompleteRef.current) {
             try {
@@ -1164,6 +1176,7 @@ const AddressSection: React.FC<{
                     return;
                 }
                 autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+                    // Support both street addresses AND business/establishment names
                     fields: ['address_components', 'geometry', 'formatted_address', 'name'],
                     componentRestrictions: { country: 'us' }
                 });
