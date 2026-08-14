@@ -1959,6 +1959,8 @@ const CustomerInputPage: React.FC = () => {
                             state: 'UT',
                             zip: '84101'
                         }));
+                        // Still open the map modal so user can manually pin the location
+                        setIsVerificationOpen(true);
                         return;
                     }
                     const geocoder = new window.google.maps.Geocoder();
@@ -1976,6 +1978,8 @@ const CustomerInputPage: React.FC = () => {
                                 state: 'UT',
                                 zip: '84101'
                             }));
+                            // Still open the map modal so user can manually pin the location
+                            setIsVerificationOpen(true);
                         }
                     }, 3000);
 
@@ -2020,6 +2024,8 @@ const CustomerInputPage: React.FC = () => {
                                 state: 'UT',
                                 zip: '84101'
                             }));
+                            // Still open the map modal so user can manually pin the location
+                            setIsVerificationOpen(true);
                         }
                     });
                 };
