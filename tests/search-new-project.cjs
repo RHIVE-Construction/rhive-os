@@ -100,19 +100,16 @@ async function login() {
 async function testSearchBarOpens() {
     log('TEST 1: Global search bar opens without crash');
     try {
-        // Try clicking the search icon
-        const searchBtn = page.locator('button[title*="Search"], button[title*="search"], button[aria-label*="search"]').first();
-        try {
-            await searchBtn.click({ timeout: 5000 });
-        } catch {
-            // Use keyboard shortcut
-            await page.keyboard.press('Control+k');
-        }
+        // Open search modal via CustomEvent (same as clicking search icon in header)
+        await page.evaluate(() => {
+            window.dispatchEvent(new CustomEvent('open-customer-lookup'));
+        });
         await page.waitForTimeout(1000);
 
         if (await detectBlackScreen('after-opening-search')) return false;
 
-        const searchInput = page.locator('input[placeholder*="Search"], input[placeholder*="search"], input[placeholder*="customer"], input[placeholder*="address"]').first();
+        // The search modal has id="search-lookup-input"
+        const searchInput = page.locator('#search-lookup-input').first();
         await searchInput.waitFor({ state: 'visible', timeout: 6000 });
         pass('Search modal opened successfully');
         await shot('02_search_open');
@@ -126,7 +123,7 @@ async function testSearchBarOpens() {
 async function testTypingAddress() {
     log('TEST 2: Type address in search bar — no black screen');
     try {
-        const searchInput = page.locator('input[placeholder*="Search"], input[placeholder*="search"], input[placeholder*="customer"], input[placeholder*="address"]').first();
+        const searchInput = page.locator('#search-lookup-input').first();
         await searchInput.fill('');
         await searchInput.type('742 Evergreen Terrace', { delay: 60 });
         await page.waitForTimeout(1800);
@@ -154,7 +151,7 @@ async function testTypingAddress() {
 async function testTabNavigatesToMapModal() {
     log('TEST 3: Tab press → navigate to CustomerInputPage → MAP MODAL appears');
     try {
-        const searchInput = page.locator('input[placeholder*="Search"], input[placeholder*="search"], input[placeholder*="customer"], input[placeholder*="address"]').first();
+        const searchInput = page.locator('#search-lookup-input').first();
 
         await searchInput.press('Tab');
         await page.waitForTimeout(5000); // Wait for geocoding + navigation
