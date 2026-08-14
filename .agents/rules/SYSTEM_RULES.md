@@ -179,9 +179,32 @@ Before running `firebase deploy`, the following must be verified:
 - [ ] **REFERENCES/ is shielded** — Restore shield after merge if it was removed.
 - [ ] **Deploy only what changed** — Use `--only hosting` or `--only functions` unless a full deploy is required.
 
+### 3.4 "Activate the Team" — Full Pipeline Test Protocol
+
+When a user says **"activate the team"** or requests a full system test, run the pipeline QA workflow:
+
+```powershell
+# Full pipeline E2E test (Stage 1 → Sign & Verify → Email → All-Pages Sweep)
+node tests/pipeline-e2e.cjs
+```
+
+**The test covers:**
+- Lead intake (Stage 1) — all fields, address map modal, submit
+- Lead appears in LeadPage list
+- Contacts & Accounts views load
+- Convert to Estimate (Stage 2) — field carry-over verified
+- Convert to Quote (Stage 3)
+- Sign & Verify (Stage 4) — internal admin page
+- Email delivery — `sendSignVerifyEmail` Cloud Function with temp mail verification
+- Customer portal — `CUSTOMER-SIGN-VERIFY` public page
+- All-pages sweep — every registered page, black screen / React crash detection
+
+**Workflow file:** `.agent/workflows/activate-the-team.md` — read this file for the full step-by-step QA protocol.
+
+> **Rule:** No deploy may happen without the pipeline E2E test passing at least the critical steps (Login, Lead creation, Sign & Verify load, Email send).
+
 ---
 
-## 4. BRANCH & COMMIT WORKFLOW
 
 ### 4.1 Branch Naming Convention
 
@@ -400,8 +423,13 @@ These rules are **permanent and non-negotiable**. They apply:
 - On every branch, every commit, every push.
 - Before every Firebase deploy.
 
+**When "activate the team" is invoked:**
+- Read `.agent/workflows/activate-the-team.md` immediately.
+- Execute the full pipeline QA protocol without skipping steps.
+- Do not push to `main` or deploy until the pipeline E2E test passes.
+
 When in doubt, **check this file first.**
 
 ---
 
-*Last updated: 2026-08-01 | Branch: system-rules | Maintained in `.agents/rules/SYSTEM_RULES.md`*
+*Last updated: 2026-08-15 | Branch: feature/pipeline-e2e-test | Maintained in `.agents/rules/SYSTEM_RULES.md`*
