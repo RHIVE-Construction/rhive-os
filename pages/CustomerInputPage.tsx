@@ -2779,8 +2779,12 @@ const CustomerInputPage: React.FC = () => {
                             label="Property 1" 
                             data={propertyData} 
                             onChange={(newData) => {
+                                const latChanged = newData.latitude !== propertyData.latitude;
+                                const lngChanged = newData.longitude !== propertyData.longitude;
                                 setPropertyData(newData);
-                                if (newData.latitude !== 0 && newData.longitude !== 0) {
+                                // Only open the verification modal when coordinates actually change
+                                // (not on every keystroke in non-address fields that preserve existing coords)
+                                if ((latChanged || lngChanged) && newData.latitude !== 0 && newData.longitude !== 0) {
                                     setCurrentVerifyingIndex(0);
                                     setIsVerificationOpen(true);
                                 }
@@ -2800,10 +2804,14 @@ const CustomerInputPage: React.FC = () => {
                                 label={`Property ${idx + 2}`} 
                                 data={prop.propertyData} 
                                 onChange={(newData) => {
+                                    const prev = additionalProperties[idx].propertyData;
+                                    const latChanged = newData.latitude !== prev.latitude;
+                                    const lngChanged = newData.longitude !== prev.longitude;
                                     const updated = [...additionalProperties];
                                     updated[idx].propertyData = newData;
                                     setAdditionalProperties(updated);
-                                    if (newData.latitude !== 0 && newData.longitude !== 0) {
+                                    // Only open the verification modal when coordinates actually change
+                                    if ((latChanged || lngChanged) && newData.latitude !== 0 && newData.longitude !== 0) {
                                         setCurrentVerifyingIndex(idx + 1);
                                         setIsVerificationOpen(true);
                                     }
