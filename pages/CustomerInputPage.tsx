@@ -1202,17 +1202,19 @@ const AddressSection: React.FC<{
         }
     }, [isCollapsed, readOnly, isApiReady]);
 
-    // Sync pre-filled address value to the native input when the section is open
-    // (Google Autocomplete can take over the DOM element, so we force-sync the value)
+    // Sync pre-filled address value to the native input when the section is open.
+    // IMPORTANT: We use the native setter ONLY — do NOT dispatch an 'input' event after
+    // setting the value. Dispatching 'input' with bubbles:true re-triggers React's
+    // synthetic onChange, which updates state, which runs this effect again →
+    // "Maximum update depth exceeded" crash (black screen) when the address is pre-populated.
     useEffect(() => {
         if (!isCollapsed && inputRef.current && data.address) {
             const nativeInput = inputRef.current;
             if (nativeInput.value !== data.address) {
-                // Use native setter to bypass React's synthetic event system
                 const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
                 if (nativeSetter) {
                     nativeSetter.call(nativeInput, data.address);
-                    nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    // DO NOT dispatch 'input' here — it would re-trigger React onChange → infinite loop
                 }
             }
         }
@@ -1374,7 +1376,14 @@ const AddressSection: React.FC<{
     };
 
     const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        onChange({ ...data, [e.target.name]: e.target.value });
+        // When the user manually edits the address text, clear the geocoded
+        // coordinates. This prevents the verification modal from re-opening
+        // on every keystroke when lat/lng are still set from a previous autocomplete.
+        if (e.target.name === 'address') {
+            onChange({ ...data, address: e.target.value, latitude: 0, longitude: 0 });
+        } else {
+            onChange({ ...data, [e.target.name]: e.target.value });
+        }
     };
 
     return (
@@ -1950,6 +1959,8 @@ const CustomerInputPage: React.FC = () => {
                             state: 'UT',
                             zip: '84101'
                         }));
+                        // Still open the map modal so user can manually pin the location
+                        setIsVerificationOpen(true);
                         return;
                     }
                     const geocoder = new window.google.maps.Geocoder();
@@ -1967,6 +1978,8 @@ const CustomerInputPage: React.FC = () => {
                                 state: 'UT',
                                 zip: '84101'
                             }));
+                            // Still open the map modal so user can manually pin the location
+                            setIsVerificationOpen(true);
                         }
                     }, 3000);
 
@@ -2011,6 +2024,8 @@ const CustomerInputPage: React.FC = () => {
                                 state: 'UT',
                                 zip: '84101'
                             }));
+                            // Still open the map modal so user can manually pin the location
+                            setIsVerificationOpen(true);
                         }
                     });
                 };
