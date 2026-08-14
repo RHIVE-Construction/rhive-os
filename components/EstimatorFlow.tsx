@@ -435,5 +435,5 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
     }
   };
 
-  return <div className="h-full w-full bg-black">{renderContent()}</div>;
+  return <div className="h-full w-full bg-transparent">{renderContent()}</div>;
 }

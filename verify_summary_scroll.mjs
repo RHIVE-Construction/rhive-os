@@ -10,17 +10,14 @@ import { chromium } from 'playwright';
 
     console.log("Setting query in sessionStorage and navigating...");
     try {
-        await page.goto('http://localhost:3002/', { waitUntil: 'domcontentloaded' });
+        await page.goto('http://localhost:3002/?bypass=Public&page=P-12', { waitUntil: 'domcontentloaded' });
         await page.evaluate(() => {
             sessionStorage.setItem('globalSearchQuery', '9329 Tortellini Dr, Sandy, UT 84093, USA');
         });
-        await page.goto('http://localhost:3002/?bypass=Public&page=P-12', { waitUntil: 'domcontentloaded' });
+        await page.reload({ waitUntil: 'domcontentloaded' });
         
         console.log("Waiting for map confirmation page...");
         await page.waitForSelector('button:has-text("CONFIRM ADDRESS")', { timeout: 25000 });
-        await page.waitForTimeout(3000);
-
-        console.log("Clicking CONFIRM ADDRESS...");
         await page.click('button:has-text("CONFIRM ADDRESS")');
         
         console.log("Waiting for RoofOptions step...");
@@ -53,7 +50,6 @@ import { chromium } from 'playwright';
         await page.click('button:has-text("Pricing")');
         await page.waitForTimeout(2500);
 
-        console.log("Capturing screenshot of the Measurements Summary modal (Pricing tab)...");
         const path = 'C:/Users/Victor/.gemini/antigravity/brain/1856e6a8-b72c-4520-be85-08bb0ab4ff14/measurements_summary_scroll.png';
         await page.screenshot({ path });
         console.log(`Screenshot saved to ${path}`);
@@ -63,6 +59,7 @@ import { chromium } from 'playwright';
         const failPath = 'C:/Users/Victor/.gemini/antigravity/brain/1856e6a8-b72c-4520-be85-08bb0ab4ff14/verify_scroll_failure.png';
         await page.screenshot({ path: failPath });
         console.log(`Failure screenshot saved to ${failPath}`);
+        process.exit(1);
     } finally {
         await browser.close();
     }

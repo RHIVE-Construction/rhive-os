@@ -78,7 +78,7 @@ const EstimateToolPage: React.FC = () => {
     }
 
     return (
-        <div className="h-full w-full bg-black relative z-20">
+        <div className="h-full w-full bg-transparent relative z-20">
             <EstimateErrorBoundary onReset={handleClose}>
                 <EstimatorFlow key={initialPlace?.address || 'default'} onClose={handleClose} initialPlace={initialPlace} />
             </EstimateErrorBoundary>
