@@ -54,7 +54,19 @@ These rules are permanent, non-negotiable, and apply to every agent and every ch
 
 ---
 
-## JustCall Integration Maintenance
+## "Activate the Team" — Full Pipeline QA Protocol
+
+When the user says **"activate the team"** (or any variation like "run the team", "run a full test"), agents MUST:
+
+1. Read `.agent/workflows/activate-the-team.md` immediately.
+2. Execute every step of the workflow in order.
+3. Run `node tests/pipeline-e2e.cjs` — the full pipeline E2E test.
+4. Do **NOT** push to `main` or deploy until critical test steps pass.
+
+**The test covers:** Lead intake → Address map modal → Contacts/Accounts → Convert to Estimate → Convert to Quote → Sign & Verify → Email delivery (temp mail) → All-pages black screen sweep.
+
+---
+
 
 - **API Versioning**: Always use the latest JustCall API version (currently v2.1). Before implementing any JustCall-related changes, check for API updates.
 - **MCP Synchronization**: Ensure the JustCall MCP server (https://mcp.justcall.host/mcp) is correctly configured in `mcp.json`. Use the API Key and Secret from `functions/.env` to authenticate.
