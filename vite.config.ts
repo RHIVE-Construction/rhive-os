@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
     server: {
-      port: 3000,
+      port: 3002,
       host: '0.0.0.0',
       // Enable HTML5 history API fallback so clean paths like /map serve index.html
       historyApiFallback: true,

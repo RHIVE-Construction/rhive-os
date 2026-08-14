@@ -10,6 +10,7 @@ import { RoofOptions } from './RoofOptions';
 import { Gutters } from './Gutters';
 import { HeatTrace } from './HeatTrace';
 import { MeasurementPage } from './MeasurementPage';
+import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 
 type AppState = 'landing' | 'addressConfirmation' | 'roofOptions' | 'gutters' | 'heatTrace' | 'dashboard' | 'gutterMeasurement' | 'heatTraceMeasurement';
 
@@ -26,6 +27,8 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
   const [streetViewUrl, setStreetViewUrl] = useState<string>('');
   const [satelliteViewUrl, setSatelliteViewUrl] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [gutterPaths, setGutterPaths] = useState<{ lat: number; lng: number }[][]>([]);
+  const [heatTracePaths, setHeatTracePaths] = useState<{ lat: number; lng: number }[][]>([]);
 
   const handlePlaceSelected = useCallback(async (place: Place) => {
     setError(null);
@@ -72,7 +75,12 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
           if (!apiK) return;
 
           const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${place.latitude}&location.longitude=${place.longitude}&requiredQuality=HIGH&key=${apiK}`;
-          const response = await fetch(url);
+          let response = await fetch(url);
+          if (response.status === 404) {
+            console.warn("Solar API HIGH quality not available, retrying with LOW");
+            const fallbackUrl = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${place.latitude}&location.longitude=${place.longitude}&requiredQuality=LOW&key=${apiK}`;
+            response = await fetch(fallbackUrl);
+          }
           if (!response.ok) {
             throw new Error(`Solar API returned status ${response.status}`);
           }
@@ -210,10 +218,55 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
   }, []);
 
   React.useEffect(() => {
+    const handleReset = () => {
+      // If we are on the landing page, bubble close to parent
+      if (appState === 'landing') {
+        onClose();
+      } else {
+        setAppState('landing');
+        setSelectedPlace(null);
+        setBuildingData(null);
+        setSurveyState(INITIAL_SURVEY_STATE);
+        setGutterPaths([]);
+        setHeatTracePaths([]);
+      }
+    };
+    window.addEventListener('rhive-reset-estimator', handleReset);
+    return () => {
+      window.removeEventListener('rhive-reset-estimator', handleReset);
+    };
+  }, [appState, onClose]);
+
+  React.useEffect(() => {
     if (initialPlace) {
       handlePlaceSelected(initialPlace);
     }
   }, [initialPlace, handlePlaceSelected]);
+
+  const isMapsApiReady = useGoogleMapsApi();
+
+  React.useEffect(() => {
+    if (!isMapsApiReady || !window.google?.maps?.Geocoder) return;
+    const query = sessionStorage.getItem('globalSearchQuery');
+    if (query) {
+      sessionStorage.removeItem('globalSearchQuery');
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address: query }, (results: any, status: any) => {
+        if (status === 'OK' && results && results[0]) {
+          const loc = results[0].geometry.location;
+          const place: Place = {
+            address: results[0].formatted_address,
+            latitude: loc.lat(),
+            longitude: loc.lng()
+          };
+          handlePlaceSelected(place);
+        } else {
+          console.warn("Geocoding failed for:", query, status);
+          setError("Failed to locate address: " + query);
+        }
+      });
+    }
+  }, [isMapsApiReady, handlePlaceSelected]);
 
   useEffect(() => {
     if ((appState === 'addressConfirmation' && !selectedPlace) ||
@@ -228,7 +281,12 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
   }, [appState, selectedPlace, buildingData, onClose]);
 
   const handleStartNew = () => {
-    onClose();
+    setAppState('landing');
+    setSelectedPlace(null);
+    setBuildingData(null);
+    setSurveyState(INITIAL_SURVEY_STATE);
+    setGutterPaths([]);
+    setHeatTracePaths([]);
   };
 
   const handleConfirmAddress = () => {
@@ -288,52 +346,74 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
 
 
       case 'gutters':
-        return (
-            <Gutters 
-                surveyState={surveyState}
-                onSurveyChange={setSurveyState}
-                onContinue={handleGuttersContinue}
-                onStartOver={handleStartNew}
-                onStartMeasurement={handleStartGutterMeasurement}
-            />
-        );
+        if (buildingData) {
+            return (
+                <Gutters 
+                    surveyState={surveyState}
+                    onSurveyChange={setSurveyState}
+                    onContinue={handleGuttersContinue}
+                    onStartOver={handleStartNew}
+                    onStartMeasurement={handleStartGutterMeasurement}
+                    onBack={() => setAppState('roofOptions')}
+                />
+            )
+        }
+        handleStartNew();
+        return null;
         
       case 'heatTrace':
-        return (
-            <HeatTrace
-                surveyState={surveyState}
-                onSurveyChange={setSurveyState}
-                onContinue={handleHeatTraceContinue}
-                onStartOver={handleStartNew}
-                onStartMeasurement={handleStartHeatTraceMeasurement}
-            />
-        );
+        if (buildingData) {
+            return (
+                <HeatTrace
+                    surveyState={surveyState}
+                    onSurveyChange={setSurveyState}
+                    onContinue={handleHeatTraceContinue}
+                    onStartOver={handleStartNew}
+                    onStartMeasurement={handleStartHeatTraceMeasurement}
+                    onBack={() => setAppState('gutters')}
+                />
+            )
+        }
+        handleStartNew();
+        return null;
 
       case 'gutterMeasurement':
-        return (
-            <MeasurementPage
-                title="Measure Gutter Length"
-                center={{ lat: selectedPlace!.latitude, lng: selectedPlace!.longitude }}
-                onLengthChange={(length) => {
-                    setSurveyState(prev => ({...prev, gutters: {...prev.gutters, length: Math.round(length)}}));
-                }}
-                onDone={handleGutterMeasurementDone}
-                onStartOver={handleStartNew}
-            />
-        );
+        if (selectedPlace) {
+            return (
+                <MeasurementPage
+                    title="Measure Gutter Length"
+                    center={{ lat: selectedPlace.latitude, lng: selectedPlace.longitude }}
+                    onLengthChange={(length) => {
+                        setSurveyState(prev => ({...prev, gutters: {...prev.gutters, length: Math.round(length)}}));
+                    }}
+                    onDone={handleGutterMeasurementDone}
+                    onStartOver={handleStartNew}
+                    initialPaths={gutterPaths}
+                    onPathsChange={setGutterPaths}
+                />
+            );
+        }
+        handleStartNew();
+        return null;
 
       case 'heatTraceMeasurement':
-        return (
-            <MeasurementPage
-                title="Measure Heat Trace Length"
-                center={{ lat: selectedPlace!.latitude, lng: selectedPlace!.longitude }}
-                onLengthChange={(length) => {
-                    setSurveyState(prev => ({...prev, heatTrace: {...prev.heatTrace, length: Math.round(length)}}));
-                }}
-                onDone={handleHeatTraceMeasurementDone}
-                onStartOver={handleStartNew}
-            />
-        );
+        if (selectedPlace) {
+            return (
+                <MeasurementPage
+                    title="Measure Heat Trace Length"
+                    center={{ lat: selectedPlace.latitude, lng: selectedPlace.longitude }}
+                    onLengthChange={(length) => {
+                        setSurveyState(prev => ({...prev, heatTrace: {...prev.heatTrace, length: Math.round(length)}}));
+                    }}
+                    onDone={handleHeatTraceMeasurementDone}
+                    onStartOver={handleStartNew}
+                    initialPaths={heatTracePaths}
+                    onPathsChange={setHeatTracePaths}
+                />
+            );
+        }
+        handleStartNew();
+        return null;
       
       case 'dashboard':
         return (
@@ -355,5 +435,5 @@ export const EstimatorFlow: React.FC<EstimatorFlowProps> = ({ onClose, initialPl
     }
   };
 
-  return <div className="h-full w-full bg-black">{renderContent()}</div>;
+  return <div className="h-full w-full bg-transparent">{renderContent()}</div>;
 }

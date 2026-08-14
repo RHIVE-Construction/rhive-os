@@ -51,3 +51,4 @@ serviceAccountKey.json
 *.sw?
 *.bak
 justcall_test_results.json
+mcp.json

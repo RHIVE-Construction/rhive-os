@@ -13,7 +13,7 @@ export const PricingProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [pricing, setPricingState] = useState<Pricing>(() => {
     try {
       const storedPricing = localStorage.getItem('rhive-pricing');
-      return storedPricing ? JSON.parse(storedPricing) : defaultPricing;
+      return storedPricing ? { ...defaultPricing, ...JSON.parse(storedPricing) } : defaultPricing;
     } catch (error) {
       console.error('Error loading pricing from localStorage', error);
       return defaultPricing;

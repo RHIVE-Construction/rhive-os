@@ -31,7 +31,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({
   }, [initialValue]);
 
   useEffect(() => {
-    if (!isApiReady || !inputRef.current || !window.google || !window.google.maps.places) {
+    if (!isApiReady || !inputRef.current || !window.google?.maps?.places) {
       return;
     }
 

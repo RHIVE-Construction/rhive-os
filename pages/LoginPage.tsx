@@ -282,32 +282,44 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                                     </p>
                                 )}
 
-                                 <div className="flex gap-3 pt-1">
+                                <div className="flex flex-col gap-2 pt-1">
+                                    <div className="flex gap-3">
+                                        <Button
+                                            type="button"
+                                            onClick={() => setActivePageId('P-00')}
+                                            variant="secondary"
+                                            className="flex-none px-5 h-12 bg-gray-900 border border-gray-800 text-gray-500 hover:bg-gray-800 hover:text-white uppercase tracking-widest text-[10px] font-black"
+                                        >
+                                            <XIcon className="w-4 h-4 mr-1" />
+                                            Back
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            disabled={!email || !password || loading}
+                                            className="flex-1 h-12 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white uppercase tracking-widest text-[10px] font-black shadow-[0_0_30px_rgba(236,2,139,0.3)] disabled:opacity-40"
+                                        >
+                                            {'Sign In'}
+                                            <ArrowRightIcon className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    </div>
                                     <Button
                                         type="button"
-                                        onClick={() => setActivePageId('P-00')}
+                                        onClick={async () => {
+                                            setLoading(true);
+                                            setError('');
+                                            const result = await onLogin('Public');
+                                            setLoading(false);
+                                            if (result && !result.success) {
+                                                showError(result.error || 'Guest login failed.');
+                                            }
+                                        }}
                                         variant="secondary"
-                                        className="flex-none px-5 h-12 bg-gray-900 border border-gray-800 text-gray-500 hover:bg-gray-800 hover:text-white uppercase tracking-widest text-[10px] font-black"
+                                        className="w-full h-10 border border-gray-800 hover:border-gray-600 bg-black/40 hover:bg-black/80 text-gray-400 hover:text-white uppercase tracking-widest text-[9px] font-extrabold"
                                     >
-                                        <XIcon className="w-4 h-4 mr-1" />
-                                        Back
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        disabled={!email || !password || loading}
-                                        className="flex-1 h-12 bg-rhive-pink/20 hover:bg-rhive-pink/40 border border-rhive-pink/40 hover:border-rhive-pink/60 backdrop-blur-md text-white uppercase tracking-widest text-[10px] font-black shadow-[0_0_30px_rgba(236,2,139,0.3)] disabled:opacity-40"
-                                    >
-                                        {'Sign In'}
-                                        <ArrowRightIcon className="w-4 h-4 ml-2" />
+                                        Sign In as Guest
                                     </Button>
                                 </div>
                             </form>
-                            
-                            {(window.location.hostname === 'localhost' || 
-                              window.location.search.includes('bypass') || 
-                              window.location.search.includes('dev')) && (
-                                <QuickBypassPanel onLogin={onLogin} />
-                            )}
                         </div>
 
                         <div className="mt-10 text-center relative z-20">

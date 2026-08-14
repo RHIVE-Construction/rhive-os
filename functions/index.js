@@ -1349,6 +1349,7 @@ exports.syncJustCallContactsAndHistory = functions.https.onRequest((req, res) =>
 });
 
 
+
 /**
  * completePasswordReset
  * POST body: { resetToken, newPassword }
@@ -2215,11 +2216,341 @@ exports.sendPasswordChangeNotification = functions.https.onRequest((req, res) =>
     });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SECURITY EMAIL: sendEmailChangeNotification
-// Called by admin (UserManagement) after changing a user's email address.
-// Sends branded notifications to BOTH the old and new email addresses.
-// ─────────────────────────────────────────────────────────────────────────────
+exports.sendEmailChangeNotification = functions.https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        try {
+            const { oldEmail, newEmail, userName } = req.body;
+            if (!oldEmail && !newEmail) return res.status(400).json({ error: 'oldEmail or newEmail is required' });
+
+            var now = new Date();
+            var dateStr = now.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            var timeStr = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+            var displayName = userName || 'RHIVE User';
+
+            function maskEmail(e) {
+                if (!e) return '';
+                var parts = e.split('@');
+                if (parts.length < 2) return e;
+                var user = parts[0];
+                return user[0] + '*'.repeat(Math.min(user.length - 1, 4)) + '@' + parts[1];
+            }
+
+            function buildEmailHtml(recipientNote, highlightedEmail) {
+                var parts = [
+                    '<!DOCTYPE html><html><head><meta charset="utf-8" /><title>Account Email Updated - RHIVE Construction</title></head>',
+                    '<body style="margin:0;padding:0;background:#050505;font-family:Rubik,Arial,sans-serif;color:#f3f4f6;">',
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;padding:40px 0;"><tr><td align="center">',
+                    '<table width="560" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #374151;border-radius:4px;overflow:hidden;max-width:560px;">',
+                    '<tr><td style="background:#ec028b;padding:4px 0;"></td></tr>',
+                    '<tr><td style="padding:32px 36px 20px;">',
+                    '<h1 style="margin:0 0 4px;font-size:22px;font-weight:800;color:#ffffff;">RHIVE <span style="color:#ec028b;">Construction</span></h1>',
+                    '<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#6b7280;">Security Notification</p>',
+                    '</td></tr><tr><td style="padding:0 36px 32px;">',
+                    '<h2 style="margin:0 0 20px;font-size:18px;font-weight:700;color:#ffffff;">Your Account Email Was Updated</h2>',
+                    '<p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#d1d5db;">Hi <strong style="color:#ffffff;">' + displayName + '</strong>,</p>',
+                    '<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#d1d5db;">' + recipientNote + '</p>',
+                    '<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#9ca3af;">This change occurred on <strong style="color:#f3f4f6;">' + dateStr + '</strong> at <strong style="color:#f3f4f6;">' + timeStr + '</strong>.</p>',
+                ];
+                if (highlightedEmail) {
+                    parts.push(
+                        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #e2ab49;border-radius:0 4px 4px 0;margin-bottom:20px;">',
+                        '<tr><td style="padding:14px 16px;">',
+                        '<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#6b7280;margin-bottom:4px;">Account Email Address</p>',
+                        '<p style="margin:0;font-size:15px;font-weight:700;color:#e2ab49;">' + highlightedEmail + '</p>',
+                        '</td></tr></table>'
+                    );
+                }
+                parts.push(
+                    '<table width="100%" cellpadding="0" cellspacing="0" style="background:#111827;border-left:3px solid #ec028b;border-radius:0 4px 4px 0;margin-bottom:32px;">',
+                    '<tr><td style="padding:14px 16px;">',
+                    '<p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">&#128274; <strong style="color:#f3f4f6;">If you did not authorise this change</strong>, please contact us at <a href="mailto:support@rhiveconstruction.com" style="color:#ec028b;text-decoration:none;">support@rhiveconstruction.com</a>.</p>',
+                    '</td></tr></table>',
+                    '<table cellpadding="0" cellspacing="0" style="margin-bottom:8px;">',
+                    '<tr><td style="background:#ec028b;border-radius:3px;">',
+                    '<a href="https://rhive-os.web.app" style="display:inline-block;padding:14px 28px;color:#ffffff;font-size:13px;font-weight:800;text-decoration:none;letter-spacing:1px;text-transform:uppercase;">Login to Your Account &#x2192;</a>',
+                    '</td></tr></table>',
+                    '</td></tr>',
+                    '<tr><td style="padding:20px 36px;border-top:1px solid #1f2937;">',
+                    '<p style="margin:0;font-size:11px;color:#4b5563;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia</p>',
+                    '</td></tr>',
+                    '<tr><td style="background:#ec028b;padding:2px 0;"></td></tr>',
+                    '</table></td></tr></table></body></html>'
+                );
+                return parts.join('');
+            }
+
+            var emailTasks = [];
+
+            if (oldEmail) {
+                emailTasks.push(admin.firestore().collection('mail').add({
+                    to: oldEmail,
+                    from: 'RHIVE Construction <support@rhiveconstruction.com>',
+                    message: {
+                        subject: 'Security Alert: Your Account Email Was Updated - RHIVE Construction',
+                        text: 'Hi ' + displayName + ',\n\nYour account login email has been changed.\nNew email: ' + (newEmail || 'updated') + '\nOccurred: ' + dateStr + ' at ' + timeStr + '\n\nNot you? Contact: support@rhiveconstruction.com\n\n- RHIVE Construction',
+                        html: buildEmailHtml('The login email on your RHIVE Construction account has been updated by an administrator.', newEmail ? maskEmail(newEmail) : null)
+                    },
+                    createdAt: admin.firestore.FieldValue.serverTimestamp()
+                }));
+            }
+
+            if (newEmail) {
+                emailTasks.push(admin.firestore().collection('mail').add({
+                    to: newEmail,
+                    from: 'RHIVE Construction <support@rhiveconstruction.com>',
+                    message: {
+                        subject: 'Security Alert: Your Account Email Was Updated - RHIVE Construction',
+                        text: 'Hi ' + displayName + ',\n\nThis address is now the login email for your RHIVE Construction account.\nOccurred: ' + dateStr + ' at ' + timeStr + '\n\nNot you? Contact: support@rhiveconstruction.com\n\n- RHIVE Construction',
+                        html: buildEmailHtml('This email address has been set as the login email for your RHIVE Construction account.', newEmail)
+                    },
+                    createdAt: admin.firestore.FieldValue.serverTimestamp()
+                }));
+            }
+
+            await Promise.all(emailTasks);
+            return res.status(200).json({ success: true, notified: emailTasks.length });
+        } catch (error) {
+            console.error('[sendEmailChangeNotification]', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+exports.consolidateEllieSkinner = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        try {
+            const db = admin.firestore();
+            const contactsRef = db.collection('contacts');
+            const snapshot = await contactsRef.get();
+            
+            let ellieDocs = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const fullName = `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.name || '';
+                const phone = String(data.phone || data.mobile || '').replace(/\D/g, '');
+                if ((fullName.toLowerCase().includes('ellie') && fullName.toLowerCase().includes('skinner')) || phone.endsWith('8012016287')) {
+                    ellieDocs.push({ id: doc.id, ...data });
+                }
+            });
+
+            if (ellieDocs.length < 2) {
+                return res.status(200).json({ success: true, message: `Found only ${ellieDocs.length} Ellie Skinner contacts. No consolidation needed.`, contacts: ellieDocs });
+            }
+
+            // Determine Master (keep the one with a valid email and tags)
+            ellieDocs.sort((a, b) => {
+                const aHasEmail = a.email && a.email.includes('@');
+                const bHasEmail = b.email && b.email.includes('@');
+                if (aHasEmail && !bHasEmail) return -1;
+                if (!aHasEmail && bHasEmail) return 1;
+                return 0;
+            });
+
+            const master = ellieDocs[0];
+            const duplicates = ellieDocs.slice(1);
+
+            const results = {
+                masterId: master.id,
+                masterName: `${master.first_name || ''} ${master.last_name || ''}`.trim(),
+                masterPhone: master.phone,
+                duplicatesRemoved: [],
+                updates: []
+            };
+
+            // Merge details from duplicates into master
+            const updatedFields = {};
+            duplicates.forEach(dup => {
+                if (!master.address && dup.address) {
+                    updatedFields.address = dup.address;
+                    master.address = dup.address;
+                }
+                if (!master.company && dup.email && !dup.email.includes('@')) {
+                    updatedFields.company = dup.email;
+                    master.company = dup.email;
+                }
+                const masterTags = master.tags || [];
+                const dupTags = dup.tags || [];
+                if (dup._source === 'justcall-sync' && !masterTags.includes('Imported')) {
+                    masterTags.push('Imported');
+                }
+                dupTags.forEach(t => {
+                    if (!masterTags.includes(t)) masterTags.push(t);
+                });
+                updatedFields.tags = masterTags;
+            });
+
+            if (Object.keys(updatedFields).length > 0) {
+                await contactsRef.doc(master.id).update(updatedFields);
+            }
+
+            // Update references in other collections
+            const collections = ['leads', 'projects', 'properties', 'sms_logs', 'call_logs', 'proposals', 'user_log'];
+            for (const colName of collections) {
+                const colRef = db.collection(colName);
+                const fieldsToCheck = ['contactId', 'customerId', 'userId', 'ownerId', 'primaryContactId'];
+                
+                for (const field of fieldsToCheck) {
+                    for (const dup of duplicates) {
+                        const snap = await colRef.where(field, '==', dup.id).get();
+                        for (const doc of snap.docs) {
+                            await colRef.doc(doc.id).update({ [field]: master.id });
+                            results.updates.push({ collection: colName, docId: doc.id, field, oldVal: dup.id, newVal: master.id });
+                        }
+                    }
+                }
+            }
+
+            // Delete the duplicate contacts
+            for (const dup of duplicates) {
+                await contactsRef.doc(dup.id).delete();
+                results.duplicatesRemoved.push({ id: dup.id, name: `${dup.first_name || ''} ${dup.last_name || ''}`.trim(), phone: dup.phone });
+            }
+
+            return res.status(200).json({ success: true, message: "Consolidation complete!", results });
+
+        } catch (error) {
+            console.error("Error in consolidateEllieSkinner:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+exports.consolidateAllContacts = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        try {
+            const db = admin.firestore();
+            const contactsRef = db.collection('contacts');
+            const snapshot = await contactsRef.get();
+
+            // Group contacts by last 10 digits
+            const groups = {};
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const cleanPhone = String(data.phone || data.mobile || '').replace(/\D/g, '');
+                const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
+                if (!last10 || last10.length < 10) return; // Skip invalid numbers
+
+                if (!groups[last10]) groups[last10] = [];
+                groups[last10].push({ id: doc.id, ...data });
+            });
+
+            const results = {
+                totalGroupsAnalyzed: Object.keys(groups).length,
+                duplicatesMergedCount: 0,
+                details: []
+            };
+
+            const collections = ['leads', 'projects', 'properties', 'sms_logs', 'call_logs', 'proposals', 'user_log'];
+            const fieldsToCheck = ['contactId', 'customerId', 'userId', 'ownerId', 'primaryContactId'];
+
+            for (const last10 of Object.keys(groups)) {
+                const list = groups[last10];
+                if (list.length < 2) continue; // No duplicates for this number
+
+                // Score contacts to determine the master (higher score is better)
+                const scoreContact = (c) => {
+                    let score = 0;
+                    if (c.email && c.email.includes('@') && !c.email.includes('@justcall.io')) score += 10;
+                    if (c.tags && c.tags.length > 0) score += 5;
+                    if (c.address && c.address !== 'Unknown Address' && c.address.length > 5) score += 3;
+                    if (c.role && c.role !== 'Property Owner') score += 2;
+                    if (c.created_at) score += 1;
+                    return score;
+                };
+
+                list.sort((a, b) => scoreContact(b) - scoreContact(a));
+                const master = list[0];
+                const duplicates = list.slice(1);
+
+                const mergeRecord = {
+                    phoneKey: last10,
+                    masterId: master.id,
+                    masterName: `${master.first_name || ''} ${master.last_name || ''}`.trim(),
+                    masterEmail: master.email,
+                    duplicatesCleaned: [],
+                    fieldsMerged: {},
+                    referencesUpdated: []
+                };
+
+                // Merge details
+                const updatedFields = {};
+                duplicates.forEach(dup => {
+                    if (!master.address && dup.address) {
+                        updatedFields.address = dup.address;
+                        master.address = dup.address;
+                        mergeRecord.fieldsMerged.address = dup.address;
+                    }
+                    if (!master.email && dup.email) {
+                        updatedFields.email = dup.email;
+                        master.email = dup.email;
+                        mergeRecord.fieldsMerged.email = dup.email;
+                    }
+                    const masterTags = master.tags || [];
+                    const dupTags = dup.tags || [];
+                    let tagsChanged = false;
+                    
+                    if (dup._source === 'justcall-sync' && !masterTags.includes('Imported')) {
+                        masterTags.push('Imported');
+                        tagsChanged = true;
+                    }
+                    dupTags.forEach(t => {
+                        if (!masterTags.includes(t)) {
+                            masterTags.push(t);
+                            tagsChanged = true;
+                        }
+                    });
+                    if (tagsChanged) {
+                        updatedFields.tags = masterTags;
+                        mergeRecord.fieldsMerged.tags = masterTags;
+                    }
+                });
+
+                if (Object.keys(updatedFields).length > 0) {
+                    await contactsRef.doc(master.id).update(updatedFields);
+                }
+
+                // Update references in other collections
+                for (const colName of collections) {
+                    const colRef = db.collection(colName);
+                    for (const field of fieldsToCheck) {
+                        for (const dup of duplicates) {
+                            const snap = await colRef.where(field, '==', dup.id).get();
+                            for (const doc of snap.docs) {
+                                await colRef.doc(doc.id).update({ [field]: master.id });
+                                mergeRecord.referencesUpdated.push({
+                                    collection: colName,
+                                    docId: doc.id,
+                                    field,
+                                    oldVal: dup.id,
+                                    newVal: master.id
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // Delete the duplicate contacts
+                for (const dup of duplicates) {
+                    await contactsRef.doc(dup.id).delete();
+                    mergeRecord.duplicatesCleaned.push({
+                        id: dup.id,
+                        name: `${dup.first_name || ''} ${dup.last_name || ''}`.trim()
+                    });
+                    results.duplicatesMergedCount++;
+                }
+
+                results.details.push(mergeRecord);
+            }
+
+            return res.status(200).json({ success: true, message: `Successfully scanned and merged duplicates.`, results });
+
+        } catch (error) {
+            console.error("Error in consolidateAllContacts:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
 
 exports.sendEmailChangeNotification = functions.https.onRequest((req, res) => {
     cors(req, res, async () => {

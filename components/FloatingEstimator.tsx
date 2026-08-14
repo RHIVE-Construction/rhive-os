@@ -18,6 +18,9 @@ import {
     Bot
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { generateMockBuildingData } from '../lib/mockData';
+import { usePricing } from '../contexts/PricingContext';
+import type { Place, BuildingData } from '../types';
 
 type Step = 'address' | 'specs' | 'lead' | 'result' | 'chat';
 
@@ -29,9 +32,115 @@ export const FloatingEstimator: React.FC = () => {
     const [activeProtocol, setActiveProtocol] = useState<string | null>(null);
     const [isVisible, setIsVisible] = useState(true);
 
+    // Dynamic Estimation States
+    const [placeCoords, setPlaceCoords] = useState<Place | null>(null);
+    const [buildingData, setBuildingData] = useState<BuildingData | null>(null);
+    const [shingleProfile, setShingleProfile] = useState<'Duration' | 'Designer' | 'Metal' | 'Slate'>('Duration');
+    const [pitch, setPitch] = useState<'Low' | 'Medium' | 'Steep'>('Medium');
+    const [priceRange, setPriceRange] = useState<{ low: number; high: number } | null>(null);
+
+    const { pricing } = usePricing();
+
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<any>(null);
     const isApiReady = useGoogleMapsApi();
+
+    const calculateBallparkRange = (bldgData: BuildingData, selectedProf: string, selectedPitch: string) => {
+        if (!bldgData || !pricing) return;
+
+        let totalSq = 0;
+        const SQ_METERS_TO_SQ_FEET = 10.7639;
+        const SQ_FEET_PER_SQUARE = 100;
+
+        bldgData.buildings.forEach(b => {
+            let bldgSq = 0;
+            b.facets.forEach(f => {
+                bldgSq += f.areaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
+            });
+            if (b.isOverridden && b.overrideSq !== undefined) {
+                bldgSq = b.overrideSq;
+            }
+            totalSq += bldgSq;
+        });
+
+        if (totalSq <= 0) {
+            totalSq = 30; // Fallback standard squares
+        }
+
+        const pitchKey = selectedPitch === 'Low' ? '4' : (selectedPitch === 'Steep' ? '10' : '6');
+        const pitchRates = pricing.costPerSqByPitch[pitchKey] || pricing.costPerSqByPitch['6'];
+        let ratePerSq = pitchRates.materials + pitchRates.labor + pitchRates.overhead;
+
+        if (selectedProf === 'Designer') {
+            ratePerSq += pricing.upgrades['GAF Grand Sequoia®'] || 35;
+        } else if (selectedProf === 'Metal') {
+            ratePerSq += 600; // Metal premium
+        } else if (selectedProf === 'Slate') {
+            ratePerSq += 1000; // Slate premium
+        }
+
+        const baseCost = ratePerSq * totalSq;
+        // Apply 15% platform margin
+        const retailPrice = baseCost / (1 - 0.15);
+
+        // Apply 10% RPSP Efficiency Credit
+        const finalPrice = retailPrice * 0.90;
+
+        // Generate range
+        const low = Math.round(finalPrice * 0.95);
+        const high = Math.round(finalPrice * 1.05);
+
+        setPriceRange({ low, high });
+    };
+
+    const fetchBuildingAndProceed = (place: Place) => {
+        const bData = generateMockBuildingData(place);
+        setBuildingData(bData);
+        setStep('specs');
+    };
+
+    const handleInitializeAnalysis = () => {
+        if (!address) return;
+
+        if (!placeCoords && window.google?.maps?.Geocoder) {
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode({ address: address }, (results: any, status: any) => {
+                if (status === 'OK' && results[0] && results[0].geometry) {
+                    const loc = results[0].geometry.location;
+                    const resolvedPlace = {
+                        address: results[0].formatted_address || address,
+                        latitude: loc.lat(),
+                        longitude: loc.lng()
+                    };
+                    setPlaceCoords(resolvedPlace);
+                    setAddress(results[0].formatted_address || address);
+                    fetchBuildingAndProceed(resolvedPlace);
+                } else {
+                    const fallbackPlace = {
+                        address: address,
+                        latitude: 40.7608,
+                        longitude: -111.8910
+                    };
+                    setPlaceCoords(fallbackPlace);
+                    fetchBuildingAndProceed(fallbackPlace);
+                }
+            });
+        } else {
+            const placeToUse = placeCoords || {
+                address: address,
+                latitude: 40.7608,
+                longitude: -111.8910
+            };
+            fetchBuildingAndProceed(placeToUse);
+        }
+    };
+
+    const handleGenerateRange = () => {
+        if (buildingData) {
+            calculateBallparkRange(buildingData, shingleProfile, pitch);
+        }
+        setStep('lead');
+    };
 
     useEffect(() => {
         const isHomepage = ['P-00', 'P-00-V2', 'P-00-V3', 'P-Landing'].includes(activePageId);
@@ -74,10 +183,52 @@ export const FloatingEstimator: React.FC = () => {
             setActiveProtocol(e.detail?.protocol || null);
             setIsOpen(true);
             if (e.detail?.address) {
-                setAddress(e.detail.address);
-                setStep('specs');
+                const addr = e.detail.address;
+                setAddress(addr);
+                // Attempt geocode immediately if geocoder is available
+                if (window.google?.maps?.Geocoder) {
+                    const geocoder = new window.google.maps.Geocoder();
+                    geocoder.geocode({ address: addr }, (results: any, status: any) => {
+                        if (status === 'OK' && results[0] && results[0].geometry) {
+                            const loc = results[0].geometry.location;
+                            const resolvedPlace = {
+                                address: results[0].formatted_address || addr,
+                                latitude: loc.lat(),
+                                longitude: loc.lng()
+                            };
+                            setPlaceCoords(resolvedPlace);
+                            setAddress(results[0].formatted_address || addr);
+                            const bData = generateMockBuildingData(resolvedPlace);
+                            setBuildingData(bData);
+                            setStep('specs');
+                        } else {
+                            const fallbackPlace = {
+                                address: addr,
+                                latitude: 40.7608,
+                                longitude: -111.8910
+                            };
+                            setPlaceCoords(fallbackPlace);
+                            const bData = generateMockBuildingData(fallbackPlace);
+                            setBuildingData(bData);
+                            setStep('specs');
+                        }
+                    });
+                } else {
+                    const fallbackPlace = {
+                        address: addr,
+                        latitude: 40.7608,
+                        longitude: -111.8910
+                    };
+                    setPlaceCoords(fallbackPlace);
+                    const bData = generateMockBuildingData(fallbackPlace);
+                    setBuildingData(bData);
+                    setStep('specs');
+                }
             } else {
                 setAddress('');
+                setPlaceCoords(null);
+                setBuildingData(null);
+                setPriceRange(null);
                 setStep('address');
             }
         };
@@ -98,13 +249,20 @@ export const FloatingEstimator: React.FC = () => {
 
         const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
             types: ['address'],
-            fields: ['formatted_address'],
+            fields: ['formatted_address', 'geometry'],
             componentRestrictions: { country: 'us' }
         });
 
         autocomplete.addListener('place_changed', () => {
             const place = autocomplete.getPlace();
-            if (place.formatted_address) {
+            if (place.formatted_address && place.geometry && place.geometry.location) {
+                setAddress(place.formatted_address);
+                setPlaceCoords({
+                    address: place.formatted_address,
+                    latitude: place.geometry.location.lat(),
+                    longitude: place.geometry.location.lng()
+                });
+            } else if (place.formatted_address) {
                 setAddress(place.formatted_address);
             } else if (inputRef.current) {
                 setAddress(inputRef.current.value);
@@ -134,7 +292,12 @@ export const FloatingEstimator: React.FC = () => {
 
     const toggleDrawer = () => {
         setIsOpen(!isOpen);
-        if (!isOpen) setStep('address');
+        if (!isOpen) {
+            setStep('address');
+            setPlaceCoords(null);
+            setBuildingData(null);
+            setPriceRange(null);
+        }
     };
 
     return (
@@ -340,7 +503,7 @@ export const FloatingEstimator: React.FC = () => {
                                     </div>
 
                                     <button
-                                        onClick={() => setStep('specs')}
+                                        onClick={handleInitializeAnalysis}
                                         disabled={!address}
                                         className="w-full btn-tech py-6 text-base shadow-pink-glow disabled:opacity-20 disabled:grayscale transition-all"
                                     >
@@ -361,7 +524,14 @@ export const FloatingEstimator: React.FC = () => {
                                             <label className="text-base font-black uppercase tracking-widest opacity-50">Shingle Profile</label>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {['Duration', 'Designer', 'Metal', 'Slate'].map(s => (
-                                                    <button key={s} className="p-4 glass-dark border-white/5 text-base font-black uppercase tracking-widest hover:border-rhive-pink transition-all">
+                                                    <button 
+                                                        key={s} 
+                                                        onClick={() => setShingleProfile(s as any)}
+                                                        className={cn(
+                                                            "p-4 glass-dark text-base font-black uppercase tracking-widest transition-all",
+                                                            shingleProfile === s ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                                        )}
+                                                    >
                                                         {s}
                                                     </button>
                                                 ))}
@@ -372,7 +542,14 @@ export const FloatingEstimator: React.FC = () => {
                                             <label className="text-base font-black uppercase tracking-widest opacity-50">Pitch Assessment</label>
                                             <div className="grid grid-cols-3 gap-3">
                                                 {['Low', 'Medium', 'Steep'].map(p => (
-                                                    <button key={p} className="p-3 glass-dark border-white/5 text-base font-black uppercase tracking-widest hover:border-rhive-pink transition-all">
+                                                    <button 
+                                                        key={p} 
+                                                        onClick={() => setPitch(p as any)}
+                                                        className={cn(
+                                                            "p-3 glass-dark text-base font-black uppercase tracking-widest transition-all",
+                                                            pitch === p ? "border-rhive-pink bg-rhive-pink/10 text-white shadow-pink-glow-sm" : "border-white/5 text-[var(--rhive-text-muted)] hover:border-rhive-pink"
+                                                        )}
+                                                    >
                                                         {p}
                                                     </button>
                                                 ))}
@@ -381,7 +558,7 @@ export const FloatingEstimator: React.FC = () => {
                                     </div>
 
                                     <button
-                                        onClick={() => setStep('lead')}
+                                        onClick={handleGenerateRange}
                                         className="w-full btn-tech py-6 text-base shadow-pink-glow"
                                     >
                                         Generate Range
@@ -432,7 +609,10 @@ export const FloatingEstimator: React.FC = () => {
                                         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent" />
                                         <span className="text-base font-black uppercase tracking-widest opacity-40 mb-4 block">Calculated Result Range</span>
                                         <div className="text-6xl font-black tracking-tighter text-white mb-2">
-                                            $14.2K - $16.8K
+                                            {priceRange 
+                                                ? `$${(priceRange.low / 1000).toFixed(1)}K - $${(priceRange.high / 1000).toFixed(1)}K`
+                                                : "$14.2K - $16.8K"
+                                            }
                                         </div>
                                         <div className="text-rhive-pink text-base font-bold uppercase tracking-widest">Includes 10% RPSP Efficiency Credit</div>
                                     </div>

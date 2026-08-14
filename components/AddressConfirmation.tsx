@@ -42,6 +42,9 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
   const streetViewRef = useRef<HTMLDivElement>(null);
   const panoramaRef = useRef<any>(null);
   const [isStreetViewAvailable, setIsStreetViewAvailable] = useState(true);
+  
+  // Feature flag to control "+ Tag Another Building" visibility
+  const SHOW_TAG_ANOTHER_BUILDING_FEATURE = false;
 
   // Interactive Maps and Pin Drop states
   const isApiReady = useGoogleMapsApi();
@@ -194,24 +197,16 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
   useEffect(() => {
     if (!isApiReady || !mapRef.current || map) return;
 
-    const initialMapType = hasAnimatedRef.current ? 'satellite' : 'roadmap';
     const mapInstance = new window.google.maps.Map(mapRef.current, {
       center: { lat: place.latitude, lng: place.longitude },
       zoom: 20,
-      mapTypeId: initialMapType,
+      mapTypeId: 'satellite',
       disableDefaultUI: true,
       zoomControl: true,
       tilt: 0,
     });
 
     setMap(mapInstance);
-
-    if (!hasAnimatedRef.current) {
-      const timer = setTimeout(() => {
-        mapInstance.setMapTypeId('satellite');
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
   }, [isApiReady, place.latitude, place.longitude, map]);
 
   // 2. Set Map Cursor Style in Pin Dropping and Polygon Drawing Modes
@@ -646,7 +641,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
     markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
 
-    // Redraw markers
+    // Redraw building markers
     buildingData.buildings.forEach((building, idx) => {
       const isIncluded = surveyState.includedBuildingIds.includes(building.id);
       const isFocused = building.id === focusedBuildingId;
@@ -716,8 +711,14 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
         }
         return;
       }
-      
       const vertices = building.polygonVertices || [];
+      if (vertices.length === 0) {
+        if (poly) {
+          poly.setMap(null);
+          gPolygonsMapRef.current.delete(building.id);
+        }
+        return;
+      }
 
       const pathCoords = vertices.map(v => new window.google.maps.LatLng(v.lat, v.lng));
 
@@ -1077,23 +1078,31 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                     <div className="border-t border-gray-800/80 pt-4">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-lg font-medium text-gray-300">Buildings on Property</h3>
-                            <button
-                                onClick={() => {
-                                    setView('satellite');
-                                    setIsAddingPin(true);
-                                }}
-                                className="inline-flex items-center text-sm font-semibold text-pink-400 hover:text-pink-300 transition-colors gap-1 px-3 py-1.5 rounded bg-pink-500/10 border border-pink-500/20 hover:bg-pink-500/20"
-                            >
-                                <PlusIcon className="h-4 w-4" />
-                                <span>Tag Another Building</span>
-                            </button>
+                            {SHOW_TAG_ANOTHER_BUILDING_FEATURE && (
+                                <button
+                                    onClick={() => {
+                                        setView('satellite');
+                                        setIsAddingPin(true);
+                                    }}
+                                    className="inline-flex items-center text-sm font-semibold text-pink-400 hover:text-pink-300 transition-colors gap-1 px-3 py-1.5 rounded bg-pink-500/10 border border-pink-500/20 hover:bg-pink-500/20"
+                                >
+                                    <PlusIcon className="h-4 w-4" />
+                                    <span>Tag Another Building</span>
+                                </button>
+                            )}
                         </div>
 
                         {/* List of buildings */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {buildingData?.buildings.map((building, idx) => {
                                 const isIncluded = surveyState.includedBuildingIds.includes(building.id);
-                                const sqValue = (building.totalAreaMeters * 10.7639 / 100).toFixed(2);
+                                const totalArea = (building.facets && building.facets.length > 0)
+                                    ? building.facets.reduce((sum, f) => sum + f.areaMeters, 0)
+                                    : building.totalAreaMeters;
+                                const hasValue = building.isOverridden || totalArea > 0;
+                                const sqValue = hasValue 
+                                    ? (totalArea * 10.7639 / 100).toFixed(2)
+                                    : "";
                                 const isCustom = building.id.startsWith('BLD_') && building.id !== 'BLD_1';
                                 const isFocused = building.id === focusedBuildingId;
                                 
@@ -1172,6 +1181,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                                                 <Switch 
                                                     checked={isIncluded} 
                                                     onCheckedChange={() => handleBuildingToggle(building.id)} 
+                                                    aria-label={`Toggle inclusion of building ${idx + 1}`}
                                                 />
                                             </div>
                                         </div>
@@ -1184,7 +1194,13 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                                                 )}>
                                                     {building.isOverridden 
                                                         ? "Manual SQ Override" 
-                                                        : (isFocused ? (isDrawingOutline ? "Drawing Mode" : "Editing Outline") : "Click to Edit Outline")}
+                                                        : (isFocused 
+                                                            ? (isDrawingOutline 
+                                                                ? "Drawing Mode" 
+                                                                : ((building.polygonVertices && building.polygonVertices.length > 0) 
+                                                                    ? "Editing Outline" 
+                                                                    : "No Outline Drawn")) 
+                                                            : "Click to Edit Outline")}
                                                 </span>
                                                 {(isFocused || building.isOverridden) && (
                                                     <button
@@ -1194,7 +1210,11 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                                                     >
                                                         {building.isOverridden
                                                             ? "Clear Override & Redraw"
-                                                            : (isDrawingOutline ? "Cancel Drawing" : "Clear & Redraw Outline")}
+                                                            : (isDrawingOutline 
+                                                                ? "Cancel Drawing" 
+                                                                : ((building.polygonVertices && building.polygonVertices.length > 0) 
+                                                                    ? "Clear & Redraw Outline" 
+                                                                    : "Draw Outline"))}
                                                     </button>
                                                 )}
                                             </div>

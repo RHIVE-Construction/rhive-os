@@ -382,6 +382,9 @@ const getStaticMapUrl = (
                         <DetailItem label="Shingle Color:" value={surveyState?.shingleColor ?? ''} />
                         <DetailItem label="Heat Trace System:" value={surveyState?.heatTrace?.enabled ? `Included (${formatCurrency(calcResult?.heatTraceEstimate?.total ?? 0)})` : 'Not Included'} />
                         <DetailItem label="Gutter System:" value={surveyState?.gutters?.enabled ? `${surveyState?.gutters?.size ?? ''} ${surveyState?.gutters?.style ?? ''}` : 'Not Included'} />
+                        {surveyState?.flatRoofFeatures?.parapetSq ? <DetailItem label="Parapet Wall Area:" value={`${surveyState.flatRoofFeatures.parapetSq.toFixed(2)} SQ`} /> : null}
+                        {surveyState?.flatRoofFeatures?.roofCurbSmall ? <DetailItem label="Roof Curb (Small):" value={surveyState.flatRoofFeatures.roofCurbSmall.toString()} /> : null}
+                        {surveyState?.flatRoofFeatures?.roofCurbLarge ? <DetailItem label="Roof Curb (Large):" value={surveyState.flatRoofFeatures.roofCurbLarge.toString()} /> : null}
                     </div>
                 </div>
 

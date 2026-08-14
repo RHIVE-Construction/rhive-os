@@ -25,7 +25,7 @@ const EstimateToolPublicPage: React.FC = () => {
     };
 
     return (
-        <div className="h-full w-full bg-black relative z-20">
+        <div className="h-full w-full bg-transparent relative z-20">
             <EstimateErrorBoundary onReset={handleClose}>
                 <EstimatorFlow onClose={handleClose} />
             </EstimateErrorBoundary>

@@ -138,6 +138,13 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
         }));
     };
 
+    const hasFlatRoof = buildingData.buildings
+        .filter(b => surveyState.includedBuildingIds.includes(b.id))
+        .some(b => b.facets.some(facet => {
+            const pitchIn12 = Math.round(12 * Math.tan(facet.pitchDegrees * Math.PI / 180));
+            return pitchIn12 < 3 && facet.areaMeters > 0;
+        }));
+
     return (
         <TooltipProvider>
             <div className="relative h-screen w-screen flex flex-col bg-black">
@@ -261,11 +268,78 @@ export const RoofOptions: React.FC<RoofOptionsProps> = ({
                                             ))}
                                         </div>
                                     </div>
+
+                                    {hasFlatRoof && (
+                                        <div className="border-t border-gray-800 pt-6">
+                                            <div className="flex justify-between items-end mb-3">
+                                                <label className="font-medium text-pink-400 uppercase tracking-wider text-xs">Flat Roof Features (0/12 - 2/12 Pitch):</label>
+                                            </div>
+                                            <div className="space-y-4">
+                                                {/* Roof curb (Small) */}
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-300">Roof curb (Small)</span>
+                                                    <QuantitySelector
+                                                        value={surveyState.flatRoofFeatures?.roofCurbSmall || 0}
+                                                        onChange={(value) => onSurveyChange(prev => ({
+                                                            ...prev,
+                                                            flatRoofFeatures: {
+                                                                ...(prev.flatRoofFeatures || { roofCurbSmall: 0, roofCurbLarge: 0, parapetSq: 0 }),
+                                                                roofCurbSmall: value
+                                                            }
+                                                        }))}
+                                                    />
+                                                </div>
+
+                                                {/* Roof curb (Large) */}
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-300">Roof curb (Large)</span>
+                                                    <QuantitySelector
+                                                        value={surveyState.flatRoofFeatures?.roofCurbLarge || 0}
+                                                        onChange={(value) => onSurveyChange(prev => ({
+                                                            ...prev,
+                                                            flatRoofFeatures: {
+                                                                ...(prev.flatRoofFeatures || { roofCurbSmall: 0, roofCurbLarge: 0, parapetSq: 0 }),
+                                                                roofCurbLarge: value
+                                                            }
+                                                        }))}
+                                                    />
+                                                </div>
+
+                                                {/* Parapet SQ */}
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-300">Parapet SQ</span>
+                                                    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                                                        <input
+                                                            type="text"
+                                                            value={surveyState.flatRoofFeatures?.parapetSq !== undefined && surveyState.flatRoofFeatures?.parapetSq !== 0 ? surveyState.flatRoofFeatures.parapetSq.toString() : ""}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                const numVal = parseFloat(val);
+                                                                onSurveyChange(prev => ({
+                                                                    ...prev,
+                                                                    flatRoofFeatures: { 
+                                                                        ...(prev.flatRoofFeatures || { roofCurbSmall: 0, roofCurbLarge: 0, parapetSq: 0 }),
+                                                                        parapetSq: isNaN(numVal) ? 0 : numVal 
+                                                                    }
+                                                                }));
+                                                            }}
+                                                            placeholder="0.00"
+                                                            className="w-16 h-8 text-xs bg-[#1a1a1a] border border-gray-700 text-pink-400 font-semibold font-mono rounded text-center px-1 focus:outline-none focus:border-pink-500 focus:shadow-[0_0_8px_rgba(236,2,139,0.35)] focus:ring-0 transition-all duration-200"
+                                                        />
+                                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">SQ</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="mt-8 text-center">
+                        <div className="mt-8 flex justify-center items-center space-x-4">
+                            <Button size="lg" variant="secondary" onClick={onBack}>
+                                Back
+                            </Button>
                             <Button size="lg" onClick={onContinue}>
                                 Continue
                             </Button>

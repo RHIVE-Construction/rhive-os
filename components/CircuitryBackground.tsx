@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 interface Dot {
   x: number;
@@ -16,6 +16,8 @@ interface PlexusShapeProps {
   density?: number;
 }
 
+let backgroundInstances: (() => void)[] = [];
+
 export const CircuitryBackground: React.FC<PlexusShapeProps> = ({
   backgroundColor = "#000000",
   dotColor = "#ec028b",
@@ -27,8 +29,28 @@ export const CircuitryBackground: React.FC<PlexusShapeProps> = ({
   const animationFrameId = useRef<number>(undefined);
   const dots = useRef<Dot[]>([]);
   const mouse = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
+  const [, forceUpdate] = useState({});
+
+  const updateFnRef = useRef<(() => void) | null>(null);
+  if (!updateFnRef.current) {
+    updateFnRef.current = () => forceUpdate({});
+  }
 
   useEffect(() => {
+    backgroundInstances.push(updateFnRef.current);
+    forceUpdate({});
+    return () => {
+      backgroundInstances = backgroundInstances.filter(i => i !== updateFnRef.current);
+      if (backgroundInstances.length > 0) {
+        backgroundInstances[0]();
+      }
+    };
+  }, []);
+
+  const isPrimary = backgroundInstances[0] === updateFnRef.current;
+
+  useEffect(() => {
+    if (!isPrimary) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -142,7 +164,9 @@ export const CircuitryBackground: React.FC<PlexusShapeProps> = ({
       window.removeEventListener('mouseleave', handleMouseLeave);
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, [backgroundColor, dotColor, lineColor, density]);
+  }, [backgroundColor, dotColor, lineColor, density, isPrimary]);
+
+  if (!isPrimary) return null;
 
   return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-0" />;
 };

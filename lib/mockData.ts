@@ -12,109 +12,7 @@ const pseudoRandom = (seed1: number, seed2: number) => {
 };
 
 export function getInitialPolygonVertices(lat: number, lng: number, address: string, index: number): { lat: number; lng: number }[] {
-  const lower = address.toLowerCase();
-  const isMemorial = lower.includes('memorial') || (Math.abs(lat - 40.571939) < 0.001 && Math.abs(lng - -111.964403) < 0.001);
-  const isNephi = lower.includes('nephi') || (Math.abs(lat - 39.7270586) < 0.005 && Math.abs(lng - -111.8345244) < 0.005);
-  const isEmerson = lower.includes('emerson') || (Math.abs(lat - 40.7376366) < 0.005 && Math.abs(lng - -111.8785726) < 0.005);
-  const isCoachman = lower.includes('coachman') || (Math.abs(lat - 40.612) < 0.01 && Math.abs(lng - -111.815) < 0.01);
-  
-  if (isCoachman && index > 1) {
-    const garageLat = 40.6126116;
-    const garageLng = -111.8222867;
-    const widthMeters = 7.45;
-    const heightMeters = 7.45;
-    const angleDeg = -32.75; // Rotation angle in degrees (counter-clockwise)
-    const theta = angleDeg * Math.PI / 180;
-    
-    const latConv = 111111;
-    const lngConv = 111111 * Math.cos(garageLat * Math.PI / 180);
-    
-    const dx1 = -widthMeters / 2;
-    const dy1 = heightMeters / 2;
-    
-    const dx2 = widthMeters / 2;
-    const dy2 = heightMeters / 2;
-    
-    const dx3 = widthMeters / 2;
-    const dy3 = -heightMeters / 2;
-    
-    const dx4 = -widthMeters / 2;
-    const dy4 = -heightMeters / 2;
-    
-    const rotate = (dx: number, dy: number) => {
-      const rx = dx * Math.cos(theta) - dy * Math.sin(theta);
-      const ry = dx * Math.sin(theta) + dy * Math.cos(theta);
-      return {
-        lat: garageLat + ry / latConv,
-        lng: garageLng + rx / lngConv
-      };
-    };
-    
-    return [
-      rotate(dx1, dy1), // Top-Left
-      rotate(dx2, dy2), // Top-Right
-      rotate(dx3, dy3), // Bottom-Right
-      rotate(dx4, dy4)  // Bottom-Left
-    ];
-  }
-
-  if (index === 1) { // Primary building
-    if (isCoachman) {
-      return [
-        { lat: 40.612622, lng: -111.822180 }, // 1. Top-Left
-        { lat: 40.612622, lng: -111.822005 }, // 2. Top-Notch-Start
-        { lat: 40.612590, lng: -111.822005 }, // 3. Notch-Depth-South
-        { lat: 40.612590, lng: -111.821955 }, // 4. Top-Right
-        { lat: 40.612536, lng: -111.821955 }, // 5. Bottom-Right
-        { lat: 40.612536, lng: -111.822115 }, // 6. Proj-Start
-        { lat: 40.612513, lng: -111.822115 }, // 7. Proj-Bottom-Right
-        { lat: 40.612513, lng: -111.822152 }, // 8. Proj-Bottom-Left
-        { lat: 40.612536, lng: -111.822152 }, // 9. Proj-Top-Left
-        { lat: 40.612536, lng: -111.822180 }  // 10. Bottom-Left
-      ];
-    }
-    if (isMemorial) {
-      return [
-        { lat: lat + 0.00008, lng: lng - 0.00014 },
-        { lat: lat + 0.00008, lng: lng + 0.00014 },
-        { lat: lat - 0.00008, lng: lng + 0.00014 },
-        { lat: lat - 0.00008, lng: lng - 0.00014 },
-      ];
-    }
-    if (isNephi) {
-      // L-shaped roof polygon
-      return [
-        { lat: lat + 0.00008, lng: lng - 0.00010 },
-        { lat: lat + 0.00008, lng: lng + 0.00010 },
-        { lat: lat - 0.00004, lng: lng + 0.00010 },
-        { lat: lat - 0.00004, lng: lng + 0.00002 },
-        { lat: lat - 0.00010, lng: lng + 0.00002 },
-        { lat: lat - 0.00010, lng: lng - 0.00010 },
-      ];
-    }
-    if (isEmerson) {
-      return [
-        { lat: lat + 0.00008, lng: lng - 0.00008 },
-        { lat: lat + 0.00008, lng: lng + 0.00008 },
-        { lat: lat - 0.00008, lng: lng + 0.00008 },
-        { lat: lat - 0.00008, lng: lng - 0.00008 },
-      ];
-    }
-  }
-  
-  // Default box: 16m x 12m for primary (192 sqm), 9m x 7m for secondary outbuildings (63 sqm)
-  const widthMeters = index === 1 ? 16 : 9;
-  const heightMeters = index === 1 ? 12 : 7;
-  
-  const latOffset = (heightMeters / 2) / 111111;
-  const lngOffset = (widthMeters / 2) / (111111 * Math.cos(lat * Math.PI / 180));
-  
-  return [
-    { lat: lat + latOffset, lng: lng - lngOffset },
-    { lat: lat + latOffset, lng: lng + lngOffset },
-    { lat: lat - latOffset, lng: lng + lngOffset },
-    { lat: lat - latOffset, lng: lng - lngOffset },
-  ];
+  return [];
 }
 
 export function generateMockBuildingData(place: Place): BuildingData {
@@ -271,6 +169,24 @@ export function generateMockBuildingData(place: Place): BuildingData {
         polygonVertices: getInitialPolygonVertices(lat, lng, place.address, 1)
       }],
       yearConstructed: 1965,
+    };
+  }
+  if (lowerCaseAddress.includes('tortellini')) {
+    const baseArea = 208.76; // ~22.47 SQ actual 3D area with slope
+    const facets = [
+      { id: 'gen_f1', areaMeters: 104.38, pitchDegrees: 22.62 },
+      { id: 'gen_f2', areaMeters: 104.38, pitchDegrees: 22.62 }
+    ];
+    return {
+      buildings: [{
+        id: 'Main Structure',
+        totalAreaMeters: baseArea,
+        facets: facets,
+        lat,
+        lng,
+        polygonVertices: getInitialPolygonVertices(lat, lng, place.address, 1)
+      }],
+      yearConstructed: 1999
     };
   }
 
@@ -439,8 +355,9 @@ export function buildBuildingFromSolarData(solarData: any, clickedLat: number, c
   const dy4 = -heightMeters / 2;
   
   const rotate = (dx: number, dy: number) => {
-    const rx = dx * Math.cos(theta) - dy * Math.sin(theta);
-    const ry = dx * Math.sin(theta) + dy * Math.cos(theta);
+    // Correct clockwise rotation for maps coordinate system (Y is North, X is East)
+    const rx = dx * Math.cos(theta) + dy * Math.sin(theta);
+    const ry = -dx * Math.sin(theta) + dy * Math.cos(theta);
     return {
       lat: centerLat + ry / latConv,
       lng: centerLng + rx / lngConv
@@ -467,12 +384,14 @@ export function buildBuildingFromSolarData(solarData: any, clickedLat: number, c
         { id: `BLD_${index}_f2`, areaMeters: area / 2, pitchDegrees: 18.43 }
       ];
       
+  const total3DArea = facets.reduce((sum, f) => sum + f.areaMeters, 0);
+
   return {
     id: `BLD_${index}`,
-    totalAreaMeters: area,
+    totalAreaMeters: total3DArea || area,
     facets,
     lat: centerLat,
     lng: centerLng,
-    polygonVertices
+    polygonVertices: []
   };
 }

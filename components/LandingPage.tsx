@@ -16,7 +16,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onPlaceSelected, error
   return (
     <div className="relative h-full w-full flex flex-col justify-center items-center p-4">
       <CircuitryBackground />
-      <RhiveLogo className="absolute top-8 left-8 h-10 z-20" />
+      <button 
+        onClick={() => window.dispatchEvent(new CustomEvent('rhive-reset-estimator'))}
+        className="absolute top-8 left-8 z-20 cursor-pointer focus:outline-none transition-transform hover:scale-105 active:scale-95 bg-transparent border-0 p-0"
+        aria-label="Back to start"
+      >
+        <RhiveLogo className="h-10" />
+      </button>
       <div className="relative z-10 w-full">
         <main className="w-full max-w-4xl text-center mx-auto">
           <h1 className="text-6xl sm:text-7xl md:text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-pink-400 tracking-tighter">

@@ -22,7 +22,7 @@
  * We use it for the area display but derive ground SQ from it for pricing inputs.
  */
 
-import type { BuildingData, RoofFacet, Pricing } from '../types';
+import type { BuildingData, RoofFacet, Pricing, SurveyState } from '../types';
 import { SQ_FEET_PER_SQUARE, SQ_METERS_TO_SQ_FEET } from '../constants';
 import { pricingToSheet, sheetVal, type SpreadsheetState } from './spreadsheetEngine';
 
@@ -219,6 +219,7 @@ export function computeDetailedMeasurements(
   buildingData: BuildingData,
   pricing: Pricing,
   includedBuildingIds?: string[],
+  surveyState?: SurveyState,
 ): DetailedMeasurementReport {
   // Collect facets from included buildings (or all buildings if not specified)
   const buildings = includedBuildingIds && includedBuildingIds.length > 0
@@ -317,30 +318,93 @@ export function computeDetailedMeasurements(
   const tier = classifyRoofTier(allFacets);
   const linear = tierLinear(allFacets, tier);
 
+  // ── Step 6.5: Compute scaling factor if surveyState totalSq is overridden ──
+  let scalingFactor = 1;
+  if (surveyState) {
+    const asphaltRoofingEnabled = surveyState.asphaltRoofingEnabled ?? true;
+    const flatRoofingEnabled = surveyState.flatRoofingEnabled ?? true;
+
+    // Total raw 3D SQ of the scanned buildings
+    let apiTotal3DSqRaw = 0;
+    allFacets.forEach(facet => {
+      const facet3DSq = facet.areaMeters * SQ_METERS_TO_SQ_FEET / SQ_FEET_PER_SQUARE;
+      apiTotal3DSqRaw += facet3DSq;
+    });
+
+    const finalSq = surveyState.totalSq > 0 ? surveyState.totalSq : apiTotal3DSqRaw;
+    scalingFactor = apiTotal3DSqRaw > 0 ? finalSq / apiTotal3DSqRaw : 1;
+  }
+
   // ── Step 7: Full pricing pipeline via spreadsheet engine ──────────────────
   const sheetInputs: Partial<SpreadsheetState> = {};
 
-  // Layer count = 1 (default; caller can override)
-  sheetInputs["B28"] = { value: 1, isEditable: true };
+  // Layer count & features
+  let layersNum = 1;
+  if (surveyState?.roofLayers === '2') layersNum = 2;
+  else if (surveyState?.roofLayers === '3') layersNum = 3;
+  else if (surveyState?.roofLayers === '4') layersNum = 4;
+  else if (surveyState?.roofLayers === 'IDK' || surveyState?.roofLayers === 'Other') layersNum = 3;
 
-  // Pitched facet count → drives waste %
-  sheetInputs["B32"] = { value: pitchedFacets, isEditable: true };
+  const asphaltRoofingEnabled = surveyState?.asphaltRoofingEnabled ?? true;
+  const flatRoofingEnabled = surveyState?.flatRoofingEnabled ?? true;
 
-  // Inject ground SQs per pitch bucket
-  Object.entries(pitchedGroundSQ).forEach(([p, gSQ]) => {
-    const pitchIn12 = Number(p);
-    const cell = PITCH_CELL[pitchIn12];
-    if (cell) sheetInputs[cell] = { value: gSQ, isEditable: true };
-  });
+  const chimneys = surveyState?.roofFeatures?.chimneys || 0;
+  const swampCoolers = surveyState?.roofFeatures?.swampCoolers || 0;
+  const skylights = surveyState?.roofFeatures?.skylights || 0;
 
-  // Flat inputs
-  sheetInputs["F31"] = { value: flatFacets, isEditable: true };
-  Object.entries(flatGroundSQ).forEach(([p, gSQ]) => {
-    const pitchIn12 = Number(p);
-    const cell = FLAT_PITCH_CELL[pitchIn12];
-    if (cell) sheetInputs[cell] = { value: gSQ, isEditable: true };
-  });
-  sheetInputs["F35"] = { value: 0, isEditable: true }; // no parapet by default
+  if (surveyState?.isManualCalculator) {
+    sheetInputs["B28"] = { value: surveyState.roofLayers ? Number(surveyState.roofLayers) || 3 : 3, isEditable: true };
+    sheetInputs["B29"] = { value: chimneys, isEditable: true };
+    sheetInputs["B30"] = { value: swampCoolers, isEditable: true };
+    sheetInputs["B31"] = { value: skylights, isEditable: true };
+    sheetInputs["B32"] = { value: chimneys ? 15 : 15, isEditable: true };
+
+    sheetInputs["F28"] = { value: flatRoofingEnabled ? Number(surveyState.roofLayers) || 3 : 1, isEditable: true };
+    sheetInputs["F29"] = { value: chimneys, isEditable: true };
+    sheetInputs["F30"] = { value: swampCoolers + skylights, isEditable: true };
+    sheetInputs["F31"] = { value: 2, isEditable: true };
+
+    const mPitches = surveyState.manualPitches || {};
+    for (let p = 3; p <= 13; p++) {
+      const cell = PITCH_CELL[p];
+      if (cell) sheetInputs[cell] = { value: mPitches[p.toString()] || 0, isEditable: true };
+    }
+    sheetInputs["B47"] = { value: mPitches['14'] || 0, isEditable: true };
+
+    const mMembrane = surveyState.manualMembranePitches || {};
+    sheetInputs["F32"] = { value: mMembrane['0'] || 0, isEditable: true };
+    sheetInputs["F33"] = { value: mMembrane['1'] || 0, isEditable: true };
+    sheetInputs["F34"] = { value: mMembrane['2'] || 0, isEditable: true };
+    sheetInputs["F35"] = { value: flatRoofingEnabled ? (surveyState.manualMembranePitches?.parapetSq ?? 4.5) : 0, isEditable: true };
+  } else {
+    sheetInputs["B28"] = { value: asphaltRoofingEnabled ? layersNum : 1, isEditable: true };
+    sheetInputs["B29"] = { value: chimneys, isEditable: true };
+    sheetInputs["B30"] = { value: swampCoolers, isEditable: true };
+    sheetInputs["B31"] = { value: skylights, isEditable: true };
+    sheetInputs["B32"] = { value: pitchedFacets, isEditable: true };
+
+    sheetInputs["F28"] = { value: flatRoofingEnabled ? layersNum : 1, isEditable: true };
+    sheetInputs["F29"] = { value: chimneys, isEditable: true };
+    sheetInputs["F30"] = { value: swampCoolers + skylights, isEditable: true };
+    sheetInputs["F31"] = { value: flatFacets, isEditable: true };
+
+    // Inject pitch ground SQs (scaled)
+    Object.entries(pitchedGroundSQ).forEach(([p, gSQ]) => {
+      const pitchIn12 = Number(p);
+      const cell = PITCH_CELL[pitchIn12];
+      if (cell) sheetInputs[cell] = { value: gSQ * scalingFactor, isEditable: true };
+    });
+
+    // Inject Flat Ground SQs (scaled)
+    Object.entries(flatGroundSQ).forEach(([p, gSQ]) => {
+      const pitchIn12 = Number(p);
+      const cell = FLAT_PITCH_CELL[pitchIn12];
+      if (cell) sheetInputs[cell] = { value: gSQ * scalingFactor, isEditable: true };
+    });
+    sheetInputs["F35"] = { value: flatRoofingEnabled ? (surveyState?.flatRoofFeatures?.parapetSq ?? 4.5) : 0, isEditable: true };
+    sheetInputs["F29"] = { value: flatRoofingEnabled ? (surveyState?.flatRoofFeatures?.roofCurbSmall ?? 0) : 0, isEditable: true };
+    sheetInputs["F30"] = { value: flatRoofingEnabled ? (surveyState?.flatRoofFeatures?.roofCurbLarge ?? 0) : 0, isEditable: true };
+  }
 
   const sheet = pricingToSheet(pricing, sheetInputs);
 
@@ -393,12 +457,12 @@ export function computeDetailedMeasurements(
     pitchBuckets,
     pitchedGroundSQ,
     flatGroundSQ,
-    sqRaw:       Math.round(sqRaw * 100) / 100,
-    wastePct,
-    sqLoad:      Math.round(sqLoad * 100) / 100,
-    flatSqRaw:   Math.round(flatSqRaw * 100) / 100,
-    flatWastePct,
-    flatSqLoad:  Math.round(flatSqLoad * 100) / 100,
+    sqRaw:       Math.round(sheetVal(sheet, "B53") * 100) / 100,
+    wastePct:    sheetVal(sheet, "B52"),
+    sqLoad:      Math.round(sheetVal(sheet, "B54") * 100) / 100,
+    flatSqRaw:   Math.round(sheetVal(sheet, "F53") * 100) / 100,
+    flatWastePct: sheetVal(sheet, "F52"),
+    flatSqLoad:  Math.round(sheetVal(sheet, "F54") * 100) / 100,
     linear,
     roofTier: tier,
     pricing: pricingResult,

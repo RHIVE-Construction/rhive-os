@@ -128,9 +128,7 @@ const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 export const passwordResetService = {
     /**
      * Step 1: Request a password reset.
-     * Looks up the user in Firestore, generates a secure token,
-     * stores it in the `passwordResets` collection, then sends the email.
-     * SECURITY: Always returns success to prevent email enumeration.
+     * Looks up user by email and sends a reset link.
      */
     requestReset: async (email: string): Promise<{ success: boolean; error?: string }> => {
         try {
@@ -256,7 +254,6 @@ export const passwordResetService = {
         }
     },
 };
-
 
 export const firestoreService = {
     // This function automatically creates the collection if it doesn't exist
@@ -1031,77 +1028,13 @@ export const userService = {
             if (snapshot.empty) return { success: false, error: 'No user found with this email' };
             return { success: true, data: snapshot.docs.map(mapDoc)[0] };
         } catch (error: any) {
-            console.error('Error in verifyResetToken:', error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    /**
-     * Completes the password reset.
-     *
-     * AUTO-DETECTS token type:
-     *  - JWT token (starts with "eyJ") → from SMS OTP flow → calls completePasswordReset Cloud Function
-     *    which uses Firebase Admin SDK to update the real Firebase Auth password.
-     *  - Firestore token → from email reset flow → updates password_hash on the user document.
-     */
-    completePasswordReset: async (token: string, newPassword: string): Promise<{ success: boolean; error?: string; email?: string }> => {
-        try {
-            const { emailService } = await import('./emailService');
-
-            // ── JWT path (SMS OTP forgot-password flow) ───────────────────────
-            if (token.startsWith('eyJ')) {
-                const res = await fetch(`${FUNCTIONS_BASE_URL}/completePasswordReset`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ resetToken: token, newPassword })
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    return { success: false, error: data.error || `HTTP ${res.status}` };
-                }
-                // Send password-changed confirmation (best-effort — JWT path may not have email)
-                if (data.email) {
-                    emailService.sendPasswordChangedConfirmation(data.email).catch(() => {});
-                }
-                return { success: true, email: data.email };
-            }
-
-            // ── Firestore token path (email reset flow) ───────────────────────
-            // 1. Verify token and get userId + email directly
-            const verification = await passwordResetService.verifyToken(token);
-            if (!verification.success || !verification.userId) {
-                return { success: false, error: verification.error || 'Token verification failed.' };
-            }
-
-            // 2. Hash the new password
-            const passwordHash = await hashPassword(newPassword);
-
-            // 3. Update password_hash and clear reset token fields on the user document
-            const updateResult = await userService.update(verification.userId, {
-                password_hash: passwordHash,
-                reset_token: null,
-                reset_token_expiry: null,
-                updated_at: new Date().toISOString()
-            });
-
-            if (!updateResult.success) {
-                return { success: false, error: updateResult.error || 'Failed to update password.' };
-            }
-
-            // 4. Send password-changed security confirmation email
-            if (verification.email) {
-                emailService.sendPasswordChangedConfirmation(verification.email).catch((err: any) => {
-                    console.error('[passwordResetService] Failed to send confirmation email:', err);
-                });
-            }
-
-            return { success: true, email: verification.email };
-        } catch (error: any) {
-            console.error('Error in completePasswordReset:', error);
             return { success: false, error: error.message };
         }
     }
 };
+
+
+
 
 export const dashboardService = {
     getStats: async () => {

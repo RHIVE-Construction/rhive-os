@@ -10,9 +10,19 @@ interface MeasurementPageProps {
   onLengthChange: (length: number) => void;
   onDone: () => void;
   onStartOver: () => void;
+  initialPaths?: { lat: number; lng: number }[][];
+  onPathsChange?: (paths: { lat: number; lng: number }[][]) => void;
 }
 
-export const MeasurementPage: React.FC<MeasurementPageProps> = ({ title, center, onLengthChange, onDone, onStartOver }) => {
+export const MeasurementPage: React.FC<MeasurementPageProps> = ({ 
+  title, 
+  center, 
+  onLengthChange, 
+  onDone, 
+  onStartOver,
+  initialPaths,
+  onPathsChange
+}) => {
   return (
     <div className="relative h-screen w-screen flex flex-col bg-black">
       <CircuitryBackground />
@@ -29,6 +39,8 @@ export const MeasurementPage: React.FC<MeasurementPageProps> = ({ title, center,
                 center={center}
                 onLengthChange={onLengthChange}
                 onClose={onDone}
+                initialPaths={initialPaths}
+                onPathsChange={onPathsChange}
             />
         </div>
       </main>

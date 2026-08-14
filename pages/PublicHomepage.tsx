@@ -373,7 +373,6 @@ const AddressScanInput = ({
                 }}
             >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                <Zap size={18} fill="currentColor" className="text-white" />
                 <span className="relative z-10">Scan My Roof</span>
             </button>
         </div>
@@ -731,19 +730,22 @@ const PublicHomepage: React.FC = () => {
             sessionStorage.removeItem('intakePurchaseIntent');
             sessionStorage.removeItem('globalSearchQuery');
             
+            let targetPage = 'P-12';
             if (customEvent.detail?.mode) {
                 if (customEvent.detail.mode === 'quote') {
                     sessionStorage.setItem('intakeScopeType', 'Replacement');
                     sessionStorage.setItem('intakePurchaseIntent', 'Ready');
+                    targetPage = 'E-02a';
                 } else {
                     sessionStorage.setItem('intakeScopeType', 'Replacement');
                     sessionStorage.setItem('intakePurchaseIntent', 'Exploring');
+                    targetPage = 'P-12';
                 }
             }
             if (customEvent.detail?.address) {
                 sessionStorage.setItem('globalSearchQuery', customEvent.detail.address);
             }
-            setActivePageId('E-02a');
+            setActivePageId(targetPage);
         };
 
         window.addEventListener('open-emergency-triage', handleEmergencyTriage);

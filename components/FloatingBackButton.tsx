@@ -21,7 +21,13 @@ export const FloatingBackButton: React.FC = () => {
                 className="fixed bottom-10 left-10 z-[100]"
             >
                 <button
-                    onClick={() => setActivePageId('P-00')}
+                    onClick={() => {
+                        if (activePageId === 'P-12') {
+                            window.dispatchEvent(new CustomEvent('rhive-reset-estimator'));
+                        } else {
+                            setActivePageId('P-00');
+                        }
+                    }}
                     className="flex items-center gap-3 bg-black/80 backdrop-blur-xl border border-white/20 hover:border-rhive-pink/50 text-white px-6 py-4 rounded-full font-black text-xs tracking-[0.2em] uppercase transition-all shadow-[0_10px_30px_rgba(0,0,0,0.5)] group cursor-pointer"
                 >
                     <ArrowLeft size={16} className="text-rhive-pink group-hover:-translate-x-1 transition-transform" />

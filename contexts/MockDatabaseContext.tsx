@@ -170,24 +170,6 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // initialUser is read at MODULE LOAD TIME (before React) — guaranteed no timing issues
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const bypassRole = params.get('bypass');
-            if (bypassRole) {
-                const normalized = bypassRole.toLowerCase();
-                let candidate: User | undefined;
-                if (normalized === 'admin' || normalized === 'super admin') {
-                    candidate = SEED_USERS.find(u => u.name === 'Michael Robinson' && (u.role === 'Admin' || u.role === 'Super Admin')) ||
-                                SEED_USERS.find(u => u.role.toLowerCase() === normalized);
-                } else {
-                    candidate = SEED_USERS.find(u => u.role.toLowerCase() === normalized);
-                }
-                if (candidate) {
-                    session.write(candidate);
-                    return candidate;
-                }
-            }
-        }
         return initialUser;
     });
     const [currentProjectId, setCurrentProjectId] = useState<string | null>(localStorage.getItem('rhive_project_id'));

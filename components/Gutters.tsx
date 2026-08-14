@@ -12,6 +12,7 @@ interface GuttersProps {
   onContinue: () => void;
   onStartOver: () => void;
   onStartMeasurement: () => void;
+  onBack: () => void;
 }
 
 const ChoiceButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
@@ -42,7 +43,7 @@ const DownspoutInput: React.FC<{ label: string; value: number; onChange: (val: n
 );
 
 
-export const Gutters: React.FC<GuttersProps> = ({ surveyState, onSurveyChange, onContinue, onStartOver, onStartMeasurement }) => {
+export const Gutters: React.FC<GuttersProps> = ({ surveyState, onSurveyChange, onContinue, onStartOver, onStartMeasurement, onBack }) => {
     const { gutters } = surveyState;
 
     const handleEnabledChange = (enabled: boolean) => {
@@ -82,6 +83,12 @@ export const Gutters: React.FC<GuttersProps> = ({ surveyState, onSurveyChange, o
                                     <ChoiceButton active={false} onClick={onContinue}>
                                         No, I'll consider it later.
                                     </ChoiceButton>
+                                    
+                                    <div className="pt-2">
+                                        <Button variant="ghost" className="text-gray-400" onClick={onBack}>
+                                            Back to previous section
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -103,9 +110,10 @@ export const Gutters: React.FC<GuttersProps> = ({ surveyState, onSurveyChange, o
                                      <div className="flex items-center space-x-2 mt-2">
                                         <input
                                             type="number"
+                                            step="any"
                                             placeholder="Ex: 120"
                                             value={gutters.length || ''}
-                                            onChange={(e) => handleValueChange('length', parseInt(e.target.value, 10) || 0)}
+                                            onChange={(e) => handleValueChange('length', parseFloat(e.target.value) || 0)}
                                             className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-pink-500/70 focus:border-transparent transition"
                                         />
                                         <Button variant="ghost" onClick={onStartMeasurement} className="flex-shrink-0 px-3">
@@ -167,12 +175,15 @@ export const Gutters: React.FC<GuttersProps> = ({ surveyState, onSurveyChange, o
                         )}
                     </div>
                      {gutters.enabled && (
-                        <div className="mt-8 text-center">
-                            <Button size="lg" onClick={onContinue}>
-                                Continue
-                            </Button>
-                        </div>
-                    )}
+                         <div className="mt-8 flex justify-center items-center space-x-4">
+                             <Button size="lg" variant="secondary" onClick={onBack}>
+                                 Back
+                             </Button>
+                             <Button size="lg" onClick={onContinue}>
+                                 Continue
+                             </Button>
+                         </div>
+                     )}
                 </div>
             </main>
         </div>
