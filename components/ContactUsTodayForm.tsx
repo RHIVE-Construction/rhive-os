@@ -28,27 +28,62 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
     const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
-        if (!isApiReady || !addressInputRef.current || !window.google?.maps?.places) return;
-        if (autocompleteRef.current) return;
+        let active = true;
+        let checkInterval: any = null;
 
-        const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-            types: ['address'],
-            fields: ['formatted_address'],
-            componentRestrictions: { country: 'us' }
-        });
+        const initAutocomplete = () => {
+            if (!addressInputRef.current) return;
+            if (autocompleteRef.current) return;
 
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace();
-            if (place.formatted_address) {
-                setAddress(place.formatted_address);
-            } else if (addressInputRef.current) {
-                setAddress(addressInputRef.current.value);
+            const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+                types: ['address'],
+                fields: ['formatted_address'],
+                componentRestrictions: { country: 'us' }
+            });
+
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (place.formatted_address) {
+                    setAddress(place.formatted_address);
+                    if (addressInputRef.current) {
+                        addressInputRef.current.value = place.formatted_address;
+                    }
+                } else if (addressInputRef.current) {
+                    setAddress(addressInputRef.current.value);
+                }
+            });
+
+            autocompleteRef.current = autocomplete;
+        };
+
+        const checkApi = () => {
+            if (window.google?.maps?.places && addressInputRef.current) {
+                initAutocomplete();
+                if (checkInterval) {
+                    clearInterval(checkInterval);
+                }
             }
-        });
+        };
 
-        autocompleteRef.current = autocomplete;
+        // Try immediately
+        checkApi();
+
+        // If not ready, poll until ready
+        if (!autocompleteRef.current) {
+            checkInterval = setInterval(() => {
+                if (!active) {
+                    clearInterval(checkInterval);
+                    return;
+                }
+                checkApi();
+            }, 100);
+        }
 
         return () => {
+            active = false;
+            if (checkInterval) {
+                clearInterval(checkInterval);
+            }
             if (autocompleteRef.current) {
                 window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
                 autocompleteRef.current = null;
@@ -58,7 +93,8 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!address || !phone || !email) {
+        const currentAddress = addressInputRef.current?.value || address;
+        if (!currentAddress || !phone || !email) {
             setErrorMessage('All fields are required.');
             setStatus('error');
             return;
@@ -67,7 +103,7 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
         setStatus('submitting');
         setErrorMessage('');
 
-        const result = await ctaLeadService.sendNotification(address, phone, email, concern);
+        const result = await ctaLeadService.sendNotification(currentAddress, phone, email, concern);
         if (result.success) {
             setStatus('success');
             if (onSuccess) onSuccess();
@@ -106,6 +142,9 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
                             <button
                                 onClick={() => {
                                     setAddress('');
+                                    if (addressInputRef.current) {
+                                        addressInputRef.current.value = '';
+                                    }
                                     setPhone('');
                                     setEmail('');
                                     setStatus('idle');
@@ -127,8 +166,7 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
                                         ref={addressInputRef}
                                         type="text"
                                         placeholder="ENTER PROJECT ADDRESS"
-                                        value={address}
-                                        onChange={(e) => setAddress(e.target.value)}
+                                        defaultValue={address}
                                         className="w-full bg-black/80 border border-white/10 hover:border-white/20 focus:border-rhive-pink py-2.5 px-4 text-xs font-bold uppercase tracking-widest outline-none text-white transition-all duration-300"
                                         disabled={status === 'submitting'}
                                         required
