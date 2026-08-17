@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getPageIdFromPath, getPathForPageId } from '../lib/routing';
 
 // Profile list pages — navigating to these clears the matched selectedId
 const PROFILE_LIST_CLEAR_MAP: Record<string, string[]> = {
@@ -47,12 +48,10 @@ const NavigationContext = createContext<NavigationContextType | undefined>(undef
 const SESSION_KEY = 'rhive_active_page';
 
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Restore last active page from URL first, then sessionStorage, then default
+    // Restore last active page from URL path first, then sessionStorage, then default
     const [activePageId, setActivePageIdRaw] = useState<string>(() => {
         if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const urlPage = params.get('page');
-            if (urlPage) return urlPage;
+            return getPageIdFromPath(window.location.pathname, window.location.search);
         }
         try {
             return sessionStorage.getItem(SESSION_KEY) || 'P-00-V3';
@@ -61,12 +60,29 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }
     });
 
-    // Wrap setter to also persist to sessionStorage
+    // Wrap setter to also persist to sessionStorage and update History API
     const setActivePageId = React.useCallback((id: string) => {
         try {
             sessionStorage.setItem(SESSION_KEY, id);
         } catch { /* ignore quota errors */ }
+        
+        if (typeof window !== 'undefined') {
+            const newPath = getPathForPageId(id);
+            if (window.location.pathname !== newPath) {
+                window.history.pushState({ pageId: id }, '', newPath);
+            }
+        }
         setActivePageIdRaw(id);
+    }, []);
+
+    // Sync state on browser back/forward buttons
+    useEffect(() => {
+        const handlePopState = () => {
+            const pageId = getPageIdFromPath(window.location.pathname, window.location.search);
+            setActivePageIdRaw(pageId);
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
     }, []);
     const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);

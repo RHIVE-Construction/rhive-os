@@ -26,7 +26,6 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useTheme } from '../contexts/ThemeContext';
 import PlexusShape from '../components/PlexusShape';
 import { cn } from '../lib/utils';
-import RhiveHeader from '../components/website/RhiveHeader';
 import Card from '../components/Card';
 
 // --- Visual Helpers ---
@@ -373,7 +372,6 @@ const AddressScanInput = ({
                 }}
             >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                <Zap size={18} fill="currentColor" className="text-white" />
                 <span className="relative z-10">Scan My Roof</span>
             </button>
         </div>
@@ -819,7 +817,6 @@ const PublicHomepage: React.FC = () => {
             {/* REMOVED: Fixed CTA. Moved to relative wrapper below. */}
 
             <div className="fixed inset-0 bg-circuit-pattern opacity-5 pointer-events-none z-0" />
-            <RhiveHeader />
 
             {/* HERO SECTION */}
             <section id="hero" className="relative w-full min-h-[85vh] flex items-center justify-center pt-32 pb-24 overflow-hidden snap-start shrink-0">

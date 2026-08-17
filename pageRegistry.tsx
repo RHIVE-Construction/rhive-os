@@ -70,6 +70,7 @@ import CustomerTrackerPage from './pages/CustomerTrackerPage'; // C-Tracker
 // Removed SimulationGuidePage import
 import RHIVEBrandingPage from './pages/RHIVEBrandingPage'; // E-39
 import InsurancePage from './pages/InsurancePage'; // P-13
+import InsuranceFaqPage from './pages/InsuranceFaqPage'; // P-15
 import PreConversionRecordPage from './pages/PreConversionRecordPage'; // (Simulation)
 import UniversalLandingPage from './pages/UniversalLandingPage'; // P-Landing
 import MaintenancePage from './pages/MaintenancePage'; // P-14
@@ -135,6 +136,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-12': EstimateToolPage,                // Alias kept for backward-compat (setActivePageId call sites, CRM users)
   'P-13': InsurancePage,
   'P-14': MaintenancePage,
+  'P-15': InsuranceFaqPage,
   'P-Landing': UniversalLandingPage,
 
   // Admin (Employee World Section 1)

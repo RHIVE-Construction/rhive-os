@@ -50,6 +50,7 @@ const CLEAN_PATH_PAGE: string | null = PATH_ROUTES[window.location.pathname] ?? 
 
 // Detect CUSTOMER-SIGN-VERIFY page (link-only, no auth, no sidebar)
 const IS_SIGN_VERIFY_ROUTE = ((): boolean => {
+    if (window.location.pathname === '/sign-verify') return true;
     const params = new URLSearchParams(window.location.search);
     return params.get('page') === 'CUSTOMER-SIGN-VERIFY';
 })();
@@ -150,54 +151,49 @@ const AppContentAuthenticated: React.FC = () => {
         if (activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3') {
             sessionStorage.setItem('lastHomepageId', activePageId);
         }
-        
-        // Sync to URL
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('page') !== activePageId) {
-            params.set('page', activePageId);
-            const newUrl = window.location.pathname + '?' + params.toString();
-            window.history.replaceState({ ...window.history.state, path: newUrl }, '', newUrl);
-        }
     }, [activePageId]);
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const pageCode = params.get('page');
-        if (pageCode) {
-            // If logged in and trying to go to login page P-06, redirect to dashboard directly
-            if (currentUser && pageCode === 'P-06') {
-                let target = 'E-01';
-                switch (currentUser.role) {
-                    case 'Customer': target = 'C-01'; break;
-                    case 'Contractor': target = 'CO-01'; break;
-                    case 'Supplier': target = 'S-01'; break;
-                }
-                setActivePageId(target);
-                // Clean up query param immediately
-                const newParams = new URLSearchParams(window.location.search);
-                newParams.delete('page');
-                const newSearch = newParams.toString();
-                const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
-                window.history.replaceState({}, '', newUrl);
-                return;
-            }
 
-            if (pageCode !== activePageId) {
-                setActivePageId(pageCode);
-            } else {
-                // Only clean up the page query param once activePageId matches it
-                const newParams = new URLSearchParams(window.location.search);
-                newParams.delete('page');
-                const newSearch = newParams.toString();
-                const newUrl = window.location.pathname + (newSearch ? '?' + newSearch : '');
-                window.history.replaceState({}, '', newUrl);
+    useEffect(() => {
+        // If logged in and active page is P-06 (login page), redirect to role-based dashboard
+        if (currentUser && activePageId === 'P-06') {
+            let target = 'E-01';
+            switch (currentUser.role) {
+                case 'Customer': target = 'C-01'; break;
+                case 'Contractor': target = 'CO-01'; break;
+                case 'Supplier': target = 'S-01'; break;
             }
+            setActivePageId(target);
         }
+    }, [activePageId, currentUser, setActivePageId]);
+
+    useEffect(() => {
         const handleCustomNav = (e: any) => {
             if (e.detail) setActivePageId(e.detail);
         };
+        const handleRoofConfigurator = (e: any) => {
+            if (e.detail?.mode === 'estimate') {
+                sessionStorage.removeItem('estimateAddress');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('estimateAddress', e.detail.address);
+                }
+                setActivePageId('P-12');
+            } else {
+                sessionStorage.removeItem('intakeScopeType');
+                sessionStorage.removeItem('intakePurchaseIntent');
+                sessionStorage.removeItem('globalSearchQuery');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('globalSearchQuery', e.detail.address);
+                }
+                setActivePageId('E-02a');
+            }
+        };
         window.addEventListener('nav-page', handleCustomNav);
-        return () => window.removeEventListener('nav-page', handleCustomNav);
-    }, [activePageId, setActivePageId, currentUser]);
+        window.addEventListener('open-roof-configurator', handleRoofConfigurator);
+        return () => {
+            window.removeEventListener('nav-page', handleCustomNav);
+            window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
+        };
+    }, [setActivePageId]);
 
     useEffect(() => {
         // Only redirect to role dashboard from the login page (P-06) or when no page is set.
@@ -232,15 +228,14 @@ const AppContentAuthenticated: React.FC = () => {
                 dotColor={isDark ? "#ec028b" : "#ec028b"}
                 lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
             />
-            {!isPublicRoute && <GlobalHeader />}
+            <GlobalHeader />
 
-            <div className={cn("relative z-10 flex h-full w-full", !isPublicRoute ? "pt-12" : "pt-0")}>
-                {!isPublicRoute && <Sidebar />}
+            <div className="relative z-10 flex h-full w-full pt-12">
+                <Sidebar />
                 <main 
                     ref={mainRef}
                     className={cn(
-                    "flex-1 h-full overflow-y-auto relative transition-colors duration-500",
-                    !isPublicRoute && "border-l",
+                    "flex-1 h-full overflow-y-auto relative transition-colors duration-500 border-l",
                     isDark ? "bg-black/20 border-white/5" : "bg-white/20 border-black/5"
                 )}>
                     <CurrentPage />
@@ -275,27 +270,34 @@ const LoginBridge: React.FC = () => {
         [targetPageId]
     );
 
-    // Parse URL parameter on mount/popstate so direct links work
+    // Set up unauthenticated custom event navigation listeners
     useEffect(() => {
-        const handleUrlChange = () => {
-            const params = new URLSearchParams(window.location.search);
-            const pageCode = params.get('page');
-            if (pageCode) {
-                setActivePageId(pageCode);
-            }
-        };
-
-        handleUrlChange();
-        window.addEventListener('popstate', handleUrlChange);
-        
         const handleCustomNav = (e: any) => {
             if (e.detail) setActivePageId(e.detail);
         };
+        const handleRoofConfigurator = (e: any) => {
+            if (e.detail?.mode === 'estimate') {
+                sessionStorage.removeItem('estimateAddress');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('estimateAddress', e.detail.address);
+                }
+                setActivePageId('P-12');
+            } else {
+                sessionStorage.removeItem('intakeScopeType');
+                sessionStorage.removeItem('intakePurchaseIntent');
+                sessionStorage.removeItem('globalSearchQuery');
+                if (e.detail?.address) {
+                    sessionStorage.setItem('globalSearchQuery', e.detail.address);
+                }
+                setActivePageId('E-02a');
+            }
+        };
         window.addEventListener('nav-page', handleCustomNav);
+        window.addEventListener('open-roof-configurator', handleRoofConfigurator);
 
         return () => {
-            window.removeEventListener('popstate', handleUrlChange);
             window.removeEventListener('nav-page', handleCustomNav);
+            window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
         };
     }, [setActivePageId]);
 
@@ -329,23 +331,6 @@ const LoginBridge: React.FC = () => {
             </div>
         );
     }
-    // Sync browser URL bar with activePageId for unauthenticated users
-    useEffect(() => {
-        if (!currentUser && activePageId) {
-            const isHomePage = activePageId === 'P-00' || activePageId === 'P-00-V2' || activePageId === 'P-00-V3';
-            if (isHomePage) {
-                if (window.location.search) {
-                    window.history.replaceState({}, '', window.location.pathname);
-                }
-            } else {
-                const params = new URLSearchParams(window.location.search);
-                if (params.get('page') !== activePageId) {
-                    const newUrl = `${window.location.pathname}?page=${activePageId}`;
-                    window.history.pushState({ path: newUrl }, '', newUrl);
-                }
-            }
-        }
-    }, [activePageId, currentUser]);
 
     // Scroll to top when activePageId changes for public layout
     useEffect(() => {
@@ -363,6 +348,7 @@ const LoginBridge: React.FC = () => {
         const isLoginPage = activePageId === 'P-06';
 
         if (isPagePublic && !isLoginPage && PublicCurrentPage) {
+            const showHeader = activePageId !== 'P-12';
             return (
                 <div className={cn(
                     "fixed inset-0 w-screen h-screen overflow-hidden font-sans transition-colors duration-500",
@@ -373,7 +359,14 @@ const LoginBridge: React.FC = () => {
                         dotColor={isDark ? "#ec028b" : "#ec028b"}
                         lineColor={isDark ? "236, 2, 139" : "236, 2, 139"}
                     />
-                    <main ref={mainRef} className="relative z-10 w-full h-full overflow-y-auto relative">
+                    {showHeader && <RhiveHeader />}
+                    <main 
+                        ref={mainRef} 
+                        className={cn(
+                            "relative z-10 w-full h-full overflow-y-auto relative",
+                            showHeader && "pt-12"
+                        )}
+                    >
                         <PublicCurrentPage />
                     </main>
                     <FloatingEstimator />
@@ -429,7 +422,6 @@ const LoginBridge: React.FC = () => {
             </div>
         );
     }
-
     return <AppContentAuthenticated />;
 };
 

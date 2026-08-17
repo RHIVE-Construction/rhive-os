@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Zap } from './icons';
 import { CheckCircle2 } from 'lucide-react';
+import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 
 interface AddressScanInputProps {
     id?: string;
@@ -23,7 +24,7 @@ export const AddressScanInput = ({
     placeholder,
 }: AddressScanInputProps) => {
     const chamferSize = "16px";
-
+    const isApiReady = useGoogleMapsApi();
 
     // Typewriter placeholder animation — uses custom placeholder prop if provided
     const fullText = placeholder || "ENTER PROJECT ADDRESS";
@@ -31,6 +32,34 @@ export const AddressScanInput = ({
     const [index, setIndex] = useState(0);
     const [localVal, setLocalVal] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const isControlled = value !== undefined;
+
+    useEffect(() => {
+        if (!isApiReady || !inputRef.current || !window.google?.maps?.places) return;
+
+        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+            types: ['address'],
+            fields: ['formatted_address', 'geometry'],
+            componentRestrictions: { country: 'us' }
+        });
+
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place.formatted_address) {
+                if (!isControlled) {
+                    setLocalVal(place.formatted_address);
+                }
+                if (onChange) {
+                    onChange(place.formatted_address);
+                }
+            }
+        });
+
+        return () => {
+            window.google?.maps?.event?.clearInstanceListeners(autocomplete);
+        };
+    }, [isApiReady, isControlled, onChange]);
 
     useEffect(() => {
         if (index < fullText.length) {
@@ -48,7 +77,6 @@ export const AddressScanInput = ({
         }
     }, [index]);
 
-    const isControlled = value !== undefined;
     const currentVal = isControlled ? value : localVal;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,7 +96,7 @@ export const AddressScanInput = ({
             window.dispatchEvent(new CustomEvent('open-roof-configurator', {
                 detail: {
                     address: currentVal || "525 Aspen Meadow Dr, Logan, UT",
-                    mode: 'estimate'
+                    mode: themeColor === 'gold' ? 'quote' : 'estimate'
                 }
             }));
         }
@@ -155,8 +183,8 @@ export const AddressScanInput = ({
             </svg>
             <div className={`absolute top-0 left-12 right-12 h-[1px] bg-gradient-to-r from-transparent ${topGradVia} to-transparent z-20`} />
 
-            <div className="relative flex-grow flex items-center px-6 md:px-8 z-20">
-                <svg viewBox="0 0 24 24" className="w-7 h-7 mr-4 shrink-0 transition-transform group-hover:scale-110 duration-500" xmlns="http://www.w3.org/2000/svg">
+            <div className="relative flex-grow flex items-center px-3 md:px-8 z-20">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 mr-2 md:w-7 md:h-7 md:mr-4 shrink-0 transition-transform group-hover:scale-110 duration-500" xmlns="http://www.w3.org/2000/svg">
                     <path fill="#4285F4" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
                     <path fill="#34A853" d="M12 2C8.13 2 5 5.13 5 9c0 1.15.22 2.21.6 3.19l3.41-3.41C9.07 8.56 9 8.29 9 8c0-1.66 1.34-3 3-3 .29 0 .56.07.78.19l3.41-3.41C14.21 2.22 13.15 2 12 2z" />
                     <path fill="#FBBC05" d="M16.19 5.6C15.21 5.22 14.15 5 13 5c-1.66 0-3 1.34-3 3 0 1.15.47 2.21 1.19 3l3.41-3.41C14.78 7.37 15 7.7 15 8c0 .29-.07.56-.19.78l3.41-3.41C17.78 6.21 18 7.15 18 8.13c0 2.22-1.21 4.39-3 6.3l3.19 3.19C20.5 14.89 22 11.83 22 9c0-3.87-3.13-7-7-7-1.15 0-2.21.22-3.19.6l3.19 3.19c.19.04.37.11.53.21l1.661-1.4z" />
@@ -167,7 +195,7 @@ export const AddressScanInput = ({
                     type="text"
                     value={currentVal}
                     placeholder={animatedPlaceholder}
-                    className={`bg-transparent text-white w-full h-full outline-none font-black uppercase text-base tracking-[0.2em] text-left ${inputPlaceholderClass}`}
+                    className={`bg-transparent text-white w-full h-full outline-none font-black uppercase text-xs md:text-base tracking-normal md:tracking-[0.2em] text-left ${inputPlaceholderClass}`}
                     onChange={handleInputChange}
                 />
             </div>
@@ -175,16 +203,14 @@ export const AddressScanInput = ({
             {/* Premium Button Section */}
             <button
                 onClick={handleScanClick}
-                className={`relative h-full px-8 md:px-12 flex items-center justify-center gap-2 ${isGold ? 'text-black' : 'text-white'} font-black uppercase text-base tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shrink-0 z-20 ${buttonBgClass}`}
+                className={`relative h-full px-3 md:px-12 flex items-center justify-center gap-1 md:gap-2 ${isGold ? 'text-black' : 'text-white'} font-black uppercase text-[10px] md:text-base tracking-wider md:tracking-widest overflow-hidden group/btn hover:scale-[1.02] active:scale-95 transition-all duration-300 shrink-0 z-20 ${buttonBgClass}`}
                 style={{
                     clipPath: `polygon(0 0, 100% 0, 100% calc(100% - ${chamferSize}), calc(100% - ${chamferSize}) 100%, 0 100%)`
                 }}
             >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                {isPink ? (
-                    <Zap size={18} fill="currentColor" className="text-white" />
-                ) : (
-                    <CheckCircle2 size={18} className={`shrink-0 ${isGold ? 'text-black' : 'text-white'}`} />
+                {!isPink && (
+                    <CheckCircle2 size={14} className={`shrink-0 ${isGold ? 'text-black' : 'text-white'} md:w-[18px] md:h-[18px]`} />
                 )}
                 <span className="relative z-10">{buttonText}</span>
             </button>
