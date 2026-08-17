@@ -276,21 +276,13 @@ const LoginBridge: React.FC = () => {
             if (e.detail) setActivePageId(e.detail);
         };
         const handleRoofConfigurator = (e: any) => {
-            if (e.detail?.mode === 'estimate') {
-                sessionStorage.removeItem('estimateAddress');
-                if (e.detail?.address) {
-                    sessionStorage.setItem('estimateAddress', e.detail.address);
-                }
-                setActivePageId('P-12');
-            } else {
-                sessionStorage.removeItem('intakeScopeType');
-                sessionStorage.removeItem('intakePurchaseIntent');
-                sessionStorage.removeItem('globalSearchQuery');
-                if (e.detail?.address) {
-                    sessionStorage.setItem('globalSearchQuery', e.detail.address);
-                }
-                setActivePageId('E-02a');
-            }
+            const concern = e.detail?.mode === 'quote' ? 'Certified Quote' : 'Instant Estimate';
+            window.dispatchEvent(new CustomEvent('open-estimator', { 
+                detail: { 
+                    concern, 
+                    address: e.detail?.address 
+                } 
+            }));
         };
         window.addEventListener('nav-page', handleCustomNav);
         window.addEventListener('open-roof-configurator', handleRoofConfigurator);

@@ -17,11 +17,11 @@ const GlobalBottomCTA: React.FC = () => {
                     </p>
                     
                     <button 
-                        onClick={() => setActivePageId('P-12')}
-                        className="relative px-12 py-6 bg-rhive-pink text-white font-bold uppercase tracking-widest text-lg hover:bg-[#c90275] transition-all flex items-center justify-center gap-3 group shadow-[0_0_20px_rgba(236,2,139,0.4)] hover:shadow-[0_0_30px_rgba(236,2,139,0.6)] mx-auto"
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'General' } }))}
+                        className="relative px-12 py-6 bg-rhive-pink text-white font-bold uppercase tracking-widest text-lg hover:bg-[#c90275] transition-all flex items-center justify-center gap-3 group shadow-[0_0_20px_rgba(236,2,139,0.4)] hover:shadow-[0_0_30px_rgba(236,2,139,0.6)] mx-auto cursor-pointer"
                         style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                     >
-                        Request an Estimate <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                        Contact Us Today <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
                     </button>
                 </div>
             </div>
