@@ -47,8 +47,11 @@ export const FloatingEstimator: React.FC = () => {
             }
         };
 
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
+        // Run initial check
+        handleScroll();
+
+        window.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+        return () => window.removeEventListener('scroll', handleScroll, { capture: true });
     }, [activePageId]);
 
     const toggleDrawer = () => {
