@@ -1574,3 +1574,31 @@ export const securityNotificationService = {
         }
     }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CTA LEAD SERVICE
+// Sends SMS notification leads to RHIVE Construction (+17438876637) via JustCall.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const ctaLeadService = {
+    sendNotification: async (address: string, phone: string, email: string, concern: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/justCallWebhook`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'client.cta_lead',
+                    data: { address, phone, email, concern }
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                return { success: false, error: data.error || `HTTP ${res.status}` };
+            }
+            return { success: true };
+        } catch (error: any) {
+            console.error('[ctaLeadService.sendNotification]', error);
+            return { success: false, error: 'Network error. Could not send the contact notification.' };
+        }
+    }
+};

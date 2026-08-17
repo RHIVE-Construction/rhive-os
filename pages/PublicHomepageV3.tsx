@@ -11,6 +11,7 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 import PlexusShape from '../components/PlexusShape';
 import AddressScanInput from '../components/AddressScanInput';
+import ContactUsTodayForm from '../components/ContactUsTodayForm';
 import { GoogleTestimonials } from '../components/GoogleTestimonials';
 import FinancingCalculator from '../components/FinancingCalculator';
 import { cn } from '../lib/utils';
@@ -77,16 +78,10 @@ const StickyCTABar: React.FC = () => {
                                 <span className="hidden md:block">(801) 449-1451</span>
                             </a>
                             <button
-                                onClick={() => setActivePageId('P-12')}
+                                onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'General' } }))}
                                 className="bg-rhive-pink text-white px-5 py-2 text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-[0_0_12px_rgba(236,2,139,0.4)]"
                             >
-                                Free Estimate
-                            </button>
-                            <button
-                                onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { protocol: 'EMERGENCY BREACH' } }))}
-                                className="bg-red-600 text-white px-5 py-2 text-xs font-black uppercase tracking-widest hover:bg-red-500 transition-all animate-pulse"
-                            >
-                                🚨 Emergency
+                                Contact Us Today
                             </button>
                         </div>
                     </div>
@@ -268,64 +263,11 @@ const PublicHomepageV3: React.FC = () => {
 
                     <div className="w-full relative z-10">
                         {intakeTab === 'emergency' ? (
-                            <div className="w-full max-w-2xl mx-auto mt-8 p-6 bg-red-950/20 border border-red-500/30 rounded-2xl text-left flex flex-col sm:flex-row justify-between items-center gap-6 animate-fade-in">
-                                <div className="flex-1">
-                                    <h4 className="text-red-400 font-bold uppercase text-sm tracking-wider flex items-center gap-2">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-                                        Active Leak Detected?
-                                    </h4>
-                                    <p className="text-gray-400 text-xs mt-1">Our emergency dispatch protocol provides rapid containment within 2-4 hours.</p>
-                                    <button 
-                                        type="button"
-                                        onClick={() => setActiveLightbox('emergency')}
-                                        className="text-[10px] text-red-400 hover:text-red-300 font-mono uppercase tracking-widest underline mt-2 block"
-                                    >
-                                        Learn More: 90-Day Tarps & Free Audits
-                                    </button>
-                                </div>
-                                <div className="flex flex-col gap-3 w-full sm:w-[320px] shrink-0">
-                                    <input
-                                        ref={emergencyInputRef}
-                                        type="text"
-                                        placeholder={isApiReady ? "ENTER EMERGENCY ADDRESS..." : "INITIALIZING..."}
-                                        value={emergencyAddress}
-                                        onChange={(e) => setEmergencyAddress(e.target.value)}
-                                        className="w-full bg-black/60 border border-red-500/30 focus:border-red-500 p-4 rounded-lg text-xs font-black uppercase tracking-widest outline-none text-red-400 placeholder-red-500/50 shadow-[0_0_10px_rgba(220,38,38,0.1)] focus:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all duration-300"
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            if (emergencyAddress) {
-                                                window.dispatchEvent(new CustomEvent('open-estimator', { 
-                                                    detail: { 
-                                                        protocol: 'EMERGENCY BREACH',
-                                                        address: emergencyAddress
-                                                    } 
-                                                }));
-                                            } else {
-                                                emergencyInputRef.current?.focus();
-                                            }
-                                        }}
-                                        className="w-full py-4 bg-red-600 hover:bg-red-500 active:scale-95 text-white font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_15px_rgba(220,38,38,0.5)] shrink-0"
-                                        style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
-                                    >
-                                        Report Emergency Leak
-                                    </button>
-                                </div>
-                            </div>
+                            <ContactUsTodayForm concern="Emergency Leak" showTitle={false} className="mt-8 animate-fade-in" />
                         ) : intakeTab === 'quote' ? (
-                            <AddressScanInput 
-                                id="v3-intake-scanner" 
-                                placeholder="ENTER PROPERTY ADDRESS FOR CERTIFIED BID"
-                                buttonText="Build Certified Quote"
-                                themeColor="gold"
-                            />
+                            <ContactUsTodayForm concern="Certified Quote" showTitle={false} className="mt-8 animate-fade-in" />
                         ) : (
-                            <AddressScanInput 
-                                id="v3-intake-scanner" 
-                                placeholder="ENTER PROJECT ADDRESS FOR INSTANT BALLPARK"
-                                buttonText="Scan My Roof"
-                                themeColor="pink"
-                            />
+                            <ContactUsTodayForm concern="Instant Estimate" showTitle={false} className="mt-8 animate-fade-in" />
                         )}
                     </div>
                 </div>
@@ -638,13 +580,13 @@ const PublicHomepageV3: React.FC = () => {
                                     <div className="flex flex-col sm:flex-row gap-4 pt-6">
                                         <button
                                             onClick={() => {
-                                                window.dispatchEvent(new CustomEvent('open-estimator', { detail: { protocol: 'EMERGENCY BREACH' } }));
+                                                window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Emergency Leak' } }));
                                                 setActiveLightbox(null);
                                             }}
                                             className="px-8 py-4 bg-red-600 hover:bg-red-500 text-white font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Trigger Dispatch Protocol
+                                            Contact Us Today
                                         </button>
                                         <button
                                             onClick={() => setActiveLightbox(null)}
@@ -757,13 +699,13 @@ const PublicHomepageV3: React.FC = () => {
                                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
                                         <button
                                             onClick={() => {
-                                                setActivePageId('P-12');
+                                                window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Commercial / Industrial' } }));
                                                 setActiveLightbox(null);
                                             }}
                                             className="px-8 py-4 bg-rhive-pink text-white font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_15px_rgba(236,2,139,0.3)] cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Schedule Commercial Site Audit
+                                            Contact Us Today
                                         </button>
                                         <button
                                             onClick={() => {
@@ -803,13 +745,13 @@ const PublicHomepageV3: React.FC = () => {
                                     <div className="flex flex-col sm:flex-row gap-4 pt-6">
                                         <button
                                             onClick={() => {
-                                                setActivePageId('P-12');
+                                                window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Residential' } }));
                                                 setActiveLightbox(null);
                                             }}
                                             className="px-8 py-4 bg-rhive-pink text-white font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_15px_rgba(236,2,139,0.3)] cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Configure Residential Quote
+                                            Contact Us Today
                                         </button>
                                         <button
                                             onClick={() => {
@@ -954,13 +896,13 @@ const PublicHomepageV3: React.FC = () => {
                                     <div className="pt-6">
                                         <button
                                             onClick={() => {
-                                                window.dispatchEvent(new CustomEvent('open-estimator', { detail: { protocol: 'PORTFOLIO AUDIT' } }));
+                                                window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Portfolio Management' } }));
                                                 setActiveLightbox(null);
                                             }}
                                             className="px-8 py-4 bg-rhive-pink text-white font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_15px_rgba(236,2,139,0.3)] cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Request Portfolio Inspection
+                                            Contact Us Today
                                         </button>
                                     </div>
                                 </div>
