@@ -27,6 +27,23 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
 
+    const formatPhoneNumber = (value: string) => {
+        const phoneNumber = value.replace(/\D/g, '');
+        const limited = phoneNumber.slice(0, 10);
+        if (limited.length <= 3) {
+            return limited;
+        }
+        if (limited.length <= 6) {
+            return `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
+        }
+        return `(${limited.slice(0, 3)}) ${limited.slice(3, 6)}-${limited.slice(6)}`;
+    };
+
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formatted = formatPhoneNumber(e.target.value);
+        setPhone(formatted);
+    };
+
     useEffect(() => {
         let active = true;
         let checkInterval: any = null;
@@ -177,7 +194,7 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
                                         type="tel"
                                         placeholder="PHONE NUMBER"
                                         value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
+                                        onChange={handlePhoneChange}
                                         className="w-full bg-black/80 border border-white/10 hover:border-white/20 focus:border-rhive-pink py-2.5 px-4 text-xs font-bold uppercase tracking-widest outline-none text-white transition-all duration-300"
                                         disabled={status === 'submitting'}
                                         required
