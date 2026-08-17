@@ -28,30 +28,62 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
     const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
-        if (!isApiReady || !addressInputRef.current || !window.google?.maps?.places) return;
-        if (autocompleteRef.current) return;
+        let active = true;
+        let checkInterval: any = null;
 
-        const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-            types: ['address'],
-            fields: ['formatted_address'],
-            componentRestrictions: { country: 'us' }
-        });
+        const initAutocomplete = () => {
+            if (!addressInputRef.current) return;
+            if (autocompleteRef.current) return;
 
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace();
-            if (place.formatted_address) {
-                setAddress(place.formatted_address);
-                if (addressInputRef.current) {
-                    addressInputRef.current.value = place.formatted_address;
+            const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+                types: ['address'],
+                fields: ['formatted_address'],
+                componentRestrictions: { country: 'us' }
+            });
+
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+                if (place.formatted_address) {
+                    setAddress(place.formatted_address);
+                    if (addressInputRef.current) {
+                        addressInputRef.current.value = place.formatted_address;
+                    }
+                } else if (addressInputRef.current) {
+                    setAddress(addressInputRef.current.value);
                 }
-            } else if (addressInputRef.current) {
-                setAddress(addressInputRef.current.value);
-            }
-        });
+            });
 
-        autocompleteRef.current = autocomplete;
+            autocompleteRef.current = autocomplete;
+        };
+
+        const checkApi = () => {
+            if (window.google?.maps?.places && addressInputRef.current) {
+                initAutocomplete();
+                if (checkInterval) {
+                    clearInterval(checkInterval);
+                }
+            }
+        };
+
+        // Try immediately
+        checkApi();
+
+        // If not ready, poll until ready
+        if (!autocompleteRef.current) {
+            checkInterval = setInterval(() => {
+                if (!active) {
+                    clearInterval(checkInterval);
+                    return;
+                }
+                checkApi();
+            }, 100);
+        }
 
         return () => {
+            active = false;
+            if (checkInterval) {
+                clearInterval(checkInterval);
+            }
             if (autocompleteRef.current) {
                 window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
                 autocompleteRef.current = null;
