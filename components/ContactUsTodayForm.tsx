@@ -41,6 +41,9 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
             const place = autocomplete.getPlace();
             if (place.formatted_address) {
                 setAddress(place.formatted_address);
+                if (addressInputRef.current) {
+                    addressInputRef.current.value = place.formatted_address;
+                }
             } else if (addressInputRef.current) {
                 setAddress(addressInputRef.current.value);
             }
@@ -58,7 +61,8 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!address || !phone || !email) {
+        const currentAddress = addressInputRef.current?.value || address;
+        if (!currentAddress || !phone || !email) {
             setErrorMessage('All fields are required.');
             setStatus('error');
             return;
@@ -67,7 +71,7 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
         setStatus('submitting');
         setErrorMessage('');
 
-        const result = await ctaLeadService.sendNotification(address, phone, email, concern);
+        const result = await ctaLeadService.sendNotification(currentAddress, phone, email, concern);
         if (result.success) {
             setStatus('success');
             if (onSuccess) onSuccess();
@@ -106,6 +110,9 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
                             <button
                                 onClick={() => {
                                     setAddress('');
+                                    if (addressInputRef.current) {
+                                        addressInputRef.current.value = '';
+                                    }
                                     setPhone('');
                                     setEmail('');
                                     setStatus('idle');
@@ -127,8 +134,7 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
                                         ref={addressInputRef}
                                         type="text"
                                         placeholder="ENTER PROJECT ADDRESS"
-                                        value={address}
-                                        onChange={(e) => setAddress(e.target.value)}
+                                        defaultValue={address}
                                         className="w-full bg-black/80 border border-white/10 hover:border-white/20 focus:border-rhive-pink py-2.5 px-4 text-xs font-bold uppercase tracking-widest outline-none text-white transition-all duration-300"
                                         disabled={status === 'submitting'}
                                         required
