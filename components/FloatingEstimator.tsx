@@ -142,6 +142,7 @@ export const FloatingEstimator: React.FC = () => {
                             <ContactUsTodayForm 
                                 concern={concern} 
                                 showTitle={false} 
+                                isNarrow={true}
                                 className="border-0 bg-transparent shadow-none p-0 flex flex-col gap-6" 
                             />
                         </div>

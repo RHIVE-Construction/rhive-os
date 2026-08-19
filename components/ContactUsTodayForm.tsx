@@ -9,6 +9,7 @@ interface ContactUsTodayFormProps {
     onSuccess?: () => void;
     className?: string;
     showTitle?: boolean;
+    isNarrow?: boolean;
 }
 
 export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
@@ -16,6 +17,7 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
     onSuccess,
     className,
     showTitle = true,
+    isNarrow = false,
 }) => {
     const isApiReady = useGoogleMapsApi();
     const addressInputRef = useRef<HTMLInputElement>(null);
@@ -131,12 +133,16 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
     };
 
     return (
-        <div className={cn("w-full max-w-4xl mx-auto bg-black/60 border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(236,2,139,0.15)] flex flex-col md:grid md:grid-cols-12 p-6 md:p-8 gap-6 md:gap-8 relative isolate", className)}>
+        <div className={cn(
+            "w-full max-w-4xl mx-auto bg-black/60 border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(236,2,139,0.15)] relative isolate",
+            isNarrow ? "flex flex-col p-6 gap-6" : "flex flex-col md:grid md:grid-cols-12 p-6 md:p-8 gap-6 md:gap-8",
+            className
+        )}>
             {/* Top linear glow line */}
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rhive-pink to-transparent z-10" />
 
             {/* Left section: Form (Option 1) */}
-            <div className="md:col-span-7 flex flex-col justify-between">
+            <div className={cn("flex flex-col justify-between", !isNarrow && "md:col-span-7")}>
                 <div>
                     {showTitle && (
                         <div className="mb-6">
@@ -189,7 +195,7 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
                                         required
                                     />
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className={cn("grid grid-cols-1 gap-3", !isNarrow && "md:grid-cols-2")}>
                                     <input
                                         type="tel"
                                         placeholder="PHONE NUMBER"
@@ -239,17 +245,17 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
             </div>
 
             {/* Middle Divider */}
-            <div className="hidden md:flex md:col-span-1 items-center justify-center relative">
+            <div className={cn("hidden items-center justify-center relative", !isNarrow && "md:flex md:col-span-1")}>
                 <div className="w-[1px] h-full bg-white/10 absolute left-1/2" />
                 <span className="bg-black border border-white/10 px-3 py-1 text-[10px] font-mono uppercase tracking-widest rounded-full z-10 text-gray-500">OR</span>
             </div>
-            <div className="flex md:hidden items-center justify-center py-2">
-                <div className="w-full h-[1px] bg-white/10 relative" />
+            <div className={cn("flex items-center justify-center py-2 relative", !isNarrow && "md:hidden")}>
+                <div className="w-full h-[1px] bg-white/10" />
                 <span className="bg-black border border-white/10 px-3 py-1 text-[9px] font-mono uppercase tracking-widest rounded-full absolute text-gray-500">OR</span>
             </div>
 
             {/* Right section: Direct contact (Option 2) */}
-            <div className="md:col-span-4 flex flex-col justify-center space-y-6 text-left">
+            <div className={cn("flex flex-col justify-center space-y-6 text-left", !isNarrow && "md:col-span-4")}>
                 <div>
                     <p className="text-gray-400 text-xs uppercase tracking-wider mb-3 font-mono">
                         CALL US TODAY
