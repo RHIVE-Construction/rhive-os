@@ -107,7 +107,7 @@ export const InteractiveCommercialAnatomy: React.FC = () => {
                     <div className="relative w-full h-full">
                         {/* Generated Diagram Image */}
                         <img
-                            src="/tpo-flat-roof-diagram.png"
+                            src="/tpo-flat-roof-diagram.webp"
                             alt="3D Commercial Roof Anatomy Diagram"
                             className="block w-full h-auto pointer-events-none z-0 mix-blend-lighten"
                         />

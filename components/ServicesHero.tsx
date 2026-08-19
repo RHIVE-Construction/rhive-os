@@ -6,7 +6,7 @@ export const ServicesHero: React.FC = () => {
             {/* Background Texture Layers */}
             <div
                 className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-50 group-hover:scale-105 transition-all duration-[2s] ease-out filter mix-blend-luminosity grayscale"
-                style={{ backgroundImage: 'url(/slc-residential-roof.png)' }}
+                style={{ backgroundImage: 'url(/slc-residential-roof.webp)' }}
             ></div>
             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black z-10"></div>
             <div className="absolute inset-0 bg-tech-grid bg-[length:40px_40px] opacity-20 pointer-events-none z-10"></div>

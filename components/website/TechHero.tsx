@@ -104,10 +104,19 @@ const TechHero: React.FC = () => {
                     muted
                     loop
                     playsInline
+                    poster="/images/modern-architectural-roofing-contractor-wasatch-front-utah.webp"
                     className="w-full h-full object-cover filter brightness-[0.4]"
                     style={{ transform: 'scale(1.12) translate(-3%, -3%)', transformOrigin: 'top left' }}
                 >
                     <source src="/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
+                    <img 
+                        src="/images/modern-architectural-roofing-contractor-wasatch-front-utah.webp"
+                        alt="Sleek, tech-forward architectural shingle roof installed by local roofing contractor RHIVE Construction along the Wasatch Front."
+                        className="w-full h-full object-cover"
+                        width={1920}
+                        height={1080}
+                        decoding="sync"
+                    />
                 </video>
             </div>
 

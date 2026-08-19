@@ -85,7 +85,7 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                         <div>
                             <h2 className="text-3xl font-black text-white uppercase tracking-tighter text-left flex items-center gap-4">
                                 O.C. DURATION <span className="text-[var(--rhive-pink)]">FOUNDATION</span>
-                                <img src="/oc-logo.png" alt="OC Preferred" className="h-8 grayscale group-hover:grayscale-0 transition-all opacity-80" />
+                                <img src="/oc-logo.webp" alt="OC Preferred" className="h-8 grayscale group-hover:grayscale-0 transition-all opacity-80" />
                             </h2>
                             <p className="text-[var(--rhive-pink)] font-mono text-base uppercase tracking-[0.3em] mt-1 italic font-bold text-left">Comprehensive System Specification</p>
                         </div>
@@ -213,7 +213,7 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                                                                 50 Years Non-Prorated Material & Labor. Includes 10-Year Workmanship backup from OC if RHIVE goes out of business.
                                                             </p>
                                                             <div className="flex items-center gap-3 text-base font-black text-gray-500 uppercase tracking-widest">
-                                                                <img src="/oc-logo.png" alt="OC" className="h-4 grayscale invert opacity-70" />
+                                                                <img src="/oc-logo.webp" alt="OC" className="h-4 grayscale invert opacity-70" />
                                                                 <span>[ MANUFACTURER BONDED ]</span>
                                                             </div>
                                                         </div>
@@ -243,7 +243,7 @@ const ShingleDurationLightbox: React.FC<ShingleDurationLightboxProps> = ({ isOpe
                     {/* Footer Info */}
                     <div className="mt-16 p-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-8 bg-black/40">
                         <div className="flex items-center gap-4">
-                            <img src="/oc-logo.png" alt="Owens Corning" className="h-8 opacity-100 transition-all cursor-crosshair" />
+                            <img src="/oc-logo.webp" alt="Owens Corning" className="h-8 opacity-100 transition-all cursor-crosshair" />
                             <div className="h-8 w-[1px] bg-white/10"></div>
                             <div className="text-base font-mono text-gray-500 uppercase tracking-widest text-left">
                                 Certified Preferred <br /> Contractor System

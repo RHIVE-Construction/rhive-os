@@ -74,8 +74,8 @@ const MembraneRoofingPage = () => {
                 {/* Background Images with Parallax & Contrast Layers */}
                 <div className="absolute inset-0 z-0 bg-black">
                     <div className="absolute inset-0 opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-[2s] ease-out filter grayscale mix-blend-luminosity flex items-end justify-center">
-                        <img src="/commercial-facility.png" alt="Commercial Layout" className="absolute bottom-0 w-full h-full object-contain origin-bottom" />
-                        <img src="/residential-flat-roof.png" alt="Residential Layout" className="absolute bottom-[10%] -right-[5%] w-[40%] h-[40%] object-contain origin-bottom" />
+                        <img src="/commercial-facility.webp" alt="Commercial Layout" className="absolute bottom-0 w-full h-full object-contain origin-bottom" />
+                        <img src="/residential-flat-roof.webp" alt="Residential Layout" className="absolute bottom-[10%] -right-[5%] w-[40%] h-[40%] object-contain origin-bottom" />
                     </div>
                     {/* Gradient Mask to ensure text readability */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black z-10"></div>
@@ -200,7 +200,7 @@ const MembraneRoofingPage = () => {
                             {/* Marketing Showcase Image */}
                             <div className="absolute inset-0 z-0">
                                 <img
-                                    src="/metal deck single ply.png"
+                                    src="/metal deck single ply.webp"
                                     className="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity duration-1000"
                                     alt="GAF TPO Membrane System on Metal Deck"
                                 />

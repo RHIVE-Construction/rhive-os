@@ -100,6 +100,10 @@ const CustomComparisonDiagram: React.FC = () => {
                 src="https://static.wixstatic.com/media/c5862a_7e539a778fd84771b8327f43dfc7dd0a~mv2.png/v1/fill/w_1200,h_675,al_c,q_90/dd.png" 
                 alt="Standard Contractor vs RHIVE comparison flow chart" 
                 className="w-full h-auto object-cover block transition-transform duration-700 group-hover:scale-[1.01]" 
+                width={1200}
+                height={675}
+                loading="lazy"
+                decoding="async"
             />
         </div>
     );
@@ -169,10 +173,19 @@ const PublicHomepageV3: React.FC = () => {
                     muted
                     loop
                     playsInline
+                    poster="/images/modern-architectural-roofing-contractor-wasatch-front-utah.webp"
                     className="w-full h-full object-cover"
                     style={{ transform: 'scale(1.12) translate(-3%, -3%)', transformOrigin: 'top left' }}
                 >
                     <source src="https://rhive-os.web.app/vidupload/compressed_tradeshow_video.mp4" type="video/mp4" />
+                    <img 
+                        src="/images/modern-architectural-roofing-contractor-wasatch-front-utah.webp"
+                        alt="Sleek, tech-forward architectural shingle roof installed by local roofing contractor RHIVE Construction along the Wasatch Front."
+                        className="w-full h-full object-cover"
+                        width={1920}
+                        height={1080}
+                        decoding="sync"
+                    />
                 </video>
             </div>
 
@@ -1044,6 +1057,10 @@ const PublicHomepageV3: React.FC = () => {
                                                     src="https://static.wixstatic.com/media/c5862a_591faf36d59c448e8c92b9caff471e96~mv2.png/v1/fill/w_100,h_125,fp_0.53_0.42,q_85,enc_avif,quality_auto" 
                                                     alt="Kara Robinson" 
                                                     className="w-20 h-24 object-cover border border-rhive-pink/40 rounded shrink-0" 
+                                                    width={80}
+                                                    height={96}
+                                                    loading="lazy"
+                                                    decoding="async"
                                                 />
                                                 <div className="max-w-[40ch]">
                                                     <h5 className="font-bold text-white uppercase text-sm leading-[1.2]">Kara Robinson</h5>
@@ -1061,6 +1078,10 @@ const PublicHomepageV3: React.FC = () => {
                                                     src="https://static.wixstatic.com/media/c5862a_f1b8b6616fe44f739664188e00d416ce~mv2.png/v1/fill/w_100,h_125,fp_0.49_0.34,q_85,enc_avif,quality_auto" 
                                                     alt="Michael Robinson" 
                                                     className="w-20 h-24 object-cover border border-[#08137C]/40 rounded shrink-0" 
+                                                    width={80}
+                                                    height={96}
+                                                    loading="lazy"
+                                                    decoding="async"
                                                 />
                                                 <div className="max-w-[40ch]">
                                                     <h5 className="font-bold text-white uppercase text-sm leading-[1.2]">Michael Robinson</h5>

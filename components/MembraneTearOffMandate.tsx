@@ -18,7 +18,7 @@ const MembraneTearOffMandate = () => {
                         
                         {/* Mockup Visual */}
                         <div className="absolute inset-0 z-0">
-                            <img src="/wood deck single ply.png" alt="Commercial Tear-off" className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
+                            <img src="/wood deck single ply.webp" alt="Commercial Tear-off" className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
                             
                             {/* Scanning Line Effect */}

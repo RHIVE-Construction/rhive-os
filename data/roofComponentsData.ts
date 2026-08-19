@@ -20,7 +20,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "ARCHITECTURAL SEAMLESS GUTTER SYSTEMS",
         category: "Gutters",
         description: "Complete water management systems engineered to exact architectural specifications. Featuring flawless seamless execution in K-Style, Round, and Box profiles, manufactured instantly on-site.",
-        image: "/components/real_seamless_gutter_1773772866806.png",
+        image: "/components/real_seamless_gutter_1773772866806.webp",
         guarantee: {
             installation: "10-Year Craftsmanship Warranty",
             materials: "20-Year Manufacturer Finish"
@@ -54,7 +54,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "HEAT TRACE - ICE MANAGEMENT SYSTEM",
         category: "Ice Management",
         description: "Proactive Ice Defense & Structural Protection. This system is engineered to actively prevent the formation of destructive ice dams and heavy icicles along your roof eaves and valleys. By maintaining a clear channel for water runoff, this solution eliminates moisture intrusion and protects the structural integrity of your roofline and gutters.",
-        image: "/components/heat_trace_1773773528589.png",
+        image: "/components/heat_trace_1773773528589.webp",
         guarantee: {
             installation: "RHIVE No-Fail System Guarantee - Covers the complete system installation, connectivity, and performance for 2 years (excluding failure due to power surge or damage from external forces).",
             materials: "10-Year Manufacturer Warranty on the cable element against mechanical failure."
@@ -73,7 +73,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "VELUX® DAYLIGHT SKYLIGHT SYSTEMS",
         category: "Roof Details",
         description: "Complete integration of energy-efficient Velux® skylights or sun tunnels. We ensure perfect thermal sealing and watertight execution.",
-        image: "/components/real_skylight_1773772893598.png",
+        image: "/components/real_skylight_1773772893598.webp",
         guarantee: {
             installation: "Standard Guarantee applies.",
             materials: "Standard Warranty applies."
@@ -99,7 +99,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "ARCHITECTURAL METAL COPING SERVICES",
         category: "Roof Details",
         description: "Precision flat roof parapet wall protection. We manage metal coping systems engineered to exceed the strictest high-wind manufacturer requirements.",
-        image: "/components/coping_cap_1773773544079.png",
+        image: "/components/coping_cap_1773773544079.webp",
         guarantee: {
             installation: "Standard Guarantee applies.",
             materials: "Standard Warranty applies."
@@ -126,7 +126,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "SOLAR PANEL MANAGEMENT PROTOCOL",
         category: "Roof Details",
         description: "Comprehensive coordination for solar panel systems during roof replacement, including safe detachment, storage, resetting, and panel cleaning.",
-        image: "/components/solar_panel_1773773558067.png",
+        image: "/components/solar_panel_1773773558067.webp",
         guarantee: {
             installation: "Service execution warranty applies.",
             materials: "Original solar system warranty maintained."
@@ -158,7 +158,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "ROOFLINE VEGETATION MANAGEMENT",
         category: "Roof Details",
         description: "Strategic Structural Protection and Warranty Compliance. We safely cut and clear all vegetation (branches, vines, brush) that touches or overhangs your roof, fascia, or gutters. This service is a critical, proactive measure that stops the most common causes of premature roof failure.",
-        image: "/components/vegetation_management_1773773572347.png",
+        image: "/components/vegetation_management_1773773572347.webp",
         guarantee: {
             installation: "Standard Guarantee applies.",
             materials: "Standard Warranty applies."
@@ -179,7 +179,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "PROACTIVE SURFACE & DRAIN DEBRIS",
         category: "Maintenance",
         description: "Critical removal of bio-matter, leaves, and granular breakdown. Ensuring absolute unhindered water dispersal from roof plane to foundation outlet.",
-        image: "/components/roof_debris_1773773622853.png",
+        image: "/components/roof_debris_1773773622853.webp",
         guarantee: {
             installation: "Complete Flow Guarantee",
             materials: "Surface Scrape Prevention Limit"
@@ -210,7 +210,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "PERIPHERAL COMPONENT PROTECTION",
         category: "Maintenance",
         description: "Targeted defense upgrades and seal maintenance for isolated vertical penetrations and high-risk zones, protecting against thermal shifts and local wildlife.",
-        image: "/components/bird_deterrent_1773773610480.png",
+        image: "/components/bird_deterrent_1773773610480.webp",
         guarantee: {
             installation: "Standard Guarantee applies.",
             materials: "Standard Warranty applies."
@@ -237,7 +237,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "TARGETED SYSTEM PENETRATION REPAIRS",
         category: "Repair",
         description: "Surgical extraction and superior replacement of localized failed components. Ensures an airtight, watertight geometric seal around high-risk penetrations and storm-damaged fields.",
-        image: "/components/shingle_repair_1773773637407.png",
+        image: "/components/shingle_repair_1773773637407.webp",
         guarantee: {
             installation: "Standard Guarantee applies.",
             materials: "Standard Warranty applies."
@@ -265,7 +265,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "RAPID-RESPONSE LEAK CONTAINMENT",
         category: "Repair",
         description: "Immediate emergency interventions utilizing premium synthetic underlayment or thermal fusion to halt water progression before secondary structural damage occurs.",
-        image: "/components/proarmor_tarp_realistic_1773797399505.png",
+        image: "/components/proarmor_tarp_realistic_1773797399505.webp",
         guarantee: {
             installation: "Standard Guarantee applies.",
             materials: "Standard Warranty applies."
@@ -302,7 +302,7 @@ export const roofComponents: ComponentDetail[] = [
         title: "COMPREHENSIVE CHIMNEY SYSTEM OVERHAUL",
         category: "Chimney",
         description: "Engineering-grade restoration for structural, metal, and decorative chimney components. Eliminating complex water entry vectors with absolute certainty.",
-        image: "/components/real_chimney_1773772853903.png",
+        image: "/components/real_chimney_1773772853903.webp",
         guarantee: {
             installation: "Standard Guarantee applies.",
             materials: "Standard Warranty applies."
