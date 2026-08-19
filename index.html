@@ -320,7 +320,80 @@
 </head>
 
 <body class="text-gray-200 selection:bg-rhive-pink/30 selection:text-white">
-  <div id="root"></div>
+  <div id="root">
+    <!-- RHIVE OS INITIALIZATION SCREEN (SEO & Loading State - Overwritten when React mounts) -->
+    <div style="font-family: 'Rubik', ui-monospace, monospace; background-color: #000000; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 3rem 2rem; box-sizing: border-box; position: relative; overflow: hidden;">
+      
+      <!-- Top Status Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(236, 2, 139, 0.2); padding-bottom: 1rem; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="https://i.imgur.com/t0VcSgJ.png" alt="RHIVE Logo" style="height: 32px; width: auto; filter: drop-shadow(0 0 8px rgba(236, 2, 139, 0.6));" />
+          <span style="font-weight: 800; letter-spacing: 0.1em; color: #ffffff;">RHIVE SYSTEM</span>
+        </div>
+        <div style="color: #ec028b; font-size: 0.8rem; letter-spacing: 0.2em; font-weight: bold; animation: pulse 1.5s infinite alternate;">SECURE PROTOCOL V2.0</div>
+      </div>
+
+      <!-- Main Boot/SEO Console -->
+      <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; max-width: 800px; margin: 0 auto; text-align: left; width: 100%;">
+        <h1 style="font-size: 2rem; font-weight: 800; text-transform: uppercase; color: #ffffff; margin-bottom: 1.5rem; letter-spacing: -0.02em;">
+          Advanced Roofing Infrastructure &amp; Drone Mapping
+        </h1>
+        
+        <p style="font-family: 'EB Garamond', serif; font-style: italic; font-size: 1.25rem; color: #9ca3af; margin-bottom: 2.5rem; line-height: 1.6; border-left: 2px solid #ec028b; padding-left: 1.5rem;">
+          Utah's #1 tech-forward roofing contractor. Deploying commercial PVC/TPO membranes, premium Owens Corning steep-slope systems, and 100% transparent cost auditing.
+        </p>
+
+        <!-- Loading Sequence Checklist (Visible SEO Content) -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 3rem; font-size: 0.9rem; color: #9ca3af;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: #ec028b; font-weight: bold;">[OK]</span>
+            <span>Commercial Roofing Capability: PVC &amp; TPO Membranes, NDL Warranty Readiness</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: #ec028b; font-weight: bold;">[OK]</span>
+            <span>Residential Roofing Capability: Owens Corning Duration Systems, Ice &amp; Water Shields</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: #ec028b; font-weight: bold;">[OK]</span>
+            <span>Drone Geospatial Mapping &amp; Zero-Surprise Digital Estimation</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: #ec028b; font-weight: bold;">[OK]</span>
+            <span>10-Stage Project Integrity Pipeline: Intake to Certified Close-out</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: #ec028b; font-weight: bold; animation: pulse 0.5s infinite alternate;">[LOADING...]</span>
+            <span style="color: #ffffff;">Booting Interactive RHIVE Dashboard &amp; Hunni AI Assistant...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Navigation & Sitemap (Vital for Crawler Navigation) -->
+      <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 2rem; margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; font-size: 0.8rem; color: #4b5563;">
+        <nav style="display: flex; flex-wrap: wrap; gap: 1rem 1.5rem;">
+          <a href="/" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Home</a>
+          <a href="/aboutus" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">About Us</a>
+          <a href="/utah-roofing" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Roofing Services</a>
+          <a href="/roofing-accessories-utah" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Accessories</a>
+          <a href="/financing" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Financing Options</a>
+          <a href="/estimator" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">AI Estimator Portal</a>
+          <a href="/insuranceclaim" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Insurance Claims</a>
+        </nav>
+        <div style="font-weight: 500; color: #9ca3af;">
+          Contact Support: <a href="tel:8014491451" style="color: #ffffff; text-decoration: none;">(801) 449-1451</a>
+        </div>
+      </div>
+
+      <!-- Styles -->
+      <style>
+        @keyframes pulse {
+          0% { opacity: 0.3; }
+          100% { opacity: 1; }
+        }
+      </style>
+
+    </div>
+  </div>
   <script type="module" src="/index.tsx"></script>
 </body>
 
