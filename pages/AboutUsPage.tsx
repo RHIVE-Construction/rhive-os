@@ -98,7 +98,7 @@ const AboutUsPage: React.FC = () => {
                 >
                     <span className="relative z-10 flex items-center gap-2">
                         <Zap size={14} className="group-hover:animate-pulse" />
-                        Preview L-01 Lightbox
+                        RHIVE Movement
                     </span>
                     <div className="absolute inset-0 bg-rhive-pink/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-0" />
                 </button>
@@ -110,7 +110,7 @@ const AboutUsPage: React.FC = () => {
                 >
                     <span className="relative z-10 flex items-center gap-2">
                         <Zap size={14} color="url(#blue-white-grad)" className="group-hover:animate-pulse" />
-                        <span className="bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent">Preview H-01 Hero</span>
+                        <span className="bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent">RHIVE Standard</span>
                     </span>
                     <div className="absolute inset-0 bg-rhive-blue/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-0" />
                 </button>
