@@ -40,9 +40,25 @@ const isPasswordResetFlow = (): boolean => {
 const PATH_ROUTES: Record<string, string> = {
     '/estimate-tool': 'estimate-tool',
     '/map':           'INTERNAL-BPM',
-    // Uncomment to add more public URL pages:
-    // '/insurance':   'P-13',
-    // '/maintenance': 'P-14',
+    '/services/residential-roof-replacement': 'P-SEO-RESIDENTIAL',
+    '/services/commercial-flat-roofing':     'P-SEO-COMMERCIAL',
+    '/services/roofing-accessories':         'P-SEO-ACCESSORIES',
+    '/zero-surprises-pricing':                'P-SEO-PRICING',
+    '/service-areas/sandy-ut':               'P-SEO-SANDY',
+    '/service-areas/west-jordan-ut':         'P-SEO-WESTJORDAN',
+    '/service-areas/salt-lake-city-ut':      'P-SEO-SLC',
+    '/faq':                                  'P-SEO-FAQ',
+    '/blog':                                 'P-SEO-BLOG-INDEX',
+    '/blog/roof-replacement-cost-utah':      'P-SEO-BLOG-1',
+    '/blog/ice-dams-prevention-utah':        'P-SEO-BLOG-2',
+    '/blog/roof-damage-insurance-claims-utah': 'P-SEO-BLOG-3',
+    '/blog/owens-corning-vs-gaf-shingles-utah': 'P-SEO-BLOG-4',
+    '/blog/tpo-vs-pvc-commercial-flat-roofing': 'P-SEO-BLOG-5',
+    '/blog/diy-roof-checklist-utah':          'P-SEO-BLOG-6',
+    '/blog/female-leadership-construction':   'P-SEO-BLOG-7',
+    '/blog/seamless-gutters-importance-utah': 'P-SEO-BLOG-8',
+    '/blog/solar-panels-roof-replacement-utah': 'P-SEO-BLOG-9',
+    '/blog/how-to-choose-reputable-roofing-contractor-utah': 'P-SEO-BLOG-10',
 };
 
 // Resolved on module load — null means this is a normal app route

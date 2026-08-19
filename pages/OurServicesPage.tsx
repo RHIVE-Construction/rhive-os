@@ -82,7 +82,7 @@ const OurServicesPage: React.FC = () => {
                 id="residential"
                 title="Commercial-Grade Asphalt Systems"
                 subtitle="Engineered for absolute defense. We refuse to install standard architectural shingles; we deploy complete, lifetime-guaranteed commercial-grade systems for every client, regardless of structure size."
-                bgImage="/slc-residential-roof.png"
+                bgImage="/slc-residential-roof.webp"
                 ctaText="Explore Asphalt Systems"
                 ctaThemeColor="var(--rhive-pink)"
                 align="left"

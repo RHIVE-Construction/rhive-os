@@ -21,9 +21,21 @@ import { cn } from '../../lib/utils';
 const NAV_LINKS = [
   { label: 'ABOUT US',  href: '/?page=P-01' },
   { label: 'SERVICES',  href: '/?page=P-02' },
+  { label: 'FAQ',       href: '/faq' },
+  { label: 'BLOGS',     href: '/blog' },
   { label: 'PROCESS',   href: '/?page=P-03' },
   { label: 'FINANCING', href: '/?page=P-04' },
   { label: 'CONTACT',   href: '/?page=P-05' },
+];
+
+const OTHER_LINKS = [
+  { label: 'RESIDENTIAL REPLACEMENT', href: '/services/residential-roof-replacement' },
+  { label: 'COMMERCIAL FLAT ROOFING', href: '/services/commercial-flat-roofing' },
+  { label: 'ROOFING ACCESSORIES',     href: '/services/roofing-accessories' },
+  { label: 'ZERO SURPRISES PRICING',   href: '/zero-surprises-pricing' },
+  { label: 'SANDY SERVICE AREA',      href: '/service-areas/sandy-ut' },
+  { label: 'WEST JORDAN SERVICE AREA', href: '/service-areas/west-jordan-ut' },
+  { label: 'SALT LAKE CITY SERVICE AREA', href: '/service-areas/salt-lake-city-ut' },
 ];
 
 // Explicit homepage URL — avoids sessionStorage overriding to a CRM page
@@ -33,13 +45,15 @@ const PublicWebHeader: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isOthersOpen, setIsOthersOpen] = React.useState(false);
+  const [isMobileOthersOpen, setIsMobileOthersOpen] = React.useState(false);
 
   const handleNav = (href: string) => {
     window.location.href = href;
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[500] h-12 flex items-center px-12">
+<header className="fixed top-0 left-0 right-0 z-[500] h-12 flex items-center justify-center px-4 md:px-12">
       {/* Keyframe styles */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes pubHeaderSheen {
@@ -61,8 +75,8 @@ const PublicWebHeader: React.FC = () => {
       </div>
 
       {/* Left nav links */}
-      <nav className="flex-1 flex justify-end items-center gap-8 z-10 ml-[180px]">
-        {NAV_LINKS.slice(0, 2).map((link) => (
+      <nav className="hidden lg:flex justify-end items-center gap-6 xl:gap-8 z-10">
+        {NAV_LINKS.slice(0, 5).map((link) => (
           <button
             key={link.label}
             onClick={() => handleNav(link.href)}
@@ -74,11 +88,11 @@ const PublicWebHeader: React.FC = () => {
       </nav>
 
       {/* Center spacer */}
-      <div className="w-[360px] shrink-0" />
+      <div className="hidden lg:block w-[340px] xl:w-[360px] shrink-0" />
 
       {/* Right nav links */}
-      <nav className="flex-1 flex justify-start items-center gap-8 z-10 mr-[180px]">
-        {NAV_LINKS.slice(2).map((link) => (
+      <nav className="hidden lg:flex justify-start items-center gap-6 xl:gap-8 z-10">
+        {NAV_LINKS.slice(5).map((link) => (
           <button
             key={link.label}
             onClick={() => handleNav(link.href)}
@@ -87,6 +101,34 @@ const PublicWebHeader: React.FC = () => {
             {link.label}
           </button>
         ))}
+
+        {/* Others Dropdown */}
+        <div 
+          className="relative"
+          onMouseEnter={() => setIsOthersOpen(true)}
+          onMouseLeave={() => setIsOthersOpen(false)}
+        >
+          <button
+            className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] transition-colors duration-300 flex items-center gap-1 cursor-pointer"
+          >
+            OTHERS <span className="text-[7px]">▼</span>
+          </button>
+          {isOthersOpen && (
+            <div className="absolute left-0 pt-2 w-64 z-50">
+              <div className="bg-black/95 border border-white/10 backdrop-blur-xl shadow-2xl p-4 flex flex-col gap-3 rounded-md animate-fade-in">
+                {OTHER_LINKS.map((link) => (
+                  <button
+                    key={link.label}
+                    onClick={() => handleNav(link.href)}
+                    className="text-[9px] text-left font-black tracking-[0.15em] uppercase text-slate-400 hover:text-[#ec028b] transition-colors cursor-pointer"
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* Central logo */}
@@ -189,6 +231,22 @@ const PublicWebHeader: React.FC = () => {
               key={link.label}
               onClick={() => { setIsMenuOpen(false); handleNav(link.href); }}
               className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
+            >
+              {link.label}
+            </button>
+          ))}
+          <button
+            onClick={() => setIsMobileOthersOpen(!isMobileOthersOpen)}
+            className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5 flex justify-between items-center"
+          >
+            <span>OTHERS</span>
+            <span className="text-[8px]">{isMobileOthersOpen ? '▲' : '▼'}</span>
+          </button>
+          {isMobileOthersOpen && OTHER_LINKS.map((link) => (
+            <button
+              key={link.label}
+              onClick={() => { setIsMenuOpen(false); handleNav(link.href); }}
+              className="w-full text-left pl-10 pr-6 py-3 text-[9px] font-black tracking-[0.15em] uppercase text-slate-400 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
             >
               {link.label}
             </button>

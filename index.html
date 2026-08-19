@@ -16,11 +16,12 @@
   <link rel="icon" href="https://i.imgur.com/t0VcSgJ.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RHIVE - Home</title>
+  <link rel="preload" href="/images/modern-architectural-roofing-contractor-wasatch-front-utah.webp" as="image">
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Identity Services (GIS) — required for Google Calendar OAuth2 -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -317,6 +318,115 @@
     })();
   </script>
   <link rel="stylesheet" href="/index.css">
+  <!-- RoofingContractor JSON-LD Schema Markup -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RoofingContractor",
+    "@id": "https://www.rhiveconstruction.com/#schema-roofing",
+    "name": "RHIVE Construction",
+    "url": "https://www.rhiveconstruction.com/",
+    "logo": "https://i.imgur.com/t0VcSgJ.png",
+    "image": "https://i.imgur.com/t0VcSgJ.png",
+    "telephone": "+1-453-417-6637",
+    "email": "office@rhiveconstruction.com",
+    "priceRange": "$$$",
+    "description": "RHIVE Construction is Utah's premier tech-forward, female-owned roofing company. Backed by a lifetime no-leak guarantee, we provide fully transparent, itemized residential roof replacements and certified commercial flat roofing systems.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "10437 Shady Plum Way",
+      "addressLocality": "South Jordan",
+      "addressRegion": "UT",
+      "postalCode": "84009",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 40.5621,
+      "longitude": -111.9772
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ],
+        "opens": "07:00",
+        "closes": "19:00"
+      }
+    ],
+    "sameAs": [
+      "https://www.instagram.com/rhive_construction/?hl=en",
+      "https://www.facebook.com/RHIVEConstruction",
+      "https://www.yelp.com/writeareview/biz/NAVT64E2iUvcc8JpHKI7Fg?return_url=%2Fbiz%2FNAVT64E2iUvcc8JpHKI7Fg&review_origin=biz-details-war-button"
+    ],
+    "areaServed": [
+      {"@type": "AdministrativeArea", "name": "South Jordan"},
+      {"@type": "AdministrativeArea", "name": "Sandy"},
+      {"@type": "AdministrativeArea", "name": "West Jordan"},
+      {"@type": "AdministrativeArea", "name": "Salt Lake City"},
+      {"@type": "AdministrativeArea", "name": "Draper"},
+      {"@type": "AdministrativeArea", "name": "Herriman"},
+      {"@type": "AdministrativeArea", "name": "Riverton"},
+      {"@type": "AdministrativeArea", "name": "Murray"},
+      {"@type": "AdministrativeArea", "name": "Midvale"},
+      {"@type": "AdministrativeArea", "name": "Taylorsville"},
+      {"@type": "AdministrativeArea", "name": "Wasatch Front"},
+      {"@type": "AdministrativeArea", "name": "Idaho"}
+    ],
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "RHIVE Roofing and Construction Services",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Residential Shingle Roof Replacement",
+            "description": "Full tear-off asphalt shingle roof replacement featuring Owens Corning Duration and GAF systems, custom-engineered for local wind/snow factors and backed by our Lifetime No-Leak Workmanship Guarantee."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Commercial Flat and Membrane Roofing",
+            "description": "GAF Certified TPO and PVC single-ply membrane flat roof replacements, including layovers and full tear-offs backed by GAF NDL warranties."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Seamless Rain Gutters and Water Management",
+            "description": "Custom on-site extrusion of continuous 5-inch and 6-inch aluminum rain gutters in K-Style, Half-Round, and Box configurations."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Proactive Heat Trace Systems",
+            "description": "Self-regulating eave heat cable installation with intelligent thermostats to permanently prevent ice dam formation."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "VELUX Skylight Installation",
+            "description": "Certified leak-proof Velux curb-mounted skylights and daylighting sun tunnels featuring multi-layered flashing systems."
+          }
+        }
+      ]
+    }
+  }
+  </script>
 </head>
 
 <body class="text-gray-200 selection:bg-rhive-pink/30 selection:text-white">

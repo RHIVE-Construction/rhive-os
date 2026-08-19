@@ -11,6 +11,16 @@ import { getPathForPageId } from '../../lib/routing';
 
 
 
+const OTHER_LINKS = [
+  { label: 'RESIDENTIAL REPLACEMENT', pageId: 'P-SEO-RESIDENTIAL' },
+  { label: 'COMMERCIAL FLAT ROOFING', pageId: 'P-SEO-COMMERCIAL' },
+  { label: 'ROOFING ACCESSORIES',     pageId: 'P-SEO-ACCESSORIES' },
+  { label: 'ZERO SURPRISES PRICING',   pageId: 'P-SEO-PRICING' },
+  { label: 'SANDY SERVICE AREA',      pageId: 'P-SEO-SANDY' },
+  { label: 'WEST JORDAN SERVICE AREA', pageId: 'P-SEO-WESTJORDAN' },
+  { label: 'SALT LAKE CITY SERVICE AREA', pageId: 'P-SEO-SLC' },
+];
+
 const RhiveHeader: React.FC = () => {
     const { setActivePageId, activePageId, lastPortalPageId } = useNavigation();
     const { setTheme, theme } = useTheme();
@@ -19,6 +29,8 @@ const RhiveHeader: React.FC = () => {
 
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+    const [isOthersOpen, setIsOthersOpen] = React.useState(false);
+    const [isMobileOthersOpen, setIsMobileOthersOpen] = React.useState(false);
 
 
     const handleExit = () => {
@@ -47,6 +59,8 @@ const RhiveHeader: React.FC = () => {
         ? [
             { label: 'ABOUT US', target: 'about' },
             { label: 'SERVICES', target: 'services' },
+            { label: 'FAQ', target: 'faq' },
+            { label: 'BLOGS', target: 'blog' },
             { label: 'PROCESS', target: 'process' },
             { label: 'FINANCING', target: 'financing' },
             { label: 'CAREERS', target: 'careers' },
@@ -55,22 +69,24 @@ const RhiveHeader: React.FC = () => {
         : [
             { label: 'ABOUT', target: 'about' },
             { label: 'SERVICES', target: 'services' },
+            { label: 'FAQ', target: 'faq' },
+            { label: 'BLOGS', target: 'blog' },
             { label: 'PROCESS', target: 'process' },
             { label: 'FINANCING', target: 'financing' },
             { label: 'INSURANCE', target: 'insurance' },
-            { label: 'FAQ', target: 'faq' },
             { label: 'CONTACT', target: 'contact' },
           ];
 
     const TARGET_TO_PAGE_ID: Record<string, string> = {
         'about': 'P-01',
         'services': 'P-02',
+        'faq': 'P-SEO-FAQ',
+        'blog': 'P-SEO-BLOG-INDEX',
         'process': 'P-03',
         'financing': 'P-04',
         'careers': 'P-10',
         'contact': 'P-05',
         'insurance': 'P-13',
-        'faq': 'P-15',
     };
 
     const getPagePath = (target: string): string => {
@@ -88,7 +104,7 @@ const RhiveHeader: React.FC = () => {
     };
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-[500] h-12 flex items-center px-4 md:px-12 transition-all duration-300">
+        <header className="fixed top-0 left-0 right-0 z-[500] h-12 flex items-center justify-center px-4 md:px-12 transition-all duration-300">
             {/* Custom High-Fidelity Metallic Styling */}
             <style dangerouslySetInnerHTML={{ __html: `
                 @keyframes headerSheen {
@@ -133,8 +149,8 @@ const RhiveHeader: React.FC = () => {
             </div>
 
             {/* Desktop Navigation Links (Left side of notch) */}
-            <nav className="hidden lg:flex flex-1 justify-end items-center gap-8 z-10 ml-[180px]">
-                {navLinks.slice(0, 3).map((link) => (
+            <nav className="hidden lg:flex justify-end items-center gap-6 xl:gap-8 z-10">
+                {navLinks.slice(0, 5).map((link) => (
                     <a
                         key={link.target}
                         href={getPagePath(link.target)}
@@ -150,11 +166,11 @@ const RhiveHeader: React.FC = () => {
             </nav>
  
             {/* Center Spacer to keep navigation links clear of the notch */}
-            <div className="hidden lg:block w-[360px] shrink-0" />
+            <div className="hidden lg:block w-[340px] xl:w-[360px] shrink-0" />
  
             {/* Desktop Navigation Links (Right side of notch) */}
-            <nav className="hidden lg:flex flex-1 justify-start items-center gap-8 z-10 mr-[180px]">
-                {navLinks.slice(3).map((link) => (
+            <nav className="hidden lg:flex justify-start items-center gap-6 xl:gap-8 z-10">
+                {navLinks.slice(5).map((link) => (
                     <a
                         key={link.target}
                         href={getPagePath(link.target)}
@@ -167,6 +183,39 @@ const RhiveHeader: React.FC = () => {
                         {link.label}
                     </a>
                 ))}
+
+                {/* Others Dropdown */}
+                <div 
+                    className="relative"
+                    onMouseEnter={() => setIsOthersOpen(true)}
+                    onMouseLeave={() => setIsOthersOpen(false)}
+                >
+                    <button
+                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 flex items-center gap-1 cursor-pointer"
+                    >
+                        OTHERS <span className="text-[7px]">▼</span>
+                    </button>
+                    {isOthersOpen && (
+                        <div className="absolute left-0 pt-2 w-64 z-50">
+                            <div className="bg-black/95 border border-white/10 backdrop-blur-xl shadow-2xl p-4 flex flex-col gap-3 rounded-md animate-fade-in">
+                                {OTHER_LINKS.map((link) => (
+                                    <a
+                                        key={link.pageId}
+                                        href={getPathForPageId(link.pageId)}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setIsOthersOpen(false);
+                                            setActivePageId(link.pageId);
+                                        }}
+                                        className="text-[9px] text-left font-black tracking-[0.15em] uppercase text-slate-400 hover:text-rhive-pink transition-colors cursor-pointer"
+                                    >
+                                        {link.label}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </nav>
 
             {/* CENTRAL LOGO (Absolute Alignment for Perfect Spacing) */}
@@ -278,6 +327,27 @@ const RhiveHeader: React.FC = () => {
                                         handleLinkClick(link.target);
                                     }}
                                     className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-4 border-b border-white/5 hover:border-rhive-pink/30 text-center cursor-pointer"
+                                >
+                                    {link.label}
+                                </a>
+                            ))}
+                            <button
+                                onClick={() => setIsMobileOthersOpen(!isMobileOthersOpen)}
+                                className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-4 border-b border-white/5 hover:border-rhive-pink/30 flex justify-between items-center cursor-pointer"
+                            >
+                                <span>OTHERS</span>
+                                <span className="text-[10px]">{isMobileOthersOpen ? '▲' : '▼'}</span>
+                            </button>
+                            {isMobileOthersOpen && OTHER_LINKS.map((link) => (
+                                <a
+                                    key={link.pageId}
+                                    href={getPathForPageId(link.pageId)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setIsMenuOpen(false);
+                                        setActivePageId(link.pageId);
+                                    }}
+                                    className="text-sm font-black tracking-[0.18em] uppercase text-slate-400 hover:text-rhive-pink transition-colors duration-300 w-full py-3 border-b border-white/5 hover:border-rhive-pink/30 text-center cursor-pointer"
                                 >
                                     {link.label}
                                 </a>

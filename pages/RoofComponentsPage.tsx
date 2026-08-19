@@ -51,7 +51,7 @@ const RoofComponentsPage: React.FC = () => {
             <section className="relative h-[50vh] flex items-center justify-center overflow-hidden border-b border-white/5">
                 <div className="absolute inset-0 z-0">
                     <img 
-                        src="/images/components/components_hero.png" 
+                        src="/images/components/components_hero.webp" 
                         alt="Premium Roof System" 
                         className="w-full h-full object-cover opacity-80 grayscale-[10%]"
                     />

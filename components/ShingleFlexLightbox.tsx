@@ -27,7 +27,7 @@ const ShingleFlexLightbox: React.FC<ShingleFlexLightboxProps> = ({ isOpen, onClo
                         <div>
                             <h2 className="text-3xl font-black text-white uppercase tracking-tighter text-left flex items-center gap-4">
                                 FLEX - <span className="bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent">UPGRADE</span>
-                                <img src="/oc-logo.png" alt="OC Preferred" className="h-8 grayscale brightness-200" />
+                                <img src="/oc-logo.webp" alt="OC Preferred" className="h-8 grayscale brightness-200" />
                             </h2>
                             <p className="bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent font-mono text-base uppercase tracking-[0.3em] mt-1 font-bold text-left">Class 4 Hail & Impact Defense</p>
                         </div>
@@ -102,7 +102,7 @@ const ShingleFlexLightbox: React.FC<ShingleFlexLightboxProps> = ({ isOpen, onClo
 
                     <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-8 border-t border-white/10 pt-8 mt-16">
                         <div className="flex items-center gap-4">
-                            <img src="/oc-logo.png" alt="Owens Corning" className="h-8 brightness-150" />
+                            <img src="/oc-logo.webp" alt="Owens Corning" className="h-8 brightness-150" />
                             <div className="h-8 w-[1px] bg-white/10"></div>
                             <div className="text-base font-mono text-gray-500 uppercase tracking-widest text-left">
                                 Certified Preferred <br /> Contractor System

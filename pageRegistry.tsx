@@ -78,6 +78,27 @@ import FirestoreDebugPage from './pages/FirestoreDebugPage'; // DEBUG
 import InternalBpmPage from './pages/InternalBpmPage'; // INTERNAL-BPM (/map)
 import CustomerSignVerifyPage from './pages/CustomerSignVerifyPage'; // CUSTOMER-SIGN-VERIFY (link-only)
 
+// New SEO landing pages
+import ResidentialReplacementServicePage from './pages/ResidentialReplacementServicePage';
+import CommercialFlatRoofingServicePage from './pages/CommercialFlatRoofingServicePage';
+import RoofingAccessoriesPage from './pages/RoofingAccessoriesPage';
+import ZeroSurprisesPricingPage from './pages/ZeroSurprisesPricingPage';
+import SandyServiceAreaPage from './pages/SandyServiceAreaPage';
+import WestJordanServiceAreaPage from './pages/WestJordanServiceAreaPage';
+import SaltLakeCityServiceAreaPage from './pages/SaltLakeCityServiceAreaPage';
+import FaqHubPage from './pages/FaqHubPage';
+import BlogIndexPage from './pages/BlogIndexPage';
+import BlogReplacementCostPage from './pages/BlogReplacementCostPage';
+import BlogIceDamsPage from './pages/BlogIceDamsPage';
+import BlogInsuranceClaimsPage from './pages/BlogInsuranceClaimsPage';
+import BlogOcGafShinglesPage from './pages/BlogOcGafShinglesPage';
+import BlogTpoPvcPage from './pages/BlogTpoPvcPage';
+import BlogDiyChecklistPage from './pages/BlogDiyChecklistPage';
+import BlogFemaleLeadershipPage from './pages/BlogFemaleLeadershipPage';
+import BlogSeamlessGuttersPage from './pages/BlogSeamlessGuttersPage';
+import BlogSolarPanelsPage from './pages/BlogSolarPanelsPage';
+import BlogReputableContractorPage from './pages/BlogReputableContractorPage';
+
 // Specific stage pages
 import LeadPage from './pages/LeadPage'; // E-26
 import QuotePage from './pages/QuotePage'; // E-28
@@ -138,6 +159,27 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-14': MaintenancePage,
   'P-15': InsuranceFaqPage,
   'P-Landing': UniversalLandingPage,
+
+  // New SEO pages mapping
+  'P-SEO-RESIDENTIAL': ResidentialReplacementServicePage,
+  'P-SEO-COMMERCIAL':  CommercialFlatRoofingServicePage,
+  'P-SEO-ACCESSORIES': RoofingAccessoriesPage,
+  'P-SEO-PRICING':     ZeroSurprisesPricingPage,
+  'P-SEO-SANDY':       SandyServiceAreaPage,
+  'P-SEO-WESTJORDAN':  WestJordanServiceAreaPage,
+  'P-SEO-SLC':         SaltLakeCityServiceAreaPage,
+  'P-SEO-FAQ':         FaqHubPage,
+  'P-SEO-BLOG-INDEX':  BlogIndexPage,
+  'P-SEO-BLOG-1':      BlogReplacementCostPage,
+  'P-SEO-BLOG-2':      BlogIceDamsPage,
+  'P-SEO-BLOG-3':      BlogInsuranceClaimsPage,
+  'P-SEO-BLOG-4':      BlogOcGafShinglesPage,
+  'P-SEO-BLOG-5':      BlogTpoPvcPage,
+  'P-SEO-BLOG-6':      BlogDiyChecklistPage,
+  'P-SEO-BLOG-7':      BlogFemaleLeadershipPage,
+  'P-SEO-BLOG-8':      BlogSeamlessGuttersPage,
+  'P-SEO-BLOG-9':      BlogSolarPanelsPage,
+  'P-SEO-BLOG-10':     BlogReputableContractorPage,
 
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,

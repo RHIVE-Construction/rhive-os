@@ -25,7 +25,7 @@ const IceManagementPage = () => {
                 <div className="absolute inset-0 z-0 bg-black">
                     <div
                         className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-[2s] ease-out filter grayscale mix-blend-luminosity"
-                        style={{ backgroundImage: `url(/components/heat_trace_1773773528589.png)` }}
+                        style={{ backgroundImage: `url(/components/heat_trace_1773773528589.webp)` }}
                     ></div>
                     <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black z-10"></div>
                 </div>
@@ -116,7 +116,7 @@ const IceManagementPage = () => {
 
                             <div className="absolute inset-0 z-0">
                                 <img
-                                    src="/components/heat_trace_1773773528589.png"
+                                    src="/components/heat_trace_1773773528589.webp"
                                     className="w-full h-full object-cover opacity-30 group-hover:opacity-60 transition-opacity duration-1000"
                                     alt="RHIVE Heat Trace System"
                                 />

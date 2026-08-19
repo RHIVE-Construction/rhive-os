@@ -1,0 +1,13 @@
+# Sitemaps point the way for Googlebot
+Sitemap: https://www.rhiveconstruction.com/sitemap.xml
+
+# Allow all search engine crawlers full access to render files
+User-agent: *
+Allow: /
+Allow: /*.js$
+Allow: /*.css$
+
+# Protect our secure staging and app directories from public index search
+Disallow: /admin/
+Disallow: /api/
+Disallow: /tmp/

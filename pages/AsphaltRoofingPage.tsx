@@ -84,7 +84,7 @@ const AsphaltRoofingPage = () => {
                 <div className="absolute inset-0 z-0 bg-black">
                     <div
                         className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-[2s] ease-out filter grayscale mix-blend-luminosity"
-                        style={{ backgroundImage: `url(/slc-residential-roof.png)` }}
+                        style={{ backgroundImage: `url(/slc-residential-roof.webp)` }}
                     ></div>
                     {/* Gradient Mask to ensure text readability */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black z-10"></div>
@@ -216,7 +216,7 @@ const AsphaltRoofingPage = () => {
                             {/* Marketing Showcase Image */}
                             <div className="absolute inset-0 z-0">
                                 <img
-                                    src="/oc_duration_standard.png"
+                                    src="/oc_duration_standard.webp"
                                     className="w-full h-full object-cover opacity-30 group-hover:opacity-60 transition-opacity duration-1000"
                                     alt="Owens Corning Duration Architectural Shingles"
                                 />
