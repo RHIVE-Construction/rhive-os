@@ -88,7 +88,7 @@ const Tpo60Page: React.FC = () => {
                         <h3 className="text-2xl font-black text-white uppercase mb-4">Secure Your Commercial Asset</h3>
                         <p className="text-gray-400 mb-8 max-w-xl mx-auto">Get an instant estimate for the GAF TPO 60 mil package using our transparent pricing engine.</p>
                         <button
-                            onClick={() => setActivePageId('P-12')}
+                            onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Commercial / Industrial' } }))}
                             className="px-8 py-4 bg-[var(--rhive-pink)] hover:bg-[#c90278] text-white font-bold uppercase tracking-widest text-sm transition-colors shadow-[0_0_20px_rgba(236,2,139,0.3)] hover:shadow-[0_0_30px_rgba(236,2,139,0.5)]"
                             style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                         >

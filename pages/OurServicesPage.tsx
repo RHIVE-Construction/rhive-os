@@ -168,7 +168,7 @@ const OurServicesPage: React.FC = () => {
                         <p className="text-gray-400 font-serif text-base md:text-lg leading-relaxed max-w-prose mx-auto mb-6">
                             RHIVE Roofing is more than shingles and sealants. It’s a movement of trust, transformation, and transparency. Whether you're protecting your home, your business, or your legacy—you’re part of the Hive now.
                         </p>
-                        <button onClick={() => setActivePageId('P-12')} className="px-8 py-4 bg-white text-black hover:bg-[var(--rhive-pink)] hover:text-white font-black text-base uppercase tracking-widest transition-colors" style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}>
+                        <button onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'General' } }))} className="px-8 py-4 bg-white text-black hover:bg-[var(--rhive-pink)] hover:text-white font-black text-base uppercase tracking-widest transition-colors" style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}>
                             Join The Hive Today
                         </button>
                     </div>

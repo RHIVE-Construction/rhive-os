@@ -88,7 +88,7 @@ const PvcPage: React.FC = () => {
                         <h3 className="text-2xl font-black text-white uppercase mb-4">Invest in Chemical Immunity</h3>
                         <p className="text-gray-400 mb-8 max-w-xl mx-auto">Get an instant estimate for our specialized PVC packages using our transparent pricing engine.</p>
                         <button
-                            onClick={() => setActivePageId('P-12')}
+                            onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Commercial / Industrial' } }))}
                             className="px-8 py-4 bg-[#e2ab49] hover:bg-[#cf9838] text-black font-black uppercase tracking-widest text-sm transition-colors shadow-[0_0_20px_rgba(226,171,73,0.3)] hover:shadow-[0_0_30px_rgba(226,171,73,0.5)]"
                             style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                         >

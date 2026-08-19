@@ -533,7 +533,15 @@ export default function MaintenancePage() {
                             <h3 className="text-3xl md:text-4xl font-bold uppercase mb-4 text-white">System Override Required?</h3>
                             <p className="text-gray-400 font-serif text-lg md:text-xl mb-8 max-w-2xl mx-auto">If the structural damage exceeds safe DIY parameters, initiate the RHIVE protocol. See what the RHIVE experience looks like and get numbers on your project today.</p>
                             
-                            <form className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto" onSubmit={(e) => { e.preventDefault(); setActivePageId('P-12'); }}>
+                            <form 
+                                className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto" 
+                                onSubmit={(e) => { 
+                                    e.preventDefault(); 
+                                    const input = e.currentTarget.querySelector('input');
+                                    const addressVal = input ? input.value : '';
+                                    window.dispatchEvent(new CustomEvent('open-estimator', { detail: { address: addressVal, concern: 'General Maintenance' } }));
+                                }}
+                            >
                                 <div className="relative flex-grow">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <Home className="h-6 w-6 text-gray-600" />

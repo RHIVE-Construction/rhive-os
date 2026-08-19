@@ -52,7 +52,7 @@ const IceManagementPage = () => {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <button
-                            onClick={() => setActivePageId('P-12')}
+                            onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Ice Management / Heat Cables' } }))}
                             className="group relative px-10 py-5 bg-gradient-to-b from-white to-rhive-blue hover:from-white hover:to-[#08137C] text-black font-black uppercase text-base tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(8,19,124,0.3)]"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >

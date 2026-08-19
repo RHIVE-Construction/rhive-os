@@ -238,7 +238,7 @@ const InsuranceFaqPage: React.FC = () => {
                             </div>
                             <Button 
                                 id="faq-eagle-cta"
-                                onClick={() => setActivePageId('P-12')}
+                                onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Insurance Claims' } }))}
                                 className="w-full justify-between"
                             >
                                 <span>Upload Carrier Estimate Now</span>

@@ -168,7 +168,10 @@ const InsurancePage: React.FC = () => {
                 <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
                     <h3 className="text-3xl font-black uppercase tracking-tighter mb-6 italic text-[#08137C]">Transparency is the new standard.</h3>
                     <p className="text-gray-400 mb-10 text-sm uppercase tracking-widest font-bold">Ready for a data-backed inspection?</p>
-                    <button className="px-12 py-5 bg-[var(--rhive-pink)] text-white font-black text-sm uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(236,2,139,0.3)] hover:scale-105 transition-all">
+                    <button 
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Insurance Claims' } }))}
+                        className="px-12 py-5 bg-[var(--rhive-pink)] text-white font-black text-sm uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(236,2,139,0.3)] hover:scale-105 transition-all"
+                    >
                         Request Ethical Inspection
                     </button>
                 </div>
