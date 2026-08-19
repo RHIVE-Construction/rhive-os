@@ -88,7 +88,7 @@ const Tpo80Page: React.FC = () => {
                         <h3 className="text-2xl font-black uppercase mb-4 bg-gradient-to-t from-rhive-blue to-white bg-clip-text text-transparent">Upgrade to 30-Year Performance</h3>
                         <p className="text-gray-400 mb-8 max-w-xl mx-auto">Get an instant estimate for the GAF TPO 80 mil upgrade using our transparent pricing engine.</p>
                         <button
-                            onClick={() => setActivePageId('P-12')}
+                            onClick={() => window.dispatchEvent(new CustomEvent('open-estimator', { detail: { concern: 'Commercial / Industrial' } }))}
                             className="px-8 py-4 bg-gradient-to-b from-white to-rhive-blue hover:from-white hover:to-[#08137C] text-black font-black uppercase tracking-widest text-sm transition-colors shadow-[0_0_20px_rgba(8,19,124,0.3)] hover:shadow-[0_0_30px_rgba(8,19,124,0.5)]"
                             style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                         >

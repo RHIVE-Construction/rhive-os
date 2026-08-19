@@ -143,7 +143,7 @@ const UniversalLandingPage: React.FC = () => {
                         transition={{ delay: 0.6 }}
                         className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
                     >
-                        <button onClick={() => setActivePageId('P-12')} className="bg-white/5 border border-white/10 hover:border-rhive-pink p-6 text-left group transition-all rounded-lg relative overflow-hidden">
+                        <button onClick={() => OpenEstimator('General')} className="bg-white/5 border border-white/10 hover:border-rhive-pink p-6 text-left group transition-all rounded-lg relative overflow-hidden">
                             <div className="absolute inset-0 bg-rhive-pink/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <Zap className="text-rhive-pink mb-4" size={28} />
                             <h3 className="text-white font-bold text-sm uppercase mb-1">Need it fixed fast?</h3>
