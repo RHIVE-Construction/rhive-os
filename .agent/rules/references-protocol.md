@@ -25,5 +25,9 @@ After a successful push:
 ## 3. MANUAL OVERRIDE
 If a user asks to "reference" a file and it is "not found," check `.gitignore` first. The system requires the folder to be UN-IGNORED in `.gitignore` to populate the `@` mention dropdown.
 
-## 4. XLXS DATA HANDLING
-While `.xlsx` files cannot be read as raw text, agents should seek to mirror key data from `RHIVE QOS DATA.xlsx` into `.json` or `.ts` constants within the `src/` directory for operational use, while keeping the original source in `REFERENCES/`.
+## 4. MASTER CLOUD DATA SOURCES (QOS SPREADSHEET & DOCS)
+All agents and AI subagents must refer directly to the live cloud Google Sheets and Google Docs:
+- **Master QOS Data Sheet:** [RHIVE QOS DATA (Services Database)](https://docs.google.com/spreadsheets/d/1QJkLf5uGr_gNb0KWCsfwnk5IyP0vtZdQnhZFLv901Aw/edit?gid=1789021942#gid=1789021942) (`1QJkLf5uGr_gNb0KWCsfwnk5IyP0vtZdQnhZFLv901Aw` / GID `1789021942`).
+- **Master Project Descriptions Doc:** [Project Item Descriptions (Google Docs)](https://docs.google.com/document/d/1c_Nkwt2CEStnA9ZurGU1VdxtOGRJMwbNNdFKAX4ja0w/edit?tab=t.0) (`1c_Nkwt2CEStnA9ZurGU1VdxtOGRJMwbNNdFKAX4ja0w`).
+- Local `.xlsx` files in `REFERENCES/` are permanently deprecated in favor of direct cloud API synchronization.
+
