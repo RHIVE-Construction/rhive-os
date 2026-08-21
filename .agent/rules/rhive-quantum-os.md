@@ -202,3 +202,12 @@ When I ask you to build a feature:
   * **Primary:** Use **Screenshots** for design review (so the user can easily export them to external analysis tools).
   * **Secondary:** Use **Video (.webp)** strictly to demonstrate interactive elements, cool animations, or complex state changes. 
 * **Efficiency:** Avoid taking an excessive or wasteful number of repeated screenshots. Scroll efficiently and capture exactly what is needed for complete coverage.
+
+## 9. PROPERTY & TAKE-OFF GEOMETRY RULES (MANDATORY)
+* **Structure Numbering:** Always separate and number individual buildings (`Structure 1: Primary Residence`, `Structure 2: Detached Garage/Outbuilding`).
+* **Pitch Distribution Table:** For every structure, output the exact breakdown of each pitch (rise/run, slope angle, Sq Ft, Squares, and Facet Count).
+* **Waste Engine (Instant Estimate v2):**
+  * Simple Gable (<6 facets, 0 valleys): +10.0% base waste.
+  * Standard Hip & Valley (6–12 facets, 1–2 valleys, pitch 6/12–7/12): +12.0% standard waste.
+  * Blended: Weighted formula average across all structures.
+* **Mermaid Syntax Guard:** Never use the `timeline` keyword in markdown artifacts; use `flowchart TD` or `flowchart LR` with custom styling classes for guaranteed render compatibility.
