@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-07-16T18:38:01.595Z",
+  "steps": {
+    "initial_state": true,
+    "modal_opened": true
+  },
+  "success": false,
+  "error": "No element found for selector: input[placeholder=\"FILTER SWARM BY KEYWORD...\"]"
+}

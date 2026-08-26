@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-07-13T02:25:29.534Z",
+  "steps": {
+    "load_dashboard": true,
+    "contacts_opened": true,
+    "scott_selected": true,
+    "dialer_keypad_verified": true,
+    "voip_call_active": true,
+    "voip_call_completed": true,
+    "sms_auto_reply_verified": true,
+    "telemetry_expanded": true,
+    "gemini_live_overlay_active": true,
+    "voice_mute_verified": true,
+    "voice_pause_verified": true,
+    "mobile_layouts_verified": true
+  },
+  "success": true
+}

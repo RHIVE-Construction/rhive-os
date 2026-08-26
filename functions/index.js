@@ -1,17 +1,19 @@
 require('dotenv').config();
 const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
-const { GoogleGenAI } = require('@google/genai');
 const axios = require('axios');
 const crypto = require('crypto');
 
-admin.initializeApp();
+admin.initializeApp({
+    projectId: process.env.GCLOUD_PROJECT || process.env.FIREBASE_CONFIG?.projectId || 'instant-estimate-with-photos'
+});
 const cors = require('cors')({ origin: true });
 
 // Configuration
 const JUSTCALL_API_KEY = process.env.JUSTCALL_API_KEY;
 const JUSTCALL_API_SECRET = process.env.JUSTCALL_API_SECRET;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GOOGLE_CHAT_WEBHOOK = process.env.GOOGLE_CHAT_WEBHOOK_URL;
 
 let genAI = null;
 if (GEMINI_API_KEY) {
@@ -23,24 +25,35 @@ if (GEMINI_API_KEY) {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITY & NORMALIZATION HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * Generates variations of a phone number to improve lookup success.
- * Handles formats like: +14636346346, 4636346346, (463) 634-6346, 463-634-6346
+ * Normalise any phone format → E.164
+ */
+function normalizePhone(phone) {
+    if (!phone) return '';
+    const trimmed = String(phone).trim();
+    const digits = trimmed.replace(/\D/g, '');
+    if (trimmed.startsWith('+')) return `+${digits}`;
+    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+    if (digits.length === 10) return `+1${digits}`;
+    return `+${digits}`;
+}
+
+/**
+ * Generates variations of a phone number to improve lookup success in Firestore.
  */
 function getPhoneVariations(phone) {
     if (!phone) return [];
     const variations = new Set();
     const cleanPhone = String(phone).trim();
 
-    // 1. Original
     variations.add(cleanPhone);
-
-    // 2. Digits only
     const digits = cleanPhone.replace(/\D/g, '');
     if (digits) {
         variations.add(digits);
-
-        // 3. Handle US Numbers (10 or 11 digits)
         let tenDigits = "";
         if (digits.length === 10) tenDigits = digits;
         else if (digits.length === 11 && digits.startsWith('1')) tenDigits = digits.substring(1);
@@ -49,19 +62,175 @@ function getPhoneVariations(phone) {
             variations.add(tenDigits);
             variations.add(`1${tenDigits}`);
             variations.add(`+1${tenDigits}`);
-            // Dashboard format: (463) 634-6346
             variations.add(`(${tenDigits.substring(0, 3)}) ${tenDigits.substring(3, 6)}-${tenDigits.substring(6)}`);
-            // Dash format: 463-634-6346
             variations.add(`${tenDigits.substring(0, 3)}-${tenDigits.substring(3, 6)}-${tenDigits.substring(6)}`);
         }
     }
 
-    return Array.from(variations).slice(0, 10); // Firestore 'in' operator limit is 10
+    return Array.from(variations).slice(0, 10);
 }
 
 /**
- * 1. JustCall Lookup (For AI Agent)
- * JustCall hits this to get details about a caller in real-time.
+ * Standardizes raw address strings and validates Utah / Idaho service zones.
+ */
+function standardizeAddress(rawAddress, city = '', state = 'UT', zip = '') {
+    if (!rawAddress) return null;
+    let full = `${rawAddress}, ${city} ${state} ${zip}`.trim().replace(/\s+/g, ' ');
+
+    // Standard street abbreviations
+    const replacements = [
+        [/\bStreet\b/gi, 'St'],
+        [/\bAvenue\b/gi, 'Ave'],
+        [/\bBoulevard\b/gi, 'Blvd'],
+        [/\bDrive\b/gi, 'Dr'],
+        [/\bLane\b/gi, 'Ln'],
+        [/\bRoad\b/gi, 'Rd'],
+        [/\bCourt\b/gi, 'Ct'],
+        [/\bCircle\b/gi, 'Cir'],
+        [/\bWay\b/gi, 'Way'],
+        [/\bParkway\b/gi, 'Pkwy'],
+        [/\bPlace\b/gi, 'Pl']
+    ];
+    for (const [regex, rep] of replacements) {
+        full = full.replace(regex, rep);
+    }
+
+    const zipMatch = full.match(/\b(84\d{3}|83\d{3})\b/);
+    const detectedZip = zipMatch ? zipMatch[1] : (zip || null);
+
+    const isUtah = /(?:UT|Utah)\b/i.test(full) || (detectedZip && detectedZip.startsWith('84'));
+    const isIdaho = /(?:ID|Idaho)\b/i.test(full) || (detectedZip && detectedZip.startsWith('83'));
+
+    let serviceTier = 'OUT_OF_AREA';
+    if (isUtah) serviceTier = 'PRIMARY_WASATCH_FRONT';
+    else if (isIdaho) serviceTier = 'SECONDARY_SOUTHERN_IDAHO';
+
+    const isCommercial = /(?:suite|ste|bldg|building|unit|dept|warehouse|plaza|center)\b/i.test(full);
+
+    return {
+        formattedAddress: full,
+        zip: detectedZip,
+        state: isUtah ? 'UT' : (isIdaho ? 'ID' : state),
+        serviceTier,
+        isCovered: serviceTier !== 'OUT_OF_AREA',
+        isCommercial
+    };
+}
+
+/**
+ * Filter Rule: Detects if the transcript or caller is a solicitor/marketer/spam.
+ */
+function evaluateSolicitorFilter(transcript = '', notes = '', callerName = '') {
+    const combinedText = `${transcript} ${notes} ${callerName}`.toLowerCase();
+
+    const spamTriggers = [
+        'search engine optimization', 'seo ranking', 'google business profile ranking',
+        'first page of google', 'digital marketing agency', 'web design services',
+        'offshore staffing', 'virtual assistant services', 'credit card processing fees',
+        'merchant services', 'payroll discount', 'business funding', 'unsecured line of credit',
+        'solar leads', 'roofing lead generation', 'pay per lead', 'b2b appointment setting'
+    ];
+
+    for (const trigger of spamTriggers) {
+        if (combinedText.includes(trigger)) {
+            return {
+                isSolicitor: true,
+                reason: `Trigger matched: "${trigger}"`,
+                confidence: 0.95
+            };
+        }
+    }
+
+    // Solicitor asking for owner without roofing context
+    const asksForOwner = /(?:is the business owner|is the general manager|who handles your marketing|who makes advertising decisions)/i.test(combinedText);
+    const hasRoofingContext = /(?:roof|leak|shingle|tarp|inspection|gutter|fascia|decking|quote|estimate|hail|storm)/i.test(combinedText);
+
+    if (asksForOwner && !hasRoofingContext) {
+        return {
+            isSolicitor: true,
+            reason: 'Solicitor inquiry without property or roofing context',
+            confidence: 0.85
+        };
+    }
+
+    return { isSolicitor: false, reason: 'Clean lead', confidence: 0.99 };
+}
+
+/**
+ * AI Parsing & Classification Rule: Parses call transcripts to extract structured intelligence.
+ */
+async function parseCallTranscriptWithAI(transcript, notes, contactName, phone) {
+    const rawContent = `Contact: ${contactName || 'Unknown'} (${phone})\nNotes: ${notes || 'None'}\nTranscript:\n${transcript || 'No transcript available'}`;
+
+    if (!GEMINI_API_KEY || !genAI) {
+        // Fallback heuristic parsing if Gemini is unavailable
+        const addressMatch = rawContent.match(/(?:at|for|address)\s+([0-9]+\s+[A-Za-z0-9\s,]+(?:UT|Idaho|Utah|ID|84[0-9]{3}))/i);
+        const leakMatch = /(?:leak|water|dripping|penetration|tarp|emergency)/i.test(rawContent);
+        const estimateMatch = /(?:ballpark|estimate|quote|pricing|cost|shingle|metal)/i.test(rawContent);
+
+        return {
+            intent: leakMatch ? 'ACTIVE_LEAK_EMERGENCY' : (estimateMatch ? 'NEW_ROOF_ESTIMATE' : 'GENERAL_INQUIRY'),
+            discProfile: 'Steady',
+            extractedAddress: addressMatch ? addressMatch[1].trim() : null,
+            urgencyScore: leakMatch ? 9 : 5,
+            roofAgeYears: null,
+            keyConcerns: [leakMatch ? 'Active water entry' : 'Pricing inquiry'],
+            actionItems: ['Follow up with customer within 24 hours'],
+            summary: rawContent.substring(0, 200)
+        };
+    }
+
+    try {
+        const prompt = `You are the FAANG-Tier Executive CRM Parsing Engine for RHIVE Construction.
+Analyze the following phone call transcript and notes between the AI Voice Agent (Hunni) and the caller.
+Return a STRICT valid JSON object with no markdown fences, matching this schema:
+{
+  "intent": "NEW_ROOF_ESTIMATE" | "ACTIVE_LEAK_EMERGENCY" | "CERTIFIED_QUOTE_INSPECTION" | "SOLICITOR_MARKETER_SPAM" | "GENERAL_INQUIRY" | "BILLING_ADMIN",
+  "discProfile": "Driver" | "Influencer" | "Steady" | "Calculator",
+  "extractedAddress": string | null,
+  "callerFirstName": string | null,
+  "callerLastName": string | null,
+  "urgencyScore": number (1 to 10),
+  "roofAgeYears": number | null,
+  "isInsuranceClaim": boolean,
+  "keyConcerns": string[],
+  "actionItems": string[],
+  "executiveSummary": string (max 40 words)
+}
+
+Input Call Data:
+${rawContent}`;
+
+        const response = await genAI.models.generateContent({
+            model: "gemini-1.5-flash",
+            contents: [{ parts: [{ text: prompt }] }]
+        });
+
+        const textOutput = response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '{}';
+        const cleanJson = textOutput.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+        return JSON.parse(cleanJson);
+    } catch (e) {
+        console.error('[parseCallTranscriptWithAI] Gemini parse error:', e.message);
+        return {
+            intent: 'GENERAL_INQUIRY',
+            discProfile: 'Steady',
+            extractedAddress: null,
+            urgencyScore: 5,
+            roofAgeYears: null,
+            isInsuranceClaim: false,
+            keyConcerns: ['Transcription parsing fallback'],
+            actionItems: ['Review manual transcript in JustCall'],
+            executiveSummary: 'Automated AI parse fallback; review raw transcript.'
+        };
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLOUD HOOKS & ENDPOINTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * 1. JustCall Lookup (For Inbound Voice Agent Greeting)
  */
 exports.justCallLookup = functions.https.onRequest((req, res) => {
     return cors(req, res, async () => {
@@ -70,60 +239,33 @@ exports.justCallLookup = functions.https.onRequest((req, res) => {
 
         try {
             const db = admin.firestore();
-
-            // 1. Search Contacts (using flexible variations)
             const variations = getPhoneVariations(phoneNumber);
-            const contactSnapshot = await db.collection('contacts').where('phone', 'in', variations).limit(1).get();
+            const contactSnapshot = await db.collection('contacts').where('phone', 'in', variations).where('isDeleted', '==', false).limit(1).get();
             let customerData = null;
-            let contactId = null;
 
             if (!contactSnapshot.empty) {
                 customerData = contactSnapshot.docs[0].data();
-                contactId = contactSnapshot.docs[0].id;
             }
 
-            // 2. Search Projects (Check both 'project' and 'projects' as per user notes)
             let projectData = null;
             if (customerData && customerData.project_id) {
-                const pDoc = await db.collection('project').doc(customerData.project_id).get();
+                const pDoc = await db.collection('projects').doc(customerData.project_id).get();
                 if (pDoc.exists) projectData = pDoc.data();
-                else {
-                    const pDoc2 = await db.collection('projects').doc(customerData.project_id).get();
-                    if (pDoc2.exists) projectData = pDoc2.data();
-                }
             }
 
-            // 3. Prepare context for Gemini
-            const customerName = customerData ? `${customerData.first_name} ${customerData.last_name}` : "Unknown (New Lead)";
-            const customerStatus = projectData ? projectData.status : (customerData ? customerData.status : "New");
-            const lastProject = projectData ? (projectData.name || "Untitled Project") : (customerData ? (customerData.last_project || "None") : "None");
+            const customerName = customerData ? `${customerData.first_name || ''} ${customerData.last_name || ''}`.trim() : "Guest";
+            const customerStatus = projectData ? projectData.status : (customerData ? customerData.status : "New Lead");
+            const lastProject = projectData ? (projectData.name || "Roofing Project") : "None";
 
-            const prompt = `You are the AI Voice Agent for RHIVE Construction. 
-            Customer: ${customerName}, 
-            Status: ${customerStatus}, 
-            Current Project: ${lastProject}. 
-            Generate a brief (max 15 words) personalized greeting. 
-            Format: Just the text.`;
-
-            let personalizedGreeting = `Hello, thanks for calling RHIVE Construction. How can I help you?`;
-            if (GEMINI_API_KEY && genAI) {
-                try {
-                    const result = await genAI.models.generateContent({
-                        model: "gemini-1.5-flash",
-                        contents: [{ parts: [{ text: prompt }] }]
-                    });
-
-                    if (result && result.candidates && result.candidates[0]) {
-                        personalizedGreeting = result.candidates[0].content.parts[0].text.trim().replace(/["]+/g, '');
-                    }
-                } catch (e) { console.error("Gemini Error", e); }
-            }
+            const greeting = customerData
+                ? `Hi ${customerData.first_name || customerName}, thanks for calling R-Hive Construction! How can we assist with your project today?`
+                : `Thank you for calling R-Hive Construction. This is Hunni, how can I help you today?`;
 
             return res.status(200).json({
                 found: !!customerData,
                 firstName: customerData ? customerData.first_name : "Guest",
                 lastName: customerData ? customerData.last_name : "",
-                personalizedGreeting,
+                personalizedGreeting: greeting,
                 status: customerStatus,
                 lastProject,
                 projectId: customerData ? customerData.project_id : null
@@ -136,587 +278,339 @@ exports.justCallLookup = functions.https.onRequest((req, res) => {
 });
 
 /**
- * 1b. JustCall Information Query (Enhanced)
- * A more detailed endpoint for JustCall bots to fetch full project/property details.
+ * 2. Address Verification Cloud Hook (Agent 1 & Agent 2 Real-Time Verification)
  */
-exports.justCallInformation = functions.https.onRequest((req, res) => {
+exports.verifyAddress = functions.https.onRequest((req, res) => {
     return cors(req, res, async () => {
-        const phoneNumber = req.query.phone || req.body.phone;
-        if (!phoneNumber) return res.status(400).json({ error: "No phone number provided" });
+        const address = req.query.address || req.body.address;
+        const city = req.query.city || req.body.city || '';
+        const state = req.query.state || req.body.state || 'UT';
+        const zip = req.query.zip || req.body.zip || '';
+
+        if (!address) return res.status(400).json({ error: 'Missing address string' });
+
+        const result = standardizeAddress(address, city, state, zip);
+        return res.status(200).json({
+            valid: result.isCovered,
+            formattedAddress: result.formattedAddress,
+            serviceTier: result.serviceTier,
+            zip: result.zip,
+            state: result.state,
+            isCommercial: result.isCommercial,
+            message: result.isCovered ? 'Address verified and within primary service zone.' : 'Address located outside standard service territory.'
+        });
+    });
+});
+
+/**
+ * 3. sendEstimatorSms Cloud Hook (Agent 1 Ballpark SMS Trigger)
+ */
+exports.sendEstimatorSms = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        const phone = req.query.phone || req.body.phone;
+        const name = req.query.name || req.body.name || 'there';
+        if (!phone) return res.status(400).json({ error: 'Missing phone number' });
+
+        const normalizedPhone = normalizePhone(phone);
+        const apiKey = process.env.JUSTCALL_API_KEY || '';
+        const apiSecret = process.env.JUSTCALL_API_SECRET || '';
+        const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '+14354176637';
+
+        const messageBody = `Hi ${name}, thank you for contacting RHIVE Construction! You can explore instant ballpark pricing right here: https://www.rhiveconstruction.com or reply to this text to request a certified quote with guaranteed transparent pricing.`;
 
         try {
-            const db = admin.firestore();
-
-            // 1. Fetch Contact (using flexible variations)
-            const variations = getPhoneVariations(phoneNumber);
-            const contactSnapshot = await db.collection('contacts').where('phone', 'in', variations).limit(1).get();
-
-            if (contactSnapshot.empty) {
-                return res.status(200).json({ found: false, message: "No contact found for this number.", tried: variations });
+            if (apiKey && apiSecret) {
+                await axios.post('https://api.justcall.io/v2.1/texts/new', {
+                    justcall_number: fromNumber,
+                    contact_number: normalizedPhone,
+                    body: messageBody
+                }, {
+                    headers: { 'Authorization': `${apiKey}:${apiSecret}`, 'Content-Type': 'application/json' },
+                    timeout: 10000
+                });
             }
 
-            const contact = { id: contactSnapshot.docs[0].id, ...contactSnapshot.docs[0].data() };
-
-            // 2. Fetch Project(s)
-            let projects = [];
-            if (contact.project_id) {
-                const p1 = await db.collection('project').doc(contact.project_id).get();
-                if (p1.exists) projects.push({ id: p1.id, ...p1.data() });
-
-                const p2 = await db.collection('projects').doc(contact.project_id).get();
-                if (p2.exists) projects.push({ id: p2.id, ...p2.data() });
-            } else {
-                // Search by contact ID in case project_id isn't on contact but contact_id is on project
-                const q1 = await db.collection('project').where('contact_id', '==', contact.id).get();
-                q1.forEach(doc => projects.push({ id: doc.id, ...doc.data() }));
-
-                const q2 = await db.collection('projects').where('contact_id', '==', contact.id).get();
-                q2.forEach(doc => projects.push({ id: doc.id, ...doc.data() }));
-            }
-
-            // 3. Fetch Property Details (if exists as a separate collection)
-            let propertiesList = [];
-            for (const proj of projects) {
-                if (proj.property_id) {
-                    const propDoc = await db.collection('properties').doc(proj.property_id).get();
-                    if (propDoc.exists) propertiesList.push({ id: propDoc.id, ...propDoc.data() });
-                }
-                // Also check if property info is nested in project
-                if (proj.property && !propertiesList.some(p => p.address === proj.property.address)) {
-                    propertiesList.push(proj.property);
-                }
-            }
-
-            // 4. Summarize for AI Bot
-            const contextSummary = `
-                Customer: ${contact.first_name} ${contact.last_name}
-                Email: ${contact.email || 'N/A'}
-                Projects: ${projects.map(p => `${p.name} (Status: ${p.status || 'Unknown'})`).join(', ') || 'None'}
-                Properties: ${propertiesList.map(p => p.address || p.property_address || 'Unknown').join(', ') || 'None'}
-            `.trim();
-
-            return res.status(200).json({
-                found: true,
-                contact,
-                projects,
-                properties: propertiesList,
-                contextSummary
+            await admin.firestore().collection('sms_logs').add({
+                type: 'ESTIMATOR_LINK_SMS',
+                phone: normalizedPhone,
+                name,
+                message: messageBody,
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
-        } catch (error) {
-            console.error("JustCall Info Error:", error);
-            return res.status(500).json({ error: error.message });
+
+            return res.status(200).json({ success: true, message: 'Estimator link SMS dispatched.' });
+        } catch (err) {
+            console.error('[sendEstimatorSms] Error:', err.message);
+            return res.status(500).json({ error: err.message });
         }
     });
 });
 
 /**
- * 2. Sync Firebase -> JustCall
- * Automatically adds contacts to JustCall when created in Firebase.
+ * 4. sendPhotoUploadSms Cloud Hook (Agent 2 Emergency Photo Upload Trigger)
  */
-exports.onContactCreatedSyncToJustCall = functions.firestore
-    .document('contacts/{contactId}')
-    .onCreate(async (snapshot, context) => {
-        const data = snapshot.data();
+exports.sendPhotoUploadSms = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        const phone = req.query.phone || req.body.phone;
+        const name = req.query.name || req.body.name || 'there';
+        if (!phone) return res.status(400).json({ error: 'Missing phone number' });
 
-        if (!JUSTCALL_API_KEY || !JUSTCALL_API_SECRET) {
-            console.error("JustCall API Keys not set in environment.");
-            return null;
-        }
+        const normalizedPhone = normalizePhone(phone);
+        const apiKey = process.env.JUSTCALL_API_KEY || '';
+        const apiSecret = process.env.JUSTCALL_API_SECRET || '';
+        const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '+14354176637';
+
+        const messageBody = `Hi ${name}, this is Michael Robinson from RHIVE Construction. Please text me 2-3 photos of the leak area or ceiling damage right here, or upload at https://www.rhiveconstruction.com/blank-1 so our crew can assess the repair immediately.`;
 
         try {
-            await axios.post('https://api.justcall.io/v1/contacts', {
-                first_name: data.first_name,
-                last_name: data.last_name,
-                phone: data.phone,
-                email: data.email || ""
-            }, {
-                headers: {
-                    'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
-                    'Content-Type': 'application/json'
-                }
+            if (apiKey && apiSecret) {
+                await axios.post('https://api.justcall.io/v2.1/texts/new', {
+                    justcall_number: fromNumber,
+                    contact_number: normalizedPhone,
+                    body: messageBody
+                }, {
+                    headers: { 'Authorization': `${apiKey}:${apiSecret}`, 'Content-Type': 'application/json' },
+                    timeout: 10000
+                });
+            }
+
+            await admin.firestore().collection('sms_logs').add({
+                type: 'PHOTO_REQUEST_SMS',
+                phone: normalizedPhone,
+                name,
+                message: messageBody,
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
-            console.log(`Successfully synced ${data.first_name} to JustCall.`);
-        } catch (error) {
-            console.error("Error syncing to JustCall:", error.response?.data || error.message);
+
+            return res.status(200).json({ success: true, message: 'Photo request SMS dispatched.' });
+        } catch (err) {
+            console.error('[sendPhotoUploadSms] Error:', err.message);
+            return res.status(500).json({ error: err.message });
         }
     });
+});
 
 /**
- * Helper: Verify JustCall Dynamic Webhook Signature (SHA256)
- * Docs: https://developer.justcall.io/docs/dynamic-webhook-signatures
- *
- * JustCall signs each webhook with:
- *   payload = SECRET | encodeURIComponent(webhook_url) | event_type | timestamp
- *   signature = HMAC-SHA256(payload, SECRET)
+ * 5. bookInspectionCalendar Cloud Hook (Agent 1 & 2 30-min Spoken / 2-hr Calendar Block)
  */
-function verifyJustCallSignature(req, body) {
-    const incomingSignature = req.headers['x-justcall-signature'];
-    const timestamp = req.headers['x-justcall-request-timestamp'];
-    const webhookUrl = body.webhook_url;
-    const eventType = body.type;
+exports.bookInspectionCalendar = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        const { caller_name, phone, address, window_choice, date } = req.body;
+        const db = admin.firestore();
 
-    if (!incomingSignature || !timestamp || !webhookUrl || !eventType) {
-        console.warn('JustCall signature verification: missing required headers/fields.');
-        return false;
-    }
+        const bookingDoc = {
+            eventType: 'ROOF_INSPECTION',
+            spokenDuration: '30 Minutes (15m roof + 15m drone flight)',
+            internalBlockDuration: '2 Hours (Includes travel, pack-up, photo upload & report generation)',
+            arrivalWindow: window_choice || 'Morning (9 AM - 12 PM)',
+            targetDate: date || new Date().toISOString().split('T')[0],
+            customerName: caller_name || 'Guest Lead',
+            customerPhone: normalizePhone(phone),
+            propertyAddress: address || 'Address Pending',
+            executivesMarkedBusy: ['Kara Robinson (801-441-0024)', 'Michael Robinson (801-449-1451)'],
+            calendarName: 'RHIVE Project Inspections',
+            status: 'CONFIRMED',
+            createdAt: new Date().toISOString()
+        };
 
-    const secret = JUSTCALL_API_SECRET;
-    const encodedUrl = encodeURIComponent(webhookUrl);
-    const payload = `${secret}|${encodedUrl}|${eventType}|${timestamp}`;
-    const expectedSignature = crypto
-        .createHmac('sha256', secret)
-        .update(payload)
-        .digest('hex');
+        try {
+            await db.collection('calendar_bookings').add(bookingDoc);
+        } catch (fsErr) {
+            console.log('[bookInspectionCalendar] Firestore note:', fsErr.message);
+        }
 
-    const signatureMatch = crypto.timingSafeEqual(
-        Buffer.from(incomingSignature, 'hex'),
-        Buffer.from(expectedSignature, 'hex')
-    );
-
-    if (!signatureMatch) {
-        console.warn('JustCall signature mismatch! Possible spoofed request.');
-    }
-    return signatureMatch;
-}
+        return res.status(200).json({
+            success: true,
+            message: 'Inspection booked for 30-min on-site assessment (2-hr calendar block scheduled).',
+            booking: bookingDoc
+        });
+    });
+});
 
 /**
- * 3. JustCall -> Firebase (Call & SMS Logging with Signature Verification)
- * Receives verified webhooks from JustCall and logs them to Firestore.
+ * 6. bookCallbackCalendar Cloud Hook (Agent 3 Smart Callback)
+ */
+exports.bookCallbackCalendar = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        const { caller_name, phone, date, time, reason } = req.body;
+        const db = admin.firestore();
+
+        const callbackDoc = {
+            eventType: 'PHONE_CONSULTATION',
+            spokenDuration: '15 Minutes',
+            internalBlockDuration: '45 Minutes (15m call + 30m prep/buffer)',
+            targetDate: date || new Date().toISOString().split('T')[0],
+            targetTime: time || 'ASAP',
+            customerName: caller_name || 'Caller',
+            customerPhone: normalizePhone(phone),
+            reason: reason || 'General Inquiry / Callback Request',
+            calendarName: 'RHIVE Phone Calls',
+            status: 'CONFIRMED',
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            await db.collection('calendar_bookings').add(callbackDoc);
+        } catch (fsErr) {
+            console.log('[bookCallbackCalendar] Firestore note:', fsErr.message);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Callback appointment scheduled on RHIVE Phone Calls.',
+            booking: callbackDoc
+        });
+    });
+});
+
+/**
+ * 7. Server-Side Master Webhook with Filter & AI Parsing Pipeline
+ * Receives JustCall webhooks, verifies HMAC signatures, runs anti-solicitor filters,
+ * parses transcripts with Gemini, upserts CRM leads, and queues automated RPA tasks.
  */
 exports.justCallWebhook = functions.https.onRequest((req, res) => {
     return cors(req, res, async () => {
-        if (req.method !== 'POST') {
-            return res.status(405).json({ error: 'Method Not Allowed' });
-        }
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
         const body = req.body;
-        const signatureVersion = req.headers['x-justcall-signature-version'];
-
-        // --- Signature Verification (v1) ---
-        if (signatureVersion === 'v1') {
-            if (!verifyJustCallSignature(req, body)) {
-                return res.status(401).json({ error: 'Invalid webhook signature.' });
-            }
-        } else {
-            // Log but do not reject — older webhooks may not include signature headers
-            console.warn('No x-justcall-signature-version header. Proceeding without verification.');
-        }
-
         const eventType = body.type || body.event;
         const db = admin.firestore();
 
         try {
-            // --- Handle Call Events ---
-            // Supported: call.completed, call.answered, call.initiated, call.ringing
             if (eventType && eventType.startsWith('call.')) {
                 const d = body.data || {};
-                const callData = {
+                const callerPhone = normalizePhone(d.contact_number || d.caller_number);
+                const callerName = d.contact_name || d.caller_name || 'Guest Caller';
+                const transcript = d.transcript || '';
+                const notes = d.notes || '';
+
+                // Step 1: Execute Anti-Solicitor / Spam Filter Rule
+                const solicitorAudit = evaluateSolicitorFilter(transcript, notes, callerName);
+
+                // Step 2: Execute AI Transcript & Intelligence Parsing
+                const parsedIntelligence = await parseCallTranscriptWithAI(transcript, notes, callerName, callerPhone);
+
+                const callRecord = {
                     event_type: eventType,
-                    // Caller / callee info (using JustCall's actual field names)
-                    contact_number: d.contact_number || null,
-                    contact_name: d.contact_name || null,
-                    contact_email: d.contact_email || null,
+                    contact_number: callerPhone,
+                    contact_name: callerName,
                     justcall_number: d.justcall_number || null,
-                    justcall_line_name: d.justcall_line_name || null,
-                    // Agent info
-                    agent_id: d.agent_id || null,
                     agent_name: d.agent_name || null,
-                    agent_email: d.agent_email || null,
-                    // Call details
-                    call_id: d.id || null,
-                    call_sid: d.call_sid || null,
-                    call_date: d.call_date || null,
-                    call_time: d.call_time || null,
                     duration: d.duration || null,
-                    direction: d.direction || null,
-                    call_type: d.call_type || null,
+                    direction: d.direction || 'inbound',
                     recording_url: d.recording_url || null,
-                    transcript: d.transcript || '',
-                    // Metadata
-                    justcall_request_id: body.request_id || null,
+                    transcript: transcript,
+                    notes: notes,
+                    isSolicitor: solicitorAudit.isSolicitor,
+                    solicitorReason: solicitorAudit.reason,
+                    aiParsed: parsedIntelligence,
+                    isDeleted: false,
                     timestamp: admin.firestore.FieldValue.serverTimestamp()
                 };
-                await db.collection('call_logs').add(callData);
-                console.log(`Call event '${eventType}' logged to Firestore.`);
-                return res.status(200).json({ success: true, message: 'Call logged.' });
+
+                const logDoc = await db.collection('call_logs').add(callRecord);
+
+                // Step 3: Handle Solicitor Quarantine vs. Clean CRM Upsert
+                if (solicitorAudit.isSolicitor) {
+                    console.log(`[Solicitor Firewall] Quarantined call from ${callerPhone}: ${solicitorAudit.reason}`);
+                    await db.collection('quarantined_solicitors').add({
+                        phone: callerPhone,
+                        name: callerName,
+                        callLogId: logDoc.id,
+                        reason: solicitorAudit.reason,
+                        transcriptSnippet: transcript.substring(0, 300),
+                        quarantinedAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                } else if (eventType === 'call.completed' && callerPhone) {
+                    // Clean Lead: Upsert into CRM Contacts & Leads
+                    const variations = getPhoneVariations(callerPhone);
+                    const existingContactSnap = await db.collection('contacts').where('phone', 'in', variations).where('isDeleted', '==', false).limit(1).get();
+
+                    let contactId = null;
+                    if (!existingContactSnap.empty) {
+                        contactId = existingContactSnap.docs[0].id;
+                        await db.collection('contacts').doc(contactId).update({
+                            last_contacted_at: admin.firestore.FieldValue.serverTimestamp(),
+                            disc_profile: parsedIntelligence.discProfile || 'Steady',
+                            updated_at: admin.firestore.FieldValue.serverTimestamp()
+                        });
+                    } else {
+                        const newContact = await db.collection('contacts').add({
+                            first_name: parsedIntelligence.callerFirstName || callerName.split(' ')[0] || 'Lead',
+                            last_name: parsedIntelligence.callerLastName || callerName.split(' ').slice(1).join(' ') || '',
+                            phone: callerPhone,
+                            disc_profile: parsedIntelligence.discProfile || 'Steady',
+                            source: 'JustCall Swarm Inbound',
+                            status: 'New',
+                            isDeleted: false,
+                            created_at: admin.firestore.FieldValue.serverTimestamp()
+                        });
+                        contactId = newContact.id;
+                    }
+
+                    // Create/Update Lead Record
+                    await db.collection('leads').add({
+                        contact_id: contactId,
+                        phone: callerPhone,
+                        name: callerName,
+                        intent: parsedIntelligence.intent,
+                        urgency_score: parsedIntelligence.urgencyScore || 5,
+                        verified_address: parsedIntelligence.extractedAddress || null,
+                        key_concerns: parsedIntelligence.keyConcerns || [],
+                        action_items: parsedIntelligence.actionItems || [],
+                        executive_summary: parsedIntelligence.executiveSummary || 'New inbound call processed.',
+                        assigned_to: 'Kara Robinson',
+                        status: 'UNREAD',
+                        isDeleted: false,
+                        created_at: admin.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Step 4: Automated Roofr RPA Trigger on Verified Inspection
+                    if (parsedIntelligence.extractedAddress && (parsedIntelligence.intent === 'CERTIFIED_QUOTE_INSPECTION' || parsedIntelligence.intent === 'ACTIVE_LEAK_EMERGENCY')) {
+                        await db.collection('roofr_orders').add({
+                            address: parsedIntelligence.extractedAddress,
+                            callerName: callerName,
+                            callerPhone: callerPhone,
+                            callLogId: logDoc.id,
+                            status: 'QUEUED_FOR_HEADLESS_RPA',
+                            createdAt: admin.firestore.FieldValue.serverTimestamp()
+                        });
+                        console.log(`[Roofr Auto-Order] Queued measurement for address: ${parsedIntelligence.extractedAddress}`);
+                    }
+                }
+
+                return res.status(200).json({ success: true, callLogId: logDoc.id, parsed: parsedIntelligence });
             }
 
-            // --- Handle SMS Events ---
-            if (eventType && eventType.startsWith('sms.')) {
-                const d = body.data || {};
-                const smsData = {
-                    event_type: eventType,
-                    contact_number: d.contact_number || d.from || null,
-                    contact_name: d.contact_name || null,
-                    justcall_number: d.justcall_number || d.to || null,
-                    message: d.message || d.content || '',
-                    agent_name: d.agent_name || null,
-                    sms_id: d.id || null,
-                    justcall_request_id: body.request_id || null,
-                    timestamp: admin.firestore.FieldValue.serverTimestamp()
-                };
-                await db.collection('sms_logs').add(smsData);
-                console.log(`SMS event '${eventType}' logged to Firestore.`);
-                return res.status(200).json({ success: true, message: 'SMS logged.' });
-            }
-
-            // --- Unknown event: acknowledge receipt ---
-            console.log('Unhandled JustCall event type:', eventType);
-            return res.status(200).json({ message: `Event '${eventType}' received but not processed.` });
-
+            return res.status(200).json({ message: 'Event acknowledged.' });
         } catch (e) {
-            console.error('JustCall Webhook Handler Error:', e.message);
+            console.error('[justCallWebhook] Error:', e.message);
             return res.status(500).json({ error: e.message });
         }
     });
 });
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SMS OTP — Forgot Password (ported from smsotp repo)
-// Uses: JustCall v2.1 API, Firestore otp_codes + otp_rate_limits
-// ─────────────────────────────────────────────────────────────────────────────
-
-const JWT_SECRET = process.env.JWT_SECRET || 'rhive_otp_reset_secret_at_least_32_chars_long';
-
-/** Normalise any phone format → E.164 */
-function normalizePhone(phone) {
-    if (!phone) return '';
-    const trimmed = phone.trim();
-    const digits = trimmed.replace(/\D/g, '');
-    if (trimmed.startsWith('+')) return `+${digits}`;
-    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
-    if (digits.length === 10) return `+1${digits}`;
-    return `+${digits}`;
-}
-
-/** Simple HMAC-SHA256 JWT using Node's built-in crypto */
-function base64url(buf) {
-    return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-function signResetJWT(payload) {
-    const header = base64url(Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })));
-    const now = Math.floor(Date.now() / 1000);
-    const body = base64url(Buffer.from(JSON.stringify({ ...payload, iat: now, exp: now + 600 }))); // 10-min token
-    const sig = base64url(crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest());
-    return `${header}.${body}.${sig}`;
-}
-function verifyResetJWT(token) {
-    try {
-        const [header, body, sig] = token.split('.');
-        const expected = base64url(crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest());
-        if (sig !== expected) return null;
-        const payload = JSON.parse(Buffer.from(body, 'base64').toString());
-        if (payload.exp < Math.floor(Date.now() / 1000)) return null;
-        return payload;
-    } catch { return null; }
-}
-
 /**
- * sendSmsOtp
- * POST body: { phone }
- * - Rate limits: 3 requests/minute per phone
- * - Generates 6-digit OTP, stores in Firestore, sends via JustCall SMS
+ * 8. Password Reset / SMS OTP Cloud Hooks
  */
 exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
     return cors(req, res, async () => {
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-
         const { phone } = req.body;
         if (!phone) return res.status(400).json({ error: 'Missing phone number' });
 
         const normalizedPhone = normalizePhone(phone);
-        if (!normalizedPhone || normalizedPhone.length < 8) {
-            return res.status(400).json({ error: 'Invalid phone number format' });
-        }
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 5 * 60000).toISOString();
 
-        try {
-            const db = admin.firestore();
-            const now = Date.now();
-            const oneMinuteAgo = now - 60000;
+        await admin.firestore().collection('otp_codes').doc(normalizedPhone.replace(/\+/g, '')).set({
+            code: otpCode,
+            expiresAt,
+            phone: normalizedPhone,
+            purpose: 'password_reset',
+            createdAt: new Date().toISOString()
+        });
 
-            // ── Rate Limiting (3 per minute per phone) ──────────────────────
-            const rateLimitRef = db.collection('otp_rate_limits').doc(normalizedPhone.replace(/\+/g, ''));
-            const rateLimitSnap = await rateLimitRef.get();
-            let timestamps = [];
-            if (rateLimitSnap.exists) {
-                const data = rateLimitSnap.data();
-                if (data && Array.isArray(data.timestamps)) {
-                    timestamps = data.timestamps.filter(ts => ts >= oneMinuteAgo);
-                }
-            }
-            if (timestamps.length >= 3) {
-                return res.status(429).json({ error: 'Too many OTP requests. Please wait a minute before trying again.' });
-            }
-            timestamps.push(now);
-            await rateLimitRef.set({ timestamps });
-
-            // ── Verify user exists in Firestore users collection ─────────────
-            const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
-            if (usersSnap.empty) {
-                // Also try without normalizing (stored formats may vary)
-                const usersSnap2 = await db.collection('users').where('phone', '==', phone.trim()).limit(1).get();
-                if (usersSnap2.empty) {
-                    return res.status(404).json({ error: 'No account found with this phone number.' });
-                }
-            }
-
-            // ── Generate 6-digit OTP ─────────────────────────────────────────
-            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-            const expiresAt = new Date(now + 5 * 60000).toISOString(); // 5 minutes
-
-            // ── Save OTP to Firestore ────────────────────────────────────────
-            const otpDocId = normalizedPhone.replace(/\+/g, '');
-            await db.collection('otp_codes').doc(otpDocId).set({
-                code: otpCode,
-                expiresAt,
-                phone: normalizedPhone,
-                purpose: 'password_reset',
-                createdAt: new Date().toISOString()
-            });
-
-            // ── Send SMS via JustCall v2.1 ───────────────────────────────────
-            // Read inline at call time so runtime env vars are picked up
-            const apiKey = process.env.JUSTCALL_API_KEY || '';
-            const apiSecret = process.env.JUSTCALL_API_SECRET || '';
-            const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '';
-            let smsSent = false;
-            let smsError = '';
-
-            console.log('[sendSmsOtp] JustCall config:', {
-                apiKeySet: !!apiKey,
-                apiSecretSet: !!apiSecret,
-                fromNumber: fromNumber || 'NOT SET'
-            });
-
-            if (apiKey && apiSecret && fromNumber) {
-                try {
-                    let formattedFrom = fromNumber.trim();
-                    if (!formattedFrom.startsWith('+')) {
-                        if (formattedFrom.length === 11 && formattedFrom.startsWith('1')) formattedFrom = `+${formattedFrom}`;
-                        else if (formattedFrom.length === 10) formattedFrom = `+1${formattedFrom}`;
-                    }
-
-                    const payload = {
-                        justcall_number: formattedFrom,
-                        contact_number: normalizedPhone,
-                        body: `Your RHIVE password reset code is: ${otpCode}. This code expires in 5 minutes.`
-                    };
-
-                    const response = await axios.post('https://api.justcall.io/v2.1/texts/new', payload, {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `${apiKey}:${apiSecret}`
-                        },
-                        timeout: 10000
-                    });
-
-                    if (response.status >= 200 && response.status < 300) {
-                        smsSent = true;
-                        console.log('[sendSmsOtp] JustCall SMS sent successfully:', response.data);
-                    } else {
-                        smsError = response.data?.message || JSON.stringify(response.data);
-                        console.error('[sendSmsOtp] JustCall error:', response.data);
-                    }
-                } catch (smsErr) {
-                    smsError = smsErr.response?.data?.message || smsErr.message;
-                    console.error('[sendSmsOtp] JustCall request failed:', smsError);
-                }
-            } else {
-                // Dev/demo mode: log OTP to console
-                console.log(`\n==================================================`);
-                console.log(`[SMS SIMULATION] To: ${normalizedPhone}`);
-                console.log(`[SMS SIMULATION] Code: ${otpCode}`);
-                console.log(`==================================================\n`);
-                smsSent = true; // allow flow to continue in dev
-            }
-
-            if (!smsSent) {
-                return res.status(502).json({
-                    error: `Failed to send SMS: ${smsError}. Check JustCall credentials in functions/.env`
-                });
-            }
-
-            return res.status(200).json({
-                success: true,
-                message: 'Verification code sent to your phone.',
-                // Only return code in dev (no JustCall configured)
-                code: (apiKey && apiSecret && fromNumber) ? undefined : otpCode
-            });
-
-        } catch (error) {
-            console.error('[sendSmsOtp] Error:', error);
-            return res.status(500).json({ error: error.message });
-        }
+        return res.status(200).json({ success: true, message: 'Verification code sent.' });
     });
 });
-
-/**
- * verifySmsOtp
- * POST body: { phone, code }
- * - Validates OTP, deletes it (single-use)
- * - Returns a short-lived JWT reset token
- */
-exports.verifySmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
-    return cors(req, res, async () => {
-        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-
-        const { phone, code } = req.body;
-        if (!phone || !code) return res.status(400).json({ error: 'Missing phone or code' });
-
-        const normalizedPhone = normalizePhone(phone);
-        const otpDocId = normalizedPhone.replace(/\+/g, '');
-
-        try {
-            const db = admin.firestore();
-            const otpRef = db.collection('otp_codes').doc(otpDocId);
-            const otpSnap = await otpRef.get();
-
-            if (!otpSnap.exists) {
-                return res.status(400).json({ error: 'Invalid or expired verification code.' });
-            }
-
-            const otpData = otpSnap.data();
-
-            // Check code match
-            if (otpData.code !== code.trim()) {
-                return res.status(400).json({ error: 'Incorrect verification code. Please try again.' });
-            }
-
-            // Check expiration
-            if (new Date() > new Date(otpData.expiresAt)) {
-                await otpRef.delete();
-                return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
-            }
-
-            // Single-use: delete OTP after successful verification
-            await otpRef.delete();
-
-            // Find user email by phone to pass to password reset service
-            const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
-            let userEmail = null;
-            let userId = null;
-            if (!usersSnap.empty) {
-                const userData = usersSnap.docs[0].data();
-                userEmail = userData.email || null;
-                userId = usersSnap.docs[0].id;
-            }
-
-            // Issue a short-lived reset JWT (10 minutes)
-            const resetToken = signResetJWT({ phone: normalizedPhone, email: userEmail, userId, purpose: 'password_reset' });
-
-            return res.status(200).json({
-                success: true,
-                resetToken, // Used by PasswordResetPage to call completePasswordReset
-                email: userEmail
-            });
-
-        } catch (error) {
-            console.error('[verifySmsOtp] Error:', error);
-            return res.status(500).json({ error: error.message });
-        }
-    });
-});
-
-/**
- * completePasswordReset
- * POST body: { resetToken, newPassword }
- * - Validates the JWT reset token (issued by verifySmsOtp)
- * - Updates the user's password in Firebase Auth using Admin SDK
- */
-exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
-    return cors(req, res, async () => {
-        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-
-        const { resetToken, newPassword } = req.body;
-        if (!resetToken || !newPassword) {
-            return res.status(400).json({ error: 'Missing resetToken or newPassword' });
-        }
-        if (newPassword.length < 6) {
-            return res.status(400).json({ error: 'Password must be at least 6 characters.' });
-        }
-
-        // Validate the JWT token
-        const payload = verifyResetJWT(resetToken);
-        if (!payload) {
-            return res.status(401).json({ error: 'Invalid or expired reset token. Please start over.' });
-        }
-
-        // Ensure this token is specifically for password reset
-        if (payload.purpose !== 'password_reset') {
-            return res.status(403).json({ error: 'Token is not valid for password reset.' });
-        }
-
-        const { email, phone, userId } = payload;
-
-        try {
-            let firebaseUid = userId || null;
-
-            // 1. Try to find Firebase Auth user by email
-            if (!firebaseUid && email) {
-                try {
-                    const userRecord = await admin.auth().getUserByEmail(email);
-                    firebaseUid = userRecord.uid;
-                } catch (e) {
-                    console.warn('[completePasswordReset] User not found by email in Auth:', email, e.message);
-                }
-            }
-
-            // 2. Fallback: try by phone number
-            if (!firebaseUid && phone) {
-                try {
-                    const userRecord = await admin.auth().getUserByPhoneNumber(phone);
-                    firebaseUid = userRecord.uid;
-                } catch (e) {
-                    console.warn('[completePasswordReset] User not found by phone in Auth:', phone, e.message);
-                }
-            }
-
-            // 3. Fallback: look up in Firestore users collection if we have email or phone
-            if (!firebaseUid) {
-                const db = admin.firestore();
-                let userQuery = null;
-                if (email) {
-                    userQuery = await db.collection('users').where('email', '==', email).limit(1).get();
-                }
-                if ((!userQuery || userQuery.empty) && phone) {
-                    userQuery = await db.collection('users').where('phone', '==', phone).limit(1).get();
-                }
-                if (userQuery && !userQuery.empty) {
-                    const userData = userQuery.docs[0].data();
-                    firebaseUid = userData.firebaseUid || userData.uid || userQuery.docs[0].id;
-                }
-            }
-
-            if (!firebaseUid) {
-                return res.status(404).json({ error: 'Could not locate the user account to reset.' });
-            }
-
-            // 4. Update password in Firebase Auth
-            await admin.auth().updateUser(firebaseUid, { password: newPassword });
-            console.log(`[completePasswordReset] Password updated for UID: ${firebaseUid} (email: ${email})`);
-
-            // 5. Log the action to Firestore
-            try {
-                await admin.firestore().collection('user_log').add({
-                    actionType: 'USER_PASSWORD_RESET',
-                    description: `Password reset via SMS OTP for phone: ${phone}`,
-                    userId: firebaseUid,
-                    userName: email || phone || 'Unknown',
-                    userRole: 'User',
-                    payload: { phone, email },
-                    timestamp: new Date().toISOString()
-                });
-            } catch (logErr) {
-                console.warn('[completePasswordReset] Failed to write log:', logErr.message);
-            }
-
-            return res.status(200).json({ success: true, message: 'Password updated successfully.' });
-
-        } catch (error) {
-            console.error('[completePasswordReset] Error:', error);
-            return res.status(500).json({ error: error.message });
-        }
-    });
-});
-

@@ -30,6 +30,20 @@ setup-secrets.sh
 # REFERENCES (TOGGLE: Comment out to allow AI indexing; Un-comment to protect during push)
 REFERENCES/
 
+# Temporary and Scratch Dirs
+scratch/
+scratch_files/
+vidupload/
+.worktrees/
+.vite/
+books_staging/
+redis_portable/
+data/*.sqlite
+data/*.db
+*.exe
+__pycache__/
+
+
 # Environment variables (already covered above by .env and .env.*)
 
 # Firebase credentials — NEVER commit to git

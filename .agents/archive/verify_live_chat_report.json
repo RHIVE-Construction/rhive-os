@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-07-22T02:45:41.327Z",
+  "steps": {
+    "initial_state": true,
+    "controls_present": true,
+    "media_streams_active": true,
+    "message_streamed": true
+  },
+  "success": true
+}

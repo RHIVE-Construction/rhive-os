@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-05-25T20:37:52.260Z",
+  "steps": {
+    "load_dashboard": true,
+    "chat_container_mounted": true,
+    "websocket_hydrated": true,
+    "message_rendered": true
+  },
+  "success": true
+}

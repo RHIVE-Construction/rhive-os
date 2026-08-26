@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RHIVE Daily Route Optimizer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --card-bg: rgba(14, 18, 27, 0.92);
+      --card-border: #1e293b;
+      --pink: #ec028b;
+      --gold: #e2ab49;
+      --cyan: #00f0ff;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rubik', sans-serif; }
+    body { background: var(--bg-dark); color: var(--text); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+    
+    header {
+      background: rgba(10, 14, 22, 0.95);
+      border-bottom: 1px solid var(--card-border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+    .brand-title { display: flex; align-items: center; gap: 12px; }
+    .badge {
+      background: rgba(236, 2, 139, 0.15);
+      border: 1px solid var(--pink);
+      color: var(--pink);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    h1 { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+    .metrics { display: flex; gap: 20px; font-size: 13px; }
+    .metric-item { display: flex; flex-direction: column; align-items: flex-end; }
+    .metric-val { font-size: 16px; font-weight: 700; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+    .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+
+    .main-container { display: flex; flex: 1; height: calc(100vh - 65px); position: relative; }
+    #map { flex: 1; height: 100%; z-index: 1; background: #0b0f19; }
+
+    .sidebar {
+      width: 420px;
+      background: var(--card-bg);
+      border-left: 1px solid var(--card-border);
+      overflow-y: auto;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(12px);
+    }
+    .sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .sidebar-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--pink); }
+    .actions-bar {
+      padding: 12px 20px;
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .nav-btn {
+      flex: 1;
+      background: linear-gradient(135deg, #ec028b 0%, #a855f7 100%);
+      color: white;
+      text-decoration: none;
+      text-align: center;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      cursor: pointer;
+    }
+    .nav-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(236, 2, 139, 0.4); }
+
+    .stops-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; }
+    .stop-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .stop-card:hover {
+      border-color: var(--pink);
+      background: rgba(30, 41, 59, 0.8);
+      transform: translateX(3px);
+    }
+    .stop-card.active {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+    }
+    .stop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .stop-num-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--pink);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+    }
+    .stop-title { font-size: 14px; font-weight: 700; color: #fff; flex: 1; }
+    .units-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold);
+      background: rgba(226, 171, 73, 0.12);
+      border: 1px solid rgba(226, 171, 73, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stop-addr { font-size: 12px; color: var(--muted); margin-bottom: 6px; line-height: 1.3; }
+    .stop-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
+      color: #94a3b8;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 6px;
+      margin-top: 4px;
+    }
+    .meta-tag { display: inline-flex; align-items: center; gap: 4px; }
+    .meta-tag strong { color: #e2e8f0; }
+
+    .leg-divider {
+      text-align: center;
+      font-size: 10px;
+      color: var(--muted);
+      padding: 2px 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .leg-divider::before, .leg-divider::after { content: ''; flex: 1; height: 1px; background: #1e293b; }
+
+    .leaflet-popup-content-wrapper {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--pink);
+      color: white;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+    .leaflet-popup-tip { background: rgba(15, 23, 42, 0.95); border-left: 1px solid var(--pink); border-top: 1px solid var(--pink); }
+    .custom-marker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 2px solid white;
+      font-weight: 800;
+      color: white;
+      box-shadow: 0 0 12px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand-title">
+      <div class="badge">RHIVE ROUTING ENGINE</div>
+      <h1>Today's Optimized Daily Route Corridor</h1>
+    </div>
+    <div class="metrics">
+      <div class="metric-item">
+        <div class="metric-val">6 STOPS</div>
+        <div class="metric-label">Total Stops</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val">7.0 MI</div>
+        <div class="metric-label">Total Distance</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val">~19 MIN</div>
+        <div class="metric-label">Total Drive Time</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div id="map"></div>
+    
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Turn-by-Turn Route Order</div>
+      </div>
+      
+      <div class="actions-bar">
+        <a class="nav-btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=2215%20E%203300%20S%2C%20Salt%20Lake%20City%2C%20UT%2084109%2C%20USA&destination=445%20E%20300%20S%2C%20Salt%20Lake%20City%2C%20UT%2084111%2C%20USA&waypoints=1230%20E%20Elgin%20Ave%2C%20Salt%20Lake%20City%2C%20UT%2084106%2C%20USA|764%20S%20800%20E%2C%20Salt%20Lake%20City%2C%20UT%2084102%2C%20USA|115%20S%20300%20E%2C%20Salt%20Lake%20City%2C%20UT%2084111%2C%20USA|228%20S%20300%20E%2C%20Salt%20Lake%20City%2C%20UT%2084111%2C%20USA">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+          Launch Live Google Maps GPS
+        </a>
+      </div>
+
+      <div class="stops-list" id="stopsList"></div>
+    </div>
+  </div>
+
+  <script>
+    const stops = [{"id":"3q977bkk15s8bfq50f3e3ikl3a","name":"UNPHC Inspection: Canyon Echo","address":"2215 E 3300 S, Salt Lake City, UT 84109, USA","assignee":"DAVID","pm":"Chelsea Sterett","phone":"(385) 831-7320 | (801) 638-6155","units":16,"start":"2026-08-26T12:00:00-06:00","end":"2026-08-26T15:00:00-06:00","lat":40.6999649,"lon":-111.854862,"num":1,"color":"#ec028b"},{"id":"5et32fatuv6q95gth3hksa6f70","name":"UNPHC Inspection: Aspenview","address":"1230 E Elgin Ave, Salt Lake City, UT 84106, USA","assignee":"DAVID","pm":"Esperanza Vicente","phone":"(801) 485-2111 | (801) 608-0443","units":16,"start":"2026-08-26T11:00:00-06:00","end":"2026-08-26T14:00:00-06:00","lat":40.7058137,"lon":-111.8669014,"num":2,"color":"#e2ab49"},{"id":"0isrnig7f3hdpe4aihijoq077u","name":"UNPHC Inspection: Hamilton Place","address":"764 S 800 E, Salt Lake City, UT 84102, USA","assignee":"JEFF","pm":"Shelly Stephens","phone":"(801) 524-0727 | (801) 652-4505","units":65,"start":"2026-08-26T10:00:00-06:00","end":"2026-08-26T13:00:00-06:00","lat":40.7508788,"lon":-111.8682703,"num":3,"color":"#00f0ff"},{"id":"1isan9iki9v77lcg1coog8nmn8","name":"UNPHC Inspection: Piccardy Apartments","address":"115 S 300 E, Salt Lake City, UT 84111, USA","assignee":"ALYCE","pm":"Lorraine Ruiz","phone":"(801) 301-6888","units":40,"start":"2026-08-26T11:00:00-06:00","end":"2026-08-26T14:00:00-06:00","lat":40.7508501,"lon":-111.8825034,"num":4,"color":"#a855f7"},{"id":"3jcc1k1q5euesi2pun3t95tl9f","name":"UNPHC Inspection: Smith N Apartments","address":"228 S 300 E, Salt Lake City, UT 84111, USA","assignee":"MARIA","pm":"Lizbeth Solano","phone":"(801) 590-4430 | (801) 381-8697","units":32,"start":"2026-08-26T11:00:00-06:00","end":"2026-08-26T14:00:00-06:00","lat":40.7642376,"lon":-111.8830967,"num":5,"color":"#10b981"},{"id":"760n0orfmkl6gi980ir9c52qg9","name":"UNPHC Inspection: Peter Pan Apartments","address":"445 E 300 S, Salt Lake City, UT 84111, USA","assignee":"MARIA","pm":"Lizbeth Solano","phone":"(801) 590-4430 | (801) 381-8697","units":32,"start":"2026-08-26T12:00:00-06:00","end":"2026-08-26T15:00:00-06:00","lat":40.7632012,"lon":-111.8781789,"num":6,"color":"#3b82f6"}];
+    const legs = [{"from":"UNPHC Inspection: Canyon Echo","to":"UNPHC Inspection: Aspenview","dist":"1.0 mi","time":"3 min"},{"from":"UNPHC Inspection: Aspenview","to":"UNPHC Inspection: Hamilton Place","dist":"3.6 mi","time":"8 min"},{"from":"UNPHC Inspection: Hamilton Place","to":"UNPHC Inspection: Piccardy Apartments","dist":"0.9 mi","time":"3 min"},{"from":"UNPHC Inspection: Piccardy Apartments","to":"UNPHC Inspection: Smith N Apartments","dist":"1.0 mi","time":"4 min"},{"from":"UNPHC Inspection: Smith N Apartments","to":"UNPHC Inspection: Peter Pan Apartments","dist":"0.4 mi","time":"2 min"}];
+    const coordinates = [[-111.854862,40.699965],[-111.854913,40.699965],[-111.855214,40.699963],[-111.855529,40.699961],[-111.855676,40.699918],[-111.855833,40.699917],[-111.855998,40.699917],[-111.856343,40.699916],[-111.856452,40.699915],[-111.856574,40.699914],[-111.857352,40.699909],[-111.857647,40.699911],[-111.858679,40.699902],[-111.858814,40.699902],[-111.85906,40.699901],[-111.859107,40.699901],[-111.859409,40.6999],[-111.85963,40.699899],[-111.859743,40.699899],[-111.859842,40.699898],[-111.860218,40.699897],[-111.860344,40.699896],[-111.860558,40.699896],[-111.860712,40.699895],[-111.860895,40.699894],[-111.861376,40.699893],[-111.861611,40.699892],[-111.861762,40.699891],[-111.862215,40.699894],[-111.862329,40.699893],[-111.862638,40.699893],[-111.863276,40.69989],[-111.863667,40.699888],[-111.864023,40.699887],[-111.864522,40.699885],[-111.864718,40.699885],[-111.864827,40.699884],[-111.864937,40.699884],[-111.865184,40.699884],[-111.865341,40.699883],[-111.865463,40.699883],[-111.865461,40.699995],[-111.865459,40.700113],[-111.86546,40.70027],[-111.865463,40.700642],[-111.865466,40.700836],[-111.865466,40.701061],[-111.865468,40.701419],[-111.865466,40.701552],[-111.865468,40.701762],[-111.865469,40.701914],[-111.865469,40.701951],[-111.865467,40.702262],[-111.865468,40.702319],[-111.865468,40.702363],[-111.865471,40.702974],[-111.865471,40.703018],[-111.865471,40.703161],[-111.865471,40.703385],[-111.865471,40.703899],[-111.865467,40.704313],[-111.865471,40.704516],[-111.865469,40.704969],[-111.865469,40.705218],[-111.865468,40.70577],[-111.865468,40.705834],[-111.865577,40.705817],[-111.866901,40.705814],[-111.868219,40.705811],[-111.868331,40.705845],[-111.868448,40.705883],[-111.871093,40.70588],[-111.871193,40.70588],[-111.871188,40.707115],[-111.871185,40.70785],[-111.871181,40.70904],[-111.871178,40.709872],[-111.871174,40.710939],[-111.87117,40.712058],[-111.87117,40.712149],[-111.871169,40.712334],[-111.871168,40.712561],[-111.871168,40.712586],[-111.871168,40.712673],[-111.871168,40.712787],[-111.871167,40.71304],[-111.871165,40.713589],[-111.871161,40.714456],[-111.871159,40.715223],[-111.871155,40.716122],[-111.871153,40.716735],[-111.87115,40.717589],[-111.87115,40.717704],[-111.871148,40.718126],[-111.871148,40.718207],[-111.871148,40.718284],[-111.871126,40.719122],[-111.871125,40.71928],[-111.87112,40.719567],[-111.871119,40.719677],[-111.871116,40.719908],[-111.871133,40.721642],[-111.871131,40.72221],[-111.871125,40.722703],[-111.871127,40.722757],[-111.871127,40.722805],[-111.871126,40.723334],[-111.871126,40.723501],[-111.871124,40.723759],[-111.871124,40.723875],[-111.871125,40.724092],[-111.871123,40.724181],[-111.87112,40.724329],[-111.871119,40.724466],[-111.871119,40.724636],[-111.871136,40.725289],[-111.871135,40.725317],[-111.871135,40.725382],[-111.871134,40.725472],[-111.871133,40.725531],[-111.871131,40.725843],[-111.871126,40.726994],[-111.871124,40.727359],[-111.871123,40.727606],[-111.871122,40.727827],[-111.871117,40.729456],[-111.871116,40.72971],[-111.871116,40.72986],[-111.871115,40.730124],[-111.871115,40.730273],[-111.871114,40.730422],[-111.87111,40.731851],[-111.871105,40.733395],[-111.871105,40.733422],[-111.871104,40.733524],[-111.871104,40.733606],[-111.871104,40.73403],[-111.871104,40.734495],[-111.871103,40.735603],[-111.871104,40.736298],[-111.871104,40.736364],[-111.871103,40.736406],[-111.871104,40.736418],[-111.871103,40.736471],[-111.871103,40.737188],[-111.871103,40.737648],[-111.871102,40.737811],[-111.871102,40.737962],[-111.871102,40.738774],[-111.871102,40.739569],[-111.8711,40.740061],[-111.8711,40.740107],[-111.871098,40.740533],[-111.871097,40.741005],[-111.871095,40.741518],[-111.871094,40.741549],[-111.871094,40.741654],[-111.871094,40.741756],[-111.871089,40.743265],[-111.871089,40.744291],[-111.871089,40.745715],[-111.871089,40.746696],[-111.871087,40.748034],[-111.871088,40.749049],[-111.87108,40.749219],[-111.871061,40.749392],[-111.871031,40.749618],[-111.871028,40.749635],[-111.871025,40.749665],[-111.871005,40.7498],[-111.870983,40.749948],[-111.870967,40.750066],[-111.870958,40.750191],[-111.870956,40.751174],[-111.87096,40.751394],[-111.870964,40.75179],[-111.870963,40.751817],[-111.870965,40.751967],[-111.870856,40.751967],[-111.870827,40.751967],[-111.870485,40.751967],[-111.869933,40.751968],[-111.869721,40.751968],[-111.869427,40.751968],[-111.868814,40.751969],[-111.868449,40.751969],[-111.868406,40.75197],[-111.868268,40.75197],[-111.868269,40.751806],[-111.86827,40.751313],[-111.868271,40.750879],[-111.868271,40.750563],[-111.868271,40.750473],[-111.868272,40.74998],[-111.868272,40.74995],[-111.868196,40.749807],[-111.868409,40.74981],[-111.869049,40.749808],[-111.86932,40.749805],[-111.869658,40.749805],[-111.870213,40.749801],[-111.870419,40.749799],[-111.870554,40.749798],[-111.870831,40.749799],[-111.870863,40.749799],[-111.871005,40.7498],[-111.871197,40.749802],[-111.87134,40.749803],[-111.871401,40.749802],[-111.871611,40.749801],[-111.871865,40.749802],[-111.871974,40.749802],[-111.872495,40.749804],[-111.873119,40.749804],[-111.873452,40.749803],[-111.873687,40.749804],[-111.873725,40.749804],[-111.87377,40.749804],[-111.873856,40.749804],[-111.873978,40.749804],[-111.874081,40.749804],[-111.874126,40.749804],[-111.874159,40.749804],[-111.874224,40.749805],[-111.874693,40.749804],[-111.875342,40.749805],[-111.876021,40.749802],[-111.876579,40.749801],[-111.876775,40.7498],[-111.87699,40.749799],[-111.877292,40.749799],[-111.877758,40.749798],[-111.877924,40.749799],[-111.878015,40.749799],[-111.878235,40.749798],[-111.878263,40.749798],[-111.878534,40.749799],[-111.878751,40.749798],[-111.879101,40.749799],[-111.879436,40.749799],[-111.879636,40.749801],[-111.879854,40.749802],[-111.880101,40.749801],[-111.880243,40.749801],[-111.880296,40.7498],[-111.880395,40.7498],[-111.880492,40.7498],[-111.880647,40.749799],[-111.880796,40.749799],[-111.88102,40.749799],[-111.881082,40.749799],[-111.881233,40.749798],[-111.881386,40.749798],[-111.88165,40.749797],[-111.881747,40.749797],[-111.881968,40.749797],[-111.882296,40.749797],[-111.882508,40.749798],[-111.882507,40.749942],[-111.882506,40.750244],[-111.882505,40.750532],[-111.882504,40.75085],[-111.882501,40.751456],[-111.8825,40.751805],[-111.882499,40.751955],[-111.882499,40.752118],[-111.8825,40.752335],[-111.8825,40.752437],[-111.882501,40.752816],[-111.882502,40.753133],[-111.882502,40.753344],[-111.882502,40.753424],[-111.882502,40.753506],[-111.882502,40.753605],[-111.882502,40.75367],[-111.882503,40.753711],[-111.882503,40.753848],[-111.882503,40.753974],[-111.882503,40.75401],[-111.882503,40.754131],[-111.882504,40.754258],[-111.882504,40.754288],[-111.882504,40.754419],[-111.882505,40.755173],[-111.882505,40.755273],[-111.882505,40.755292],[-111.882505,40.755302],[-111.882505,40.755783],[-111.882505,40.755853],[-111.882505,40.756151],[-111.882505,40.756296],[-111.882505,40.756466],[-111.882507,40.756859],[-111.882508,40.757042],[-111.882508,40.757174],[-111.882505,40.757623],[-111.882506,40.757849],[-111.882507,40.757949],[-111.882508,40.758079],[-111.882463,40.758295],[-111.882463,40.758326],[-111.882485,40.758483],[-111.8825,40.758645],[-111.882514,40.75883],[-111.882523,40.758972],[-111.882525,40.759584],[-111.882524,40.759739],[-111.882523,40.75984],[-111.882517,40.759903],[-111.8825,40.759987],[-111.88249,40.760059],[-111.882476,40.760146],[-111.882468,40.760204],[-111.882468,40.760276],[-111.882468,40.760452],[-111.882465,40.76048],[-111.882455,40.760559],[-111.882445,40.760639],[-111.882441,40.760673],[-111.882432,40.760746],[-111.882421,40.760829],[-111.88242,40.761032],[-111.882434,40.761194],[-111.882437,40.76129],[-111.882443,40.761628],[-111.882445,40.761726],[-111.88244,40.761971],[-111.882441,40.762068],[-111.882445,40.762497],[-111.882445,40.762652],[-111.882446,40.762674],[-111.882444,40.762769],[-111.882444,40.762885],[-111.882444,40.762914],[-111.882444,40.762985],[-111.882444,40.763072],[-111.882444,40.76331],[-111.882445,40.76342],[-111.882445,40.763651],[-111.882445,40.763859],[-111.882446,40.764679],[-111.882446,40.764823],[-111.882446,40.76485],[-111.882448,40.765012],[-111.882576,40.765011],[-111.882576,40.764851],[-111.882576,40.764238],[-111.882576,40.764022],[-111.882576,40.763935],[-111.882576,40.763874],[-111.882576,40.763766],[-111.882576,40.763654],[-111.882576,40.763162],[-111.882576,40.763016],[-111.882576,40.762985],[-111.882574,40.762886],[-111.882573,40.762771],[-111.882444,40.762769],[-111.8823,40.762773],[-111.881742,40.762837],[-111.881584,40.762836],[-111.881482,40.762835],[-111.881299,40.762835],[-111.88123,40.762835],[-111.880849,40.762835],[-111.880615,40.762834],[-111.880457,40.762834],[-111.880239,40.762834],[-111.880113,40.762834],[-111.880055,40.762835],[-111.879854,40.762836],[-111.879637,40.762835],[-111.879442,40.762832],[-111.879184,40.762834],[-111.879121,40.762833],[-111.878789,40.762835],[-111.878512,40.762835],[-111.878189,40.762835],[-111.877882,40.762835],[-111.877882,40.762988],[-111.877893,40.763157],[-111.877893,40.763157]];
+
+    const map = L.map('map', { zoomControl: false });
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+
+    const latLngs = coordinates.map(c => [c[1], c[0]]);
+    
+    L.polyline(latLngs, {
+      color: '#ec028b',
+      weight: 10,
+      opacity: 0.35,
+      lineJoin: 'round'
+    }).addTo(map);
+
+    const polyline = L.polyline(latLngs, {
+      color: '#ec028b',
+      weight: 4,
+      opacity: 0.95,
+      dashArray: '8, 6',
+      lineJoin: 'round'
+    }).addTo(map);
+
+    const markers = [];
+
+    stops.forEach((s, idx) => {
+      const customIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: '<div class="custom-marker" style="background: ' + s.color + '; width: 28px; height: 28px; font-size: 13px;">' + s.num + '</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+
+      const marker = L.marker([s.lat, s.lon], { icon: customIcon }).addTo(map);
+      marker.bindPopup(
+        '<div style="padding: 4px;">' +
+          '<div style="font-size: 11px; color: ' + s.color + '; font-weight: 800; text-transform: uppercase;">STOP #' + s.num + '</div>' +
+          '<h3 style="font-size: 15px; margin: 4px 0 6px 0; color: #fff;">' + s.name + '</h3>' +
+          '<p style="font-size: 12px; color: #cbd5e1; margin-bottom: 6px;">' + s.address + '</p>' +
+          '<div style="font-size: 11px; border-top: 1px solid #334155; padding-top: 6px; color: #94a3b8; line-height: 1.5;">' +
+            (s.units ? '<div>🏢 <strong>Units:</strong> ' + s.units + '</div>' : '') +
+            (s.assignee ? '<div>👤 <strong>Assignee:</strong> ' + s.assignee + '</div>' : '') +
+            (s.phone ? '<div>📞 <strong>Contact:</strong> ' + s.phone + '</div>' : '') +
+          '</div>' +
+        '</div>'
+      );
+      markers.push(marker);
+    });
+
+    map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+
+    const container = document.getElementById('stopsList');
+    stops.forEach((s, i) => {
+      const card = document.createElement('div');
+      card.className = 'stop-card';
+      card.innerHTML = 
+        '<div class="stop-header">' +
+          '<div style="display: flex; align-items: center;">' +
+            '<span class="stop-num-badge" style="background: ' + s.color + ';">' + s.num + '</span>' +
+            '<span class="stop-title">' + s.name + '</span>' +
+          '</div>' +
+          (s.units ? '<span class="units-tag">' + s.units + ' Units</span>' : '') +
+        '</div>' +
+        '<div class="stop-addr">' + s.address + '</div>' +
+        '<div class="stop-meta">' +
+          (s.assignee ? '<span class="meta-tag">👤 <strong>' + s.assignee + '</strong></span>' : '') +
+          (s.phone ? '<span class="meta-tag">📞 <strong>' + s.phone + '</strong></span>' : '') +
+        '</div>';
+
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.stop-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        map.flyTo([s.lat, s.lon], 15, { duration: 1 });
+        markers[i].openPopup();
+      });
+
+      container.appendChild(card);
+
+      if (i < legs.length) {
+        const legDiv = document.createElement('div');
+        legDiv.className = 'leg-divider';
+        legDiv.innerHTML = '↓ ' + legs[i].dist + ' (' + legs[i].time + ') ↓';
+        container.appendChild(legDiv);
+      }
+    });
+  </script>
+</body>
+</html>

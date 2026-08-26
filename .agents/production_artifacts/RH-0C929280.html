@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RHIVE Sovereign Contract Standard v8</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --rhive-pink: #ec028b;
+            --rhive-gold: #e2ab49;
+            --text-main: #000000;
+            --text-muted: #4b5563;
+            --border-color: #d1d5db;
+        }
+
+        body {
+            font-family: 'Rubik', sans-serif;
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            max-width: 800px;
+            margin: auto;
+            background-color: #ffffff;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--rhive-pink);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            flex: 1;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--rhive-pink);
+            letter-spacing: -1px;
+        }
+
+        .document-title {
+            text-align: right;
+            flex: 1;
+        }
+
+        .document-title h1 {
+            margin: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--rhive-pink);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        .label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .value {
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .price-box {
+            background-color: #f9fafb;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .total-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--rhive-pink);
+        }
+
+        .legal-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: justify;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .legal-clause {
+            margin-bottom: 10px;
+        }
+
+        .signature-block {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .sig-line {
+            border-top: 1px solid var(--text-main);
+            margin-top: 40px;
+            padding-top: 10px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .highlight {
+            color: var(--rhive-pink);
+            font-weight: 700;
+        }
+
+        @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-container">
+            <div class="logo-text">RHIVE</div>
+            <div style="font-size: 10px; color: var(--text-muted);">MASTER CRAFTED INFRASTRUCTURE</div>
+        </div>
+        <div class="document-title">
+            <h1>Sovereign Agreement</h1>
+            <div style="font-size: 12px; color: var(--text-muted);">CONTRACT ID: RH-0C929280</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Party Identification</div>
+        <div class="grid">
+            <div class="field">
+                <span class="label">Customer Name</span>
+                <span class="value">Jane Smith</span>
+            </div>
+            <div class="field">
+                <span class="label">Project Address</span>
+                <span class="value">456 Oak Ave, Provo, UT 84601</span>
+            </div>
+            <div class="field">
+                <span class="label">Email</span>
+                <span class="value">jane.smith@example.com</span>
+            </div>
+            <div class="field">
+                <span class="label">Phone</span>
+                <span class="value">801-555-0200</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Scope of Infrastructure Works</div>
+        <div class="value" style="white-space: pre-wrap;">Basement finishing and electrical upgrade.</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Investment & Financial Terms</div>
+        <div class="price-box">
+            <div class="field">
+                <span class="label">Base Investment</span>
+                <span class="value">$15,037.60</span>
+            </div>
+            <div class="field">
+                <span class="label">Taxes & Logistics</span>
+                <span class="value">$1,090.23</span>
+            </div>
+            <div class="field">
+                <span class="total-price">Total Sovereign Investment: $16,127.83</span>
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-top: 10px;">
+                *All credit card processing costs are absorbed into the retail margin. No surcharges applied.
+            </div>
+        </div>
+    </div>
+
+    <div class="legal-text">
+        <div class="legal-clause">
+            <strong>1. SOVEREIGN COMPLIANCE (UTAH LAW):</strong> This agreement is governed by the laws of the State of Utah. All financial terms, including the removal of credit card surcharges, are engineered to ensure 100% compliance with local consumer protection mandates.
+        </div>
+        
+        <div class="legal-clause">
+            <strong>2. LIMITED WARRANTY:</strong> RHIVE provides a <span class="highlight">Limited Warranty</span> covering workmanship for a period of 10 years. This warranty is limited to the repair or replacement of defective materials or labor directly provided by RHIVE. We expressly strike any "Guarantee" or "Lifetime" promises.
+        </div>
+
+        <div class="legal-clause">
+            <strong>3. PRICE ESCALATION TRIGGER:</strong> Customer acknowledges that material costs are volatile. If material costs increase by more than <span class="highlight">5%</span> between the date of signing and the date of procurement, RHIVE reserves the right to adjust the total contract price by the exact delta of the increase.
+        </div>
+
+        <div class="legal-clause">
+            <strong>4. LIABILITY FIREWALL:</strong> RHIVE is not liable for damage to driveways, sidewalks, or landscaping resulting from heavy machinery or material staging. We are not liable for internal dust, minor ceiling cracks from vibration, or "tobacco juicing" streaks on exterior surfaces. All interior valuables must be secured by the owner prior to start.
+        </div>
+
+        <div class="legal-clause">
+            <strong>5. TIME & MATERIALS (EXTRAS):</strong> Any work requested outside the defined Scope of Work will be performed at a Time & Materials rate of <span class="highlight">$125/hr</span> plus materials cost + 20% handling fee, unless a separate change order is executed.
+        </div>
+
+        <div class="legal-clause">
+            <strong>6. AAA ARBITRATION:</strong> Any dispute arising out of or relating to this contract, or the breach thereof, shall be settled by arbitration administered by the American Arbitration Association (AAA) in accordance with its Commercial Arbitration Rules. Judgment on the award rendered by the arbitrator(s) may be entered in any court having jurisdiction thereof.
+        </div>
+
+        <div class="legal-clause">
+            <strong>7. ENTIRE AGREEMENT:</strong> This document constitutes the entire agreement between the parties. No external hyperlinks or referenced digital terms are valid unless hardcoded herein.
+        </div>
+    </div>
+
+    <div class="signature-block">
+        <div>
+            <div class="sig-line">Customer Signature</div>
+            <div style="font-size: 10px; margin-top: 5px;">Date: ____________________</div>
+        </div>
+        <div>
+            <div class="sig-line">RHIVE Authorized Officer</div>
+            <div style="font-size: 10px; margin-top: 5px;">Date: ____________________</div>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; text-align: center; font-size: 9px; color: #cbd5e1;">
+        GENERATED BY RHIVE OMNI-CLONE SWARM | SOVEREIGN v8 PROTOCOL
+    </div>
+</body>
+</html>
