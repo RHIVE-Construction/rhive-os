@@ -5,7 +5,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 admin.initializeApp({
-    projectId: process.env.GCLOUD_PROJECT || process.env.FIREBASE_CONFIG?.projectId || 'instant-estimate-with-photos'
+    projectId: process.env.GCLOUD_PROJECT || process.env.FIREBASE_CONFIG?.projectId || 'rhive-os'
 });
 const cors = require('cors')({ origin: true });
 
@@ -464,9 +464,120 @@ exports.bookCallbackCalendar = functions.https.onRequest((req, res) => {
 });
 
 /**
+ * Universal Email Dispatcher: Sends structured Lead Brief to office@rhiveconstruction.com
+ */
+async function sendOfficeEmailNotification(callData, parsedIntelligence, solicitorAudit) {
+    const targetEmail = process.env.OFFICE_NOTIFICATION_EMAIL || 'office@rhiveconstruction.com';
+    const emailApiKey = process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY;
+
+    const subject = solicitorAudit.isSolicitor
+        ? `[SOLICITOR DEFLECTED] Call from ${callData.contact_number || 'Unknown'}`
+        : `[RHIVE LEAD ALERT] ${parsedIntelligence.intent} - ${callData.contact_name || 'Guest'} (${parsedIntelligence.discProfile || 'Steady'})`;
+
+    const htmlContent = `
+    <div style="font-family: Arial, sans-serif; background-color: #0d1117; color: #ffffff; padding: 24px; border-radius: 8px; max-width: 600px;">
+        <div style="border-bottom: 2px solid #ec028b; padding-bottom: 12px; margin-bottom: 20px;">
+            <h2 style="color: #ec028b; margin: 0;">RHIVE TELEPHONY SWARM ALERT</h2>
+            <p style="color: #8b949e; margin: 4px 0 0 0; font-size: 13px;">Automated Swarm Intelligence Report</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+                <td style="color: #8b949e; padding: 6px 0; font-size: 14px;">Caller Name:</td>
+                <td style="color: #ffffff; font-weight: bold; padding: 6px 0; font-size: 14px;">${callData.contact_name || 'Guest'}</td>
+            </tr>
+            <tr>
+                <td style="color: #8b949e; padding: 6px 0; font-size: 14px;">Phone Number:</td>
+                <td style="color: #ffffff; font-weight: bold; padding: 6px 0; font-size: 14px;"><a href="tel:${callData.contact_number}" style="color: #58a6ff; text-decoration: none;">${callData.contact_number}</a></td>
+            </tr>
+            <tr>
+                <td style="color: #8b949e; padding: 6px 0; font-size: 14px;">Dialed Line:</td>
+                <td style="color: #ffffff; padding: 6px 0; font-size: 14px;">${callData.justcall_number || 'Master Switchboard'} (${callData.agent_name || 'Hunni Swarm'})</td>
+            </tr>
+            <tr>
+                <td style="color: #8b949e; padding: 6px 0; font-size: 14px;">Intent / Category:</td>
+                <td style="color: #e2ab49; font-weight: bold; padding: 6px 0; font-size: 14px;">${parsedIntelligence.intent}</td>
+            </tr>
+            <tr>
+                <td style="color: #8b949e; padding: 6px 0; font-size: 14px;">DISC Profile:</td>
+                <td style="color: #58a6ff; font-weight: bold; padding: 6px 0; font-size: 14px;">${parsedIntelligence.discProfile || 'Steady'} (Urgency: ${parsedIntelligence.urgencyScore || 5}/10)</td>
+            </tr>
+            <tr>
+                <td style="color: #8b949e; padding: 6px 0; font-size: 14px;">Property Address:</td>
+                <td style="color: #ffffff; font-weight: bold; padding: 6px 0; font-size: 14px;">${parsedIntelligence.extractedAddress || 'Not Provided over phone'}</td>
+            </tr>
+        </table>
+
+        <div style="background-color: #161b22; border-left: 4px solid #ec028b; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+            <div style="color: #ec028b; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px;">Executive Summary</div>
+            <div style="color: #c9d1d9; font-size: 14px; line-height: 1.5;">${parsedIntelligence.executiveSummary || 'Call completed normally.'}</div>
+        </div>
+
+        ${parsedIntelligence.actionItems && parsedIntelligence.actionItems.length > 0 ? `
+        <div style="margin-bottom: 20px;">
+            <div style="color: #8b949e; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">Recommended Action Items</div>
+            <ul style="color: #c9d1d9; margin: 0; padding-left: 20px; font-size: 14px;">
+                ${parsedIntelligence.actionItems.map(item => `<li style="margin-bottom: 4px;">${item}</li>`).join('')}
+            </ul>
+        </div>
+        ` : ''}
+
+        ${callData.recording_url ? `
+        <div style="margin-bottom: 20px;">
+            <a href="${callData.recording_url}" style="background-color: #238636; color: #ffffff; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold; display: inline-block;">Listen to Call Recording</a>
+        </div>
+        ` : ''}
+
+        <div style="border-top: 1px solid #30363d; padding-top: 12px; font-size: 11px; color: #8b949e;">
+            RHIVE Autonomous Telephony Swarm • Sent to ${targetEmail} • Server Timestamp: ${new Date().toISOString()}
+        </div>
+    </div>
+    `;
+
+    try {
+        if (process.env.RESEND_API_KEY) {
+            await axios.post('https://api.resend.com/emails', {
+                from: 'RHIVE Telephony Swarm <telephony@rhiveconstruction.com>',
+                to: [targetEmail],
+                subject: subject,
+                html: htmlContent
+            }, {
+                headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' }
+            });
+            console.log(`[Email Dispatcher] Sent Lead Brief via Resend to ${targetEmail}`);
+        } else if (process.env.SENDGRID_API_KEY) {
+            await axios.post('https://api.sendgrid.com/v3/mail/send', {
+                personalizations: [{ to: [{ email: targetEmail }] }],
+                from: { email: 'telephony@rhiveconstruction.com', name: 'RHIVE Telephony Swarm' },
+                subject: subject,
+                content: [{ type: 'text/html', value: htmlContent }]
+            }, {
+                headers: { 'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`, 'Content-Type': 'application/json' }
+            });
+            console.log(`[Email Dispatcher] Sent Lead Brief via SendGrid to ${targetEmail}`);
+        } else {
+            console.log(`[DEV EMAIL SIMULATION] Target: ${targetEmail} | Subject: ${subject}`);
+        }
+
+        // Always log email delivery to Firestore
+        await admin.firestore().collection('email_notifications').add({
+            recipient: targetEmail,
+            subject,
+            intent: parsedIntelligence.intent,
+            callerPhone: callData.contact_number,
+            callerName: callData.contact_name,
+            deliveredAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (emailErr) {
+        console.error('[sendOfficeEmailNotification] Error:', emailErr.response?.data || emailErr.message);
+    }
+}
+
+/**
  * 7. Server-Side Master Webhook with Filter & AI Parsing Pipeline
  * Receives JustCall webhooks, verifies HMAC signatures, runs anti-solicitor filters,
- * parses transcripts with Gemini, upserts CRM leads, and queues automated RPA tasks.
+ * parses transcripts with Gemini, upserts CRM leads, emails office@rhiveconstruction.com,
+ * and queues automated RPA tasks.
  */
 exports.justCallWebhook = functions.https.onRequest((req, res) => {
     return cors(req, res, async () => {
@@ -510,7 +621,12 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
 
                 const logDoc = await db.collection('call_logs').add(callRecord);
 
-                // Step 3: Handle Solicitor Quarantine vs. Clean CRM Upsert
+                // Step 3: Universal Email Notification to office@rhiveconstruction.com
+                if (eventType === 'call.completed') {
+                    await sendOfficeEmailNotification(callRecord, parsedIntelligence, solicitorAudit);
+                }
+
+                // Step 4: Handle Solicitor Quarantine vs. Clean CRM Upsert
                 if (solicitorAudit.isSolicitor) {
                     console.log(`[Solicitor Firewall] Quarantined call from ${callerPhone}: ${solicitorAudit.reason}`);
                     await db.collection('quarantined_solicitors').add({
@@ -591,8 +707,81 @@ exports.justCallWebhook = functions.https.onRequest((req, res) => {
 });
 
 /**
+ * 1b. JustCall Information Query (Enhanced)
+ */
+exports.justCallInformation = functions.https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        const phoneNumber = req.query.phone || req.body.phone;
+        if (!phoneNumber) return res.status(400).json({ error: "No phone number provided" });
+
+        try {
+            const db = admin.firestore();
+            const variations = getPhoneVariations(phoneNumber);
+            const contactSnapshot = await db.collection('contacts').where('phone', 'in', variations).limit(1).get();
+
+            if (contactSnapshot.empty) {
+                return res.status(200).json({ found: false, message: "No contact found." });
+            }
+
+            const contact = { id: contactSnapshot.docs[0].id, ...contactSnapshot.docs[0].data() };
+            return res.status(200).json({ found: true, contact });
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+/**
+ * 1c. Sync Firebase Contact -> JustCall
+ */
+exports.onContactCreatedSyncToJustCall = functions.firestore
+    .document('contacts/{contactId}')
+    .onCreate(async (snapshot) => {
+        const data = snapshot.data();
+        if (!JUSTCALL_API_KEY || !JUSTCALL_API_SECRET) return null;
+        try {
+            await axios.post('https://api.justcall.io/v1/contacts', {
+                first_name: data.first_name,
+                last_name: data.last_name,
+                phone: data.phone,
+                email: data.email || ""
+            }, {
+                headers: {
+                    'Authorization': `${JUSTCALL_API_KEY}:${JUSTCALL_API_SECRET}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        } catch (error) {
+            console.error("Error syncing to JustCall:", error.message);
+        }
+    });
+
+/**
  * 8. Password Reset / SMS OTP Cloud Hooks
  */
+const JWT_SECRET = process.env.JWT_SECRET || 'rhive_otp_reset_secret_at_least_32_chars_long';
+
+function base64url(buf) {
+    return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+function signResetJWT(payload) {
+    const header = base64url(Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })));
+    const now = Math.floor(Date.now() / 1000);
+    const body = base64url(Buffer.from(JSON.stringify({ ...payload, iat: now, exp: now + 600 })));
+    const sig = base64url(crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest());
+    return `${header}.${body}.${sig}`;
+}
+function verifyResetJWT(token) {
+    try {
+        const [header, body, sig] = token.split('.');
+        const expected = base64url(crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest());
+        if (sig !== expected) return null;
+        const payload = JSON.parse(Buffer.from(body, 'base64').toString());
+        if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+        return payload;
+    } catch { return null; }
+}
+
 exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
     return cors(req, res, async () => {
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
@@ -612,5 +801,41 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
         });
 
         return res.status(200).json({ success: true, message: 'Verification code sent.' });
+    });
+});
+
+exports.verifySmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+        const { phone, code } = req.body;
+        if (!phone || !code) return res.status(400).json({ error: 'Missing phone or code' });
+
+        const normalizedPhone = normalizePhone(phone);
+        const otpDocId = normalizedPhone.replace(/\+/g, '');
+        const otpSnap = await admin.firestore().collection('otp_codes').doc(otpDocId).get();
+
+        if (!otpSnap.exists || otpSnap.data().code !== code.trim()) {
+            return res.status(400).json({ error: 'Invalid or expired code.' });
+        }
+        await admin.firestore().collection('otp_codes').doc(otpDocId).delete();
+
+        const resetToken = signResetJWT({ phone: normalizedPhone, purpose: 'password_reset' });
+        return res.status(200).json({ success: true, resetToken });
+    });
+});
+
+exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+        const { resetToken, newPassword } = req.body;
+        const payload = verifyResetJWT(resetToken);
+        if (!payload) return res.status(401).json({ error: 'Invalid reset token' });
+
+        const usersSnap = await admin.firestore().collection('users').where('phone', '==', payload.phone).limit(1).get();
+        if (usersSnap.empty) return res.status(404).json({ error: 'User not found' });
+
+        const uid = usersSnap.docs[0].id;
+        await admin.auth().updateUser(uid, { password: newPassword });
+        return res.status(200).json({ success: true, message: 'Password updated successfully' });
     });
 });
