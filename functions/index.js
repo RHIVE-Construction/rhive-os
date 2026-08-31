@@ -73,9 +73,22 @@ function getPhoneVariations(phone) {
 /**
  * Standardizes raw address strings and validates Utah / Idaho service zones.
  */
+function convertSpokenWordsToNumbers(text) {
+    if (!text) return '';
+    const wordMap = {
+        'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4',
+        'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9',
+        'ten': '10', 'eleven': '11', 'twelve': '12', 'thirteen': '13', 'fourteen': '14',
+        'fifteen': '15', 'sixteen': '16', 'seventeen': '17', 'eighteen': '18', 'nineteen': '19',
+        'twenty': '20', 'thirty': '30', 'forty': '40', 'fifty': '50', 'sixty': '60',
+        'seventy': '70', 'eighty': '80', 'ninety': '90'
+    };
+    return text.replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/gi, (m) => wordMap[m.toLowerCase()] || m);
+}
+
 function standardizeAddress(rawAddress, city = '', state = 'UT', zip = '') {
     if (!rawAddress) return null;
-    let full = `${rawAddress}, ${city} ${state} ${zip}`.trim().replace(/\s+/g, ' ');
+    let full = convertSpokenWordsToNumbers(`${rawAddress}, ${city} ${state} ${zip}`).trim().replace(/\s+/g, ' ');
 
     // Standard street abbreviations
     const replacements = [
@@ -89,7 +102,11 @@ function standardizeAddress(rawAddress, city = '', state = 'UT', zip = '') {
         [/\bCircle\b/gi, 'Cir'],
         [/\bWay\b/gi, 'Way'],
         [/\bParkway\b/gi, 'Pkwy'],
-        [/\bPlace\b/gi, 'Pl']
+        [/\bPlace\b/gi, 'Pl'],
+        [/\bNorth\b/gi, 'N'],
+        [/\bSouth\b/gi, 'S'],
+        [/\bEast\b/gi, 'E'],
+        [/\bWest\b/gi, 'W']
     ];
     for (const [regex, rep] of replacements) {
         full = full.replace(regex, rep);
@@ -116,6 +133,7 @@ function standardizeAddress(rawAddress, city = '', state = 'UT', zip = '') {
         isCommercial
     };
 }
+
 
 /**
  * Converts a street address into a slow, clear, phonetic spoken string
@@ -246,7 +264,16 @@ async function getUpcomingWeatherEvents(zip = '84095') {
 exports.getAvailableWindows = functions.https.onRequest((req, res) => {
     return cors(req, res, async () => {
         const db = admin.firestore();
-        const targetDate = req.query.date || req.body.date || new Date().toISOString().split('T')[0];
+        
+        // Calculate tomorrow's date strictly in Mountain Time (America/Denver)
+        const denverFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Denver', year: 'numeric', month: '2-digit', day: '2-digit' });
+        const todayDenver = denverFormatter.format(new Date());
+        
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        const tomorrowDenver = denverFormatter.format(d);
+
+        const targetDate = req.query.date || req.body.date || tomorrowDenver;
 
         try {
             // Check existing bookings on the target date

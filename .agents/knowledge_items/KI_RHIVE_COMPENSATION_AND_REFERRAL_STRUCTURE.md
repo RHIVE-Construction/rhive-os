@@ -37,9 +37,9 @@
 - **Target Partners:** High school sports teams, clubs, academic groups, police/fire stations, and civic non-profits.
 - **Value Prop:** Zero upfront costs, no door-to-door selling, zero administrative burden for school staff.
 - **Tiered Calendar Year Profit Share (Resets Jan 1st):**
-  - **Tier 1 (Starter):** Roofs 1–5 in calendar year -> `30% CGP`
-  - **Tier 2 (Growth):** Roofs 6–10 in calendar year -> `40% CGP`
-  - **Tier 3 (Abundance Leader):** 11+ Roofs in calendar year -> `50% CGP`
+  - **Tier 1 (Community Partner):** Roofs 1–5 in calendar year -> `30% CGP`
+  - **Tier 2 (Impact Champion):** Roofs 6–10 in calendar year -> `40% CGP`
+  - **Tier 3 (Abundance Leader / Legacy Partner):** 11+ Roofs in calendar year -> `50% CGP`
   - **Annual Reset:** Tier counter resets to 0 on **January 1st** of each year.
 - **Language Rule:** Always specify roof sizes in **square footage (e.g. 20 SQ (2,000 sq ft) Roof)** when addressing community leaders.
 - **Tech Features:** Ghost QR Code & Share Link, live "Pizza Tracker" thermometer dashboard.
