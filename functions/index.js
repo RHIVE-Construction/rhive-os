@@ -769,6 +769,10 @@ async function sendGoogleChatCardNotification(callData, parsedIntelligence, soli
                                             {
                                                 text: "🗺️ View on Maps",
                                                 onClick: { openLink: { url: `https://maps.google.com/?q=${encodeURIComponent(parsedIntelligence.extractedAddress || 'Utah')}` } }
+                                            },
+                                            {
+                                                text: "⏳ PENDING AUTHORIZATION — 1-Click Roofr Order (All Structures)",
+                                                onClick: { openLink: { url: `https://us-central1-rhive-os.cloudfunctions.net/approveRoofrOrder?orderId=${logId}` } }
                                             }
                                         ]
                                     }
