@@ -19,6 +19,7 @@ backlog:
   - "[N9] CALENDAR_OPT: Restructure calendars for Martell color-blocks. QA_EXIT:0."
 review:
 done:
+  - "[N1] TELEPHONY_SWARM_ACOUSTIC_AND_PERSUASION_CALIBRATION: Deployed vocal smile formants, DISC triage, Mountain Timezone localization, and 6 Cloud Functions. QA_EXIT:0."
   - "[N1] JUSTCALL_TELEPHONY_SWARM_INTEGRATION: Deployed 3 dedicated voice agents, live cloud hooks, anti-solicitor quarantine pipeline, and post-call email alerts. QA_EXIT:0."
   - "[N1] INTAKE_PORTAL_UPGRADES_AND_SETTINGS_LIMIT: Moved inline notes to footer editor modal, enriched collapsed summaries, implemented state boundary blocks with bypass, added settings boundary input, and validated builds. QA_EXIT:0."
   - "[N1] BRANCH_CHERRYPICK: Created michael-branch-1.0, cherry-picked 17 UI commits from Michael-Branch. QA_EXIT:0."
