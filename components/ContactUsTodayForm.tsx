@@ -223,6 +223,18 @@ export const ContactUsTodayForm: React.FC<ContactUsTodayFormProps> = ({
                                     <span>{errorMessage}</span>
                                 </div>
                             )}
+                            {/* TCR 10DLC Mandatory SMS Communications Consent & Disclosure */}
+                            <div className="flex items-start gap-2.5 p-2.5 bg-black/70 border border-white/10 rounded-[8px] text-left">
+                                <input 
+                                    type="checkbox" 
+                                    id="contactFormSmsConsent" 
+                                    defaultChecked={true}
+                                    className="mt-0.5 h-3.5 w-3.5 rounded accent-[#ec028b] cursor-pointer shrink-0" 
+                                />
+                                <label htmlFor="contactFormSmsConsent" className="text-[10px] text-gray-300 leading-tight cursor-pointer select-none">
+                                    By providing your phone number, you agree to receive text messages from RHIVE Construction regarding your project quote, scheduling, and service updates. Consent is not a condition of purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for assistance. View our <a href="/privacy" className="text-rhive-pink underline hover:text-white">Privacy Policy</a> & <a href="/privacy" className="text-rhive-pink underline hover:text-white">Terms of Service</a>. Mobile information will not be shared with third parties for marketing purposes.
+                                </label>
+                            </div>
 
                             <button
                                 type="submit"

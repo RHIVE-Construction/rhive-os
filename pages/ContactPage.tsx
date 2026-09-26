@@ -36,9 +36,15 @@ const ContactPage: React.FC = () => {
                                 <Input placeholder="john@example.com" type="email" />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Subject</label>
-                            <Input placeholder="Quote Inquiry, Partnership, etc." />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Phone Number</label>
+                                <Input placeholder="(801) 555-0199" type="tel" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Subject</label>
+                                <Input placeholder="Quote Inquiry, Partnership, etc." />
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Message</label>
@@ -47,6 +53,20 @@ const ContactPage: React.FC = () => {
                                 placeholder="How can we help your project finish on top?"
                             />
                         </div>
+
+                        {/* TCR 10DLC Compliance SMS Consent */}
+                        <div className="flex items-start gap-2.5 p-3 bg-black/60 border border-gray-800 rounded-xl text-left">
+                            <input 
+                                type="checkbox" 
+                                id="contactPageSmsConsent" 
+                                defaultChecked={true}
+                                className="mt-0.5 h-4 w-4 rounded accent-[#ec028b] cursor-pointer shrink-0" 
+                            />
+                            <label htmlFor="contactPageSmsConsent" className="text-xs text-gray-400 leading-normal cursor-pointer select-none">
+                                By providing your phone number, you agree to receive SMS communications from RHIVE Construction regarding your project quote, scheduling, and service updates. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help. View our <a href="/privacy" className="text-[#ec028b] underline hover:text-white">Privacy Policy</a> & <a href="/privacy" className="text-[#ec028b] underline hover:text-white">Terms of Service</a>. Mobile information will not be shared with third parties for marketing purposes.
+                            </label>
+                        </div>
+
                         <Button size="lg" className="w-full md:w-auto px-12">
                             Send Secure Message
                         </Button>
