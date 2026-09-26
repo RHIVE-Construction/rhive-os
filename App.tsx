@@ -15,6 +15,7 @@ import RhiveHeader from './components/website/RhiveHeader';
 import { pageComponentMap } from './pageRegistry';
 import { CircuitryBackground } from './components/CircuitryBackground';
 import { FloatingEstimator } from './components/FloatingEstimator';
+import { CookieConsentBanner } from './components/website/CookieConsentBanner';
 import { GlobalChatWidget } from './components/chat/GlobalChatWidget';
 import HunniChatWidget from './components/website/HunniChatWidget';
 import PublicWebHeader from './components/website/PublicWebHeader';
@@ -59,6 +60,8 @@ const PATH_ROUTES: Record<string, string> = {
     '/blog/seamless-gutters-importance-utah': 'P-SEO-BLOG-8',
     '/blog/solar-panels-roof-replacement-utah': 'P-SEO-BLOG-9',
     '/blog/how-to-choose-reputable-roofing-contractor-utah': 'P-SEO-BLOG-10',
+    '/privacy':                               'P-PRIVACY',
+    '/terms':                                 'P-TERMS',
 };
 
 // Resolved on module load — null means this is a normal app route
@@ -112,6 +115,7 @@ const CleanPathRenderer: React.FC<{ pageId: string }> = ({ pageId }) => {
                         </div>
                     )}
                 </main>
+                <CookieConsentBanner />
                 {/* FloatingBackButton and DevNavigator intentionally excluded —
                     both use useNavigation() which is not available in the public zone. */}
             </div>
@@ -258,6 +262,7 @@ const AppContentAuthenticated: React.FC = () => {
                 </main>
             </div>
             <FloatingEstimator />
+            <CookieConsentBanner />
             <GlobalChatWidget />
             <FloatingBackButton />
             <HunniChatWidget />
@@ -378,6 +383,7 @@ const LoginBridge: React.FC = () => {
                         <PublicCurrentPage />
                     </main>
                     <FloatingEstimator />
+                    <CookieConsentBanner />
                     <FloatingBackButton />
                     {window.location.hostname === 'localhost' && <DevNavigator />}
                 </div>
@@ -399,6 +405,7 @@ const LoginBridge: React.FC = () => {
                     <LoginPage onLogin={login} />
                 </main>
                 <FloatingEstimator />
+                <CookieConsentBanner />
                 <HunniChatWidget />
                 <GlobalCustomerLookupModal />
                 <GlobalWeatherModal />

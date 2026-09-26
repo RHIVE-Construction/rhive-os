@@ -77,6 +77,7 @@ import MaintenancePage from './pages/MaintenancePage'; // P-14
 import FirestoreDebugPage from './pages/FirestoreDebugPage'; // DEBUG
 import InternalBpmPage from './pages/InternalBpmPage'; // INTERNAL-BPM (/map)
 import CustomerSignVerifyPage from './pages/CustomerSignVerifyPage'; // CUSTOMER-SIGN-VERIFY (link-only)
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'; // P-PRIVACY / P-TERMS
 
 // New SEO landing pages
 import ResidentialReplacementServicePage from './pages/ResidentialReplacementServicePage';
@@ -267,5 +268,9 @@ export const pageComponentMap: Record<string, React.FC> = {
 
   // Customer-facing Sign & Verify form — accessible via link only (no sidebar, no auth required)
   'CUSTOMER-SIGN-VERIFY': CustomerSignVerifyPage,
+
+  // TCR 10DLC Compliance & Privacy Policy Pages
+  'P-PRIVACY': PrivacyPolicyPage,
+  'P-TERMS': PrivacyPolicyPage,
 
 };

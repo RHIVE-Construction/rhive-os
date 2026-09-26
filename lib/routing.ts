@@ -54,6 +54,8 @@ export const PATH_TO_PAGE_MAP: Record<string, string> = {
     '/blog/seamless-gutters-importance-utah': 'P-SEO-BLOG-8',
     '/blog/solar-panels-roof-replacement-utah': 'P-SEO-BLOG-9',
     '/blog/how-to-choose-reputable-roofing-contractor-utah': 'P-SEO-BLOG-10',
+    '/privacy':                              'P-PRIVACY',
+    '/terms':                                'P-TERMS',
 };
 
 // Maps page IDs to clean URL pathnames
@@ -113,6 +115,8 @@ export const PAGE_TO_PATH_MAP: Record<string, string> = {
     'P-SEO-BLOG-8':      '/blog/seamless-gutters-importance-utah',
     'P-SEO-BLOG-9':      '/blog/solar-panels-roof-replacement-utah',
     'P-SEO-BLOG-10':     '/blog/how-to-choose-reputable-roofing-contractor-utah',
+    'P-PRIVACY':         '/privacy',
+    'P-TERMS':           '/terms',
 };
 
 /** Convert page ID to its clean URL path or fallback portal path */
