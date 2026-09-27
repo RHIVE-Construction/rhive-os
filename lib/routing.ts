@@ -126,25 +126,25 @@ export const getPathForPageId = (pageId: string): string => {
 
 /** Resolve current browser path and query params to a unique page ID */
 export const getPageIdFromPath = (pathname: string, search: string): string => {
-    // Normalize path by stripping trailing slash
-    const cleanPath = pathname.replace(/\/$/, '') || '/';
-    
-    // 1. Direct path check
-    if (PATH_TO_PAGE_MAP[cleanPath]) {
-        return PATH_TO_PAGE_MAP[cleanPath];
-    }
-    
-    // 2. Portal pages (/portal/PAGE_ID)
-    const portalMatch = cleanPath.match(/^\/portal\/([A-Z0-9-]+)$/i);
-    if (portalMatch) {
-        return portalMatch[1].toUpperCase();
-    }
-    
-    // 3. Fallback search query parameter (?page=PAGE_ID)
+    // 1. Explicit search query parameter (?page=PAGE_ID) takes highest precedence
     const params = new URLSearchParams(search);
     const queryPage = params.get('page');
     if (queryPage) {
         return queryPage;
+    }
+
+    // Normalize path by stripping trailing slash
+    const cleanPath = pathname.replace(/\/$/, '') || '/';
+    
+    // 2. Direct path check
+    if (PATH_TO_PAGE_MAP[cleanPath]) {
+        return PATH_TO_PAGE_MAP[cleanPath];
+    }
+    
+    // 3. Portal pages (/portal/PAGE_ID)
+    const portalMatch = cleanPath.match(/^\/portal\/([A-Z0-9-]+)$/i);
+    if (portalMatch) {
+        return portalMatch[1].toUpperCase();
     }
     
     // 4. Default public homepage V3
