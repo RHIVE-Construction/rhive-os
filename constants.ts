@@ -130,6 +130,7 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'E-23', name: 'Quote Builder', userType: 'Employee' },
             { id: 'E-38', name: 'Weather Guide', userType: 'Employee' },
             { id: 'E-21', name: 'My Info', userType: 'Employee' },
+            { id: 'E-39', name: 'Branding', userType: 'Employee' },
         ]
     },
     {
