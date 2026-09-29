@@ -87,6 +87,26 @@ import ZeroSurprisesPricingPage from './pages/ZeroSurprisesPricingPage';
 import SandyServiceAreaPage from './pages/SandyServiceAreaPage';
 import WestJordanServiceAreaPage from './pages/WestJordanServiceAreaPage';
 import SaltLakeCityServiceAreaPage from './pages/SaltLakeCityServiceAreaPage';
+import BountifulServiceAreaPage from './pages/BountifulServiceAreaPage';
+import ClearfieldServiceAreaPage from './pages/ClearfieldServiceAreaPage';
+import CottonwoodHeightsServiceAreaPage from './pages/CottonwoodHeightsServiceAreaPage';
+import DraperServiceAreaPage from './pages/DraperServiceAreaPage';
+import HerrimanServiceAreaPage from './pages/HerrimanServiceAreaPage';
+import HolladayServiceAreaPage from './pages/HolladayServiceAreaPage';
+import KearnsServiceAreaPage from './pages/KearnsServiceAreaPage';
+import LaytonServiceAreaPage from './pages/LaytonServiceAreaPage';
+import MagnaServiceAreaPage from './pages/MagnaServiceAreaPage';
+import MidvaleServiceAreaPage from './pages/MidvaleServiceAreaPage';
+import MillcreekServiceAreaPage from './pages/MillcreekServiceAreaPage';
+import MurrayServiceAreaPage from './pages/MurrayServiceAreaPage';
+import NorthSaltLakeServiceAreaPage from './pages/NorthSaltLakeServiceAreaPage';
+import OgdenServiceAreaPage from './pages/OgdenServiceAreaPage';
+import ParkCityServiceAreaPage from './pages/ParkCityServiceAreaPage';
+import SouthJordanServiceAreaPage from './pages/SouthJordanServiceAreaPage';
+import SugarHouseServiceAreaPage from './pages/SugarHouseServiceAreaPage';
+import TaylorsvilleServiceAreaPage from './pages/TaylorsvilleServiceAreaPage';
+import TooeleServiceAreaPage from './pages/TooeleServiceAreaPage';
+import WestValleyCityServiceAreaPage from './pages/WestValleyCityServiceAreaPage';
 import FaqHubPage from './pages/FaqHubPage';
 import BlogIndexPage from './pages/BlogIndexPage';
 import BlogReplacementCostPage from './pages/BlogReplacementCostPage';
@@ -169,6 +189,26 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-SEO-SANDY':       SandyServiceAreaPage,
   'P-SEO-WESTJORDAN':  WestJordanServiceAreaPage,
   'P-SEO-SLC':         SaltLakeCityServiceAreaPage,
+  'P-SEO-BOUNTIFUL':   BountifulServiceAreaPage,
+  'P-SEO-CLEARFIELD':  ClearfieldServiceAreaPage,
+  'P-SEO-COTTONWOOD':  CottonwoodHeightsServiceAreaPage,
+  'P-SEO-DRAPER':      DraperServiceAreaPage,
+  'P-SEO-HERRIMAN':    HerrimanServiceAreaPage,
+  'P-SEO-HOLLADAY':    HolladayServiceAreaPage,
+  'P-SEO-KEARNS':      KearnsServiceAreaPage,
+  'P-SEO-LAYTON':      LaytonServiceAreaPage,
+  'P-SEO-MAGNA':       MagnaServiceAreaPage,
+  'P-SEO-MIDVALE':     MidvaleServiceAreaPage,
+  'P-SEO-MILLCREEK':   MillcreekServiceAreaPage,
+  'P-SEO-MURRAY':      MurrayServiceAreaPage,
+  'P-SEO-NSL':         NorthSaltLakeServiceAreaPage,
+  'P-SEO-OGDEN':       OgdenServiceAreaPage,
+  'P-SEO-PARKCITY':    ParkCityServiceAreaPage,
+  'P-SEO-SOUTHJORDAN': SouthJordanServiceAreaPage,
+  'P-SEO-SUGARHOUSE':  SugarHouseServiceAreaPage,
+  'P-SEO-TAYLORSVILLE': TaylorsvilleServiceAreaPage,
+  'P-SEO-TOOELE':      TooeleServiceAreaPage,
+  'P-SEO-WESTVALLEY':  WestValleyCityServiceAreaPage,
   'P-SEO-FAQ':         FaqHubPage,
   'P-SEO-BLOG-INDEX':  BlogIndexPage,
   'P-SEO-BLOG-1':      BlogReplacementCostPage,

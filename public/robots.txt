@@ -1,13 +1,38 @@
-# Sitemaps point the way for Googlebot
+# Sitemaps point the way for Googlebot and AI Search Engines
 Sitemap: https://www.rhiveconstruction.com/sitemap.xml
 
-# Allow all search engine crawlers full access to render files
+# Allow all search engine crawlers full access to render files and read content
 User-agent: *
 Allow: /
 Allow: /*.js$
 Allow: /*.css$
+Allow: /faq
+Allow: /blog
+Allow: /services/
+Allow: /service-areas/
+Allow: /zero-surprises-pricing
+Allow: /estimate-tool
 
-# Protect our secure staging and app directories from public index search
+# AI Crawler Directives (AEO Optimization)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Protect secure staging and internal app directories from public index search
 Disallow: /admin/
 Disallow: /api/
 Disallow: /tmp/

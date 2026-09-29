@@ -18,24 +18,67 @@ import { Sun, Moon, Menu, X } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { cn } from '../../lib/utils';
 
-const NAV_LINKS = [
+const NAV_LINKS_LEFT = [
   { label: 'ABOUT US',  href: '/?page=P-01' },
-  { label: 'SERVICES',  href: '/?page=P-02' },
+];
+
+const SERVICE_MENU_GROUPS = [
+  {
+    title: 'Core Roofing Sectors & Materials',
+    links: [
+      { label: 'All Services Overview', href: '/?page=P-02' },
+      { label: 'Residential Roofing (Pitched & Flat)', href: '/services/residential-roof-replacement' },
+      { label: 'Commercial Roofing (Low & Steep-Slope)', href: '/services/commercial-flat-roofing' },
+      { label: 'Asphalt Shingle Systems', href: '/services/asphalt-roofing' },
+      { label: 'Flat & Membrane Systems', href: '/services/membrane-roofing' },
+      { label: 'Roofing Accessories & Heat Trace', href: '/services/roofing-accessories' },
+    ]
+  },
+  {
+    title: 'Pricing & Transparency',
+    links: [
+      { label: 'Zero Surprises Pricing', href: '/zero-surprises-pricing' },
+    ]
+  },
+  {
+    title: 'Local Service Areas',
+    links: [
+      { label: 'Sandy Service Area', href: '/service-areas/sandy-ut' },
+      { label: 'West Jordan Service Area', href: '/service-areas/west-jordan-ut' },
+      { label: 'Salt Lake City Service Area', href: '/service-areas/salt-lake-city-ut' },
+      { label: 'Bountiful Service Area', href: '/service-areas/bountiful-ut' },
+      { label: 'Clearfield Service Area', href: '/service-areas/clearfield-ut' },
+      { label: 'Cottonwood Heights Service Area', href: '/service-areas/cottonwood-heights-ut' },
+      { label: 'Draper Service Area', href: '/service-areas/draper-ut' },
+      { label: 'Herriman Service Area', href: '/service-areas/herriman-ut' },
+      { label: 'Holladay Service Area', href: '/service-areas/holladay-ut' },
+      { label: 'Kearns Service Area', href: '/service-areas/kearns-ut' },
+      { label: 'Layton Service Area', href: '/service-areas/layton-ut' },
+      { label: 'Magna Service Area', href: '/service-areas/magna-ut' },
+      { label: 'Midvale Service Area', href: '/service-areas/midvale-ut' },
+      { label: 'Millcreek Service Area', href: '/service-areas/millcreek-ut' },
+      { label: 'Murray Service Area', href: '/service-areas/murray-ut' },
+      { label: 'North Salt Lake Service Area', href: '/service-areas/north-salt-lake-ut' },
+      { label: 'Ogden Service Area', href: '/service-areas/ogden-ut' },
+      { label: 'Park City Service Area', href: '/service-areas/park-city-ut' },
+      { label: 'South Jordan Service Area', href: '/service-areas/south-jordan-ut' },
+      { label: 'Sugar House Service Area', href: '/service-areas/sugar-house-ut' },
+      { label: 'Taylorsville Service Area', href: '/service-areas/taylorsville-ut' },
+      { label: 'Tooele Service Area', href: '/service-areas/tooele-ut' },
+      { label: 'West Valley City Service Area', href: '/service-areas/west-valley-city-ut' },
+    ]
+  }
+];
+
+const NAV_LINKS_LEFT_REMAINING = [
   { label: 'FAQ',       href: '/faq' },
   { label: 'BLOGS',     href: '/blog' },
+];
+
+const NAV_LINKS_RIGHT = [
   { label: 'PROCESS',   href: '/?page=P-03' },
   { label: 'FINANCING', href: '/?page=P-04' },
   { label: 'CONTACT',   href: '/?page=P-05' },
-];
-
-const OTHER_LINKS = [
-  { label: 'RESIDENTIAL REPLACEMENT', href: '/services/residential-roof-replacement' },
-  { label: 'COMMERCIAL FLAT ROOFING', href: '/services/commercial-flat-roofing' },
-  { label: 'ROOFING ACCESSORIES',     href: '/services/roofing-accessories' },
-  { label: 'ZERO SURPRISES PRICING',   href: '/zero-surprises-pricing' },
-  { label: 'SANDY SERVICE AREA',      href: '/service-areas/sandy-ut' },
-  { label: 'WEST JORDAN SERVICE AREA', href: '/service-areas/west-jordan-ut' },
-  { label: 'SALT LAKE CITY SERVICE AREA', href: '/service-areas/salt-lake-city-ut' },
 ];
 
 // Explicit homepage URL — avoids sessionStorage overriding to a CRM page
@@ -45,8 +88,8 @@ const PublicWebHeader: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [isOthersOpen, setIsOthersOpen] = React.useState(false);
-  const [isMobileOthersOpen, setIsMobileOthersOpen] = React.useState(false);
+  const [isServicesOpen, setIsServicesOpen] = React.useState(false);
+  const [isMobileServicesOpen, setIsMobileServicesOpen] = React.useState(false);
 
   const handleNav = (href: string) => {
     window.location.href = href;
@@ -76,11 +119,62 @@ const PublicWebHeader: React.FC = () => {
 
       {/* Left nav links */}
       <nav className="hidden lg:flex justify-end items-center gap-6 xl:gap-8 z-10">
-        {NAV_LINKS.slice(0, 5).map((link) => (
+        {NAV_LINKS_LEFT.map((link) => (
           <button
             key={link.label}
             onClick={() => handleNav(link.href)}
-            className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] transition-colors duration-300"
+            className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] transition-colors duration-300 cursor-pointer"
+          >
+            {link.label}
+          </button>
+        ))}
+
+        {/* Services Dropdown */}
+        <div 
+          className="relative"
+          onMouseEnter={() => setIsServicesOpen(true)}
+          onMouseLeave={() => setIsServicesOpen(false)}
+        >
+          <button
+            onClick={() => handleNav('/?page=P-02')}
+            className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] transition-colors duration-300 flex items-center gap-1 cursor-pointer"
+          >
+            SERVICES <span className="text-[7px]">▼</span>
+          </button>
+          {isServicesOpen && (
+            <div className="absolute left-0 pt-2 w-72 z-50">
+              <div className="bg-black/95 border border-white/10 backdrop-blur-xl shadow-2xl p-4 flex flex-col gap-4 rounded-xl animate-fade-in">
+                {SERVICE_MENU_GROUPS.map((group) => (
+                  <div key={group.title} className="space-y-1.5 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                    <div className="text-[8px] font-mono font-bold uppercase tracking-wider text-[#ec028b]">
+                      {group.title}
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {group.links.map((link) => (
+                        <button
+                          key={link.label}
+                          onClick={() => {
+                            setIsServicesOpen(false);
+                            handleNav(link.href);
+                          }}
+                          className="text-[9px] text-left font-black tracking-[0.15em] uppercase text-slate-300 hover:text-[#ec028b] transition-colors cursor-pointer pl-1 hover:pl-2"
+                        >
+                          {link.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {NAV_LINKS_LEFT_REMAINING.map((link) => (
+          <button
+            key={link.label}
+            onClick={() => handleNav(link.href)}
+            className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] transition-colors duration-300 cursor-pointer"
           >
             {link.label}
           </button>
@@ -92,43 +186,15 @@ const PublicWebHeader: React.FC = () => {
 
       {/* Right nav links */}
       <nav className="hidden lg:flex justify-start items-center gap-6 xl:gap-8 z-10">
-        {NAV_LINKS.slice(5).map((link) => (
+        {NAV_LINKS_RIGHT.map((link) => (
           <button
             key={link.label}
             onClick={() => handleNav(link.href)}
-            className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] transition-colors duration-300"
+            className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] transition-colors duration-300 cursor-pointer"
           >
             {link.label}
           </button>
         ))}
-
-        {/* Others Dropdown */}
-        <div 
-          className="relative"
-          onMouseEnter={() => setIsOthersOpen(true)}
-          onMouseLeave={() => setIsOthersOpen(false)}
-        >
-          <button
-            className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] transition-colors duration-300 flex items-center gap-1 cursor-pointer"
-          >
-            OTHERS <span className="text-[7px]">▼</span>
-          </button>
-          {isOthersOpen && (
-            <div className="absolute left-0 pt-2 w-64 z-50">
-              <div className="bg-black/95 border border-white/10 backdrop-blur-xl shadow-2xl p-4 flex flex-col gap-3 rounded-md animate-fade-in">
-                {OTHER_LINKS.map((link) => (
-                  <button
-                    key={link.label}
-                    onClick={() => handleNav(link.href)}
-                    className="text-[9px] text-left font-black tracking-[0.15em] uppercase text-slate-400 hover:text-[#ec028b] transition-colors cursor-pointer"
-                  >
-                    {link.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
       </nav>
 
       {/* Central logo */}
@@ -226,31 +292,73 @@ const PublicWebHeader: React.FC = () => {
           exit={{ opacity: 0, y: -8 }}
           className="absolute top-12 left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/10 flex flex-col md:hidden z-[499]"
         >
-          {NAV_LINKS.map((link) => (
-            <button
-              key={link.label}
-              onClick={() => { setIsMenuOpen(false); handleNav(link.href); }}
-              className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
-            >
-              {link.label}
-            </button>
-          ))}
           <button
-            onClick={() => setIsMobileOthersOpen(!isMobileOthersOpen)}
+            onClick={() => { setIsMenuOpen(false); handleNav('/?page=P-01'); }}
+            className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5"
+          >
+            ABOUT US
+          </button>
+
+          <button
+            onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
             className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5 flex justify-between items-center"
           >
-            <span>OTHERS</span>
-            <span className="text-[8px]">{isMobileOthersOpen ? '▲' : '▼'}</span>
+            <span>SERVICES</span>
+            <span className="text-[8px]">{isMobileServicesOpen ? '▲' : '▼'}</span>
           </button>
-          {isMobileOthersOpen && OTHER_LINKS.map((link) => (
-            <button
-              key={link.label}
-              onClick={() => { setIsMenuOpen(false); handleNav(link.href); }}
-              className="w-full text-left pl-10 pr-6 py-3 text-[9px] font-black tracking-[0.15em] uppercase text-slate-400 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
-            >
-              {link.label}
-            </button>
-          ))}
+
+          {isMobileServicesOpen && (
+            <div className="bg-white/[0.02] border-b border-white/5">
+              {SERVICE_MENU_GROUPS.map((group) => (
+                <div key={group.title} className="py-2">
+                  <div className="px-8 py-1 text-[8px] font-mono font-bold uppercase tracking-wider text-[#ec028b]">
+                    {group.title}
+                  </div>
+                  {group.links.map((link) => (
+                    <button
+                      key={link.label}
+                      onClick={() => { setIsMenuOpen(false); handleNav(link.href); }}
+                      className="w-full text-left pl-10 pr-6 py-2.5 text-[9px] font-black tracking-[0.15em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors block"
+                    >
+                      {link.label}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button
+            onClick={() => { setIsMenuOpen(false); handleNav('/faq'); }}
+            className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5"
+          >
+            FAQ
+          </button>
+          <button
+            onClick={() => { setIsMenuOpen(false); handleNav('/blog'); }}
+            className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5"
+          >
+            BLOGS
+          </button>
+          <button
+            onClick={() => { setIsMenuOpen(false); handleNav('/?page=P-03'); }}
+            className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5"
+          >
+            PROCESS
+          </button>
+          <button
+            onClick={() => { setIsMenuOpen(false); handleNav('/?page=P-04'); }}
+            className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5"
+          >
+            FINANCING
+          </button>
+          <button
+            onClick={() => { setIsMenuOpen(false); handleNav('/?page=P-05'); }}
+            className="w-full text-left px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-[#ec028b] hover:bg-white/5 transition-colors border-b border-white/5"
+          >
+            CONTACT
+          </button>
+
           <a
             href="tel:8887448301"
             className="px-6 py-4 text-[11px] font-black tracking-[0.18em] uppercase text-[#ec028b] hover:bg-white/5 transition-colors"

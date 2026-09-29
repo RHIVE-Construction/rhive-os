@@ -2,19 +2,19 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Phone, Shield, ArrowRight, Zap, MapPin, ChevronDown, Wind, Building2, Layers, CheckCircle2, Wrench, Umbrella, Award } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export default function SandyServiceAreaPage() {
+export default function TaylorsvilleServiceAreaPage() {
     useEffect(() => {
-        document.title = "Top-Rated Roofing Contractor Sandy UT | Wasatch Bench | RHIVE Construction";
+        document.title = "Top-Rated Roofing Contractor Taylorsville UT | RHIVE Construction";
         let metaDesc = document.querySelector('meta[name="description"]');
         if (!metaDesc) {
             metaDesc = document.createElement('meta');
             metaDesc.setAttribute('name', 'description');
             document.head.appendChild(metaDesc);
         }
-        metaDesc.setAttribute('content', "Expert residential & commercial roofing in Sandy, UT & Wasatch Bench. Owens Corning Duration 130 MPH shingles, GAF TPO flat roofs, full tear-off, and lifetime guarantees.");
+        metaDesc.setAttribute('content', "Expert residential & commercial roofing in Taylorsville, UT. Owens Corning Duration 130 MPH shingles, GAF TPO/PVC flat roofs, 100% full tear-off, and lifetime guarantees.");
     }, []);
 
-    const [openFaq, setOpenFaq] = useState<string | null>('faq-sandy-icedams');
+    const [openFaq, setOpenFaq] = useState<string | null>('faq-taylorsville-attic');
 
     const handleEstimateClick = () => {
         window.location.href = '/estimate-tool';
@@ -24,22 +24,22 @@ export default function SandyServiceAreaPage() {
         setOpenFaq(prev => prev === id ? null : id);
     };
 
-    // Granular JSON-LD Schema for Sandy, UT local SEO & AEO
+    // Granular JSON-LD Schema for Taylorsville, UT local SEO & AEO
     const jsonLdSchema = useMemo(() => {
         return {
             "@context": "https://schema.org",
             "@graph": [
                 {
                     "@type": "RoofingContractor",
-                    "@id": "https://www.rhiveconstruction.com/service-areas/sandy-ut/#localbusiness",
-                    "name": "RHIVE Construction - Sandy Service Area",
-                    "url": "https://www.rhiveconstruction.com/service-areas/sandy-ut",
+                    "@id": "https://www.rhiveconstruction.com/service-areas/taylorsville-ut/#localbusiness",
+                    "name": "RHIVE Construction - Taylorsville Service Area",
+                    "url": "https://www.rhiveconstruction.com/service-areas/taylorsville-ut",
                     "logo": "https://i.imgur.com/t0VcSgJ.png",
                     "image": "https://i.imgur.com/t0VcSgJ.png",
                     "telephone": "+1-435-417-6637",
                     "email": "office@rhiveconstruction.com",
                     "priceRange": "$$$",
-                    "description": "RHIVE Construction delivers precision-engineered residential roofing, commercial facility systems, high-performance asphalt shingles, and certified flat membrane installations across Sandy, UT.",
+                    "description": "RHIVE Construction delivers precision-engineered residential roofing, commercial facility systems, high-performance asphalt shingles, and certified flat membrane installations across Taylorsville, UT.",
                     "address": {
                         "@type": "PostalAddress",
                         "streetAddress": "10437 Shady Plum Way",
@@ -50,82 +50,80 @@ export default function SandyServiceAreaPage() {
                     },
                     "geo": {
                         "@type": "GeoCoordinates",
-                        "latitude": 40.5700,
-                        "longitude": -111.8597
+                        "latitude": 40.6677,
+                        "longitude": -111.9388
                     },
                     "areaServed": [
-                        {"@type": "City", "name": "Sandy"},
-                        {"@type": "PostalCode", "postalCode": "84070"},
-                        {"@type": "PostalCode", "postalCode": "84092"},
-                        {"@type": "PostalCode", "postalCode": "84093"},
-                        {"@type": "PostalCode", "postalCode": "84094"},
-                        {"@type": "AdministrativeArea", "name": "Pepperwood"},
-                        {"@type": "AdministrativeArea", "name": "Dimple Dell"},
-                        {"@type": "AdministrativeArea", "name": "Willow Creek"},
-                        {"@type": "AdministrativeArea", "name": "Bell Canyon Foothills"},
-                        {"@type": "AdministrativeArea", "name": "Historic Sandy"},
-                        {"@type": "AdministrativeArea", "name": "Union Park Corridor"},
-                        {"@type": "AdministrativeArea", "name": "Hidden Valley"}
+                        {"@type": "City", "name": "Taylorsville"},
+                        {"@type": "PostalCode", "postalCode": "84123"},
+                        {"@type": "PostalCode", "postalCode": "84129"},
+                        {"@type": "AdministrativeArea", "name": "Redwood Road Corridor"},
+                        {"@type": "AdministrativeArea", "name": "5400 South Corridor"},
+                        {"@type": "AdministrativeArea", "name": "4700 South District"},
+                        {"@type": "AdministrativeArea", "name": "Taylorsville High Area"},
+                        {"@type": "AdministrativeArea", "name": "Bennion"},
+                        {"@type": "AdministrativeArea", "name": "Valley Fair Adjacent"},
+                        {"@type": "AdministrativeArea", "name": "Jordan River Parkway"}
                     ]
                 },
                 {
                     "@type": "FAQPage",
-                    "@id": "https://www.rhiveconstruction.com/service-areas/sandy-ut/#faqpage",
+                    "@id": "https://www.rhiveconstruction.com/service-areas/taylorsville-ut/#faqpage",
                     "mainEntity": [
                         {
                             "@type": "Question",
-                            "name": "How does RHIVE prevent destructive ice dams on shaded Wasatch Bench rooflines in Sandy?",
+                            "name": "How does RHIVE handle attic ventilation in Taylorsville homes to combat summer heat?",
                             "acceptedAnswer": {
                                 "@type": "Answer",
-                                "text": "We install a minimum 6-foot continuous eave coverage of self-adhering Owens Corning WeatherLock® Ice & Water Shield paired with commercial-grade self-regulating heat trace cables (5W/lin ft, 110V) controlled by intelligent thermostats."
+                                "text": "We install continuous Owens Corning VentSure® Ridge Vents paired with soffit intake vents. Balanced airflow prevents summer heat from baking shingles from the underside, extending overall system lifespan."
                             }
                         },
                         {
                             "@type": "Question",
-                            "name": "Why is Owens Corning Duration FLEX® recommended for Sandy foothill properties?",
+                            "name": "How does the RHIVE Project Savings Promotion (RPSP) work in Taylorsville?",
                             "acceptedAnswer": {
                                 "@type": "Answer",
-                                "text": "Duration FLEX® shingles use SBS polymer-modified asphalt, giving them rubberized elasticity to absorb high-velocity wind impacts and withstand 80°F+ single-day thermal swings without cracking. They also qualify homeowners for up to 20–30% insurance premium discounts."
+                                "text": "The RPSP provides an immediate 10% credit (up to $1,000 for residential / $3,000 for commercial) for decisions made within the presentation window by stripping out chase costs and administrative overhead. Homeowners retain their full 3-day statutory right of rescission with zero financial risk."
                             }
                         },
                         {
                             "@type": "Question",
-                            "name": "What guarantees protect Sandy property owners against installation leaks?",
+                            "name": "Does RHIVE handle insurance claims for storm damage in Taylorsville?",
                             "acceptedAnswer": {
                                 "@type": "Answer",
-                                "text": "In addition to Owens Corning 50-year non-prorated material warranties, RHIVE backs every replacement with our direct Lifetime Installer No-Leak Guarantee—if our installation causes a leak, we repair it 100% free of charge."
+                                "text": "Yes. We conduct free storm inspections using Roofr satellite data. CEO Michael Robinson meets insurance adjusters on-site to verify wind creases, hail impact bruises, and code-required items."
                             }
                         },
                         {
                             "@type": "Question",
-                            "name": "What is RHIVE’s residential reroofing standard for Sandy single-family homes?",
+                            "name": "What is RHIVE’s residential reroofing standard for Taylorsville single-family homes?",
                             "acceptedAnswer": {
                                 "@type": "Answer",
-                                "text": "RHIVE enforces a strict 100% full tear-off policy down to bare OSB decking on all single-family reroofs in Sandy. Every project includes ProArmor® synthetic underlayment, 6+ ft WeatherLock® Ice & Water Shield, 6-nail fastening, and 100 sq ft free OSB decking replacement."
+                                "text": "RHIVE enforces a strict 100% full tear-off policy down to bare OSB decking on all single-family reroofs in Taylorsville. Every replacement includes ProArmor® synthetic underlayment, 6+ ft WeatherLock® Ice & Water Shield, 6-nail fastening, and 100 sq ft free OSB decking replacement."
                             }
                         },
                         {
                             "@type": "Question",
-                            "name": "What commercial roofing options does RHIVE install in Sandy?",
+                            "name": "What commercial roofing solutions does RHIVE provide in Taylorsville?",
                             "acceptedAnswer": {
                                 "@type": "Answer",
-                                "text": "RHIVE delivers turnkey commercial roofing across Sandy, engineering both commercial steep-slope architectural shingles (churches, banks, multi-family) and heat-welded GAF EverGuard® TPO and PVC single-ply flat membranes with Polyiso insulation and DensDeck® cover boards, backed by GAF NDL warranties up to 30 years."
+                                "text": "As a certified GAF commercial installer, RHIVE installs heat-welded GAF EverGuard® TPO and PVC single-ply membranes in 60 mil and heavy-duty 80 mil specifications with Polyiso insulation and DensDeck® cover boards, backed by GAF NDL warranties up to 30 years."
                             }
                         },
                         {
                             "@type": "Question",
-                            "name": "What asphalt shingle products does RHIVE install for Sandy properties?",
+                            "name": "What asphalt shingle products does RHIVE install for Taylorsville properties?",
                             "acceptedAnswer": {
                                 "@type": "Answer",
-                                "text": "RHIVE installs Owens Corning Duration® Series (130 MPH SureNail® wind uplift), Duration FLEX® Class 4 Impact Rated shingles for hail and storm protection, and GAF Designer Shingles (Woodland®/Grand Sequoia®) for luxury estate aesthetics."
+                                "text": "RHIVE installs Owens Corning Duration® Series (130 MPH SureNail® wind uplift), Duration FLEX® Class 4 Impact Rated shingles for hail and storm protection, and GAF Designer Shingles (Woodland®/Grand Sequoia®) for luxury aesthetic appeal."
                             }
                         },
                         {
                             "@type": "Question",
-                            "name": "Does Sandy require a building permit for residential reroofing?",
+                            "name": "Does Taylorsville require a building permit for residential reroofing?",
                             "acceptedAnswer": {
                                 "@type": "Answer",
-                                "text": "Yes. Full roof replacements in Sandy require municipal building permits through the Sandy City Community Development Department. RHIVE manages 100% of the permitting process to ensure complete building code compliance."
+                                "text": "Yes. Full roof replacements in Taylorsville require municipal building permits through the City of Taylorsville Community Development Department. RHIVE manages 100% of the municipal permitting process to ensure complete building code compliance."
                             }
                         }
                     ]
@@ -149,15 +147,15 @@ export default function SandyServiceAreaPage() {
                     <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
                         <div className="max-w-3xl space-y-6">
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pink-500/10 border border-pink-500/30 text-pink-400 text-xs font-mono uppercase tracking-widest">
-                                <MapPin className="w-3.5 h-3.5" /> Sandy & Wasatch Bench Master Roofing Systems
+                                <MapPin className="w-3.5 h-3.5" /> Taylorsville, Utah Master Roofing Systems
                             </div>
                             
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight font-sans">
-                                Solving Sandy's Toughest <span className="text-[#ec028b]">Mountain Bench Wind</span> & Severe Canyon Snowpack Challenges
+                                Solving Taylorsville's Toughest <span className="text-[#ec028b]">Central Valley Wind</span> & Rapid Freeze-Thaw Challenges
                             </h1>
 
                             <p className="text-lg sm:text-xl text-gray-300 font-serif leading-relaxed max-w-[70ch]">
-                                Perched at the base of Big and Little Cottonwood Canyons along the Wasatch Bench, Sandy properties face extreme downslope winds and heavy winter snow accumulation that creates severe eave ice dams. RHIVE Construction engineers roofs with Owens Corning Duration® 130 MPH SureNail® shingles, Class 4 Impact Rated shingles, GAF EverGuard® TPO/PVC flat membranes, and our direct Lifetime Installer No-Leak Guarantee.
+                                Located in central Salt Lake County along the Jordan River, Taylorsville properties face unobstructed valley winds, summer solar heat bakes, and rapid freeze-thaw cycles fluctuating over 80°F in a single day. RHIVE Construction engineers roofs with Owens Corning Duration® 130 MPH SureNail® shingles, GAF EverGuard® TPO/PVC flat membranes, and our direct Lifetime Installer No-Leak Guarantee.
                             </p>
 
                             <div className="flex flex-wrap gap-4 pt-2">
@@ -165,7 +163,7 @@ export default function SandyServiceAreaPage() {
                                     onClick={handleEstimateClick}
                                     className="px-8 py-4 bg-[#ec028b] hover:bg-[#d0027a] text-white font-bold text-base rounded-md transition-all duration-200 shadow-lg shadow-pink-500/20 flex items-center gap-3 cursor-pointer"
                                 >
-                                    <span>Get Instant Sandy Estimate</span>
+                                    <span>Get Instant Taylorsville Estimate</span>
                                     <ArrowRight className="w-5 h-5" />
                                 </button>
                                 
@@ -209,29 +207,29 @@ export default function SandyServiceAreaPage() {
                         {/* Visual Highlight Badge */}
                         <div className="w-full lg:w-96 bg-gray-950/80 border border-gray-800 p-6 rounded-xl relative">
                             <div className="absolute -top-3 -right-3 bg-[#ec028b] text-white text-xs font-mono font-bold px-3 py-1 rounded">
-                                WASATCH BENCH
+                                CENTRAL VALLEY
                             </div>
-                            <h3 className="text-lg font-bold text-white mb-3">Sandy Micro-Climate Profile</h3>
+                            <h3 className="text-lg font-bold text-white mb-3">Taylorsville Micro-Climate Profile</h3>
                             <ul className="space-y-3 text-xs text-gray-300">
                                 <li className="flex items-start gap-2">
                                     <CheckCircle2 className="w-4 h-4 text-[#ec028b] shrink-0 mt-0.5" />
-                                    <span><strong>Cottonwood Canyon Winds:</strong> Downslope canyon gusts sweep through foothill neighborhoods.</span>
+                                    <span><strong>Open Valley Winds:</strong> High uplift forces across Redwood Road and 5400 South.</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <CheckCircle2 className="w-4 h-4 text-[#ec028b] shrink-0 mt-0.5" />
-                                    <span><strong>Heavy Snow Retention:</strong> Bell Canyon snow loads create chronic freeze-thaw ice dams.</span>
+                                    <span><strong>Jordan River Humidity:</strong> Localized moisture accelerating winter freeze-thaw cycles.</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <CheckCircle2 className="w-4 h-4 text-[#ec028b] shrink-0 mt-0.5" />
-                                    <span><strong>Thermal Cycling:</strong> 80°F+ single-day fluctuations stress shingle sealants and decking.</span>
+                                    <span><strong>Summer Solar Bakes:</strong> Intense heat requiring balanced ridge & soffit ventilation.</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <CheckCircle2 className="w-4 h-4 text-[#ec028b] shrink-0 mt-0.5" />
-                                    <span><strong>Foothill Estates:</strong> Pepperwood, Dimple Dell, & Willow Creek luxury architectural specs.</span>
+                                    <span><strong>Suburban Rooflines:</strong> Established single-family decking requiring rot inspections.</span>
                                 </li>
                             </ul>
                             <div className="mt-6 pt-4 border-t border-gray-800 text-center">
-                                <span className="text-xs text-gray-400 font-mono">Permitting: Sandy Community Development</span>
+                                <span className="text-xs text-gray-400 font-mono">Permitting: Taylorsville Community Development</span>
                             </div>
                         </div>
                     </div>
@@ -245,7 +243,7 @@ export default function SandyServiceAreaPage() {
                 <section className="bg-gray-950/60 border border-gray-800 p-8 sm:p-10 rounded-xl space-y-8">
                     <div className="space-y-3">
                         <div className="text-xs font-mono text-[#ec028b] uppercase tracking-wider">Part 1: Regional Specifications</div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-white">Sandy Environmental Factors & RHIVE Brand Commitment</h2>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-white">Taylorsville Environmental Factors & RHIVE Brand Commitment</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm sm:text-base text-gray-300 font-serif leading-relaxed">
@@ -254,25 +252,25 @@ export default function SandyServiceAreaPage() {
                                 <MapPin className="w-5 h-5 text-[#ec028b]" /> Regional Environmental Factors & Local Footprint
                             </h3>
                             <p>
-                                Sandy features established foothill communities, master-planned residential subdivisions, and busy commercial centers near South Towne. Shaded rooflines near canyon mouths experience prolonged snow retention, making continuous self-adhering ice barriers and heavy-gauge drip edge mandatory for long-term protection.
+                                Taylorsville features established residential neighborhoods, multi-family housing complexes, and major retail centers. Proximity to the Jordan River basin creates localized humidity and winter freeze-thaw cycles that accelerate shingle granule loss and cause ice dam backup along eave lines.
                             </p>
                             <p>
-                                Full roof replacements in Sandy require municipal building permits issued through the Sandy City Community Development Department. RHIVE Construction handles 100% of the permitting process, ensuring full compliance with Utah building codes, 28-gauge steel drip metal specifications, and eave ice barrier extensions.
+                                Full roof replacements in Taylorsville require municipal building permits issued through the City of Taylorsville Community Development Department. RHIVE Construction manages 100% of the permitting process, ensuring full compliance with Utah building codes, 28-gauge steel drip metal specifications, and eave ice barrier extensions.
                             </p>
                             <p className="text-xs text-gray-400 font-mono">
-                                Neighborhood Footprint: Pepperwood, Dimple Dell, Willow Creek, Bell Canyon foothill zones, Historic Sandy, Union Park corridor, and areas surrounding Hidden Valley Country Club.
+                                Neighborhood Footprint: Redwood Road corridor, 5400 South, 4700 South, Taylorsville High district, Bennion, Valley Fair Mall adjacent areas, and Jordan River parkway neighborhoods.
                             </p>
                         </div>
 
                         <div className="space-y-4">
                             <h3 className="text-lg font-bold text-white font-sans flex items-center gap-2">
-                                <Award className="w-5 h-5 text-[#ec028b]" /> Radical Transparency & Community Mission
+                                <Award className="w-5 h-5 text-[#ec028b]" /> Radical Transparency & Community Commitment
                             </h3>
                             <p>
-                                Co-founded by <strong>Kara Robinson (President)</strong> and <strong>Michael Robinson (CEO)</strong>, RHIVE Construction brings complete cost transparency to Sandy homeowners. By operating without physical warehouse overhead or commissioned sales reps, we keep administrative expenses <strong>under 10%</strong>.
+                                Co-founded by <strong>Kara Robinson</strong> (President) and <strong>Michael Robinson</strong> (CEO), RHIVE Construction brings complete cost transparency to Taylorsville homeowners. We eliminate sales commissions and physical warehouse overhead to keep administrative expenses <strong>under 10%</strong>.
                             </p>
                             <p>
-                                Every quote includes a detailed mathematical breakdown showing exact costs for <strong>Materials, Labor, Operating Overhead, and Net Profit</strong>. Guided by our slogan <strong>"Finish On Top"</strong> and our community mission of donating roofs to local veterans, teachers, and first responders, Sandy property owners receive master-craftsman quality at a fair price.
+                                Every quote includes an itemized mathematical breakdown showing exact costs for <strong>Materials, Labor, Operating Overhead (&lt;10%), and Net Profit</strong>. Guided by our slogan <strong>"Finish On Top"</strong> and our ongoing mission of donating complete roof replacements to local veterans, teachers, and first responders, Taylorsville homeowners receive master-craftsman quality at a fair price.
                             </p>
                         </div>
                     </div>
@@ -282,19 +280,19 @@ export default function SandyServiceAreaPage() {
                 <section className="bg-gray-950/60 border border-gray-800 p-8 sm:p-10 rounded-xl space-y-8">
                     <div className="space-y-3">
                         <div className="text-xs font-mono text-[#ec028b] uppercase tracking-wider">Part 2: Residential Solutions</div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-white">Residential Roofing Standards for Sandy Single-Family Homes</h2>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-white">Residential Roofing Standards for Taylorsville Single-Family Homes</h2>
                     </div>
 
                     <div className="p-6 rounded-lg bg-pink-500/10 border border-pink-500/20 text-gray-200">
-                        <h3 className="text-base font-bold text-white font-sans mb-2">Q: What is RHIVE’s residential reroofing standard for Sandy single-family homes?</h3>
+                        <h3 className="text-base font-bold text-white font-sans mb-2">Q: What is RHIVE’s residential reroofing standard for Taylorsville single-family homes?</h3>
                         <p className="font-serif text-sm sm:text-base text-gray-300 leading-relaxed">
-                            <strong>A:</strong> RHIVE enforces a strict <strong>100% full tear-off policy</strong> down to bare OSB decking on all single-family reroofs in Sandy. We never perform residential layovers because placing new shingles over old materials traps heat, conceals structural wood rot, adds excessive weight under snow loads, and voids manufacturer warranties.
+                            <strong>A:</strong> RHIVE enforces a strict <strong>100% full tear-off policy</strong> down to bare OSB decking on all single-family reroofs in Taylorsville. We never perform residential layovers because placing new shingles over old materials traps moisture, conceals structural wood rot, adds excessive weight, and voids manufacturer warranties.
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="p-5 rounded-lg bg-gray-900 border border-gray-800 space-y-2">
-                            <h4 className="text-sm font-bold text-white">Synthetic Field Protection</h4>
+                            <h4 className="text-sm font-bold text-white">Synthetic Field Barrier</h4>
                             <p className="text-xs text-gray-400 font-serif leading-relaxed">
                                 100% field coverage with <strong>Owens Corning ProArmor®</strong> synthetic underlayment.
                             </p>
@@ -327,9 +325,9 @@ export default function SandyServiceAreaPage() {
                     </div>
 
                     <div className="p-6 rounded-lg bg-pink-500/10 border border-pink-500/20 text-gray-200">
-                        <h3 className="text-base font-bold text-white font-sans mb-2">Q: What commercial roofing systems does RHIVE install for Sandy commercial facilities?</h3>
+                        <h3 className="text-base font-bold text-white font-sans mb-2">Q: What commercial roofing solutions does RHIVE provide in Taylorsville?</h3>
                         <p className="font-serif text-sm sm:text-base text-gray-300 leading-relaxed">
-                            <strong>A:</strong> RHIVE provides comprehensive commercial roofing services across Sandy for retail strips, office buildings, churches, banks, industrial complexes, and multi-family communities. We engineer and install both <strong>commercial steep-slope architectural shingle systems</strong> (for multi-family, churches, and steep-slope offices) and <strong>certified single-ply flat membrane systems</strong> (TPO/PVC) backed by certified Master Service Agreements (MSAs) and GAF manufacturer warranties.
+                            <strong>A:</strong> RHIVE provides turnkey commercial roofing throughout Taylorsville, serving Crossroads Plaza, Redwood Road retail centers, Taylorsville Town Center, churches, banks, and multi-family developments. We engineer and install both <strong>commercial steep-slope architectural shingle systems</strong> (for multi-family, churches, and steep-slope offices) and <strong>certified single-ply flat membrane systems</strong> (TPO/PVC) backed by certified Master Service Agreements (MSAs) and GAF manufacturer warranties.
                         </p>
                     </div>
 
@@ -337,7 +335,7 @@ export default function SandyServiceAreaPage() {
                         <div className="p-5 rounded-lg bg-gray-900 border border-gray-800 space-y-2">
                             <h4 className="text-sm font-bold text-white">Commercial Code Layover</h4>
                             <p className="text-xs text-gray-400 font-serif leading-relaxed">
-                                Under active Utah building codes, single-layer commercial layovers are permitted when underlying structural decking and insulation are dry and sound, avoiding tear-off costs.
+                                Under active Utah building codes, single-layer commercial layovers are permitted when underlying structural decking and insulation are dry and sound, avoiding tear-off expenses.
                             </p>
                         </div>
                         <div className="p-5 rounded-lg bg-gray-900 border border-gray-800 space-y-2">
@@ -349,7 +347,7 @@ export default function SandyServiceAreaPage() {
                         <div className="p-5 rounded-lg bg-gray-900 border border-gray-800 space-y-2">
                             <h4 className="text-sm font-bold text-white">Commercial RPSP Credit</h4>
                             <p className="text-xs text-gray-400 font-serif leading-relaxed">
-                                Commercial accounts operate under MSAs and qualify for our <strong>Commercial RPSP 10% credit up to $3,000</strong> for estimates approved within 7 days.
+                                Commercial accounts operate under custom MSAs and qualify for our <strong>Commercial RPSP 10% credit up to $3,000</strong> for estimates approved within 7 days.
                             </p>
                         </div>
                     </div>
@@ -363,9 +361,9 @@ export default function SandyServiceAreaPage() {
                     </div>
 
                     <div className="p-6 rounded-lg bg-pink-500/10 border border-pink-500/20 text-gray-200">
-                        <h3 className="text-base font-bold text-white font-sans mb-2">Q: What asphalt shingle products does RHIVE install for Sandy properties?</h3>
+                        <h3 className="text-base font-bold text-white font-sans mb-2">Q: What asphalt shingle products does RHIVE install for Taylorsville properties?</h3>
                         <p className="font-serif text-sm sm:text-base text-gray-300 leading-relaxed">
-                            <strong>A:</strong> RHIVE Construction installs the <strong>Owens Corning Duration® Series</strong> with patented <strong>SureNail® Technology</strong> (130 MPH wind uplift rating), <strong>Duration FLEX®</strong> SBS polymer-modified Class 4 Impact Rated shingles for hail resistance and insurance premium discounts, and <strong>GAF Designer Shingles</strong> (Woodland® / Grand Sequoia®) for luxury estate aesthetics backed by 50-year non-prorated warranties.
+                            <strong>A:</strong> RHIVE Construction is an Owens Corning Preferred Contractor installing the <strong>Duration® Series</strong> with patented <strong>SureNail® Technology</strong> (130 MPH wind uplift rating), <strong>Duration FLEX®</strong> SBS polymer-modified Class 4 Impact Rated shingles for hail resistance and insurance discounts, and <strong>GAF Designer Shingles</strong> (Woodland® / Grand Sequoia®) for luxury aesthetic appeal backed by 50-year non-prorated warranties.
                         </p>
                     </div>
 
@@ -380,7 +378,7 @@ export default function SandyServiceAreaPage() {
                         </div>
                         <div className="p-4 rounded-lg bg-gray-900/80 border border-gray-800">
                             <h4 className="text-sm font-bold text-white mb-1">GAF Designer Shingles</h4>
-                            <p className="text-xs text-gray-400">Woodland® and Grand Sequoia® hand-cut dimensional aesthetics for luxury Sandy estates.</p>
+                            <p className="text-xs text-gray-400">Woodland® and Grand Sequoia® hand-cut dimensional aesthetics for luxury Taylorsville homes.</p>
                         </div>
                         <div className="p-4 rounded-lg bg-gray-900/80 border border-gray-800">
                             <h4 className="text-sm font-bold text-white mb-1">50-Year Non-Prorated</h4>
@@ -397,9 +395,9 @@ export default function SandyServiceAreaPage() {
                     </div>
 
                     <div className="p-6 rounded-lg bg-pink-500/10 border border-pink-500/20 text-gray-200">
-                        <h3 className="text-base font-bold text-white font-sans mb-2">Q: What are the technical specifications of RHIVE’s flat roof membrane installations in Sandy?</h3>
+                        <h3 className="text-base font-bold text-white font-sans mb-2">Q: What are the technical specifications of RHIVE’s flat roof membrane installations in Taylorsville?</h3>
                         <p className="font-serif text-sm sm:text-base text-gray-300 leading-relaxed">
-                            <strong>A:</strong> RHIVE installs <strong>GAF EverGuard® TPO (60/80 mil)</strong> reflective white Energy Star membranes to cut cooling costs, and <strong>GAF EverGuard® PVC (60/80 mil)</strong> for high chemical, grease, and fire resistance. The assembly includes mechanically attached Polyiso insulation, custom-tapered boards around drains and scuppers to eliminate ponding water, high-density DensDeck® gypsum cover boards, and fusion hot-air welded seams.
+                            <strong>A:</strong> RHIVE installs <strong>GAF EverGuard® TPO (60/80 mil)</strong> reflective white Energy Star membranes to lower summer HVAC cooling costs, and <strong>GAF EverGuard® PVC (60/80 mil)</strong> for high chemical, grease, and fire resistance. The assembly includes mechanically attached Polyiso insulation, custom-tapered boards around drains and scuppers to eliminate ponding water, high-density DensDeck® gypsum cover boards, and fusion hot-air welded seams.
                         </p>
                     </div>
 
@@ -427,9 +425,9 @@ export default function SandyServiceAreaPage() {
                 <section className="bg-gray-950/80 border border-gray-800 p-8 sm:p-10 rounded-xl space-y-8">
                     <div className="text-center max-w-3xl mx-auto space-y-3">
                         <div className="text-xs font-mono text-[#ec028b] uppercase tracking-wider">AEO & Direct Answers</div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-white">Frequently Asked Questions: Sandy Roofing</h2>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-white">Frequently Asked Questions: Taylorsville Roofing</h2>
                         <p className="text-sm text-gray-400 font-serif">
-                            Direct answers to common questions asked by homeowners and commercial property managers in Sandy, Utah.
+                            Direct answers to common questions asked by homeowners and commercial property managers in Taylorsville, Utah.
                         </p>
                     </div>
 
@@ -437,19 +435,19 @@ export default function SandyServiceAreaPage() {
                         {/* FAQ 1 */}
                         <div className="border border-gray-800 rounded-lg overflow-hidden">
                             <button
-                                onClick={() => toggleFaq('faq-sandy-icedams')}
+                                onClick={() => toggleFaq('faq-taylorsville-attic')}
                                 className="w-full p-5 text-left bg-gray-900/90 hover:bg-gray-900 flex justify-between items-center transition-colors cursor-pointer"
                             >
-                                <span className="font-bold text-sm sm:text-base text-white">How does RHIVE prevent destructive ice dams on shaded Wasatch Bench rooflines in Sandy?</span>
-                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-sandy-icedams' ? "rotate-180" : "")} />
+                                <span className="font-bold text-sm sm:text-base text-white">How does RHIVE handle attic ventilation in Taylorsville homes to combat summer heat?</span>
+                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-taylorsville-attic' ? "rotate-180" : "")} />
                             </button>
-                            {openFaq === 'faq-sandy-icedams' && (
+                            {openFaq === 'faq-taylorsville-attic' && (
                                 <div className="p-5 bg-black/60 border-t border-gray-800 space-y-3">
                                     <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded text-xs text-pink-300 font-mono">
-                                        DIRECT ANSWER: We install a minimum 6-foot continuous eave coverage of self-adhering Owens Corning WeatherLock® Ice & Water Shield paired with commercial-grade self-regulating heat trace cables.
+                                        DIRECT ANSWER: We install continuous Owens Corning VentSure® Ridge Vents paired with soffit intake vents to ensure balanced attic airflow.
                                     </div>
                                     <p className="text-sm text-gray-300 font-serif leading-relaxed">
-                                        Our self-regulating heat trace cables (5W/lin ft, 110V) automatically modulate heat output based on ambient temperature to ensure continuous drainage pathways through snowpack and prevent meltwater backup.
+                                        Balanced airflow prevents summer heat from baking shingles from the underside, which reduces air conditioning loads and significantly extends shingle lifespan.
                                     </p>
                                 </div>
                             )}
@@ -458,19 +456,19 @@ export default function SandyServiceAreaPage() {
                         {/* FAQ 2 */}
                         <div className="border border-gray-800 rounded-lg overflow-hidden">
                             <button
-                                onClick={() => toggleFaq('faq-sandy-flex')}
+                                onClick={() => toggleFaq('faq-taylorsville-rpsp')}
                                 className="w-full p-5 text-left bg-gray-900/90 hover:bg-gray-900 flex justify-between items-center transition-colors cursor-pointer"
                             >
-                                <span className="font-bold text-sm sm:text-base text-white">Why is Owens Corning Duration FLEX® recommended for Sandy foothill properties?</span>
-                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-sandy-flex' ? "rotate-180" : "")} />
+                                <span className="font-bold text-sm sm:text-base text-white">How does the RHIVE Project Savings Promotion (RPSP) work in Taylorsville?</span>
+                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-taylorsville-rpsp' ? "rotate-180" : "")} />
                             </button>
-                            {openFaq === 'faq-sandy-flex' && (
+                            {openFaq === 'faq-taylorsville-rpsp' && (
                                 <div className="p-5 bg-black/60 border-t border-gray-800 space-y-3">
                                     <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded text-xs text-pink-300 font-mono">
-                                        DIRECT ANSWER: Duration FLEX® shingles use SBS polymer-modified asphalt, giving them rubberized elasticity to absorb high-velocity wind impacts and withstand 80°F+ single-day thermal swings without cracking.
+                                        DIRECT ANSWER: The RPSP provides an immediate 10% credit (up to $1,000 for residential / $3,000 for commercial) for decisions made within the presentation window.
                                     </div>
                                     <p className="text-sm text-gray-300 font-serif leading-relaxed">
-                                        These Class 4 Impact Rated shingles also qualify Sandy homeowners for up to 20–30% discounts on annual homeowner insurance premiums.
+                                        By deciding within the initial presentation window, we eliminate administrative chase costs and pass 100% of those savings directly back to you. Homeowners retain their full 3-day statutory right of rescission with zero financial risk.
                                     </p>
                                 </div>
                             )}
@@ -479,19 +477,19 @@ export default function SandyServiceAreaPage() {
                         {/* FAQ 3 */}
                         <div className="border border-gray-800 rounded-lg overflow-hidden">
                             <button
-                                onClick={() => toggleFaq('faq-sandy-guarantee')}
+                                onClick={() => toggleFaq('faq-taylorsville-insurance')}
                                 className="w-full p-5 text-left bg-gray-900/90 hover:bg-gray-900 flex justify-between items-center transition-colors cursor-pointer"
                             >
-                                <span className="font-bold text-sm sm:text-base text-white">What guarantees protect Sandy property owners against installation leaks?</span>
-                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-sandy-guarantee' ? "rotate-180" : "")} />
+                                <span className="font-bold text-sm sm:text-base text-white">Does RHIVE handle insurance claims for storm damage in Taylorsville?</span>
+                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-taylorsville-insurance' ? "rotate-180" : "")} />
                             </button>
-                            {openFaq === 'faq-sandy-guarantee' && (
+                            {openFaq === 'faq-taylorsville-insurance' && (
                                 <div className="p-5 bg-black/60 border-t border-gray-800 space-y-3">
                                     <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded text-xs text-pink-300 font-mono">
-                                        DIRECT ANSWER: In addition to Owens Corning 50-year non-prorated material warranties, RHIVE backs every replacement with our direct Lifetime Installer No-Leak Guarantee.
+                                        DIRECT ANSWER: Yes. We conduct free storm inspections using Roofr satellite data. CEO Michael Robinson meets insurance adjusters on-site.
                                     </div>
                                     <p className="text-sm text-gray-300 font-serif leading-relaxed">
-                                        If our installation causes a leak at any point during your roof's lifespan, we dispatch technicians to repair it 100% free of charge.
+                                        We verify wind creases, hail impact bruises, and code-required items so homeowners receive fair compensation for full system replacements.
                                     </p>
                                 </div>
                             )}
@@ -500,16 +498,16 @@ export default function SandyServiceAreaPage() {
                         {/* FAQ 4 */}
                         <div className="border border-gray-800 rounded-lg overflow-hidden">
                             <button
-                                onClick={() => toggleFaq('faq-sandy-tearoff')}
+                                onClick={() => toggleFaq('faq-taylorsville-tearoff')}
                                 className="w-full p-5 text-left bg-gray-900/90 hover:bg-gray-900 flex justify-between items-center transition-colors cursor-pointer"
                             >
-                                <span className="font-bold text-sm sm:text-base text-white">What is RHIVE’s residential reroofing standard for Sandy single-family homes?</span>
-                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-sandy-tearoff' ? "rotate-180" : "")} />
+                                <span className="font-bold text-sm sm:text-base text-white">What is RHIVE’s residential reroofing standard for Taylorsville single-family homes?</span>
+                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-taylorsville-tearoff' ? "rotate-180" : "")} />
                             </button>
-                            {openFaq === 'faq-sandy-tearoff' && (
+                            {openFaq === 'faq-taylorsville-tearoff' && (
                                 <div className="p-5 bg-black/60 border-t border-gray-800 space-y-3">
                                     <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded text-xs text-pink-300 font-mono">
-                                        DIRECT ANSWER: RHIVE enforces a strict 100% full tear-off policy down to bare OSB decking on all single-family reroofs in Sandy.
+                                        DIRECT ANSWER: RHIVE enforces a strict 100% full tear-off policy down to bare OSB decking on all single-family reroofs in Taylorsville.
                                     </div>
                                     <p className="text-sm text-gray-300 font-serif leading-relaxed">
                                         We never perform residential layovers. Every project includes ProArmor® synthetic underlayment, 6+ feet of WeatherLock® Ice & Water Shield, 6-nail fastening, and up to 100 sq ft of free OSB decking replacement.
@@ -521,13 +519,13 @@ export default function SandyServiceAreaPage() {
                         {/* FAQ 5 */}
                         <div className="border border-gray-800 rounded-lg overflow-hidden">
                             <button
-                                onClick={() => toggleFaq('faq-sandy-commercial')}
+                                onClick={() => toggleFaq('faq-taylorsville-commercial')}
                                 className="w-full p-5 text-left bg-gray-900/90 hover:bg-gray-900 flex justify-between items-center transition-colors cursor-pointer"
                             >
-                                <span className="font-bold text-sm sm:text-base text-white">What single-ply commercial flat roof options does RHIVE install in Sandy?</span>
-                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-sandy-commercial' ? "rotate-180" : "")} />
+                                <span className="font-bold text-sm sm:text-base text-white">What commercial roofing solutions does RHIVE provide in Taylorsville?</span>
+                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-taylorsville-commercial' ? "rotate-180" : "")} />
                             </button>
-                            {openFaq === 'faq-sandy-commercial' && (
+                            {openFaq === 'faq-taylorsville-commercial' && (
                                 <div className="p-5 bg-black/60 border-t border-gray-800 space-y-3">
                                     <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded text-xs text-pink-300 font-mono">
                                         DIRECT ANSWER: We install heat-welded GAF EverGuard® TPO and PVC single-ply membranes in 60 mil and heavy-duty 80 mil specifications.
@@ -542,13 +540,13 @@ export default function SandyServiceAreaPage() {
                         {/* FAQ 6 */}
                         <div className="border border-gray-800 rounded-lg overflow-hidden">
                             <button
-                                onClick={() => toggleFaq('faq-sandy-shingles')}
+                                onClick={() => toggleFaq('faq-taylorsville-shingles')}
                                 className="w-full p-5 text-left bg-gray-900/90 hover:bg-gray-900 flex justify-between items-center transition-colors cursor-pointer"
                             >
-                                <span className="font-bold text-sm sm:text-base text-white">What asphalt shingle products does RHIVE install for Sandy properties?</span>
-                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-sandy-shingles' ? "rotate-180" : "")} />
+                                <span className="font-bold text-sm sm:text-base text-white">What asphalt shingle products does RHIVE install for Taylorsville properties?</span>
+                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-taylorsville-shingles' ? "rotate-180" : "")} />
                             </button>
-                            {openFaq === 'faq-sandy-shingles' && (
+                            {openFaq === 'faq-taylorsville-shingles' && (
                                 <div className="p-5 bg-black/60 border-t border-gray-800 space-y-3">
                                     <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded text-xs text-pink-300 font-mono">
                                         DIRECT ANSWER: We install Owens Corning Duration® (130 MPH SureNail®), Duration FLEX® Class 4 Impact Rated shingles, and GAF Designer Shingles.
@@ -563,16 +561,16 @@ export default function SandyServiceAreaPage() {
                         {/* FAQ 7 */}
                         <div className="border border-gray-800 rounded-lg overflow-hidden">
                             <button
-                                onClick={() => toggleFaq('faq-sandy-permits')}
+                                onClick={() => toggleFaq('faq-taylorsville-permits')}
                                 className="w-full p-5 text-left bg-gray-900/90 hover:bg-gray-900 flex justify-between items-center transition-colors cursor-pointer"
                             >
-                                <span className="font-bold text-sm sm:text-base text-white">Does Sandy require a building permit for residential reroofing?</span>
-                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-sandy-permits' ? "rotate-180" : "")} />
+                                <span className="font-bold text-sm sm:text-base text-white">Does Taylorsville require a building permit for residential reroofing?</span>
+                                <ChevronDown className={cn("w-5 h-5 text-[#ec028b] transition-transform duration-200", openFaq === 'faq-taylorsville-permits' ? "rotate-180" : "")} />
                             </button>
-                            {openFaq === 'faq-sandy-permits' && (
+                            {openFaq === 'faq-taylorsville-permits' && (
                                 <div className="p-5 bg-black/60 border-t border-gray-800 space-y-3">
                                     <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded text-xs text-pink-300 font-mono">
-                                        DIRECT ANSWER: Yes. Full roof replacements in Sandy require municipal building permits through the Sandy City Community Development Department.
+                                        DIRECT ANSWER: Yes. Full roof replacements in Taylorsville require municipal building permits through the City of Taylorsville Community Development Department.
                                     </div>
                                     <p className="text-sm text-gray-300 font-serif leading-relaxed">
                                         RHIVE manages 100% of the municipal permitting process to ensure compliance with local Utah energy codes, eave ice barrier standards, and perimeter metal flashings.
@@ -586,7 +584,7 @@ export default function SandyServiceAreaPage() {
                 {/* BOTTOM CALL TO ACTION */}
                 <section className="bg-gradient-to-r from-pink-950/40 via-black to-pink-950/40 border border-pink-500/30 p-10 sm:p-12 rounded-2xl text-center space-y-6">
                     <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-sans">
-                        Protect Your Sandy Property with Master-Craftsman Precision
+                        Protect Your Taylorsville Property with Master-Craftsman Precision
                     </h2>
                     <p className="text-gray-300 font-serif max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
                         Get an itemized mathematical estimate with zero salesman pressure, backed by our Lifetime Installer No-Leak Guarantee and 50-year non-prorated material protection.
@@ -596,7 +594,7 @@ export default function SandyServiceAreaPage() {
                             onClick={handleEstimateClick}
                             className="px-8 py-4 bg-[#ec028b] hover:bg-[#d0027a] text-white font-bold text-base rounded-md transition-all duration-200 shadow-lg shadow-pink-500/20 cursor-pointer flex items-center gap-3"
                         >
-                            <span>Calculate Your Instant Sandy Estimate</span>
+                            <span>Calculate Your Instant Taylorsville Estimate</span>
                             <ArrowRight className="w-5 h-5" />
                         </button>
                         <a

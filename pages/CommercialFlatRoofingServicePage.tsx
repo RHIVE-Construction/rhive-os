@@ -183,6 +183,30 @@ export default function CommercialFlatRoofingServicePage() {
                     </div>
                 </div>
             </section>
+
+            {/* AEO Commercial & Flat Roofing FAQ Link */}
+            <section className="relative z-10 py-16 px-6 max-w-5xl mx-auto border-t border-white/10">
+                <div className="p-8 md:p-12 rounded-3xl bg-white/[0.03] border border-white/10 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="space-y-3 max-w-xl">
+                        <div className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">
+                            COMMERCIAL FLAT ROOFING INTELLIGENCE
+                        </div>
+                        <div className="text-2xl md:text-3xl font-black uppercase tracking-tight text-white">
+                            Have Questions on TPO vs. PVC or Warranties?
+                        </div>
+                        <p className="text-sm text-gray-300 font-serif leading-relaxed">
+                            Check our AEO Answer Hub for technical details on single-ply membranes, NDL manufacturer guarantees, sub-zero temperature elasticity, and commercial maintenance schedules.
+                        </p>
+                    </div>
+                    <a
+                        href="/faq"
+                        className="shrink-0 inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-black font-bold text-xs uppercase tracking-widest px-8 py-4 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all hover:scale-105"
+                    >
+                        <span>Explore FAQ Hub</span>
+                        <ArrowRight className="w-4 h-4" />
+                    </a>
+                </div>
+            </section>
         </div>
     );
 }
