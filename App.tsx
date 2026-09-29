@@ -104,6 +104,31 @@ const SignVerifyRenderer: React.FC = () => {
     );
 };
 
+// ── Canonical URL Synchronizer ───────────────────────────────────────────────
+const updateCanonicalUrl = (pathname: string = window.location.pathname) => {
+    try {
+        const cleanPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '');
+        const canonicalUrl = `https://www.rhiveconstruction.com${cleanPath}`;
+        let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+        if (!link) {
+            link = document.createElement('link');
+            link.setAttribute('rel', 'canonical');
+            document.head.appendChild(link);
+        }
+        link.setAttribute('href', canonicalUrl);
+
+        let ogUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+        if (!ogUrl) {
+            ogUrl = document.createElement('meta');
+            ogUrl.setAttribute('property', 'og:url');
+            document.head.appendChild(ogUrl);
+        }
+        ogUrl.setAttribute('content', canonicalUrl);
+    } catch (e) {
+        // Safe fallback in SSR or restricted environments
+    }
+};
+
 // ── Clean Path Full-Screen Renderer ───────────────────────────────────────────
 // Rendered when the URL pathname matches a PATH_ROUTES entry.
 // COMPLETELY ISOLATED from the CRM provider tree:
@@ -115,6 +140,11 @@ const CleanPathRenderer: React.FC<{ pageId: string }> = ({ pageId }) => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const PageComponent = pageComponentMap[pageId];
+
+    useEffect(() => {
+        updateCanonicalUrl(window.location.pathname);
+    }, [pageId]);
+
     return (
         <PricingProvider>
             <div className={cn(
@@ -365,9 +395,10 @@ const LoginBridge: React.FC = () => {
         );
     }
 
-    // Scroll to top when activePageId changes for public layout
+    // Scroll to top and update canonical URL when activePageId changes for public layout
     useEffect(() => {
         if (!currentUser) {
+            updateCanonicalUrl();
             if (mainRef.current) {
                 mainRef.current.scrollTop = 0;
             }
