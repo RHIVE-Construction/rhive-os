@@ -11,27 +11,63 @@ import { getPathForPageId } from '../../lib/routing';
 
 
 
-const OTHER_LINKS = [
-  { label: 'RESIDENTIAL REPLACEMENT', pageId: 'P-SEO-RESIDENTIAL' },
-  { label: 'COMMERCIAL FLAT ROOFING', pageId: 'P-SEO-COMMERCIAL' },
-  { label: 'ROOFING ACCESSORIES',     pageId: 'P-SEO-ACCESSORIES' },
-  { label: 'ZERO SURPRISES PRICING',   pageId: 'P-SEO-PRICING' },
-  { label: 'SANDY SERVICE AREA',      pageId: 'P-SEO-SANDY' },
-  { label: 'WEST JORDAN SERVICE AREA', pageId: 'P-SEO-WESTJORDAN' },
-  { label: 'SALT LAKE CITY SERVICE AREA', pageId: 'P-SEO-SLC' },
+const SERVICE_MENU_GROUPS = [
+  {
+    title: 'Core Roofing Sectors & Materials',
+    links: [
+      { label: 'All Services Overview', pageId: 'P-02' },
+      { label: 'Residential Roofing (Pitched & Flat)', pageId: 'P-SEO-RESIDENTIAL' },
+      { label: 'Commercial Roofing (Low & Steep-Slope)', pageId: 'P-SEO-COMMERCIAL' },
+      { label: 'Asphalt Shingle Systems', pageId: 'P-02a' },
+      { label: 'Flat & Membrane Systems', pageId: 'P-02b' },
+      { label: 'Roofing Accessories & Heat Trace', pageId: 'P-SEO-ACCESSORIES' },
+    ]
+  },
+  {
+    title: 'Pricing & Transparency',
+    links: [
+      { label: 'Zero Surprises Pricing', pageId: 'P-SEO-PRICING' },
+    ]
+  },
+  {
+    title: 'Local Service Areas',
+    links: [
+      { label: 'Sandy Service Area', pageId: 'P-SEO-SANDY' },
+      { label: 'West Jordan Service Area', pageId: 'P-SEO-WESTJORDAN' },
+      { label: 'Salt Lake City Service Area', pageId: 'P-SEO-SLC' },
+      { label: 'Bountiful Service Area', pageId: 'P-SEO-BOUNTIFUL' },
+      { label: 'Clearfield Service Area', pageId: 'P-SEO-CLEARFIELD' },
+      { label: 'Cottonwood Heights Service Area', pageId: 'P-SEO-COTTONWOOD' },
+      { label: 'Draper Service Area', pageId: 'P-SEO-DRAPER' },
+      { label: 'Herriman Service Area', pageId: 'P-SEO-HERRIMAN' },
+      { label: 'Holladay Service Area', pageId: 'P-SEO-HOLLADAY' },
+      { label: 'Kearns Service Area', pageId: 'P-SEO-KEARNS' },
+      { label: 'Layton Service Area', pageId: 'P-SEO-LAYTON' },
+      { label: 'Magna Service Area', pageId: 'P-SEO-MAGNA' },
+      { label: 'Midvale Service Area', pageId: 'P-SEO-MIDVALE' },
+      { label: 'Millcreek Service Area', pageId: 'P-SEO-MILLCREEK' },
+      { label: 'Murray Service Area', pageId: 'P-SEO-MURRAY' },
+      { label: 'North Salt Lake Service Area', pageId: 'P-SEO-NSL' },
+      { label: 'Ogden Service Area', pageId: 'P-SEO-OGDEN' },
+      { label: 'Park City Service Area', pageId: 'P-SEO-PARKCITY' },
+      { label: 'South Jordan Service Area', pageId: 'P-SEO-SOUTHJORDAN' },
+      { label: 'Sugar House Service Area', pageId: 'P-SEO-SUGARHOUSE' },
+      { label: 'Taylorsville Service Area', pageId: 'P-SEO-TAYLORSVILLE' },
+      { label: 'Tooele Service Area', pageId: 'P-SEO-TOOELE' },
+      { label: 'West Valley City Service Area', pageId: 'P-SEO-WESTVALLEY' },
+    ]
+  }
 ];
 
 const RhiveHeader: React.FC = () => {
     const { setActivePageId, activePageId, lastPortalPageId } = useNavigation();
     const { setTheme, theme } = useTheme();
-    const { logout, currentUser, login } = useMockDB();
+    const { logout, currentUser } = useMockDB();
     const isDark = theme === 'dark';
 
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const [isProfileOpen, setIsProfileOpen] = React.useState(false);
-    const [isOthersOpen, setIsOthersOpen] = React.useState(false);
-    const [isMobileOthersOpen, setIsMobileOthersOpen] = React.useState(false);
-
+    const [isServicesOpen, setIsServicesOpen] = React.useState(false);
+    const [isMobileServicesOpen, setIsMobileServicesOpen] = React.useState(false);
 
     const handleExit = () => {
         if (lastPortalPageId) {
@@ -55,22 +91,23 @@ const RhiveHeader: React.FC = () => {
         ? activePageId
         : (sessionStorage.getItem('lastHomepageId') || 'P-00-V3');
 
-    const navLinks = currentHomeId === 'P-00-V3'
+    const navLinksLeft = [
+        { label: 'ABOUT US', target: 'about' },
+    ];
+
+    const navLinksLeftRemaining = [
+        { label: 'FAQ', target: 'faq' },
+        { label: 'BLOGS', target: 'blog' },
+    ];
+
+    const navLinksRight = currentHomeId === 'P-00-V3'
         ? [
-            { label: 'ABOUT US', target: 'about' },
-            { label: 'SERVICES', target: 'services' },
-            { label: 'FAQ', target: 'faq' },
-            { label: 'BLOGS', target: 'blog' },
             { label: 'PROCESS', target: 'process' },
             { label: 'FINANCING', target: 'financing' },
             { label: 'CAREERS', target: 'careers' },
             { label: 'CONTACT', target: 'contact' },
           ]
         : [
-            { label: 'ABOUT', target: 'about' },
-            { label: 'SERVICES', target: 'services' },
-            { label: 'FAQ', target: 'faq' },
-            { label: 'BLOGS', target: 'blog' },
             { label: 'PROCESS', target: 'process' },
             { label: 'FINANCING', target: 'financing' },
             { label: 'INSURANCE', target: 'insurance' },
@@ -150,7 +187,68 @@ const RhiveHeader: React.FC = () => {
 
             {/* Desktop Navigation Links (Left side of notch) */}
             <nav className="hidden lg:flex justify-end items-center gap-6 xl:gap-8 z-10">
-                {navLinks.slice(0, 5).map((link) => (
+                {navLinksLeft.map((link) => (
+                    <a
+                        key={link.target}
+                        href={getPagePath(link.target)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleLinkClick(link.target);
+                        }}
+                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 cursor-pointer"
+                    >
+                        {link.label}
+                    </a>
+                ))}
+
+                {/* Services Dropdown */}
+                <div 
+                    className="relative"
+                    onMouseEnter={() => setIsServicesOpen(true)}
+                    onMouseLeave={() => setIsServicesOpen(false)}
+                >
+                    <a
+                        href="/services"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            handleLinkClick('services');
+                        }}
+                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 flex items-center gap-1 cursor-pointer"
+                    >
+                        SERVICES <span className="text-[7px]">▼</span>
+                    </a>
+                    {isServicesOpen && (
+                        <div className="absolute left-0 pt-2 w-72 z-50">
+                            <div className="bg-black/95 border border-white/10 backdrop-blur-xl shadow-2xl p-4 flex flex-col gap-4 rounded-xl animate-fade-in">
+                                {SERVICE_MENU_GROUPS.map((group) => (
+                                    <div key={group.title} className="space-y-1.5 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                                        <div className="text-[8px] font-mono font-bold uppercase tracking-wider text-rhive-pink">
+                                            {group.title}
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            {group.links.map((link) => (
+                                                <a
+                                                    key={link.pageId}
+                                                    href={getPathForPageId(link.pageId)}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setIsServicesOpen(false);
+                                                        setActivePageId(link.pageId);
+                                                    }}
+                                                    className="text-[9px] text-left font-black tracking-[0.15em] uppercase text-slate-300 hover:text-rhive-pink transition-colors cursor-pointer pl-1 hover:pl-2"
+                                                >
+                                                    {link.label}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {navLinksLeftRemaining.map((link) => (
                     <a
                         key={link.target}
                         href={getPagePath(link.target)}
@@ -170,7 +268,7 @@ const RhiveHeader: React.FC = () => {
  
             {/* Desktop Navigation Links (Right side of notch) */}
             <nav className="hidden lg:flex justify-start items-center gap-6 xl:gap-8 z-10">
-                {navLinks.slice(5).map((link) => (
+                {navLinksRight.map((link) => (
                     <a
                         key={link.target}
                         href={getPagePath(link.target)}
@@ -183,39 +281,6 @@ const RhiveHeader: React.FC = () => {
                         {link.label}
                     </a>
                 ))}
-
-                {/* Others Dropdown */}
-                <div 
-                    className="relative"
-                    onMouseEnter={() => setIsOthersOpen(true)}
-                    onMouseLeave={() => setIsOthersOpen(false)}
-                >
-                    <button
-                        className="text-[9px] font-black tracking-[0.18em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 flex items-center gap-1 cursor-pointer"
-                    >
-                        OTHERS <span className="text-[7px]">▼</span>
-                    </button>
-                    {isOthersOpen && (
-                        <div className="absolute left-0 pt-2 w-64 z-50">
-                            <div className="bg-black/95 border border-white/10 backdrop-blur-xl shadow-2xl p-4 flex flex-col gap-3 rounded-md animate-fade-in">
-                                {OTHER_LINKS.map((link) => (
-                                    <a
-                                        key={link.pageId}
-                                        href={getPathForPageId(link.pageId)}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setIsOthersOpen(false);
-                                            setActivePageId(link.pageId);
-                                        }}
-                                        className="text-[9px] text-left font-black tracking-[0.15em] uppercase text-slate-400 hover:text-rhive-pink transition-colors cursor-pointer"
-                                    >
-                                        {link.label}
-                                    </a>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
             </nav>
 
             {/* CENTRAL LOGO (Absolute Alignment for Perfect Spacing) */}
@@ -304,7 +369,7 @@ const RhiveHeader: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed inset-x-0 top-12 bottom-0 z-[490] bg-black/95 backdrop-blur-2xl border-b border-white/10 flex flex-col justify-center items-center py-20 px-8 lg:hidden"
+                        className="fixed inset-x-0 top-12 bottom-0 z-[490] bg-black/95 backdrop-blur-2xl border-b border-white/10 flex flex-col justify-center items-center py-20 px-8 lg:hidden overflow-y-auto"
                     >
                         {/* Universal Dark Pink Plexus Background */}
                         <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
@@ -316,8 +381,76 @@ const RhiveHeader: React.FC = () => {
                                 className="h-full w-full relative z-0"
                             />
                         </div>
-                        <div className="relative z-10 flex flex-col items-center gap-6 w-full max-w-sm">
-                            {navLinks.map((link) => (
+                        <div className="relative z-10 flex flex-col items-center gap-4 w-full max-w-sm">
+                            <a
+                                href={getPagePath('about')}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setIsMenuOpen(false);
+                                    handleLinkClick('about');
+                                }}
+                                className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-3 border-b border-white/5 hover:border-rhive-pink/30 text-center cursor-pointer"
+                            >
+                                ABOUT US
+                            </a>
+
+                            <button
+                                onClick={() => setIsMobileServicesOpen(!isMobileServicesOpen)}
+                                className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-3 border-b border-white/5 hover:border-rhive-pink/30 flex justify-between items-center cursor-pointer px-2"
+                            >
+                                <span>SERVICES</span>
+                                <span className="text-[10px]">{isMobileServicesOpen ? '▲' : '▼'}</span>
+                            </button>
+
+                            {isMobileServicesOpen && (
+                                <div className="w-full bg-white/[0.02] rounded-xl p-3 space-y-3 border border-white/5">
+                                    {SERVICE_MENU_GROUPS.map((group) => (
+                                        <div key={group.title} className="text-left space-y-1">
+                                            <div className="text-[9px] font-mono font-bold uppercase tracking-wider text-rhive-pink">
+                                                {group.title}
+                                            </div>
+                                            {group.links.map((link) => (
+                                                <a
+                                                    key={link.pageId}
+                                                    href={getPathForPageId(link.pageId)}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setIsMenuOpen(false);
+                                                        setActivePageId(link.pageId);
+                                                    }}
+                                                    className="text-xs font-black tracking-[0.15em] uppercase text-slate-300 hover:text-rhive-pink transition-colors block py-1.5 pl-2 border-l border-white/10 hover:border-rhive-pink"
+                                                >
+                                                    {link.label}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <a
+                                href={getPagePath('faq')}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setIsMenuOpen(false);
+                                    handleLinkClick('faq');
+                                }}
+                                className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-3 border-b border-white/5 hover:border-rhive-pink/30 text-center cursor-pointer"
+                            >
+                                FAQ
+                            </a>
+                            <a
+                                href={getPagePath('blog')}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setIsMenuOpen(false);
+                                    handleLinkClick('blog');
+                                }}
+                                className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-3 border-b border-white/5 hover:border-rhive-pink/30 text-center cursor-pointer"
+                            >
+                                BLOGS
+                            </a>
+                            {navLinksRight.map((link) => (
                                 <a
                                     key={link.target}
                                     href={getPagePath(link.target)}
@@ -326,28 +459,7 @@ const RhiveHeader: React.FC = () => {
                                         setIsMenuOpen(false);
                                         handleLinkClick(link.target);
                                     }}
-                                    className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-4 border-b border-white/5 hover:border-rhive-pink/30 text-center cursor-pointer"
-                                >
-                                    {link.label}
-                                </a>
-                            ))}
-                            <button
-                                onClick={() => setIsMobileOthersOpen(!isMobileOthersOpen)}
-                                className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-4 border-b border-white/5 hover:border-rhive-pink/30 flex justify-between items-center cursor-pointer"
-                            >
-                                <span>OTHERS</span>
-                                <span className="text-[10px]">{isMobileOthersOpen ? '▲' : '▼'}</span>
-                            </button>
-                            {isMobileOthersOpen && OTHER_LINKS.map((link) => (
-                                <a
-                                    key={link.pageId}
-                                    href={getPathForPageId(link.pageId)}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setIsMenuOpen(false);
-                                        setActivePageId(link.pageId);
-                                    }}
-                                    className="text-sm font-black tracking-[0.18em] uppercase text-slate-400 hover:text-rhive-pink transition-colors duration-300 w-full py-3 border-b border-white/5 hover:border-rhive-pink/30 text-center cursor-pointer"
+                                    className="text-base font-black tracking-[0.2em] uppercase text-slate-300 hover:text-rhive-pink transition-colors duration-300 w-full py-3 border-b border-white/5 hover:border-rhive-pink/30 text-center cursor-pointer"
                                 >
                                     {link.label}
                                 </a>
