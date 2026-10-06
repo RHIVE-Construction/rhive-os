@@ -12,6 +12,7 @@ Allow: /services/
 Allow: /service-areas/
 Allow: /zero-surprises-pricing
 Allow: /estimate-tool
+Allow: /llms.txt
 
 # AI Crawler Directives (AEO Optimization)
 User-agent: GPTBot
