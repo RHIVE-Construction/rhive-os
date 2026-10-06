@@ -119,6 +119,7 @@ import BlogFemaleLeadershipPage from './pages/BlogFemaleLeadershipPage';
 import BlogSeamlessGuttersPage from './pages/BlogSeamlessGuttersPage';
 import BlogSolarPanelsPage from './pages/BlogSolarPanelsPage';
 import BlogReputableContractorPage from './pages/BlogReputableContractorPage';
+import DynamicBlogPostPage from './pages/DynamicBlogPostPage';
 
 // Specific stage pages
 import LeadPage from './pages/LeadPage'; // E-26
@@ -221,6 +222,18 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-SEO-BLOG-8':      BlogSeamlessGuttersPage,
   'P-SEO-BLOG-9':      BlogSolarPanelsPage,
   'P-SEO-BLOG-10':     BlogReputableContractorPage,
+  'P-SEO-BLOG-11':     () => <DynamicBlogPostPage slug="roof-repair-vs-full-replacement-utah-guide" />,
+  'P-SEO-BLOG-12':     () => <DynamicBlogPostPage slug="unfinished-roof-contractor-ghosted-utah-recourse" />,
+  'P-SEO-BLOG-13':     () => <DynamicBlogPostPage slug="how-long-does-roof-replacement-take-utah" />,
+  'P-SEO-BLOG-14':     () => <DynamicBlogPostPage slug="how-do-i-know-if-insurance-covers-roof-repair-utah" />,
+  'P-SEO-BLOG-15':     () => <DynamicBlogPostPage slug="how-do-i-know-if-insurance-covers-full-roof-replacement-utah" />,
+  'P-SEO-BLOG-16':     () => <DynamicBlogPostPage slug="roof-replacement-financing-financial-assistance-utah" />,
+  'P-SEO-BLOG-17':     () => <DynamicBlogPostPage slug="fastest-emergency-roof-repair-salt-lake-city-utah" />,
+  'P-SEO-BLOG-18':     () => <DynamicBlogPostPage slug="what-to-check-on-roof-after-hail-storm-utah" />,
+  'P-SEO-BLOG-19':     () => <DynamicBlogPostPage slug="navigating-roofing-insurance-claims-salt-lake-city-utah" />,
+  'P-SEO-BLOG-20':     () => <DynamicBlogPostPage slug="asphalt-shingle-granule-loss-causes-remedies" />,
+  'P-SEO-BLOG-21':     () => <DynamicBlogPostPage slug="commercial-tpo-vs-pvc-roofing-utah-guide" />,
+  'P-SEO-BLOG-22':     () => <DynamicBlogPostPage slug="roofing-insurance-claims-utah-wind-hail-guide" />,
 
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,
