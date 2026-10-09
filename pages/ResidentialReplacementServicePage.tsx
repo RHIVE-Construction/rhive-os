@@ -248,6 +248,30 @@ export default function ResidentialReplacementServicePage() {
                     </div>
                 </div>
             </section>
+
+            {/* AEO Topical Knowledge & FAQ Section */}
+            <section className="relative z-10 py-16 px-6 max-w-5xl mx-auto border-t border-white/10">
+                <div className="p-8 md:p-12 rounded-3xl bg-white/[0.03] border border-white/10 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="space-y-3 max-w-xl">
+                        <div className="text-xs font-mono font-bold uppercase tracking-widest text-rhive-pink">
+                            HAVE QUESTIONS ABOUT YOUR ROOF?
+                        </div>
+                        <div className="text-2xl md:text-3xl font-black uppercase tracking-tight text-white">
+                            Explore Our Comprehensive Utah Roofing FAQ
+                        </div>
+                        <p className="text-sm text-gray-300 font-serif leading-relaxed">
+                            Get immediate, data-backed answers to questions regarding Utah building codes, average roof replacement costs, winter installation protocols, and Owens Corning vs GAF comparisons.
+                        </p>
+                    </div>
+                    <a
+                        href="/faq"
+                        className="shrink-0 inline-flex items-center gap-2 bg-rhive-pink hover:bg-[#d4007b] text-white font-bold text-xs uppercase tracking-widest px-8 py-4 rounded-full shadow-[0_0_15px_rgba(236,2,139,0.4)] transition-all hover:scale-105"
+                    >
+                        <span>Visit FAQ Answer Hub</span>
+                        <ArrowRight className="w-4 h-4" />
+                    </a>
+                </div>
+            </section>
         </div>
     );
 }

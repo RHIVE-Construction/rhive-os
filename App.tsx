@@ -48,6 +48,26 @@ const PATH_ROUTES: Record<string, string> = {
     '/service-areas/sandy-ut':               'P-SEO-SANDY',
     '/service-areas/west-jordan-ut':         'P-SEO-WESTJORDAN',
     '/service-areas/salt-lake-city-ut':      'P-SEO-SLC',
+    '/service-areas/bountiful-ut':           'P-SEO-BOUNTIFUL',
+    '/service-areas/clearfield-ut':          'P-SEO-CLEARFIELD',
+    '/service-areas/cottonwood-heights-ut':  'P-SEO-COTTONWOOD',
+    '/service-areas/draper-ut':              'P-SEO-DRAPER',
+    '/service-areas/herriman-ut':            'P-SEO-HERRIMAN',
+    '/service-areas/holladay-ut':            'P-SEO-HOLLADAY',
+    '/service-areas/kearns-ut':              'P-SEO-KEARNS',
+    '/service-areas/layton-ut':              'P-SEO-LAYTON',
+    '/service-areas/magna-ut':               'P-SEO-MAGNA',
+    '/service-areas/midvale-ut':             'P-SEO-MIDVALE',
+    '/service-areas/millcreek-ut':           'P-SEO-MILLCREEK',
+    '/service-areas/murray-ut':              'P-SEO-MURRAY',
+    '/service-areas/north-salt-lake-ut':     'P-SEO-NSL',
+    '/service-areas/ogden-ut':               'P-SEO-OGDEN',
+    '/service-areas/park-city-ut':           'P-SEO-PARKCITY',
+    '/service-areas/south-jordan-ut':        'P-SEO-SOUTHJORDAN',
+    '/service-areas/sugar-house-ut':         'P-SEO-SUGARHOUSE',
+    '/service-areas/taylorsville-ut':        'P-SEO-TAYLORSVILLE',
+    '/service-areas/tooele-ut':              'P-SEO-TOOELE',
+    '/service-areas/west-valley-city-ut':    'P-SEO-WESTVALLEY',
     '/faq':                                  'P-SEO-FAQ',
     '/blog':                                 'P-SEO-BLOG-INDEX',
     '/blog/roof-replacement-cost-utah':      'P-SEO-BLOG-1',
@@ -60,6 +80,18 @@ const PATH_ROUTES: Record<string, string> = {
     '/blog/seamless-gutters-importance-utah': 'P-SEO-BLOG-8',
     '/blog/solar-panels-roof-replacement-utah': 'P-SEO-BLOG-9',
     '/blog/how-to-choose-reputable-roofing-contractor-utah': 'P-SEO-BLOG-10',
+    '/blog/roof-repair-vs-full-replacement-utah-guide': 'P-SEO-BLOG-11',
+    '/blog/unfinished-roof-contractor-ghosted-utah-recourse': 'P-SEO-BLOG-12',
+    '/blog/how-long-does-roof-replacement-take-utah': 'P-SEO-BLOG-13',
+    '/blog/how-do-i-know-if-insurance-covers-roof-repair-utah': 'P-SEO-BLOG-14',
+    '/blog/how-do-i-know-if-insurance-covers-full-roof-replacement-utah': 'P-SEO-BLOG-15',
+    '/blog/roof-replacement-financing-financial-assistance-utah': 'P-SEO-BLOG-16',
+    '/blog/fastest-emergency-roof-repair-salt-lake-city-utah': 'P-SEO-BLOG-17',
+    '/blog/what-to-check-on-roof-after-hail-storm-utah': 'P-SEO-BLOG-18',
+    '/blog/navigating-roofing-insurance-claims-salt-lake-city-utah': 'P-SEO-BLOG-19',
+    '/blog/asphalt-shingle-granule-loss-causes-remedies': 'P-SEO-BLOG-20',
+    '/blog/commercial-tpo-vs-pvc-roofing-utah-guide': 'P-SEO-BLOG-21',
+    '/blog/roofing-insurance-claims-utah-wind-hail-guide': 'P-SEO-BLOG-22',
     '/privacy':                               'P-PRIVACY',
     '/terms':                                 'P-TERMS',
 };
@@ -84,6 +116,31 @@ const SignVerifyRenderer: React.FC = () => {
     );
 };
 
+// ── Canonical URL Synchronizer ───────────────────────────────────────────────
+const updateCanonicalUrl = (pathname: string = window.location.pathname) => {
+    try {
+        const cleanPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '');
+        const canonicalUrl = `https://www.rhiveconstruction.com${cleanPath}`;
+        let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+        if (!link) {
+            link = document.createElement('link');
+            link.setAttribute('rel', 'canonical');
+            document.head.appendChild(link);
+        }
+        link.setAttribute('href', canonicalUrl);
+
+        let ogUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+        if (!ogUrl) {
+            ogUrl = document.createElement('meta');
+            ogUrl.setAttribute('property', 'og:url');
+            document.head.appendChild(ogUrl);
+        }
+        ogUrl.setAttribute('content', canonicalUrl);
+    } catch (e) {
+        // Safe fallback in SSR or restricted environments
+    }
+};
+
 // ── Clean Path Full-Screen Renderer ───────────────────────────────────────────
 // Rendered when the URL pathname matches a PATH_ROUTES entry.
 // COMPLETELY ISOLATED from the CRM provider tree:
@@ -95,6 +152,11 @@ const CleanPathRenderer: React.FC<{ pageId: string }> = ({ pageId }) => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const PageComponent = pageComponentMap[pageId];
+
+    useEffect(() => {
+        updateCanonicalUrl(window.location.pathname);
+    }, [pageId]);
+
     return (
         <PricingProvider>
             <div className={cn(
@@ -345,9 +407,10 @@ const LoginBridge: React.FC = () => {
         );
     }
 
-    // Scroll to top when activePageId changes for public layout
+    // Scroll to top and update canonical URL when activePageId changes for public layout
     useEffect(() => {
         if (!currentUser) {
+            updateCanonicalUrl();
             if (mainRef.current) {
                 mainRef.current.scrollTop = 0;
             }

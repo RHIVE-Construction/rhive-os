@@ -43,11 +43,10 @@ function configApiPlugin(mapsApiKey: string): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
+    appType: 'spa',
     server: {
       port: 3000,
       host: '0.0.0.0',
-      // Enable HTML5 history API fallback so clean paths like /map serve index.html
-      historyApiFallback: true,
     },
     plugins: [
       react(),

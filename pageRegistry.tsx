@@ -88,6 +88,26 @@ import ZeroSurprisesPricingPage from './pages/ZeroSurprisesPricingPage';
 import SandyServiceAreaPage from './pages/SandyServiceAreaPage';
 import WestJordanServiceAreaPage from './pages/WestJordanServiceAreaPage';
 import SaltLakeCityServiceAreaPage from './pages/SaltLakeCityServiceAreaPage';
+import BountifulServiceAreaPage from './pages/BountifulServiceAreaPage';
+import ClearfieldServiceAreaPage from './pages/ClearfieldServiceAreaPage';
+import CottonwoodHeightsServiceAreaPage from './pages/CottonwoodHeightsServiceAreaPage';
+import DraperServiceAreaPage from './pages/DraperServiceAreaPage';
+import HerrimanServiceAreaPage from './pages/HerrimanServiceAreaPage';
+import HolladayServiceAreaPage from './pages/HolladayServiceAreaPage';
+import KearnsServiceAreaPage from './pages/KearnsServiceAreaPage';
+import LaytonServiceAreaPage from './pages/LaytonServiceAreaPage';
+import MagnaServiceAreaPage from './pages/MagnaServiceAreaPage';
+import MidvaleServiceAreaPage from './pages/MidvaleServiceAreaPage';
+import MillcreekServiceAreaPage from './pages/MillcreekServiceAreaPage';
+import MurrayServiceAreaPage from './pages/MurrayServiceAreaPage';
+import NorthSaltLakeServiceAreaPage from './pages/NorthSaltLakeServiceAreaPage';
+import OgdenServiceAreaPage from './pages/OgdenServiceAreaPage';
+import ParkCityServiceAreaPage from './pages/ParkCityServiceAreaPage';
+import SouthJordanServiceAreaPage from './pages/SouthJordanServiceAreaPage';
+import SugarHouseServiceAreaPage from './pages/SugarHouseServiceAreaPage';
+import TaylorsvilleServiceAreaPage from './pages/TaylorsvilleServiceAreaPage';
+import TooeleServiceAreaPage from './pages/TooeleServiceAreaPage';
+import WestValleyCityServiceAreaPage from './pages/WestValleyCityServiceAreaPage';
 import FaqHubPage from './pages/FaqHubPage';
 import BlogIndexPage from './pages/BlogIndexPage';
 import BlogReplacementCostPage from './pages/BlogReplacementCostPage';
@@ -100,6 +120,7 @@ import BlogFemaleLeadershipPage from './pages/BlogFemaleLeadershipPage';
 import BlogSeamlessGuttersPage from './pages/BlogSeamlessGuttersPage';
 import BlogSolarPanelsPage from './pages/BlogSolarPanelsPage';
 import BlogReputableContractorPage from './pages/BlogReputableContractorPage';
+import DynamicBlogPostPage from './pages/DynamicBlogPostPage';
 
 // Specific stage pages
 import LeadPage from './pages/LeadPage'; // E-26
@@ -170,6 +191,26 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-SEO-SANDY':       SandyServiceAreaPage,
   'P-SEO-WESTJORDAN':  WestJordanServiceAreaPage,
   'P-SEO-SLC':         SaltLakeCityServiceAreaPage,
+  'P-SEO-BOUNTIFUL':   BountifulServiceAreaPage,
+  'P-SEO-CLEARFIELD':  ClearfieldServiceAreaPage,
+  'P-SEO-COTTONWOOD':  CottonwoodHeightsServiceAreaPage,
+  'P-SEO-DRAPER':      DraperServiceAreaPage,
+  'P-SEO-HERRIMAN':    HerrimanServiceAreaPage,
+  'P-SEO-HOLLADAY':    HolladayServiceAreaPage,
+  'P-SEO-KEARNS':      KearnsServiceAreaPage,
+  'P-SEO-LAYTON':      LaytonServiceAreaPage,
+  'P-SEO-MAGNA':       MagnaServiceAreaPage,
+  'P-SEO-MIDVALE':     MidvaleServiceAreaPage,
+  'P-SEO-MILLCREEK':   MillcreekServiceAreaPage,
+  'P-SEO-MURRAY':      MurrayServiceAreaPage,
+  'P-SEO-NSL':         NorthSaltLakeServiceAreaPage,
+  'P-SEO-OGDEN':       OgdenServiceAreaPage,
+  'P-SEO-PARKCITY':    ParkCityServiceAreaPage,
+  'P-SEO-SOUTHJORDAN': SouthJordanServiceAreaPage,
+  'P-SEO-SUGARHOUSE':  SugarHouseServiceAreaPage,
+  'P-SEO-TAYLORSVILLE': TaylorsvilleServiceAreaPage,
+  'P-SEO-TOOELE':      TooeleServiceAreaPage,
+  'P-SEO-WESTVALLEY':  WestValleyCityServiceAreaPage,
   'P-SEO-FAQ':         FaqHubPage,
   'P-SEO-BLOG-INDEX':  BlogIndexPage,
   'P-SEO-BLOG-1':      BlogReplacementCostPage,
@@ -182,6 +223,18 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-SEO-BLOG-8':      BlogSeamlessGuttersPage,
   'P-SEO-BLOG-9':      BlogSolarPanelsPage,
   'P-SEO-BLOG-10':     BlogReputableContractorPage,
+  'P-SEO-BLOG-11':     () => <DynamicBlogPostPage slug="roof-repair-vs-full-replacement-utah-guide" />,
+  'P-SEO-BLOG-12':     () => <DynamicBlogPostPage slug="unfinished-roof-contractor-ghosted-utah-recourse" />,
+  'P-SEO-BLOG-13':     () => <DynamicBlogPostPage slug="how-long-does-roof-replacement-take-utah" />,
+  'P-SEO-BLOG-14':     () => <DynamicBlogPostPage slug="how-do-i-know-if-insurance-covers-roof-repair-utah" />,
+  'P-SEO-BLOG-15':     () => <DynamicBlogPostPage slug="how-do-i-know-if-insurance-covers-full-roof-replacement-utah" />,
+  'P-SEO-BLOG-16':     () => <DynamicBlogPostPage slug="roof-replacement-financing-financial-assistance-utah" />,
+  'P-SEO-BLOG-17':     () => <DynamicBlogPostPage slug="fastest-emergency-roof-repair-salt-lake-city-utah" />,
+  'P-SEO-BLOG-18':     () => <DynamicBlogPostPage slug="what-to-check-on-roof-after-hail-storm-utah" />,
+  'P-SEO-BLOG-19':     () => <DynamicBlogPostPage slug="navigating-roofing-insurance-claims-salt-lake-city-utah" />,
+  'P-SEO-BLOG-20':     () => <DynamicBlogPostPage slug="asphalt-shingle-granule-loss-causes-remedies" />,
+  'P-SEO-BLOG-21':     () => <DynamicBlogPostPage slug="commercial-tpo-vs-pvc-roofing-utah-guide" />,
+  'P-SEO-BLOG-22':     () => <DynamicBlogPostPage slug="roofing-insurance-claims-utah-wind-hail-guide" />,
 
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,
