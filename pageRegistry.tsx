@@ -35,6 +35,7 @@ import EmployeeHomepage from './pages/EmployeeHomepage'; // E-01
 import CustomerInputPage from './pages/CustomerInputPage'; // E-02a
 import EmployeePipelinePage from './pages/EmployeePipelinePage'; // E-05
 import IncomeActionatorPage from './pages/IncomeActionatorPage'; // E-16
+import CommissionCompassPage from './pages/CommissionCompassPage'; // E-17
 import ReportingPage from './pages/ReportingPage'; // E-18
 import EmployeeInfoPage from './pages/EmployeeInfoPage'; // E-21
 import EmployeeTimeoffPage from './pages/EmployeeTimeoffPage'; // E-22 / E-04
@@ -209,7 +210,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-14': () => <Placeholder name="PROJECT HUB" />,
   'E-15': ProjectProfilePage,
   'E-16': IncomeActionatorPage,
-  'E-17': () => <Placeholder name="COMMISSION COMPASS" />,
+  'E-17': CommissionCompassPage,
   'E-18': ReportingPage,
   'E-19': LineItemCatalogPage,
   'E-20': LineItemProfilePage,
