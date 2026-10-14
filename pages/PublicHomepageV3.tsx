@@ -109,6 +109,30 @@ const CustomComparisonDiagram: React.FC = () => {
     );
 };
 
+// --- HOMEPAGE FAQS DATA ---
+const HOMEPAGE_FAQS = [
+    {
+        q: "How much does a roof replacement cost in Utah?",
+        a: "Residential roof replacement in Utah typically ranges between $8,500 and $22,000 depending on square footage, pitch, layer count, and material choice. At RHIVE Construction, we provide 100% itemized estimates separating materials, labor, overhead, and company profit, eliminating sales commission markups."
+    },
+    {
+        q: "What is the RHIVE Project Savings Promotion (RPSP)?",
+        a: "The RPSP is an efficiency credit that eliminates contractor follow-up chase costs. Homeowners who approve their bid within 48 hours receive an instant 10% credit (up to $1,000) applied directly to their project total without sacrificing materials or labor quality."
+    },
+    {
+        q: "What is RHIVE's 100 sq ft OSB decking standard?",
+        a: "RHIVE includes the replacement of up to 100 square feet (up to 3 full 4x8 sheets) of deteriorated or rotten OSB/plywood roof decking at $0 additional charge in every residential full tear-off contract."
+    },
+    {
+        q: "What is the difference between commercial TPO and PVC flat roofing?",
+        a: "TPO (Thermoplastic Polyolefin) delivers exceptional UV reflection and thermal efficiency for commercial buildings. PVC (Polyvinyl Chloride) provides superior chemical and animal grease resistance, making it essential for restaurants and facilities with rooftop ventilation exhaust."
+    },
+    {
+        q: "What roofing warranties does RHIVE Construction offer?",
+        a: "RHIVE offers Owens Corning and GAF manufacturer lifetime system warranties (up to 50 years non-prorated) combined with our exclusive Lifetime No-Leak Workmanship Guarantee and commercial GAF NDL (No Dollar Limit) coverage."
+    }
+];
+
 // --- MAIN PAGE ---
 const PublicHomepageV3: React.FC = () => {
     const { setActivePageId } = useNavigation();
@@ -117,6 +141,7 @@ const PublicHomepageV3: React.FC = () => {
     const [capexSqft, setCapexSqft] = useState<number>(15000);
     const [capexComplexity, setCapexComplexity] = useState<'low' | 'medium' | 'high'>('medium');
     const [capexAge, setCapexAge] = useState<number>(10);
+    const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
     const emergencyInputRef = useRef<HTMLInputElement>(null);
     const emergencyAutocompleteRef = useRef<any>(null);
@@ -498,6 +523,91 @@ const PublicHomepageV3: React.FC = () => {
                 <GoogleTestimonials />
             </section>
 
+            {/* ── INTERACTIVE FAQ SECTION (AEO & KNOWLEDGE HUB) ──────────────── */}
+            <section id="faq-section" className="py-24 px-6 max-w-5xl mx-auto z-10 relative">
+                <div className="text-center mb-12">
+                    <div className="inline-block border border-rhive-pink/30 px-6 py-2 rounded-full bg-rhive-pink/10 mb-4 shadow-[0_0_20px_rgba(236,2,139,0.2)]">
+                        <span className="font-bold text-xs tracking-[0.4em] uppercase animate-text-gradient-pink">Direct Answers</span>
+                    </div>
+                    <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight animate-text-gradient-white mb-4">
+                        Frequently Asked Questions
+                    </h2>
+                    <p className="text-gray-400 font-serif italic text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                        Clear, transparent answers to Utah roofing costs, our 100 sq ft OSB replacement standard, and commercial membrane specifications.
+                    </p>
+                </div>
+
+                <div className="space-y-4 mb-10">
+                    {HOMEPAGE_FAQS.map((faq, idx) => {
+                        const isOpen = openFaqIndex === idx;
+                        return (
+                            <div
+                                key={idx}
+                                className="border border-white/10 bg-white/[0.02] hover:border-rhive-pink/40 transition-all rounded-xl overflow-hidden"
+                            >
+                                <button
+                                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                                    className="w-full p-6 text-left flex items-center justify-between gap-4 cursor-pointer"
+                                >
+                                    <span className="font-bold text-white text-base md:text-lg leading-snug">
+                                        {faq.q}
+                                    </span>
+                                    <div className={cn(
+                                        "w-8 h-8 rounded-full border border-white/20 flex items-center justify-center shrink-0 transition-transform duration-300",
+                                        isOpen ? "rotate-180 border-rhive-pink text-rhive-pink bg-rhive-pink/10" : "text-gray-400"
+                                    )}>
+                                        <ChevronDown size={18} />
+                                    </div>
+                                </button>
+                                <AnimatePresence>
+                                    {isOpen && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: "auto", opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.25 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="px-6 pb-6 pt-1 text-gray-300 font-serif text-sm md:text-base leading-relaxed border-t border-white/5">
+                                                {faq.a}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a
+                        href="/faq"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setActivePageId('P-SEO-FAQ');
+                            window.history.pushState({}, '', '/faq');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="group flex items-center justify-center gap-3 bg-rhive-pink hover:brightness-110 active:scale-95 text-white px-8 py-4 font-black uppercase tracking-widest text-xs transition-all shadow-[0_0_20px_rgba(236,2,139,0.3)] rounded"
+                    >
+                        Explore Complete Master FAQ Hub
+                        <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </a>
+                    <a
+                        href="/zero-surprises-pricing"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setActivePageId('P-SEO-PRICING');
+                            window.history.pushState({}, '', '/zero-surprises-pricing');
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="flex items-center justify-center gap-2 border border-white/20 bg-white/5 hover:bg-white/10 text-white px-8 py-4 font-black uppercase tracking-widest text-xs transition-all rounded"
+                    >
+                        Zero Surprises Pricing Specs
+                    </a>
+                </div>
+            </section>
+
             {/* ── CAREERS (JOIN THE HIVE) ────────────────────────────────────── */}
             <section id="careers" className="py-32 px-6 max-w-5xl mx-auto text-center z-10 relative">
                 <div className="inline-block border border-rhive-pink/30 px-6 py-2 rounded-full bg-rhive-pink/10 mb-6 shadow-[0_0_20px_rgba(236,2,139,0.3)]">
@@ -527,18 +637,35 @@ const PublicHomepageV3: React.FC = () => {
 
             {/* ── GLOBAL FOOTER ──────────────────────────────────────────────── */}
             <footer id="contact" className="bg-black py-16 px-6 border-t border-white/10 relative z-10">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-                    <div className="flex items-center gap-3">
-                        <Zap className="text-rhive-pink animate-pulse" size={24} />
-                        <span className="text-2xl font-black text-white italic tracking-tighter uppercase">RHIVE</span>
+                <div className="max-w-7xl mx-auto space-y-10">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-8">
+                        <div className="flex items-center gap-3">
+                            <Zap className="text-rhive-pink animate-pulse" size={24} />
+                            <span className="text-2xl font-black text-white italic tracking-tighter uppercase">RHIVE</span>
+                        </div>
+                        <nav className="flex flex-wrap gap-4 text-xs font-mono text-gray-400">
+                            <a href="/services/residential-roof-replacement" onClick={(e) => { e.preventDefault(); setActivePageId('P-SEO-RESIDENTIAL'); window.history.pushState({}, '', '/services/residential-roof-replacement'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Residential</a>
+                            <a href="/services/commercial-flat-roofing" onClick={(e) => { e.preventDefault(); setActivePageId('P-SEO-COMMERCIAL'); window.history.pushState({}, '', '/services/commercial-flat-roofing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Commercial</a>
+                            <a href="/services/roofing-accessories" onClick={(e) => { e.preventDefault(); setActivePageId('P-SEO-ACCESSORIES'); window.history.pushState({}, '', '/services/roofing-accessories'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Accessories</a>
+                            <a href="/zero-surprises-pricing" onClick={(e) => { e.preventDefault(); setActivePageId('P-SEO-PRICING'); window.history.pushState({}, '', '/zero-surprises-pricing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Pricing</a>
+                            <a href="/faq" onClick={(e) => { e.preventDefault(); setActivePageId('P-SEO-FAQ'); window.history.pushState({}, '', '/faq'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-rhive-pink hover:brightness-125 font-bold transition-colors">FAQ Hub</a>
+                            <a href="/blog" onClick={(e) => { e.preventDefault(); setActivePageId('P-SEO-BLOG-INDEX'); window.history.pushState({}, '', '/blog'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Blog</a>
+                            <a href="/estimate-tool" onClick={(e) => { e.preventDefault(); setActivePageId('estimate-tool'); window.history.pushState({}, '', '/estimate-tool'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">Estimator</a>
+                        </nav>
+                        <div className="flex gap-4">
+                            <a href="https://www.instagram.com/rhive_construction/?hl=en" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer hover:border-white transition-all text-xs font-mono">IG</a>
+                            <a href="https://www.facebook.com/RHIVEConstruction" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer hover:border-white transition-all text-xs font-mono">FB</a>
+                        </div>
                     </div>
-                    <p className="text-xs font-mono text-slate-500 uppercase tracking-widest text-center leading-loose">
-                        © 2026 RHIVE CONSTRUCTION LLC. ALL RIGHTS RESERVED.<br />
-                        SOUTH JORDAN, UT // POCATELLO, ID // POWERED BY RHIVE'S AI ARCHITECT
-                    </p>
-                    <div className="flex gap-4">
-                        <span className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer hover:border-white transition-all text-xs font-mono">IG</span>
-                        <span className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer hover:border-white transition-all text-xs font-mono">FB</span>
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-mono text-slate-500 uppercase tracking-widest text-center sm:text-left">
+                        <p>
+                            © 2026 RHIVE CONSTRUCTION LLC. ALL RIGHTS RESERVED.<br />
+                            SOUTH JORDAN, UT // POCATELLO, ID // LICENSED &amp; INSURED UTAH CONTRACTOR
+                        </p>
+                        <div className="flex gap-4">
+                            <a href="/privacy" onClick={(e) => { e.preventDefault(); setActivePageId('P-PRIVACY'); window.history.pushState({}, '', '/privacy'); }} className="hover:text-gray-300">Privacy</a>
+                            <a href="/terms" onClick={(e) => { e.preventDefault(); setActivePageId('P-TERMS'); window.history.pushState({}, '', '/terms'); }} className="hover:text-gray-300">Terms</a>
+                        </div>
                     </div>
                 </div>
             </footer>

@@ -235,6 +235,8 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-SEO-BLOG-20':     () => <DynamicBlogPostPage slug="asphalt-shingle-granule-loss-causes-remedies" />,
   'P-SEO-BLOG-21':     () => <DynamicBlogPostPage slug="commercial-tpo-vs-pvc-roofing-utah-guide" />,
   'P-SEO-BLOG-22':     () => <DynamicBlogPostPage slug="roofing-insurance-claims-utah-wind-hail-guide" />,
+  'P-SEO-BLOG-23':     () => <DynamicBlogPostPage slug="rhive-abundance-feature-local-utah-businesses" />,
+  'P-SEO-BLOG-24':     () => <DynamicBlogPostPage slug="rhive-abundance-network-community-referrals" />,
 
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,
