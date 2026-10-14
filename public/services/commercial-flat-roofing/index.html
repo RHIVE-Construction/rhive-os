@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('rhive-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="https://i.imgur.com/t0VcSgJ.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utah Commercial Flat Roofing Contractors | TPO & PVC Systems | RHIVE Construction</title>
+  <meta name="description" content="Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, modified bitumen, and transparent RPSP pricing." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <link rel="canonical" href="https://www.rhiveconstruction.com/services/commercial-flat-roofing" id="canonical-link" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Utah Commercial Flat Roofing Contractors | TPO & PVC Systems" />
+  <meta property="og:description" content="Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, modified bitumen, and transparent RPSP pricing." />
+  <meta property="og:url" content="https://www.rhiveconstruction.com/services/commercial-flat-roofing" />
+  <meta property="og:site_name" content="RHIVE Construction" />
+  <link rel="preload" href="/images/modern-architectural-roofing-contractor-wasatch-front-utah.webp" as="image">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Identity Services (GIS) — required for Google Calendar OAuth2 -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'rhive-pink': '#ec028b',
+            'rhive-gold': '#e2ab49',
+            'rhive-blue': '#08137C',
+            'rhive-obsidian': '#050505',
+            'rhive-dark-card': 'rgba(20, 20, 20, 0.8)',
+            'rhive-light-card': 'rgba(255, 255, 255, 0.9)',
+          },
+          fontFamily: {
+            sans: ['Rubik', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+            serif: ['"EB Garamond"', 'serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+          },
+          boxShadow: {
+            'pink-glow': '0 0 15px rgba(236, 2, 139, 0.4)',
+            'pink-glow-sm': '0 0 8px rgba(236, 2, 139, 0.3)',
+          },
+          backgroundImage: {
+            'circuit-pattern': "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMWgydjJIMXoiIGZpbGw9InJnYmEoMjM2LCAyLCAxMzksIDAuMikiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvc3ZnPg==')",
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0, transform: 'translateY(10px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' },
+            },
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.7s ease-out forwards',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    :root {
+      --rhive-bg: #050505;
+      --rhive-text: #ffffff;
+      --rhive-text-muted: #9ca3af;
+      --rhive-border: rgba(255, 255, 255, 0.05);
+      --rhive-glass: rgba(5, 5, 5, 0.65);
+    }
+
+    .light-mode-active {
+      --rhive-bg: #f3f4f6;
+      --rhive-text: #050505;
+      --rhive-text-muted: #4b5563;
+      --rhive-border: rgba(0, 0, 0, 0.05);
+      --rhive-glass: rgba(255, 255, 255, 0.8);
+    }
+
+    body {
+      background-color: var(--rhive-bg);
+      color: var(--rhive-text);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .glass-dark {
+      background: var(--rhive-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(236, 2, 139, 0.15);
+    }
+
+    .light-mode-active .glass-dark {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Scroll Progress Bar */
+    .progress-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: #ec028b;
+      width: 0%;
+      box-shadow: 0 0 10px #ec028b;
+    }
+
+    /* Glitch Effect */
+    .glitch-wrapper {
+      position: relative;
+    }
+
+    .glitch-text::before,
+    .glitch-text::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+
+    .glitch-text::before {
+      left: 2px;
+      text-shadow: -1px 0 red;
+      animation: glitch-anim-1 2s infinite linear alternate-reverse;
+    }
+
+    .glitch-text::after {
+      left: -2px;
+      text-shadow: -1px 0 blue;
+      animation: glitch-anim-2 3s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitch-anim-1 {
+      0% {
+        clip-path: inset(20% 0 80% 0);
+      }
+
+      20% {
+        clip-path: inset(60% 0 10% 0);
+      }
+
+      40% {
+        clip-path: inset(40% 0 50% 0);
+      }
+
+      60% {
+        clip-path: inset(80% 0 5% 0);
+      }
+
+      80% {
+        clip-path: inset(10% 0 70% 0);
+      }
+
+      100% {
+        clip-path: inset(30% 0 50% 0);
+      }
+    }
+
+    @keyframes glitch-anim-2 {
+      0% {
+        clip-path: inset(10% 0 60% 0);
+      }
+
+      20% {
+        clip-path: inset(30% 0 20% 0);
+      }
+
+      40% {
+        clip-path: inset(70% 0 10% 0);
+      }
+
+      60% {
+        clip-path: inset(20% 0 50% 0);
+      }
+
+      80% {
+        clip-path: inset(50% 0 30% 0);
+      }
+
+      100% {
+        clip-path: inset(5% 0 80% 0);
+      }
+    }
+
+    .neon-border {
+      box-shadow: 0 0 15px rgba(236, 2, 139, 0.4);
+      border: 1px solid rgba(236, 2, 139, 0.6);
+    }
+
+    /* Process Stage Lines */
+    .process-line {
+      width: 2px;
+      background: linear-gradient(to bottom, #ec028b, #08137C);
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      transform: translateX(-50%);
+      z-index: 0;
+    }
+
+    /* Google Places Autocomplete Styling */
+    .pac-container {
+      z-index: 10000 !important;
+      background-color: #0a0a0a;
+      border: 1px solid #374151;
+      font-family: 'Rubik', sans-serif;
+    }
+
+    .pac-item {
+      color: #e5e7eb;
+      border-top: 1px solid #1f2937;
+      padding: 10px 15px;
+    }
+
+    .pac-item:hover {
+      background-color: #1f2937;
+    }
+
+    .pac-item-query {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .pac-icon {
+      filter: invert(1) hue-rotate(300deg) saturate(5);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #050505;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ec028b;
+      box-shadow: 0 0 10px #ec028b;
+    }
+  </style>
+  <script>
+    window.googleMapsApiLoaded = false;
+    window.googleMapsApiFailed = false;
+    function onGoogleMapsApiReady() {
+      window.googleMapsApiLoaded = true;
+      window.dispatchEvent(new Event('google-maps-api-ready'));
+    }
+    function onGoogleMapsApiError() {
+      window.googleMapsApiFailed = true;
+      console.error('[RHIVE] Google Maps failed to load. Check API key validity and billing in GCP console.');
+      window.dispatchEvent(new Event('google-maps-api-failed'));
+    }
+    // Loads Maps API. Key is injected by Vite at serve/build time via AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA.
+    // Falls back to /api/config fetch for environments where template replacement isn't available.
+    (function () {
+      function loadMapsScript(apiKey) {
+        if (!apiKey) {
+          console.warn('[RHIVE] VITE_GOOGLE_MAPS_API_KEY is not set — Maps features disabled.');
+          window.googleMapsApiFailed = true;
+          window.dispatchEvent(new Event('google-maps-api-failed'));
+          return;
+        }
+        var s = document.createElement('script');
+        s.async = true;
+        s.onerror = onGoogleMapsApiError;
+        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + apiKey + '&libraries=places,drawing,geometry&callback=onGoogleMapsApiReady';
+        document.head.appendChild(s);
+      }
+
+      // Try Vite template-injected key first (fast, synchronous availability).
+      // At build time, Vite replaces AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA with the real key.
+      // In local dev (npm run dev), Vite also replaces this via its HTML transform.
+      var inlineKey = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
+      if (inlineKey && inlineKey.indexOf('%') === -1) {
+        // Vite injected the key at build/serve time — use it directly.
+        loadMapsScript(inlineKey);
+      } else {
+        // Key was not injected (e.g. raw file open or edge-case build).
+        // Attempt the Vite dev-server /api/config endpoint as a last resort.
+        // This route does NOT exist in production — failure here is expected and handled gracefully.
+        fetch('/api/config')
+          .then(function (res) {
+            if (!res.ok) throw new Error('status ' + res.status);
+            return res.json();
+          })
+          .then(function (data) { loadMapsScript(data.mapsApiKey || ''); })
+          .catch(function () {
+            // /api/config is only available on the Vite dev server.
+            // In production the key is baked in at build time — this path should not run.
+            console.warn('[RHIVE] Maps API key not available — map features will be disabled.');
+            window.googleMapsApiFailed = true;
+            window.dispatchEvent(new Event('google-maps-api-failed'));
+          });
+      }
+    })();
+  </script>
+  <!-- RoofingContractor & FAQPage JSON-LD Schema Markup -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "RoofingContractor",
+        "@id": "https://www.rhiveconstruction.com/services/commercial-flat-roofing#organization",
+        "name": "RHIVE Construction - Commercial Division",
+        "url": "https://www.rhiveconstruction.com/services/commercial-flat-roofing",
+        "logo": "https://i.imgur.com/t0VcSgJ.png",
+        "image": "https://www.rhiveconstruction.com/images/commercial-tpo-membrane-re-roof-layover-salt-lake-city-utah.webp",
+        "telephone": "+1-801-449-1451",
+        "email": "office@rhiveconstruction.com",
+        "priceRange": "$$",
+        "currenciesAccepted": "USD",
+        "paymentAccepted": "Cash, Check, Wire Transfer, Progress Billing, Net 30",
+        "description": "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, modified bitumen, and transparent RPSP pricing.",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "10437 Shady Plum Way",
+          "addressLocality": "South Jordan",
+          "addressRegion": "UT",
+          "postalCode": "84009",
+          "addressCountry": "US"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 40.5621,
+          "longitude": -111.9772
+        },
+        "areaServed": [
+          {"@type": "AdministrativeArea", "name": "Salt Lake County"},
+          {"@type": "AdministrativeArea", "name": "Utah County"},
+          {"@type": "AdministrativeArea", "name": "Davis County"},
+          {"@type": "AdministrativeArea", "name": "Weber County"},
+          {"@type": "AdministrativeArea", "name": "Summit County"},
+          {"@type": "AdministrativeArea", "name": "Wasatch County"},
+          {"@type": "AdministrativeArea", "name": "Tooele County"}
+        ]
+      },
+      {
+        "@type": "Service",
+        "@id": "https://www.rhiveconstruction.com/services/commercial-flat-roofing#service",
+        "name": "Commercial Flat Roofing Contractors Utah",
+        "provider": {
+          "@id": "https://www.rhiveconstruction.com/services/commercial-flat-roofing#organization"
+        },
+        "description": "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, and transparent RPSP pricing.",
+        "serviceType": "Commercial Roofing, Flat Roofing, TPO Roofing, PVC Roofing, Industrial Roofing, Modified Bitumen"
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://www.rhiveconstruction.com/services/commercial-flat-roofing#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is a GAF No Dollar Limit (NDL) Warranty?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "An NDL Warranty is a premium commercial guarantee where GAF covers 100% of material and labor costs to repair any manufacturing or certified installation defect for up to 30 years with zero financial cap on payouts."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can we install a TPO or PVC membrane over our existing commercial roof in Utah?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Under Utah building codes (IBC Chapter 15), a single-layer flat roof in dry, sound condition can receive a certified layover. RHIVE conducts core sampling and thermal infrared scans to verify structural qualification, saving tens of thousands in tear-off costs."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the primary operational difference between TPO and PVC membranes?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "TPO delivers superior thermal reflection and UV resistance for standard office and warehouse spaces. PVC contains plasticizers making it impervious to animal fats, kitchen grease exhaust, and industrial chemicals, essential for restaurants and processing plants."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does RHIVE eliminate salesman markups on commercial projects?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We operate using AI-driven aerial diagnostic workflows and salaried technical project managers, eliminating the 10-15% commission paid to sales reps and returning those savings via transparent itemized pricing showing materials, labor, overhead, and profit."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <script type="module" crossorigin src="/assets/index-Bes8hZ23.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CR-wGVmD.css">
+</head>
+
+<body class="text-gray-200 selection:bg-rhive-pink/30 selection:text-white">
+  
+  <div id="root">
+    <div style="font-family: 'Rubik', ui-monospace, sans-serif; background-color: #000000; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 2.5rem 2rem; box-sizing: border-box; position: relative;">
+      
+      <!-- Top Status Header -->
+      <header style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(236, 2, 139, 0.2); padding-bottom: 1rem; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img src="https://i.imgur.com/t0VcSgJ.png" alt="RHIVE Construction Logo" style="height: 32px; width: auto; filter: drop-shadow(0 0 8px rgba(236, 2, 139, 0.6));" />
+          <span style="font-weight: 800; letter-spacing: 0.1em; color: #ffffff;">RHIVE COMMERCIAL DIVISION</span>
+        </div>
+        <div style="color: #ec028b; font-size: 0.8rem; letter-spacing: 0.2em; font-weight: bold;">GAF COMMERCIAL CERTIFIED CONTRACTOR | UTAH &amp; IDAHO</div>
+      </header>
+
+      <!-- Main Semantic SEO Content Structure -->
+      <main style="flex-grow: 1; max-width: 960px; margin: 0 auto; text-align: left; width: 100%;">
+        <div style="display: inline-block; border: 1px solid rgba(236, 2, 139, 0.3); background: rgba(236, 2, 139, 0.1); padding: 0.35rem 1rem; border-radius: 9999px; margin-bottom: 1.25rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: #ffffff; text-transform: uppercase;">
+          Single-Ply TPO &amp; PVC Flat Roofing Specialists
+        </div>
+
+        <h1 style="font-size: 2.5rem; font-weight: 900; text-transform: uppercase; color: #ffffff; margin-bottom: 1.25rem; letter-spacing: -0.02em; line-height: 1.15;">
+          Utah Commercial Flat Roofing Contractors | TPO &amp; PVC Systems
+        </h1>
+        
+        <p style="font-family: 'EB Garamond', serif; font-style: italic; font-size: 1.35rem; color: #e2ab49; margin-bottom: 2rem; line-height: 1.6; border-left: 3px solid #ec028b; padding-left: 1.25rem;">
+          Engineering Superior Flat Roof Systems with Radical Cost Transparency, 30-Year NDL Warranties, and Zero Salesman Markup.
+        </p>
+
+        <p style="color: #d1d5db; font-size: 1rem; line-height: 1.7; margin-bottom: 2.5rem; font-family: 'EB Garamond', serif;">
+          RHIVE Construction redefines commercial contracting across the Wasatch Front and Western United States. By eliminating physical warehouse bloat and sales commissions, we keep administrative overhead under 10% and pass direct capital efficiency back to property managers, facility directors, and commercial building owners.
+        </p>
+
+        <!-- Section 1: Single-Ply & Industrial Systems -->
+        <section style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: #ec028b; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+            GAF EverGuard® Single-Ply &amp; Industrial Assemblies
+          </h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.25rem; border-radius: 8px;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 0.5rem;">GAF EverGuard® TPO (60 &amp; 80 mil)</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.6;">Engineered for retail centers, distribution centers, and office parks. White Energy Star-rated reflective membrane lowers cooling loads; hot-air fusion-welded seams form a monolithic waterproof barrier certified up to 120 MPH wind uplift.</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.25rem; border-radius: 8px;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #e2ab49; margin-bottom: 0.5rem;">GAF EverGuard® PVC (60 &amp; 80 mil)</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.6;">Specially plasticized for commercial kitchens, restaurants, food processing plants, and manufacturing facilities requiring extreme resistance to animal fats, greases, jet fuel, and harsh chemical discharges.</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.25rem; border-radius: 8px;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #06b6d4; margin-bottom: 0.5rem;">Multi-Ply SBS Modified Bitumen</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.6;">Heavy-duty redundant waterproofing for intense rooftop foot traffic zones, mechanical equipment platforms, and chemical loading docks, available in low-odor cold adhesive and torch applications.</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.25rem; border-radius: 8px;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 0.5rem;">Commercial Structural Metal</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.6;">24-gauge Galvalume® standing seam panels with 70% PVDF / Kynar 500® factory finishes for commercial architectural canopies, high-slope entries, and zero-maintenance corporate headquarters.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 2: Code Layover Analysis -->
+        <section style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: #e2ab49; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+            Utah Building Code (IBC Chapter 15) Tear-Off vs. Layover Analysis
+          </h2>
+          <p style="color: #9ca3af; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
+            Under active Utah commercial building codes (IBC Chapter 15), properties with a single existing membrane are permitted a certified commercial layover if non-destructive moisture verification confirms the insulation and decking are dry and structurally sound.
+          </p>
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.25rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <ul style="color: #d1d5db; font-size: 0.9rem; line-height: 1.8; margin: 0; padding-left: 1.25rem;">
+              <li><strong>Certified Layover Protocol:</strong> Mechanically fastened or adhered over high-density DensDeck® cover boards, saving property owners tens of thousands in landfill fees while retaining 100% eligibility for 30-year GAF NDL warranties.</li>
+              <li><strong>Full Tear-Off Protocol:</strong> Mandatory when two or more roofing layers exist or when infrared moisture scans reveal water saturation within existing insulation cores.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Section 3: Commercial Case Studies -->
+        <section style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: #06b6d4; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+            Utah Commercial Project Case Studies
+          </h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+            <div style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid #ec028b; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 700; color: #ffffff;">Silicon Slopes Tech Campus (Lehi, UT)</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5; margin-top: 0.25rem;">52,000 Sq Ft 80-mil TPO re-cover with R-30+ Polyiso upgrade; completed with zero tenant downtime during business hours; backed by 30-Year GAF NDL Guarantee.</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid #e2ab49; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 700; color: #ffffff;">Industrial Logistics Center (West Valley City, UT)</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5; margin-top: 0.25rem;">110,000 Sq Ft induction-welded TPO system engineered for 120 MPH wind uplift along the I-215 corridor with 24-ga Kynar perimeter coping.</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); border-left: 3px solid #06b6d4; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 700; color: #ffffff;">Restaurant &amp; Hospitality Center (Salt Lake City, UT)</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5; margin-top: 0.25rem;">18,500 Sq Ft grease-resistant 60-mil GAF PVC membrane protecting roof deck from 14 kitchen hood exhaust units with zero chemical degradation.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 4: Commercial FAQs -->
+        <section style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: #ffffff; margin-bottom: 1rem; text-transform: uppercase;">
+            Commercial Roofing Technical FAQs
+          </h2>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="background: rgba(255,255,255,0.02); border-left: 2px solid #ec028b; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.35rem;">What is a GAF No Dollar Limit (NDL) Warranty?</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">An NDL Warranty is a premium commercial guarantee where GAF covers 100% of material and labor costs to repair any manufacturing or certified installation defect for up to 30 years with zero financial cap on payouts.</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border-left: 2px solid #ec028b; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.35rem;">Can we install a TPO or PVC membrane over our existing commercial roof in Utah?</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">Under Utah building codes (IBC Chapter 15), a single-layer flat roof in dry, sound condition can receive a certified layover. RHIVE conducts core sampling and thermal infrared scans to verify structural qualification, saving tens of thousands in tear-off costs.</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border-left: 2px solid #ec028b; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.35rem;">What is the primary operational difference between TPO and PVC membranes?</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">TPO delivers superior thermal reflection and UV resistance for standard office and warehouse spaces. PVC contains plasticizers making it impervious to animal fats, kitchen grease exhaust, and industrial chemicals, essential for restaurants and processing plants.</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border-left: 2px solid #ec028b; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.35rem;">How does RHIVE eliminate salesman markups on commercial projects?</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">We operate using AI-driven aerial diagnostic workflows and salaried technical project managers, eliminating the 10-15% commission paid to sales reps and returning those savings via transparent itemized pricing showing materials, labor, overhead (<10%), and profit.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 5: Regional Service Footprint & Corridors -->
+        <section style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: #06b6d4; margin-bottom: 1rem; text-transform: uppercase;">
+            Utah Commercial Corridors &amp; Service Hubs
+          </h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; color: #d1d5db; font-size: 0.85rem;">
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 1rem; border-radius: 6px;">
+              <strong style="color: #ec028b; display: block; margin-bottom: 0.25rem;">Silicon Slopes Tech Corridor</strong>
+              Lehi, Draper, Alpine, American Fork, Traverse Mountain tech hubs.
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 1rem; border-radius: 6px;">
+              <strong style="color: #e2ab49; display: block; margin-bottom: 0.25rem;">Salt Lake Metro Core</strong>
+              Salt Lake City Downtown, South Jordan, Sandy, West Valley City, Murray.
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 1rem; border-radius: 6px;">
+              <strong style="color: #06b6d4; display: block; margin-bottom: 0.25rem;">I-15 Industrial Spine</strong>
+              Business Depot Ogden (BDO), Clearfield Freeport, West Jordan logistics.
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 1rem; border-radius: 6px;">
+              <strong style="color: #ffffff; display: block; margin-bottom: 0.25rem;">High Elevation Commercial</strong>
+              Park City Kimball Junction, Summit County, Heber Valley.
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Footer Navigation & Sitemap Crawl Links -->
+      <footer style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 2rem; margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; font-size: 0.85rem; color: #9ca3af;">
+        <nav style="display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem;">
+          <a href="/" style="color: #ffffff; text-decoration: none; font-weight: 500;">Home</a>
+          <a href="/services/residential-roof-replacement" style="color: #9ca3af; text-decoration: none;">Residential Roofing</a>
+          <a href="/services/commercial-flat-roofing" style="color: #ec028b; text-decoration: none; font-weight: bold;">Commercial Flat Roofing</a>
+          <a href="/services/roofing-accessories" style="color: #9ca3af; text-decoration: none;">Roofing Accessories &amp; Gutters</a>
+          <a href="/zero-surprises-pricing" style="color: #9ca3af; text-decoration: none;">Zero Surprises Pricing</a>
+          <a href="/estimate-tool" style="color: #9ca3af; text-decoration: none;">Instant Drone Estimator</a>
+          <a href="/faq" style="color: #9ca3af; text-decoration: none;">FAQ &amp; Knowledge Base</a>
+          <a href="/blog" style="color: #9ca3af; text-decoration: none;">Roofing Research &amp; Guides</a>
+          <a href="/privacy" style="color: #6b7280; text-decoration: none;">Privacy Policy</a>
+          <a href="/terms" style="color: #6b7280; text-decoration: none;">Terms of Service</a>
+        </nav>
+        <div style="font-weight: 500; color: #9ca3af;">
+          Direct Office Dispatch: <a href="tel:8014491451" style="color: #ec028b; text-decoration: none; font-weight: bold;">(801) 449-1451</a>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+</body>
+
+</html>
