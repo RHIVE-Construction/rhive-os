@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { 
     Phone, Shield, ArrowRight, CheckCircle2, Zap, 
     Building2, Clock, Layers, Award, MapPin, 
-    ChevronDown, Wrench, AlertTriangle, FileText 
+    ChevronDown, Wrench, AlertTriangle, FileText, 
+    Check, Sparkles, Scale, DollarSign
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -13,24 +14,20 @@ interface CommercialFaq {
 
 const COMMERCIAL_FAQS: CommercialFaq[] = [
     {
-        q: "How much does commercial flat roofing cost per square foot in Utah?",
-        a: "Commercial flat roofing in Utah typically ranges from $5.50 to $9.50 per square foot for single-ply TPO membrane installations and $7.00 to $12.00 per square foot for high-durability PVC systems. Final costs depend on roof square footage, existing insulation R-value requirements, structural deck condition, and whether the project is a single-layer layover or a full tear-off. RHIVE provides 100% itemized commercial estimates with transparent material and labor breakdowns."
+        q: "Do you offer commercial roof repairs and emergency leak tarping in Utah?",
+        a: "Yes. RHIVE operates a Quantum Rapid-Response Protocol. We dispatch emergency containment crews for heat-welded TPO/PVC membrane patching or synthetic tarping. Emergency containment carries a flat $350 fee, which is 100% credited back toward your permanent repair or full replacement."
     },
     {
-        q: "Can my commercial building in Utah qualify for a layover instead of a full tear-off?",
-        a: "Under Utah State Building Code (IBC/IRC), a commercial building may qualify for a single-ply membrane layover if there is only one existing roof layer and the underlying insulation and decking are dry and structurally sound. RHIVE conducts core sampling and thermal drone scans to verify moisture levels before recommending a layover, saving property owners 25% to 40% in labor and disposal costs."
+        q: "What is a GAF No Dollar Limit (NDL) Warranty?",
+        a: "An NDL Warranty is a premium commercial guarantee where GAF covers 100% of material and labor costs to fix manufacturing or installation defects for up to 30 years with zero financial cap on payouts. It requires rigorous factory inspection and certified installer execution."
     },
     {
-        q: "What is a GAF No Dollar Limit (NDL) warranty and why is it essential?",
-        a: "A GAF No Dollar Limit (NDL) warranty is the gold standard of commercial roofing coverage. Unlike standard manufacturer material warranties, an NDL warranty covers 100% of both material defects and contractor workmanship with no financial cap on repair payouts for up to 20 or 25 years. It is directly backed and inspected by GAF field inspectors, protecting commercial asset value and corporate balance sheets."
+        q: "Can we install a TPO or PVC membrane over our existing commercial roof in Utah?",
+        a: "Under Utah building codes, a single-layer flat roof in dry, sound structural condition can receive a certified layover. RHIVE conducts core moisture testing and thermal infrared diagnostics to determine if your property qualifies, saving thousands in tear-off and disposal costs."
     },
     {
-        q: "How does RHIVE minimize disruption to commercial tenants, customers, and operations?",
-        a: "RHIVE implements a phased commercial project management protocol. We section roofs into independent zones, utilize exterior crane hoists to keep building interiors untouched, coordinate off-hours and weekend hot-air welding passes when requested, and provide facility managers with live digital drone progress feeds to ensure tenant parking and foot traffic remain 100% unobstructed."
-    },
-    {
-        q: "How do commercial TPO and PVC flat roofs perform during severe Utah winters?",
-        a: "Both TPO and PVC are engineered with advanced polymer plasticizers that maintain elasticity in sub-zero Wasatch Front temperatures, preventing brittle cracking under heavy snowpack. Hot-air heat-welded seams create a monolithic waterproof envelope that resists ponding water and ice dam expansion along internal scuppers, parapet flashings, and rooftop drains."
+        q: "How does RHIVE eliminate salesman markups on commercial bids?",
+        a: "We use AI automation and remote diagnostic tools to manage operations, eliminating the 10–15% commission typically paid to sales reps and passing those savings directly to you via itemized cost quotes detailing Materials, Labor, Overhead (<10%), and Net Profit."
     }
 ];
 
@@ -46,7 +43,7 @@ export default function CommercialFlatRoofingServicePage() {
             metaDesc.setAttribute('name', 'description');
             document.head.appendChild(metaDesc);
         }
-        metaDesc.setAttribute('content', "Utah's premier certified commercial roofing contractor. Specializing in TPO and PVC flat roofs, layovers, complete tear-offs, industrial CAPEX planning, and 20-year GAF NDL warranties across Salt Lake, Utah, Davis, Summit, and Weber Counties.");
+        metaDesc.setAttribute('content', "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, and transparent RPSP pricing.");
 
         // Schema.org Structured Data: RoofingContractor + Service + FAQPage
         const schemaId = 'schema-commercial-roofing-utah';
@@ -64,7 +61,7 @@ export default function CommercialFlatRoofingServicePage() {
                 {
                     "@type": "RoofingContractor",
                     "@id": "https://www.rhiveconstruction.com/commercial-roofing#organization",
-                    "name": "RHIVE Construction - Commercial Roofing Division",
+                    "name": "RHIVE Construction - Commercial Division",
                     "url": "https://www.rhiveconstruction.com/commercial-roofing",
                     "logo": "https://i.imgur.com/t0VcSgJ.png",
                     "image": "https://www.rhiveconstruction.com/images/commercial-tpo-membrane-re-roof-layover-salt-lake-city-utah.webp",
@@ -100,7 +97,7 @@ export default function CommercialFlatRoofingServicePage() {
                     "provider": {
                         "@id": "https://www.rhiveconstruction.com/commercial-roofing#organization"
                     },
-                    "description": "Certified commercial flat roofing contractor delivering TPO and PVC single-ply membrane installations, layovers, complete tear-offs, and 20-year GAF NDL warranties in Utah.",
+                    "description": "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, and transparent RPSP pricing.",
                     "serviceType": "Commercial Roofing, Flat Roofing, TPO Roofing, PVC Roofing, Industrial Roofing"
                 },
                 {
@@ -132,50 +129,62 @@ export default function CommercialFlatRoofingServicePage() {
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-hidden font-sans">
-            {/* Ambient Background Glow */}
-            <div className="absolute top-1/4 left-1/3 -translate-x-1/2 w-[600px] h-[600px] bg-rhive-blue/15 blur-[140px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[500px] bg-rhive-pink/10 blur-[140px] rounded-full pointer-events-none" />
+            {/* Ambient Background Glows */}
+            <div className="absolute top-1/4 left-1/3 -translate-x-1/2 w-[650px] h-[650px] bg-rhive-blue/15 blur-[150px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-1/3 right-1/4 w-[550px] h-[550px] bg-rhive-pink/10 blur-[150px] rounded-full pointer-events-none" />
 
-            {/* ── HERO SECTION ──────────────────────────────────────────────── */}
+            {/* ── SECTION 1: HERO MODULE ──────────────────────────────────────── */}
             <section className="relative z-10 pt-24 pb-16 px-6 max-w-6xl mx-auto text-center">
                 <div className="inline-flex items-center gap-2 border border-rhive-pink/30 px-4 py-1.5 rounded-full bg-rhive-pink/10 mb-6 shadow-[0_0_15px_rgba(236,2,139,0.2)]">
                     <Building2 size={14} className="text-rhive-pink" />
                     <span className="text-xs font-mono font-bold uppercase tracking-widest text-white">
-                        GAF CERTIFIED COMMERCIAL CONTRACTOR | UTAH &amp; IDAHO
+                        GAF COMMERCIAL CERTIFIED CONTRACTOR | UTAH &amp; IDAHO
                     </span>
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight leading-[1.1] mb-6">
-                    Utah Commercial &amp; Industrial<br />
+                    Utah’s Premier AI-Driven<br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-rhive-pink">
-                        Flat Roofing Specialists
+                        Commercial &amp; Industrial Roofing Specialists
                     </span>
                 </h1>
 
                 <div className="text-lg sm:text-xl md:text-2xl font-serif italic text-rhive-gold mb-8 max-w-3xl mx-auto">
-                    Certified GAF TPO &amp; PVC Single-Ply Membranes, Layovers, Full Tear-Offs &amp; 20-Year NDL Warranties Across the Wasatch Front.
+                    Engineering Superior Flat Roof Systems with Radical Cost Transparency, 30-Year NDL Warranties, and Zero Salesman Markup.
                 </div>
 
                 <p className="text-base sm:text-lg text-gray-300 max-w-[78ch] mx-auto mb-10 leading-relaxed font-serif">
-                    Commercial flat and low-slope roofing systems require specialized materials, advanced thermal modeling, and master-craftsman execution to withstand Utah's extreme freeze-thaw cycles. At <strong className="text-white">RHIVE Construction</strong>, we combine commercial membrane certifications with proprietary drone cartography and 100% itemized pricing. From industrial warehouses to retail plazas, we protect corporate balance sheets with manufacturer-backed No Dollar Limit (NDL) warranties and zero business disruption.
+                    RHIVE Construction redefines commercial contracting across the Wasatch Front and Western United States. By eliminating physical warehouse bloat and sales commissions, we keep administrative overhead under 10% and pass direct capital efficiency back to property managers and facility directors.
                 </p>
 
-                <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8">
                     <button
                         onClick={handleEstimateClick}
                         className="bg-rhive-pink text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded shadow-[0_0_20px_rgba(236,2,139,0.4)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                         style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                     >
-                        Request Commercial Bid
+                        Request Commercial CapEx Analysis
                     </button>
                     <a
-                        href="tel:8014491451"
+                        href="/estimate-tool"
                         className="flex items-center gap-2 border border-white/20 hover:border-rhive-pink text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
                         style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                     >
-                        <Phone size={14} className="text-rhive-pink" />
-                        (801) 449-1451 Dispatch
+                        Launch Instant Aerial Estimator
                     </a>
+                </div>
+
+                {/* Trust Badges */}
+                <div className="flex flex-wrap justify-center items-center gap-6 text-xs font-mono text-gray-300">
+                    <span className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-rhive-pink" /> GAF Commercial Certified Contractor
+                    </span>
+                    <span className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-rhive-gold" /> 30-Year No Dollar Limit (NDL) Guarantees
+                    </span>
+                    <span className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-cyan-400" /> Female-Owned &amp; Operated
+                    </span>
                 </div>
 
                 {/* Hero Showcase Image */}
@@ -191,351 +200,441 @@ export default function CommercialFlatRoofingServicePage() {
                     />
                     <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent p-4 sm:p-6 text-left flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                         <div>
-                            <div className="text-xs font-mono font-bold text-rhive-pink uppercase tracking-widest">Active Project Profile</div>
+                            <div className="text-xs font-mono font-bold text-rhive-pink uppercase tracking-widest">Active Commercial Portfolio</div>
                             <div className="text-sm sm:text-base font-bold text-white">45,000 Sq Ft GAF EverGuard® TPO Layover — Salt Lake County, UT</div>
                         </div>
                         <span className="text-xs font-mono text-gray-300 bg-white/10 px-3 py-1 rounded border border-white/20">
-                            20-Yr NDL Certified
+                            30-Yr NDL Certified
                         </span>
                     </div>
                 </div>
             </section>
 
-            {/* ── SECTION 1: COMMERCIAL FLAT ROOFING SYSTEMS & MATERIALS ───────── */}
+            {/* ── SECTION 2: THE RHIVE COMMERCIAL DIFFERENCE ──────────────────── */}
+            <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10">
+                <div className="text-center mb-12">
+                    <span className="text-xs font-mono text-rhive-pink uppercase tracking-[0.2em] block mb-2 font-bold">
+                        Institutional Value Proposition
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
+                        Why Utah Property Managers &amp; HOA Boards Partner with RHIVE
+                    </h2>
+                    <p className="text-gray-400 font-serif italic text-base max-w-3xl mx-auto mt-3">
+                        Commercial roofing projects represent major capital expenditures (CapEx). Traditional contractors protect their margins with vague lump-sum bids, inflated sales commissions, and short-term workmanship warranties. RHIVE Construction flips that script through operational technology, engineering precision, and complete financial openness.
+                    </p>
+                    <div className="w-16 h-1 bg-rhive-pink mx-auto mt-4" />
+                </div>
+
+                {/* Radical Transparency Terminal Box */}
+                <div className="max-w-3xl mx-auto bg-black/80 border border-rhive-pink/40 p-6 sm:p-8 rounded-xl font-mono text-xs sm:text-sm shadow-[0_0_25px_rgba(236,2,139,0.15)] mb-12">
+                    <div className="border-b border-rhive-pink/30 pb-3 mb-4 text-center text-rhive-pink font-bold uppercase tracking-widest">
+                        RHIVE RADICAL TRANSPARENCY MODEL
+                    </div>
+                    <ul className="space-y-3 text-gray-200">
+                        <li className="flex items-start gap-3">
+                            <span className="text-rhive-pink font-bold">✓</span>
+                            <span><strong>Itemized Cost Breakdown:</strong> Materials, Labor, Overhead (&lt;10%), and Net Company Profit transparently exposed on every bid.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <span className="text-rhive-pink font-bold">✓</span>
+                            <span><strong>Factory-Certified Single-Ply Membrane Installation:</strong> Adherence to GAF specifications with automated test-weld logging.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <span className="text-rhive-pink font-bold">✓</span>
+                            <span><strong>Up to 30-Year GAF No Dollar Limit (NDL) Coverage:</strong> Non-prorated factory material and labor coverage with zero payout cap.</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <span className="text-rhive-pink font-bold">✓</span>
+                            <span><strong>Direct Founder Line &amp; Dedicated AI Systems Architect:</strong> Immediate communication without multiple corporate gatekeepers.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <div className="text-xs text-rhive-pink font-mono font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <DollarSign size={16} /> Cost Integrity
+                        </div>
+                        <h3 className="text-base font-bold text-white uppercase mb-2">Radical Cost Transparency</h3>
+                        <p className="text-gray-400 text-xs font-serif leading-relaxed">
+                            Every commercial proposal includes an itemized mathematical breakdown showing exact costs for Materials, Labor, Operating Overhead (&lt;10%), and Net Company Profit.
+                        </p>
+                    </div>
+
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <div className="text-xs text-rhive-gold font-mono font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <Award size={16} /> Master Standards
+                        </div>
+                        <h3 className="text-base font-bold text-white uppercase mb-2">Factory-Certified Precision</h3>
+                        <p className="text-gray-400 text-xs font-serif leading-relaxed">
+                            As a certified GAF commercial installer, our crews adhere strictly to manufacturer assembly drawings, technical submittals, and daily robotic seam test welds.
+                        </p>
+                    </div>
+
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <div className="text-xs text-cyan-400 font-mono font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <Shield size={16} /> Dual Warranties
+                        </div>
+                        <h3 className="text-base font-bold text-white uppercase mb-2">Double-Layer Protection</h3>
+                        <p className="text-gray-400 text-xs font-serif leading-relaxed">
+                            Receive non-prorated manufacturer system warranties alongside RHIVE's direct Lifetime Installer No-Leak Guarantee for absolute institutional security.
+                        </p>
+                    </div>
+
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <div className="text-xs text-white font-mono font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <Sparkles size={16} className="text-rhive-pink" /> Social Impact
+                        </div>
+                        <h3 className="text-base font-bold text-white uppercase mb-2">Community Reinvestment</h3>
+                        <p className="text-gray-400 text-xs font-serif leading-relaxed">
+                            Every commercial project helps fund complete roof replacements for local veterans, teachers, and first responders through "Our Hive" community reinvestment initiatives.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── SECTION 3: COMMERCIAL SINGLE-PLY SYSTEMS & SPECIFICATIONS ───── */}
             <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10">
                 <div className="text-center mb-12">
                     <span className="text-xs font-mono text-rhive-pink uppercase tracking-[0.2em] block mb-2 font-bold">
                         Engineered Single-Ply Specifications
                     </span>
                     <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                        Commercial Flat, PVC &amp; TPO Roofing Systems in Utah
+                        GAF EverGuard® Single-Ply Flat Membrane Assemblies
                     </h2>
                     <p className="text-gray-400 font-serif italic text-base max-w-2xl mx-auto mt-3">
-                        Deploying industry-leading single-ply membrane technologies engineered for thermal reflectivity, chemical resistance, and monolithic seam strength.
+                        We specialize in heat-welded thermoplastic membrane systems engineered to withstand Utah’s harsh climate dynamics—including 80°F+ single-day thermal swings, high UV radiation, and heavy snow loads.
                     </p>
                     <div className="w-16 h-1 bg-rhive-pink mx-auto mt-4" />
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-8">
-                    {/* TPO Card */}
-                    <div className="bg-white/[0.02] border border-white/10 p-6 rounded-xl flex flex-col justify-between hover:border-rhive-pink/40 transition-all duration-300">
-                        <div>
-                            <div className="text-xs text-rhive-pink font-mono font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                <Zap size={14} /> Energy Star Efficiency
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-3">GAF EverGuard® TPO Roofing</h3>
-                            <p className="text-gray-300 text-sm leading-relaxed font-serif mb-4">
-                                Thermoplastic Polyolefin (TPO) roofs are exceptionally well-suited for Utah commercial buildings seeking maximum energy savings. With initial solar reflectance up to 85%, TPO significantly lowers cooling loads during hot Wasatch Front summers.
-                            </p>
+                <div className="grid md:grid-cols-2 gap-8 mb-12">
+                    {/* TPO Detailed Card */}
+                    <div className="bg-white/[0.02] border border-white/10 p-8 rounded-2xl space-y-4">
+                        <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                            <h3 className="text-xl sm:text-2xl font-bold text-white">1. GAF EverGuard® TPO Systems</h3>
+                            <span className="text-xs font-mono text-rhive-pink bg-rhive-pink/10 px-2.5 py-1 rounded border border-rhive-pink/30">
+                                60 mil &amp; Heavy-Duty 80 mil
+                            </span>
                         </div>
-                        <ul className="text-xs text-gray-400 space-y-1.5 border-t border-white/5 pt-4 font-mono">
-                            <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-rhive-pink" /> 60-mil &amp; 80-mil Thickness</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-rhive-pink" /> Robotic Hot-Air Welded Seams</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-rhive-pink" /> Class A Fire &amp; Hail Resistant</li>
+                        <ul className="text-sm text-gray-300 space-y-3 font-serif">
+                            <li>
+                                <strong className="text-white font-sans">Primary Application:</strong> Retail plazas, office towers, warehouses, distribution centers, and educational facilities.
+                            </li>
+                            <li>
+                                <strong className="text-white font-sans">Thermal Performance:</strong> Highly reflective white Energy Star-rated membrane reflects solar radiation, lowering building HVAC cooling loads during hot summer months.
+                            </li>
+                            <li>
+                                <strong className="text-white font-sans">Mechanical Integrity:</strong> Secured using GAF Drill-Tec™ #15 XHD screws and barbed stress plates for maximum wind uplift resistance under high canyon winds.
+                            </li>
+                            <li>
+                                <strong className="text-white font-sans">Fusion Heat-Welded Seams:</strong> All field seams, wall transitions, and pipe boots are fusion heat-welded using hot air to form a continuous, monolithic watertight bond stronger than the membrane itself.
+                            </li>
+                            <li>
+                                <strong className="text-white font-sans">Warranty Options:</strong> 20-Year (60 mil) or 30-Year (80 mil) GAF System Limited &amp; NDL Warranties.
+                            </li>
                         </ul>
                     </div>
 
-                    {/* PVC Card */}
-                    <div className="bg-white/[0.02] border border-white/10 p-6 rounded-xl flex flex-col justify-between hover:border-rhive-pink/40 transition-all duration-300">
-                        <div>
-                            <div className="text-xs text-rhive-gold font-mono font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                <Shield size={14} /> Chemical &amp; Grease Defense
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-3">GAF EverGuard® PVC Roofing</h3>
-                            <p className="text-gray-300 text-sm leading-relaxed font-serif mb-4">
-                                Polyvinyl Chloride (PVC) delivers unmatched resistance to harsh chemicals, industrial oils, and rooftop kitchen grease exhaust. The mandatory choice for restaurants, food processing plants, and manufacturing hubs across Utah.
-                            </p>
+                    {/* PVC Detailed Card */}
+                    <div className="bg-white/[0.02] border border-white/10 p-8 rounded-2xl space-y-4">
+                        <div className="flex justify-between items-center border-b border-white/10 pb-3">
+                            <h3 className="text-xl sm:text-2xl font-bold text-white">2. GAF EverGuard® PVC Systems</h3>
+                            <span className="text-xs font-mono text-rhive-gold bg-rhive-gold/10 px-2.5 py-1 rounded border border-rhive-gold/30">
+                                60 mil &amp; Heavy-Duty 80 mil
+                            </span>
                         </div>
-                        <ul className="text-xs text-gray-400 space-y-1.5 border-t border-white/5 pt-4 font-mono">
-                            <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-rhive-gold" /> Animal Fat &amp; Oil Resistant</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-rhive-gold" /> Permanent Flexible Plasticizers</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-rhive-gold" /> High Puncture Resistance</li>
+                        <ul className="text-sm text-gray-300 space-y-3 font-serif">
+                            <li>
+                                <strong className="text-white font-sans">Primary Application:</strong> Commercial kitchens, restaurants, food processing plants, automotive centers, and facilities exposed to chemical exhaust.
+                            </li>
+                            <li>
+                                <strong className="text-white font-sans">Chemical &amp; Grease Resistance:</strong> Formulated to resist animal fats, oils, greases, and industrial chemicals that rapidly dissolve standard asphalt or TPO membranes.
+                            </li>
+                            <li>
+                                <strong className="text-white font-sans">Fire Safety &amp; Puncture Resistance:</strong> High fire resistance rating and superior puncture strength against roof foot traffic and service maintenance.
+                            </li>
+                            <li>
+                                <strong className="text-white font-sans">Warranty Options:</strong> Up to 30-Year non-prorated material and labor coverage.
+                            </li>
                         </ul>
                     </div>
+                </div>
 
-                    {/* Integrated Substrate Card */}
-                    <div className="bg-white/[0.02] border border-white/10 p-6 rounded-xl flex flex-col justify-between hover:border-rhive-pink/40 transition-all duration-300">
-                        <div>
-                            <div className="text-xs text-cyan-400 font-mono font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                <Layers size={14} /> Complete Assembly
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-3">Polyiso &amp; HD Cover Boards</h3>
-                            <p className="text-gray-300 text-sm leading-relaxed font-serif mb-4">
-                                A commercial roof is only as resilient as its foundation. We engineer complete substrate assemblies utilizing staggered Polyisocyanurate (Polyiso) R-30+ insulation, high-density gypsum cover boards, and vapor barriers to halt internal condensation.
+                {/* Substrate & Drainage Engineering */}
+                <div className="bg-white/[0.02] border border-white/10 p-8 rounded-2xl space-y-6">
+                    <h3 className="text-2xl font-bold text-white border-b border-white/10 pb-3">
+                        3. Substrate &amp; Drainage Engineering
+                    </h3>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="space-y-2">
+                            <div className="text-xs font-mono text-cyan-400 font-bold uppercase">Thermal Insulation</div>
+                            <h4 className="text-base font-bold text-white">Mandatory Polyiso (R-30+)</h4>
+                            <p className="text-xs text-gray-400 font-serif leading-relaxed">
+                                Mechanically attached Polyisocyanurate (Polyiso) insulation boards installed to achieve required energy code R-values.
                             </p>
                         </div>
-                        <ul className="text-xs text-gray-400 space-y-1.5 border-t border-white/5 pt-4 font-mono">
-                            <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-cyan-400" /> Tapered Insulation Drainage</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-cyan-400" /> High-Density Hail Cover Boards</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={12} className="text-cyan-400" /> Mechanically Attached or Adhered</li>
-                        </ul>
+                        <div className="space-y-2">
+                            <div className="text-xs font-mono text-cyan-400 font-bold uppercase">Positive Drainage</div>
+                            <h4 className="text-base font-bold text-white">Tapered Polyiso Crickets</h4>
+                            <p className="text-xs text-gray-400 font-serif leading-relaxed">
+                                Custom pre-fabricated tapered Polyiso installed around curbs, drains, and scuppers to eliminate standing ponding water.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="text-xs font-mono text-cyan-400 font-bold uppercase">Abuse Resistance</div>
+                            <h4 className="text-base font-bold text-white">DensDeck® Gypsum Boards</h4>
+                            <p className="text-xs text-gray-400 font-serif leading-relaxed">
+                                High-density fiberglass-mat gypsum cover boards installed over insulation to provide hail resistance and Class A fire ratings.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="text-xs font-mono text-cyan-400 font-bold uppercase">Perimeter Integrity</div>
+                            <h4 className="text-base font-bold text-white">Kynar-Coated Steel Coping</h4>
+                            <p className="text-xs text-gray-400 font-serif leading-relaxed">
+                                Custom-fabricated 24-gauge steel 2-piece coping cap systems with continuous anchor cleats for extreme canyon wind uplift protection.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* ── SECTION 2: PROJECT MANAGEMENT & MINIMIZING DISRUPTIONS ────────── */}
-            <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10">
-                <div className="text-center mb-12">
-                    <span className="text-xs font-mono text-cyan-400 uppercase tracking-[0.2em] block mb-2 font-bold">
-                        Operational Excellence
-                    </span>
-                    <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                        Commercial Project Management: Minimizing Business Disruptions
-                    </h2>
-                    <p className="text-gray-400 font-serif italic text-base max-w-2xl mx-auto mt-3">
-                        Commercial property managers, facility directors, and HOA boards need roof installations that protect daily business continuity.
-                    </p>
-                    <div className="w-16 h-1 bg-cyan-400 mx-auto mt-4" />
-                </div>
-
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <div className="w-10 h-10 rounded bg-rhive-pink/10 border border-rhive-pink/30 flex items-center justify-center text-rhive-pink mb-4">
-                            <Clock size={20} />
-                        </div>
-                        <h3 className="text-base font-bold text-white uppercase mb-2">Phased Installation Zones</h3>
-                        <p className="text-gray-400 text-xs font-serif leading-relaxed">
-                            We divide large commercial roofs into staged operational sectors, keeping 80% of parking and building entrances completely unobstructed at all times.
-                        </p>
-                    </div>
-
-                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <div className="w-10 h-10 rounded bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4">
-                            <Zap size={20} />
-                        </div>
-                        <h3 className="text-base font-bold text-white uppercase mb-2">Off-Hours &amp; Weekend Work</h3>
-                        <p className="text-gray-400 text-xs font-serif leading-relaxed">
-                            For noise-sensitive offices, schools, and medical facilities, our crews execute heavy tear-off and mechanical staging outside of regular operational hours.
-                        </p>
-                    </div>
-
-                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <div className="w-10 h-10 rounded bg-rhive-gold/10 border border-rhive-gold/30 flex items-center justify-center text-rhive-gold mb-4">
-                            <Shield size={20} />
-                        </div>
-                        <h3 className="text-base font-bold text-white uppercase mb-2">OSHA Crane &amp; Safety Staging</h3>
-                        <p className="text-gray-400 text-xs font-serif leading-relaxed">
-                            All materials are staged directly via heavy-lift boom cranes. Drop zones and safety perimeters are enclosed with OSHA-certified barriers to ensure tenant protection.
-                        </p>
-                    </div>
-
-                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <div className="w-10 h-10 rounded bg-white/10 border border-white/20 flex items-center justify-center text-white mb-4">
-                            <FileText size={20} />
-                        </div>
-                        <h3 className="text-base font-bold text-white uppercase mb-2">Drone Inspection Vault</h3>
-                        <p className="text-gray-400 text-xs font-serif leading-relaxed">
-                            Property managers receive daily aerial progress photographs, seam weld pull-test documentation, and verified milestone sign-offs streamed directly to their portal.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            {/* ── SECTION 3: TEAR-OFF VS. LAYOVER ─────────────────────────────── */}
+            {/* ── SECTION 4: CODE & COMMERCIAL LAYOVER ANALYSIS ───────────────── */}
             <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10">
                 <div className="text-center mb-12">
                     <span className="text-xs font-mono text-rhive-gold uppercase tracking-[0.2em] block mb-2 font-bold">
-                        Cost vs. Structural Scope
+                        Utah Building Code Compliance
                     </span>
                     <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                        Flexible Commercial Re-Roofing: Layover vs. Full Tear-Off
+                        Full System Tear-Off vs. Certified Code Layover
                     </h2>
                     <p className="text-gray-400 font-serif italic text-base max-w-2xl mx-auto mt-3">
-                        Navigating Utah State Building Code allowances to balance capital expenditure and long-term asset integrity.
+                        Navigating Utah building code compliance is essential when evaluating commercial roof asset management.
                     </p>
                     <div className="w-16 h-1 bg-rhive-gold mx-auto mt-4" />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8">
-                    <div className="p-8 bg-white/[0.02] border border-white/10 rounded-2xl">
-                        <div className="inline-block bg-rhive-gold/20 text-rhive-gold font-mono font-bold text-xs uppercase px-3 py-1 rounded mb-4 border border-rhive-gold/30">
-                            CAPEX Optimization (Saves 25-40%)
-                        </div>
-                        <h3 className="text-2xl font-bold text-white mb-3">Single-Ply Layover Membrane</h3>
-                        <p className="text-gray-300 text-sm leading-relaxed font-serif mb-4">
-                            Under Utah building code, a single-layer existing flat roof that is dry and structurally intact qualifies for a certified membrane layover. We install a high-density fanfold recovery board directly over the existing substrate, followed by a new GAF TPO or PVC membrane.
-                        </p>
-                        <ul className="text-xs text-gray-400 space-y-2 font-mono">
-                            <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rhive-gold" /> Eliminates costly landfill disposal fees</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rhive-gold" /> Prevents interior weather exposure during construction</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rhive-gold" /> Fully inspectable and certifiable for GAF NDL warranties</li>
-                        </ul>
+                {/* ASCII / Visual Matrix Block */}
+                <div className="max-w-4xl mx-auto bg-black/80 border border-white/15 rounded-xl overflow-hidden mb-12">
+                    <div className="bg-white/5 p-4 text-center font-mono text-xs font-bold uppercase text-white tracking-widest border-b border-white/10">
+                        COMMERCIAL FLAT ROOF EVALUATION MATRIX
                     </div>
-
-                    <div className="p-8 bg-white/[0.02] border border-white/10 rounded-2xl">
-                        <div className="inline-block bg-rhive-pink/20 text-rhive-pink font-mono font-bold text-xs uppercase px-3 py-1 rounded mb-4 border border-rhive-pink/30">
-                            100% Structural Reset
+                    <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10 p-6 sm:p-8 gap-6 sm:gap-8 font-serif">
+                        <div className="space-y-3">
+                            <div className="text-base font-bold text-white font-sans uppercase text-rhive-pink">Full Tear-Off Protocol</div>
+                            <ul className="text-xs sm:text-sm text-gray-300 space-y-2">
+                                <li className="flex items-center gap-2">• Complete removal down to the steel or wood deck</li>
+                                <li className="flex items-center gap-2">• Complete structural deck replacement (up to 100 sq ft included)</li>
+                                <li className="flex items-center gap-2">• Maximum R-value upgrade with custom multi-layer tapered ISO</li>
+                                <li className="flex items-center gap-2">• Mandatory for multi-layered or saturated assemblies</li>
+                            </ul>
                         </div>
-                        <h3 className="text-2xl font-bold text-white mb-3">Full System Tear-Off &amp; Substrate Replacement</h3>
-                        <p className="text-gray-300 text-sm leading-relaxed font-serif mb-4">
-                            For multi-layered, saturated, or failing commercial roofs, full tear-off is mandatory. We strip all old layers down to the steel or wood deck, inspect and repair all structural purlins and decking, and install a brand-new, tapered R-30+ insulation system.
-                        </p>
-                        <ul className="text-xs text-gray-400 space-y-2 font-mono">
-                            <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rhive-pink" /> 100 sq ft structural decking replacement included</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rhive-pink" /> Custom-tapered slopes to permanently eradicate ponding water</li>
-                            <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rhive-pink" /> Full 20 to 25-Year GAF NDL Manufacturer Coverage</li>
-                        </ul>
+                        <div className="space-y-3 pt-6 md:pt-0">
+                            <div className="text-base font-bold text-white font-sans uppercase text-rhive-gold">Certified Layover Protocol</div>
+                            <ul className="text-xs sm:text-sm text-gray-300 space-y-2">
+                                <li className="flex items-center gap-2">• Single-layer dry membrane substrate required</li>
+                                <li className="flex items-center gap-2">• Mechanically fastened or adhered over high-density cover board</li>
+                                <li className="flex items-center gap-2">• Saves tens of thousands in landfill and disposal costs</li>
+                                <li className="flex items-center gap-2">• 100% eligible for full GAF NDL warranties</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-300 font-serif leading-relaxed">
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <strong className="text-white font-sans block mb-2">Residential vs. Commercial Standard:</strong>
+                        While RHIVE enforces a strict 100% full tear-off policy on all residential asphalt roofs, active Utah building codes permit single-layer commercial flat roof layovers if the underlying insulation and structural decking are verified dry and sound.
+                    </div>
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <strong className="text-white font-sans block mb-2">The Layover Benefit:</strong>
+                        A certified GAF TPO or PVC layover over new high-density cover boards saves property owners tens of thousands of dollars in tear-off and landfill disposal fees while maintaining 100% eligibility for GAF NDL warranties.
+                    </div>
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <strong className="text-white font-sans block mb-2">Moisture Audits &amp; Thermal Scanning:</strong>
+                        Prior to specifying any layover, RHIVE conducts core sampling and thermal diagnostics to ensure no trapped moisture exists.
                     </div>
                 </div>
             </section>
 
-            {/* ── SECTION 4: TECHNICAL COMPARISON TABLE ────────────────────────── */}
-            <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10 overflow-x-auto">
-                <div className="text-center mb-10">
-                    <span className="text-xs font-mono text-rhive-pink uppercase tracking-[0.2em] block mb-2 font-bold">
-                        Synthesizable Specification Guide
-                    </span>
-                    <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
-                        Utah Commercial Roofing Material Technical Comparison
-                    </h2>
-                </div>
-
-                <table className="w-full border-collapse text-left text-xs sm:text-sm bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden">
-                    <thead>
-                        <tr className="bg-rhive-pink/15 border-b border-rhive-pink/30 text-white font-mono uppercase">
-                            <th className="p-4">Criteria</th>
-                            <th className="p-4">GAF TPO Membrane</th>
-                            <th className="p-4">GAF PVC Membrane</th>
-                            <th className="p-4">Standing Seam Metal</th>
-                            <th className="p-4">Built-Up Asphalt (BUR)</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5 text-gray-300 font-serif">
-                        <tr>
-                            <td className="p-4 font-bold text-white font-mono">Chemical &amp; Grease Resistance</td>
-                            <td className="p-4">Moderate</td>
-                            <td className="p-4 text-rhive-gold font-bold">Exceptional (Animal Fat/Grease)</td>
-                            <td className="p-4">High</td>
-                            <td className="p-4 text-red-400">Poor (Degrades with Oil)</td>
-                        </tr>
-                        <tr>
-                            <td className="p-4 font-bold text-white font-mono">Energy Star Solar Reflectance</td>
-                            <td className="p-4 text-rhive-pink font-bold">Up to 85% Initial</td>
-                            <td className="p-4">Up to 83% Initial</td>
-                            <td className="p-4">Up to 70%</td>
-                            <td className="p-4 text-red-400">&lt; 25% (Heat Absorbing)</td>
-                        </tr>
-                        <tr>
-                            <td className="p-4 font-bold text-white font-mono">Average Utah Lifespan</td>
-                            <td className="p-4">25 - 30 Years</td>
-                            <td className="p-4">25 - 30 Years</td>
-                            <td className="p-4 text-rhive-pink font-bold">40 - 50 Years</td>
-                            <td className="p-4">15 - 20 Years</td>
-                        </tr>
-                        <tr>
-                            <td className="p-4 font-bold text-white font-mono">Primary Utah Application</td>
-                            <td className="p-4">Warehouses, Distribution, Big Box Retail</td>
-                            <td className="p-4">Restaurants, Food Processing, Manufacturing</td>
-                            <td className="p-4">Architectural, Low/Steep Slope</td>
-                            <td className="p-4 text-gray-500">Legacy Systems Only</td>
-                        </tr>
-                        <tr>
-                            <td className="p-4 font-bold text-white font-mono">Approx. Cost / Sq Ft Installed</td>
-                            <td className="p-4 font-mono text-white">$5.50 - $9.50</td>
-                            <td className="p-4 font-mono text-white">$7.00 - $12.00</td>
-                            <td className="p-4 font-mono text-white">$10.00 - $16.00</td>
-                            <td className="p-4 font-mono text-gray-400">$6.50 - $10.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-
-            {/* ── SECTION 5: WARRANTIES & NDL GUARANTEE ───────────────────────── */}
+            {/* ── SECTION 5: COMMERCIAL WARRANTY INFRASTRUCTURE ───────────────── */}
             <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10">
                 <div className="text-center mb-12">
-                    <span className="text-xs font-mono text-rhive-pink uppercase tracking-[0.2em] block mb-2 font-bold">
+                    <span className="text-xs font-mono text-cyan-400 uppercase tracking-[0.2em] block mb-2 font-bold">
                         Institutional Asset Protection
                     </span>
                     <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                        Elite GAF Commercial Warranties &amp; 20-Year NDL Guarantees
+                        Unmatched Capital Protection &amp; Lifetime Performance
                     </h2>
-                    <div className="w-16 h-1 bg-rhive-pink mx-auto mt-4" />
+                    <div className="w-16 h-1 bg-cyan-400 mx-auto mt-4" />
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-8">
-                    <div className="p-6 bg-white/[0.02] border border-white/10 rounded-xl">
-                        <div className="text-base font-bold text-white mb-2 flex items-center gap-2">
-                            <Award size={18} className="text-rhive-pink" /> GAF System Plus Warranty
-                        </div>
-                        <p className="text-gray-400 text-sm leading-relaxed font-serif">
-                            Extended manufacturer non-prorated system coverage for small to mid-sized commercial reroofs installed by certified RHIVE specialists.
-                        </p>
+                {/* Visual Warranty Hierarchy Box */}
+                <div className="max-w-2xl mx-auto flex flex-col items-center mb-12">
+                    <div className="w-full bg-rhive-pink/10 border-2 border-rhive-pink p-5 rounded-xl text-center shadow-[0_0_20px_rgba(236,2,139,0.3)]">
+                        <div className="text-xs font-mono font-bold uppercase tracking-widest text-rhive-pink">30-YEAR GAF NDL GUARANTEE</div>
+                        <div className="text-base sm:text-lg font-black text-white uppercase mt-1">100% Material &amp; Certified Labor Coverage (No Payout Cap)</div>
+                    </div>
+                    <div className="w-0.5 h-8 bg-gradient-to-b from-rhive-pink to-rhive-gold" />
+                    <div className="w-full bg-rhive-gold/10 border-2 border-rhive-gold p-5 rounded-xl text-center shadow-[0_0_20px_rgba(226,171,73,0.3)]">
+                        <div className="text-xs font-mono font-bold uppercase tracking-widest text-rhive-gold">RHIVE INSTALLER NO-LEAK GUARANTEE</div>
+                        <div className="text-base sm:text-lg font-black text-white uppercase mt-1">Direct Lifetime Workmanship Protection (Zero-Cost Repairs)</div>
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                    <div className="p-8 bg-white/[0.02] border border-white/10 rounded-2xl space-y-4">
+                        <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+                            <Award size={22} className="text-rhive-pink" /> 1. GAF No Dollar Limit (NDL) Commercial Guarantees
+                        </h3>
+                        <ul className="text-sm text-gray-300 space-y-3 font-serif">
+                            <li>
+                                <strong className="text-white font-sans">No Payout Caps:</strong> Covers 100% of material and certified labor costs to repair manufacturing defects or installation failures without a dollar payout ceiling for up to 30 years.
+                            </li>
+                            <li>
+                                <strong className="text-white font-sans">Factory Inspection Required:</strong> A GAF technical field engineer conducts a rigorous multi-point inspection of the completed roof before issuing the NDL certificate.
+                            </li>
+                            <li>
+                                <strong className="text-white font-sans">Complete System Integrity:</strong> Covers all integrated components—membranes, Polyiso insulation, cover boards, Drill-Tec™ fasteners, and perimeter metal edge details.
+                            </li>
+                        </ul>
                     </div>
 
-                    <div className="p-6 bg-white/[0.02] border border-rhive-pink/40 bg-rhive-pink/[0.02] rounded-xl shadow-[0_0_25px_rgba(236,2,139,0.1)]">
-                        <div className="text-base font-bold text-white mb-2 flex items-center gap-2">
-                            <Shield size={18} className="text-rhive-pink" /> 20-Year No Dollar Limit (NDL)
-                        </div>
-                        <p className="text-gray-300 text-sm leading-relaxed font-serif">
-                            The corporate standard. Covers 100% of material defects and certified contractor workmanship with no financial ceiling on repair costs, inspected directly by GAF technical field auditors.
+                    <div className="p-8 bg-white/[0.02] border border-white/10 rounded-2xl space-y-4">
+                        <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+                            <Shield size={22} className="text-rhive-gold" /> 2. RHIVE Lifetime Installer No-Leak Guarantee
+                        </h3>
+                        <p className="text-sm text-gray-300 font-serif leading-relaxed">
+                            In addition to manufacturer warranties, RHIVE Construction guarantees our installation workmanship for the lifetime of the roof system.
                         </p>
-                    </div>
-
-                    <div className="p-6 bg-white/[0.02] border border-white/10 rounded-xl">
-                        <div className="text-base font-bold text-white mb-2 flex items-center gap-2">
-                            <CheckCircle2 size={18} className="text-rhive-gold" /> RHIVE Lifetime Workmanship
+                        <div className="p-4 bg-white/5 border border-white/10 rounded-xl text-sm font-serif italic text-gray-200">
+                            "If our installation methods cause a leak, RHIVE repairs it 100% free of charge."
                         </div>
-                        <p className="text-gray-400 text-sm leading-relaxed font-serif">
-                            Our proprietary company warranty guarantees all flashing, scuppers, pipe boots, and terminations for the lifetime of your membrane system. If it leaks, we fix it at zero cost.
-                        </p>
+                        <ul className="text-xs text-gray-400 space-y-2 font-mono">
+                            <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rhive-gold" /> Lifetime Flashing &amp; Scupper Guarantee</li>
+                            <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rhive-gold" /> 24/7 Dispatch Hotline for Active Breaches</li>
+                            <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-rhive-gold" /> Transferable Asset Documentation</li>
+                        </ul>
                     </div>
                 </div>
             </section>
 
-            {/* ── SECTION 6: UTAH GEOGRAPHIC SERVICE FOOTPRINT ─────────────────── */}
+            {/* ── SECTION 6: FINANCIAL STRUCTURE & CAPEX PRESERVATION ─────────── */}
             <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10">
-                <div className="text-center mb-10">
-                    <span className="text-xs font-mono text-cyan-400 uppercase tracking-[0.2em] block mb-2 font-bold">
-                        Regional Coverage
+                <div className="text-center mb-12">
+                    <span className="text-xs font-mono text-rhive-pink uppercase tracking-[0.2em] block mb-2 font-bold">
+                        Capital Efficiency Engine
                     </span>
                     <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                        Utah Commercial Roofing Service Footprint
+                        The Commercial RHIVE Project Savings Promotion (RPSP)
                     </h2>
-                    <p className="text-gray-400 font-serif italic text-base max-w-2xl mx-auto mt-2">
-                        Deploying fully equipped mobile commercial hot-air welding rigs across all major Utah economic corridors.
+                    <p className="text-gray-400 font-serif italic text-base max-w-3xl mx-auto mt-3">
+                        Commercial procurement delays and extended bid management often inflate contracting budgets by 15–20% in "soft costs". The RHIVE Project Savings Promotion (RPSP) rewards decision-speed by stripping out administrative "chase costs" and crediting the savings directly back to your project ledger.
                     </p>
+                    <div className="w-16 h-1 bg-rhive-pink mx-auto mt-4" />
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
+                {/* Efficiency Credit Matrix */}
+                <div className="max-w-3xl mx-auto bg-black/80 border border-rhive-pink/40 rounded-xl overflow-hidden mb-10 shadow-[0_0_25px_rgba(236,2,139,0.15)]">
+                    <div className="bg-rhive-pink/15 p-4 text-center font-mono text-xs font-bold uppercase text-white tracking-widest border-b border-rhive-pink/30">
+                        COMMERCIAL RPSP EFFICIENCY MATRIX
+                    </div>
+                    <table className="w-full text-left text-xs sm:text-sm font-mono">
+                        <thead className="bg-white/5 border-b border-white/10 text-gray-300">
+                            <tr>
+                                <th className="p-4">Project Value Tier</th>
+                                <th className="p-4">Maximum Efficiency Credit</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5 text-gray-200 font-serif">
+                            <tr>
+                                <td className="p-4 font-bold text-white font-mono">Tier 1: Under $50,000</td>
+                                <td className="p-4 text-rhive-pink font-bold font-mono">Up to $1,000 Credit</td>
+                            </tr>
+                            <tr>
+                                <td className="p-4 font-bold text-white font-mono">Tier 2: $50,000 - $100,000</td>
+                                <td className="p-4 text-rhive-gold font-bold font-mono">Starts at $1,500 Credit</td>
+                            </tr>
+                            <tr>
+                                <td className="p-4 font-bold text-white font-mono">Tier 3: Large Scale ($100k+)</td>
+                                <td className="p-4 text-cyan-400 font-bold font-mono">+$500 per additional $50k (e.g. $150k = $2,500)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-300 font-serif leading-relaxed mb-12">
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <strong className="text-white font-sans block mb-2">How It Works:</strong>
+                        Execute your commercial agreement within 72 hours of presentation to unlock your Tiered Efficiency Credit directly onto your balance sheet.
+                    </div>
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <strong className="text-white font-sans block mb-2">Portfolio Scaling:</strong>
+                        Managing multiple properties or HOAs? RPSP efficiency credits stack across your entire portfolio, lowering capital expenditures across all assets.
+                    </div>
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <strong className="text-white font-sans block mb-2">Protected by Utah’s 3-Day Rescission:</strong>
+                        Lock in your efficiency pricing immediately while retaining a full 3-business-day statutory window for internal board review or stakeholder verification with zero risk.
+                    </div>
+                </div>
+
+                {/* Investment Schedule Box */}
+                <div className="bg-white/[0.02] border border-white/10 p-8 rounded-2xl">
+                    <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">
+                        Commercial Investment Schedule &amp; Institutional Terms
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-300 font-serif leading-relaxed">
+                        <div>
+                            <h4 className="text-white font-bold mb-1 font-sans">Standard 50/40/10 Milestone Terms:</h4>
+                            <p>50% initial investment at signing (secures permits and materials), 40% on final installation day (substantial completion), and 10% final settlement upon 100% project completion and punch list verification.</p>
+                        </div>
+                        <div>
+                            <h4 className="text-white font-bold mb-1 font-sans">Master Service Agreements (MSAs):</h4>
+                            <p>Customized progress billing, AIA G702/G703 formats, and Net-30 credit terms available for established commercial management accounts and REIT developers.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── SECTION 7: THE 10-STAGE "ZERO SURPRISES" COMMERCIAL WORKFLOW ─── */}
+            <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10">
+                <div className="text-center mb-12">
+                    <span className="text-xs font-mono text-cyan-400 uppercase tracking-[0.2em] block mb-2 font-bold">
+                        Fulfillment Architecture
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
+                        The 10-Stage "Zero Surprises" Commercial Workflow
+                    </h2>
+                    <p className="text-gray-400 font-serif italic text-base max-w-2xl mx-auto mt-2">
+                        Automated Fulfillment Built for Property Managers and Facility Directors.
+                    </p>
+                    <div className="w-16 h-1 bg-cyan-400 mx-auto mt-4" />
+                </div>
+
+                {/* Interactive Workflow Grid */}
+                <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     {[
-                        { county: "Salt Lake County", hubs: "Salt Lake City, South Jordan, Sandy, Draper, West Valley" },
-                        { county: "Utah County", hubs: "Lehi Silicon Slopes, Provo, Orem, American Fork" },
-                        { county: "Davis County", hubs: "Layton, Bountiful, Clearfield, North Salt Lake" },
-                        { county: "Weber County", hubs: "Ogden Commercial Hub, Business Depot Ogden (BDO)" },
-                        { county: "Summit County", hubs: "Park City Commercial, Kimball Junction, Snyderville" },
-                        { county: "Tooele County", hubs: "Tooele City, Stansbury Park, Industrial Park" }
-                    ].map((item, idx) => (
-                        <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-lg">
-                            <MapPin size={16} className="text-rhive-pink mx-auto mb-2" />
-                            <div className="text-xs font-bold text-white uppercase">{item.county}</div>
-                            <div className="text-[10px] text-gray-400 font-serif mt-1 leading-snug">{item.hubs}</div>
+                        { num: "01", name: "LEAD INTAKE", desc: "High-definition aerial Roofr reports and Google Solar API rooftop mapping generate preliminary parameters." },
+                        { num: "02", name: "ESTIMATE", desc: "Instant itemized data range generated without sales pressure or in-person disruption." },
+                        { num: "03", name: "QUOTE", desc: "Multi-option proposal detailing GAF TPO/PVC packages, insulation R-values, and perimeter details." },
+                        { num: "04", name: "SIGN & INVEST", desc: "Digital contract execution via secure portal with RPSP credit lock and deposit confirmation." },
+                        { num: "05", name: "SCHEDULE", desc: "City permit acquisition, GAF submittal package filing, material delivery, and crew dispatch." },
+                        { num: "06", name: "PRE-INSTALL", desc: "Automated weekly SMS/email status reports keep facility directors fully informed." },
+                        { num: "07", name: "INSTALL", desc: "Mobile-first site logs capture real-time photos of tear-off, Polyiso layout, and heat-welded seams." },
+                        { num: "08", name: "PUNCH LIST", desc: "Multi-point quality inspection ensuring 100% defect clearance before final billing." },
+                        { num: "09", name: "INVOICING", desc: "Electronic billing with automated Lien Waiver generation and GAF engineering documentation." },
+                        { num: "10", name: "TROPHY ROOM", desc: "Activation of 30-Year GAF NDL Warranty and RHIVE Lifetime Guarantee stored in your digital vault." }
+                    ].map((step, idx) => (
+                        <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl hover:border-rhive-pink/40 transition-colors">
+                            <div className="font-mono text-xs font-black text-rhive-pink mb-1">{step.num} // STAGE</div>
+                            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-2">{step.name}</h3>
+                            <p className="text-[11px] text-gray-400 font-serif leading-relaxed">{step.desc}</p>
                         </div>
                     ))}
                 </div>
             </section>
 
-            {/* ── SECTION 7: RPSP 7-DAY COMMERCIAL PROMOTION ──────────────────── */}
-            <section className="relative z-10 py-16 px-6 max-w-4xl mx-auto border-t border-white/10">
-                <div className="bg-gradient-to-br from-black via-white/[0.02] to-black border-2 border-rhive-pink p-8 sm:p-10 rounded-2xl shadow-[0_0_35px_rgba(236,2,139,0.25)] text-center">
-                    <div className="inline-block bg-rhive-pink text-white font-bold text-xs uppercase tracking-widest px-4 py-1.5 rounded-full mb-4 shadow-[0_0_12px_rgba(236,2,139,0.5)]">
-                        Active Commercial Incentive
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white mb-4">
-                        The RHIVE Project Savings Promotion (RPSP)
-                    </h2>
-                    <p className="text-gray-300 font-serif text-base max-w-2xl mx-auto leading-relaxed mb-6">
-                        Eliminating sales rep follow-up overhead and passing scheduling efficiencies directly to commercial property owners. When you approve your commercial bid within 7 days, we apply an immediate 10% efficiency credit (up to $3,000) directly toward your contract total.
-                    </p>
-                    <button
-                        onClick={handleEstimateClick}
-                        className="bg-white text-black font-black text-xs uppercase tracking-widest px-8 py-4 rounded hover:bg-rhive-pink hover:text-white transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer"
-                    >
-                        Claim 7-Day Commercial Credit
-                    </button>
-                </div>
-            </section>
-
-            {/* ── SECTION 8: COMMERCIAL FAQS ACCORDION ────────────────────────── */}
+            {/* ── SECTION 8: COMMERCIAL ROOFING FAQ ───────────────────────────── */}
             <section className="relative z-10 py-16 px-6 max-w-5xl mx-auto border-t border-white/10">
                 <div className="text-center mb-12">
                     <span className="text-xs font-mono text-rhive-pink uppercase tracking-[0.2em] block mb-2 font-bold">
@@ -544,9 +643,6 @@ export default function CommercialFlatRoofingServicePage() {
                     <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
                         Frequently Asked Questions: Utah Commercial Roofing
                     </h2>
-                    <p className="text-gray-400 font-serif italic text-base max-w-2xl mx-auto mt-2">
-                        Direct answers to pricing, building code layover regulations, NDL warranties, and winter maintenance.
-                    </p>
                     <div className="w-16 h-1 bg-rhive-pink mx-auto mt-4" />
                 </div>
 
@@ -583,44 +679,79 @@ export default function CommercialFlatRoofingServicePage() {
                 </div>
             </section>
 
-            {/* ── SECTION 9: TECHNICAL GUIDES CROSS-LINKING ───────────────────── */}
-            <section className="relative z-10 py-16 px-6 max-w-5xl mx-auto border-t border-white/10">
-                <div className="p-8 md:p-12 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div className="space-y-3 max-w-xl text-left">
-                        <div className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400">
-                            TECHNICAL RESEARCH &amp; GUIDES
-                        </div>
-                        <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
-                            Explore Commercial TPO vs. PVC &amp; Emergency Protocols
-                        </h3>
-                        <p className="text-sm text-gray-300 font-serif leading-relaxed">
-                            Read our in-depth architectural breakdown on single-ply weld mechanics, freeze-thaw performance, and rapid leak containment protocols across Utah.
+            {/* ── SECTION 9: REGIONAL SERVICE AREA & CALL TO ACTION ───────────── */}
+            <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10">
+                <div className="text-center mb-12">
+                    <span className="text-xs font-mono text-cyan-400 uppercase tracking-[0.2em] block mb-2 font-bold">
+                        Regional Coverage
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
+                        Serving Commercial Properties Across Utah &amp; Idaho
+                    </h2>
+                    <p className="text-gray-400 font-serif italic text-base max-w-3xl mx-auto mt-3">
+                        RHIVE Construction delivers certified commercial roofing services across all primary Wasatch Front hubs and surrounding regions:
+                    </p>
+                </div>
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <MapPin size={18} className="text-rhive-pink mb-2" />
+                        <h3 className="font-bold text-white text-sm uppercase mb-2">Salt Lake County</h3>
+                        <p className="text-xs text-gray-400 font-serif leading-relaxed">
+                            Salt Lake City, South Jordan (Corporate HQ), Sandy, Draper, West Jordan, West Valley City, Herriman, Taylorsville, Midvale, Millcreek, Holladay, Kearns, Magna, Sugar House.
                         </p>
-                        <div className="flex flex-wrap gap-3 pt-2 text-xs font-mono">
-                            <a href="/blog/commercial-tpo-vs-pvc-roofing-utah-guide" className="text-rhive-pink hover:underline">
-                                → TPO vs PVC Guide
-                            </a>
-                            <a href="/blog/fastest-emergency-roof-repair-salt-lake-city-utah" className="text-cyan-400 hover:underline">
-                                → Emergency Tarping &amp; Repair
-                            </a>
-                            <a href="/zero-surprises-pricing" className="text-rhive-gold hover:underline">
-                                → Zero Surprises Pricing
-                            </a>
-                        </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-4 shrink-0">
-                        <a
-                            href="/estimate-tool"
-                            className="bg-rhive-pink text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded shadow-[0_0_15px_rgba(236,2,139,0.4)] hover:brightness-110 transition-all text-center"
+
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <MapPin size={18} className="text-rhive-gold mb-2" />
+                        <h3 className="font-bold text-white text-sm uppercase mb-2">Utah County</h3>
+                        <p className="text-xs text-gray-400 font-serif leading-relaxed">
+                            Lehi Silicon Slopes, Provo, Orem, American Fork, Pleasant Grove, Springville, Spanish Fork.
+                        </p>
+                    </div>
+
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <MapPin size={18} className="text-cyan-400 mb-2" />
+                        <h3 className="font-bold text-white text-sm uppercase mb-2">Davis &amp; Weber Counties</h3>
+                        <p className="text-xs text-gray-400 font-serif leading-relaxed">
+                            Bountiful, Layton, Clearfield, North Salt Lake, Ogden Commercial Hub, Business Depot Ogden (BDO).
+                        </p>
+                    </div>
+
+                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <MapPin size={18} className="text-white mb-2" />
+                        <h3 className="font-bold text-white text-sm uppercase mb-2">Summit, Wasatch &amp; Beyond</h3>
+                        <p className="text-xs text-gray-400 font-serif leading-relaxed">
+                            Park City, Heber City, Tooele, with expanded commercial project coverage extending throughout Idaho.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Contact Card & Final CTA */}
+                <div className="bg-gradient-to-br from-black via-white/[0.02] to-black border-2 border-rhive-pink p-8 sm:p-12 rounded-2xl shadow-[0_0_40px_rgba(236,2,139,0.25)] text-center max-w-4xl mx-auto">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-white mb-4">
+                        Ready to Elevate Your Commercial Property Asset?
+                    </h2>
+                    <p className="text-gray-300 font-serif text-base max-w-2xl mx-auto leading-relaxed mb-8">
+                        Get a precise, itemized commercial quote backed by factory-certified GAF single-ply systems and radical pricing transparency.
+                    </p>
+
+                    <div className="inline-block bg-white/5 border border-white/10 p-6 rounded-xl text-xs font-mono text-gray-300 text-left mb-8 space-y-2">
+                        <div className="text-rhive-pink font-bold uppercase tracking-wider mb-1">RHIVE Construction Corporate Headquarters</div>
+                        <div>📍 10437 Shady Plum Way, South Jordan, UT 84009</div>
+                        <div>📞 Phone: <a href="tel:4354176637" className="text-white hover:underline">435-41-ROOFS (435-417-6637)</a> / <a href="tel:8014491451" className="text-white hover:underline">(801) 449-1451</a></div>
+                        <div>✉️ Email: <a href="mailto:office@rhiveconstruction.com" className="text-white hover:underline">office@rhiveconstruction.com</a></div>
+                        <div>💻 Website: <a href="https://www.rhiveconstruction.com" className="text-white hover:underline">rhiveconstruction.com</a></div>
+                    </div>
+
+                    <div>
+                        <button
+                            onClick={handleEstimateClick}
+                            className="bg-rhive-pink text-white font-black text-xs uppercase tracking-widest px-10 py-5 rounded shadow-[0_0_25px_rgba(236,2,139,0.5)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                            style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                         >
-                            Commercial Estimator
-                        </a>
-                        <a
-                            href="/faq"
-                            className="border border-white/20 hover:border-white text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded bg-white/5 hover:bg-white/10 transition-all text-center"
-                        >
-                            FAQ Knowledge Hub
-                        </a>
+                            Request Your Free Commercial Certified Quote Today
+                        </button>
                     </div>
                 </div>
             </section>
