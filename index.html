@@ -327,209 +327,337 @@
     })();
   </script>
   <link rel="stylesheet" href="/index.css">
-  <!-- RoofingContractor & LocalBusiness JSON-LD Schema Markup -->
+  <!-- RoofingContractor & FAQPage JSON-LD Schema Markup -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "RoofingContractor",
-    "@id": "https://www.rhiveconstruction.com/#schema-roofing",
-    "name": "RHIVE Construction",
-    "url": "https://www.rhiveconstruction.com/",
-    "logo": "https://i.imgur.com/t0VcSgJ.png",
-    "image": "https://i.imgur.com/t0VcSgJ.png",
-    "telephone": "+1-801-449-1451",
-    "email": "office@rhiveconstruction.com",
-    "priceRange": "$$$",
-    "currenciesAccepted": "USD",
-    "paymentAccepted": "Cash, Credit Card, Check, Financing",
-    "description": "RHIVE Construction is Utah's premier tech-forward, female-owned roofing contractor. Backed by a lifetime no-leak guarantee, we provide fully transparent, itemized residential roof replacements, commercial flat roofing (TPO/PVC), seamless rain gutters, and ice dam mitigation across the Wasatch Front.",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "10437 Shady Plum Way",
-      "addressLocality": "South Jordan",
-      "addressRegion": "UT",
-      "postalCode": "84009",
-      "addressCountry": "US"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 40.5621,
-      "longitude": -111.9772
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "5.0",
-      "reviewCount": "48",
-      "bestRating": "5",
-      "worstRating": "1"
-    },
-    "openingHoursSpecification": [
+    "@graph": [
       {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday"
+        "@type": "RoofingContractor",
+        "@id": "https://www.rhiveconstruction.com/#schema-roofing",
+        "name": "RHIVE Construction",
+        "url": "https://www.rhiveconstruction.com/",
+        "logo": "https://i.imgur.com/t0VcSgJ.png",
+        "image": "https://i.imgur.com/t0VcSgJ.png",
+        "telephone": "+1-801-449-1451",
+        "email": "office@rhiveconstruction.com",
+        "priceRange": "$$$",
+        "currenciesAccepted": "USD",
+        "paymentAccepted": "Cash, Credit Card, Check, Financing",
+        "description": "RHIVE Construction is Utah's premier tech-forward, female-owned roofing contractor. Backed by a lifetime no-leak guarantee, we provide fully transparent, itemized residential roof replacements, commercial flat roofing (TPO/PVC), seamless rain gutters, and ice dam mitigation across the Wasatch Front.",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "10437 Shady Plum Way",
+          "addressLocality": "South Jordan",
+          "addressRegion": "UT",
+          "postalCode": "84009",
+          "addressCountry": "US"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 40.5621,
+          "longitude": -111.9772
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "5.0",
+          "reviewCount": "48",
+          "bestRating": "5",
+          "worstRating": "1"
+        },
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday"
+            ],
+            "opens": "07:00",
+            "closes": "19:00"
+          }
         ],
-        "opens": "07:00",
-        "closes": "19:00"
-      }
-    ],
-    "sameAs": [
-      "https://www.instagram.com/rhive_construction/?hl=en",
-      "https://www.facebook.com/RHIVEConstruction",
-      "https://www.yelp.com/writeareview/biz/NAVT64E2iUvcc8JpHKI7Fg?return_url=%2Fbiz%2FNAVT64E2iUvcc8JpHKI7Fg&review_origin=biz-details-war-button"
-    ],
-    "areaServed": [
-      {"@type": "AdministrativeArea", "name": "South Jordan"},
-      {"@type": "AdministrativeArea", "name": "Sandy"},
-      {"@type": "AdministrativeArea", "name": "West Jordan"},
-      {"@type": "AdministrativeArea", "name": "Salt Lake City"},
-      {"@type": "AdministrativeArea", "name": "Draper"},
-      {"@type": "AdministrativeArea", "name": "Herriman"},
-      {"@type": "AdministrativeArea", "name": "Riverton"},
-      {"@type": "AdministrativeArea", "name": "Murray"},
-      {"@type": "AdministrativeArea", "name": "Midvale"},
-      {"@type": "AdministrativeArea", "name": "Taylorsville"},
-      {"@type": "AdministrativeArea", "name": "Lehi"},
-      {"@type": "AdministrativeArea", "name": "Provo"},
-      {"@type": "AdministrativeArea", "name": "Utah County"},
-      {"@type": "AdministrativeArea", "name": "Wasatch Front"},
-      {"@type": "AdministrativeArea", "name": "Idaho"}
-    ],
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "RHIVE Roofing and Construction Services",
-      "itemListElement": [
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Residential Shingle Roof Replacement",
-            "description": "Full tear-off asphalt shingle roof replacement featuring Owens Corning Duration and GAF systems, custom-engineered for local wind/snow factors and backed by our Lifetime No-Leak Workmanship Guarantee."
-          }
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Commercial Flat and Membrane Roofing",
-            "description": "GAF Certified TPO and PVC single-ply membrane flat roof replacements, including layovers and full tear-offs backed by GAF NDL warranties."
-          }
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Seamless Rain Gutters and Water Management",
-            "description": "Custom on-site extrusion of continuous 5-inch and 6-inch aluminum rain gutters in K-Style, Half-Round, and Box configurations."
-          }
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Proactive Heat Trace Systems & Ice Dam Prevention",
-            "description": "Self-regulating eave heat cable installation with intelligent thermostats to permanently prevent ice dam formation."
-          }
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "VELUX Skylight Installation",
-            "description": "Certified leak-proof Velux curb-mounted skylights and daylighting sun tunnels featuring multi-layered flashing systems."
-          }
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Zero-Surprise Instant Drone Estimator",
-            "description": "Real-time AI and aerial measurement calculations providing transparent, itemized material, labor, and municipal permit costs."
-          }
+        "sameAs": [
+          "https://www.instagram.com/rhive_construction/?hl=en",
+          "https://www.facebook.com/RHIVEConstruction",
+          "https://www.yelp.com/writeareview/biz/NAVT64E2iUvcc8JpHKI7Fg?return_url=%2Fbiz%2FNAVT64E2iUvcc8JpHKI7Fg&review_origin=biz-details-war-button"
+        ],
+        "areaServed": [
+          {"@type": "AdministrativeArea", "name": "South Jordan"},
+          {"@type": "AdministrativeArea", "name": "Sandy"},
+          {"@type": "AdministrativeArea", "name": "West Jordan"},
+          {"@type": "AdministrativeArea", "name": "Salt Lake City"},
+          {"@type": "AdministrativeArea", "name": "Draper"},
+          {"@type": "AdministrativeArea", "name": "Herriman"},
+          {"@type": "AdministrativeArea", "name": "Riverton"},
+          {"@type": "AdministrativeArea", "name": "Murray"},
+          {"@type": "AdministrativeArea", "name": "Midvale"},
+          {"@type": "AdministrativeArea", "name": "Taylorsville"},
+          {"@type": "AdministrativeArea", "name": "Lehi"},
+          {"@type": "AdministrativeArea", "name": "Provo"},
+          {"@type": "AdministrativeArea", "name": "Utah County"},
+          {"@type": "AdministrativeArea", "name": "Wasatch Front"},
+          {"@type": "AdministrativeArea", "name": "Idaho"}
+        ],
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "RHIVE Roofing and Construction Services",
+          "itemListElement": [
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Residential Shingle Roof Replacement",
+                "description": "Full tear-off asphalt shingle roof replacement featuring Owens Corning Duration and GAF systems, custom-engineered for local wind/snow factors and backed by our Lifetime No-Leak Workmanship Guarantee."
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Commercial Flat and Membrane Roofing",
+                "description": "GAF Certified TPO and PVC single-ply membrane flat roof replacements, including layovers and full tear-offs backed by GAF NDL warranties."
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Seamless Rain Gutters and Water Management",
+                "description": "Custom on-site extrusion of continuous 5-inch and 6-inch aluminum rain gutters in K-Style, Half-Round, and Box configurations."
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Proactive Heat Trace Systems & Ice Dam Prevention",
+                "description": "Self-regulating eave heat cable installation with intelligent thermostats to permanently prevent ice dam formation."
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "VELUX Skylight Installation",
+                "description": "Certified leak-proof Velux curb-mounted skylights and daylighting sun tunnels featuring multi-layered flashing systems."
+              }
+            },
+            {
+              "@type": "Offer",
+              "itemOffered": {
+                "@type": "Service",
+                "name": "Zero-Surprise Instant Drone Estimator",
+                "description": "Real-time AI and aerial measurement calculations providing transparent, itemized material, labor, and municipal permit costs."
+              }
+            }
+          ]
         }
-      ]
-    }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://www.rhiveconstruction.com/#schema-faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How much does a roof replacement cost in Utah?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Residential roof replacement in Utah typically ranges from $8,500 to $22,000 depending on roof square footage, pitch, layer count, and material choice. At RHIVE Construction, we provide fully itemized estimates separating materials, labor, overhead, and company profit, eliminating sales commission markups."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the RHIVE Project Savings Promotion (RPSP)?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The RHIVE Project Savings Promotion (RPSP) awards homeowners a 10% Efficiency Credit (up to $1,000) when approving their project estimate within 48 hours. This passes administrative follow-up savings directly to the homeowner without reducing material quality or workmanship."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is RHIVE's 100 sq ft OSB decking standard?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "RHIVE includes the replacement of up to 100 square feet (up to 3 full 4x8 sheets) of damaged, rotted, or compromised OSB or plywood roof decking at zero additional cost on every full residential tear-off project."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the difference between commercial TPO and PVC roofing in Utah?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "TPO (Thermoplastic Polyolefin) delivers exceptional UV reflection, thermal efficiency, and ozone resistance for commercial buildings. PVC (Polyvinyl Chloride) provides superior chemical and animal fat resistance, making it the preferred choice for restaurants, food processing, and industrial facilities with rooftop exhaust systems."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What roofing warranties does RHIVE Construction offer?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "RHIVE offers Owens Corning and GAF manufacturer lifetime system warranties (up to 50 years non-prorated) combined with our exclusive Lifetime No-Leak Workmanship Guarantee and commercial GAF NDL (No Dollar Limit) coverage."
+            }
+          }
+        ]
+      }
+    ]
   }
   </script>
 </head>
 
 <body class="text-gray-200 selection:bg-rhive-pink/30 selection:text-white">
   <div id="root">
-    <!-- RHIVE OS INITIALIZATION SCREEN (SEO & Loading State - Overwritten when React mounts) -->
-    <div style="font-family: 'Rubik', ui-monospace, monospace; background-color: #000000; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 3rem 2rem; box-sizing: border-box; position: relative; overflow: hidden;">
+    <!-- RHIVE OS INITIALIZATION SCREEN (SEO & Prerender Fallback - Replaced when React mounts) -->
+    <div style="font-family: 'Rubik', ui-monospace, sans-serif; background-color: #000000; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; padding: 2.5rem 2rem; box-sizing: border-box; position: relative;">
       
       <!-- Top Status Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(236, 2, 139, 0.2); padding-bottom: 1rem; margin-bottom: 2rem;">
+      <header style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(236, 2, 139, 0.2); padding-bottom: 1rem; margin-bottom: 2rem;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <img src="https://i.imgur.com/t0VcSgJ.png" alt="RHIVE Logo" style="height: 32px; width: auto; filter: drop-shadow(0 0 8px rgba(236, 2, 139, 0.6));" />
-          <span style="font-weight: 800; letter-spacing: 0.1em; color: #ffffff;">RHIVE SYSTEM</span>
+          <img src="https://i.imgur.com/t0VcSgJ.png" alt="RHIVE Construction Logo" style="height: 32px; width: auto; filter: drop-shadow(0 0 8px rgba(236, 2, 139, 0.6));" />
+          <span style="font-weight: 800; letter-spacing: 0.1em; color: #ffffff;">RHIVE CONSTRUCTION</span>
         </div>
-        <div style="color: #ec028b; font-size: 0.8rem; letter-spacing: 0.2em; font-weight: bold; animation: pulse 1.5s infinite alternate;">SECURE PROTOCOL V2.0</div>
-      </div>
+        <div style="color: #ec028b; font-size: 0.8rem; letter-spacing: 0.2em; font-weight: bold;">UTAH LICENSED ROOFING CONTRACTOR</div>
+      </header>
 
-      <!-- Main Boot/SEO Console -->
-      <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; max-width: 800px; margin: 0 auto; text-align: left; width: 100%;">
-        <h1 style="font-size: 2rem; font-weight: 800; text-transform: uppercase; color: #ffffff; margin-bottom: 1.5rem; letter-spacing: -0.02em;">
-          Advanced Roofing Infrastructure &amp; Drone Mapping
+      <!-- Main Semantic Boot & SEO Content Structure -->
+      <main style="flex-grow: 1; max-width: 900px; margin: 0 auto; text-align: left; width: 100%;">
+        <h1 style="font-size: 2.25rem; font-weight: 800; text-transform: uppercase; color: #ffffff; margin-bottom: 1.25rem; letter-spacing: -0.02em; line-height: 1.2;">
+          Advanced Roofing Infrastructure &amp; Drone Mapping in Utah
         </h1>
         
-        <p style="font-family: 'EB Garamond', serif; font-style: italic; font-size: 1.25rem; color: #9ca3af; margin-bottom: 2.5rem; line-height: 1.6; border-left: 2px solid #ec028b; padding-left: 1.5rem;">
-          Utah's #1 tech-forward roofing contractor. Deploying commercial PVC/TPO membranes, premium Owens Corning steep-slope systems, and 100% transparent cost auditing.
+        <p style="font-family: 'EB Garamond', serif; font-style: italic; font-size: 1.25rem; color: #d1d5db; margin-bottom: 2rem; line-height: 1.6; border-left: 3px solid #ec028b; padding-left: 1.25rem;">
+          Utah's premier tech-forward, female-owned roofing contractor. Specializing in 100% full tear-off residential architectural shingles, commercial TPO/PVC flat membranes, seamless gutters, and transparent itemized pricing.
         </p>
 
-        <!-- Loading Sequence Checklist (Visible SEO Content) -->
-        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 3rem; font-size: 0.9rem; color: #9ca3af;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="color: #ec028b; font-weight: bold;">[OK]</span>
-            <span>Commercial Roofing Capability: PVC &amp; TPO Membranes, NDL Warranty Readiness</span>
+        <!-- Structured Topic Section 1: Residential Services -->
+        <section style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.4rem; font-weight: 700; color: #ec028b; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+            Residential Roofing Services in Utah
+          </h2>
+          <p style="color: #9ca3af; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
+            RHIVE delivers full tear-off residential roof replacements across the Wasatch Front. We never install shingle layovers over compromised decks.
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 6px;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.5rem;">Architectural Shingle Systems</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">Featuring Owens Corning Duration® shingles with patented SureNail® technology engineered for 130 MPH Utah wind resistance and class-leading snow load protection.</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 6px;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.5rem;">100 Sq Ft OSB Decking Standard</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">Every residential contract includes up to 100 sq ft (3 full 4x8 sheets) of rotten or damaged decking replaced at zero extra charge—eliminating hidden change orders.</p>
+            </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="color: #ec028b; font-weight: bold;">[OK]</span>
-            <span>Residential Roofing Capability: Owens Corning Duration Systems, Ice &amp; Water Shields</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="color: #ec028b; font-weight: bold;">[OK]</span>
-            <span>Drone Geospatial Mapping &amp; Zero-Surprise Digital Estimation</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="color: #ec028b; font-weight: bold;">[OK]</span>
-            <span>10-Stage Project Integrity Pipeline: Intake to Certified Close-out</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="color: #ec028b; font-weight: bold; animation: pulse 0.5s infinite alternate;">[LOADING...]</span>
-            <span style="color: #ffffff;">Booting Interactive RHIVE Dashboard &amp; Hunni AI Assistant...</span>
-          </div>
-        </div>
-      </div>
+        </section>
 
-      <!-- Footer Navigation & Sitemap (Vital for Crawler Navigation) -->
-      <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 2rem; margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; font-size: 0.8rem; color: #4b5563;">
-        <nav style="display: flex; flex-wrap: wrap; gap: 1rem 1.5rem;">
-          <a href="/" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Home</a>
-          <a href="/aboutus" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">About Us</a>
-          <a href="/utah-roofing" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Roofing Services</a>
-          <a href="/roofing-accessories-utah" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Accessories</a>
-          <a href="/financing" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Financing Options</a>
-          <a href="/estimator" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">AI Estimator Portal</a>
-          <a href="/insuranceclaim" style="color: #9ca3af; text-decoration: none; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='#ec028b'" onmouseout="this.style.color='#9ca3af'">Insurance Claims</a>
+        <!-- Structured Topic Section 2: Commercial Membranes -->
+        <section style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.4rem; font-weight: 700; color: #e2ab49; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+            Commercial PVC &amp; TPO Roofing Solutions
+          </h2>
+          <p style="color: #9ca3af; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
+            Engineered commercial flat roofing systems designed to eliminate ponding water risks, resist severe freeze-thaw cycles, and lower HVAC energy loads with high solar reflectance.
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 6px;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.5rem;">GAF EverGuard® TPO &amp; PVC</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">Single-ply heat-welded seams creating an impervious monolithic water barrier. Certified for industrial facilities, retail strips, and restaurant exhaust environments.</p>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem; border-radius: 6px;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.5rem;">NDL Warranty Protection</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">Manufacturer-backed No Dollar Limit (NDL) warranties up to 20 years covering both 100% material defects and certified contractor workmanship.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Synthesizable Comparison Summary Matrix -->
+        <section style="margin-bottom: 2.5rem; overflow-x: auto;">
+          <h2 style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 1rem; text-transform: uppercase;">
+            Roofing System Technical Comparison
+          </h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1);">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(236, 2, 139, 0.3); background: rgba(236, 2, 139, 0.08);">
+                <th style="padding: 0.75rem; color: #ffffff;">System Type</th>
+                <th style="padding: 0.75rem; color: #ffffff;">Primary Application</th>
+                <th style="padding: 0.75rem; color: #ffffff;">Wind Rating</th>
+                <th style="padding: 0.75rem; color: #ffffff;">Lifespan</th>
+                <th style="padding: 0.75rem; color: #ffffff;">Warranty Tier</th>
+              </tr>
+            </thead>
+            <tbody style="color: #9ca3af;">
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 0.75rem; font-weight: 600; color: #ffffff;">Owens Corning Duration Shingles</td>
+                <td style="padding: 0.75rem;">Residential Steep-Slope</td>
+                <td style="padding: 0.75rem;">130 MPH</td>
+                <td style="padding: 0.75rem;">30 - 50 Years</td>
+                <td style="padding: 0.75rem;">Lifetime System / Non-Prorated</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 0.75rem; font-weight: 600; color: #ffffff;">GAF EverGuard TPO Membrane</td>
+                <td style="padding: 0.75rem;">Commercial Low-Slope &amp; Flat</td>
+                <td style="padding: 0.75rem;">120 MPH</td>
+                <td style="padding: 0.75rem;">25 - 30 Years</td>
+                <td style="padding: 0.75rem;">Up to 20-Year NDL</td>
+              </tr>
+              <tr>
+                <td style="padding: 0.75rem; font-weight: 600; color: #ffffff;">GAF EverGuard PVC Membrane</td>
+                <td style="padding: 0.75rem;">Restaurants &amp; Industrial Facilities</td>
+                <td style="padding: 0.75rem;">120 MPH</td>
+                <td style="padding: 0.75rem;">25 - 30 Years</td>
+                <td style="padding: 0.75rem;">Up to 20-Year NDL</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Static FAQ Section (AEO & Voice Search Prerender) -->
+        <section style="margin-bottom: 2.5rem;">
+          <h2 style="font-size: 1.4rem; font-weight: 700; color: #ffffff; margin-bottom: 1rem; text-transform: uppercase;">
+            Frequently Asked Questions &amp; Pricing Standards
+          </h2>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="background: rgba(255,255,255,0.02); border-left: 2px solid #ec028b; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.35rem;">How much does a roof replacement cost in Utah?</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">Residential roof replacement in Utah typically ranges between $8,500 and $22,000 depending on square footage, pitch, layer count, and material selection. RHIVE provides 100% itemized pricing separating materials, labor, and profit margins.</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border-left: 2px solid #ec028b; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.35rem;">What is the RHIVE Project Savings Promotion (RPSP)?</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">The RPSP is an efficiency credit that eliminates contractor follow-up chase costs. Homeowners who approve their bid within 48 hours receive an instant 10% credit (up to $1,000) applied directly to their project total.</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border-left: 2px solid #ec028b; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.35rem;">What is RHIVE's 100 sq ft OSB decking standard?</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">RHIVE includes the replacement of up to 100 square feet (up to 3 full 4x8 sheets) of deteriorated or rotten OSB/plywood roof decking at $0 additional charge in every residential full tear-off contract.</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border-left: 2px solid #ec028b; padding: 1rem;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 0.35rem;">What is the difference between commercial TPO and PVC flat roofing?</h3>
+              <p style="color: #9ca3af; font-size: 0.85rem; line-height: 1.5;">TPO delivers superior thermal reflection and UV resistance for standard commercial facilities. PVC delivers superior chemical and animal fat resistance, making it essential for restaurants and facilities with rooftop ventilation exhaust.</p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Footer Navigation & Sitemap Crawl Links -->
+      <footer style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 2rem; margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; font-size: 0.85rem; color: #9ca3af;">
+        <nav style="display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem;">
+          <a href="/" style="color: #ffffff; text-decoration: none; font-weight: 500;">Home</a>
+          <a href="/services/residential-roof-replacement" style="color: #9ca3af; text-decoration: none;">Residential Roofing</a>
+          <a href="/services/commercial-flat-roofing" style="color: #9ca3af; text-decoration: none;">Commercial Flat Roofing</a>
+          <a href="/services/roofing-accessories" style="color: #9ca3af; text-decoration: none;">Roofing Accessories &amp; Gutters</a>
+          <a href="/zero-surprises-pricing" style="color: #9ca3af; text-decoration: none;">Zero Surprises Pricing</a>
+          <a href="/estimate-tool" style="color: #9ca3af; text-decoration: none;">Instant Drone Estimator</a>
+          <a href="/faq" style="color: #ec028b; text-decoration: none; font-weight: 600;">FAQ &amp; Knowledge Base</a>
+          <a href="/blog" style="color: #9ca3af; text-decoration: none;">Roofing Research &amp; Guides</a>
+          <a href="/privacy" style="color: #6b7280; text-decoration: none;">Privacy Policy</a>
+          <a href="/terms" style="color: #6b7280; text-decoration: none;">Terms of Service</a>
         </nav>
         <div style="font-weight: 500; color: #9ca3af;">
-          Contact Support: <a href="tel:8014491451" style="color: #ffffff; text-decoration: none;">(801) 449-1451</a>
+          Direct Office Dispatch: <a href="tel:8014491451" style="color: #ec028b; text-decoration: none; font-weight: bold;">(801) 449-1451</a>
         </div>
-      </div>
-
-      <!-- Styles -->
-      <style>
-        @keyframes pulse {
-          0% { opacity: 0.3; }
-          100% { opacity: 1; }
-        }
-      </style>
+      </footer>
 
     </div>
   </div>
