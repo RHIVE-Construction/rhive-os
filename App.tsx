@@ -92,6 +92,8 @@ const PATH_ROUTES: Record<string, string> = {
     '/blog/asphalt-shingle-granule-loss-causes-remedies': 'P-SEO-BLOG-20',
     '/blog/commercial-tpo-vs-pvc-roofing-utah-guide': 'P-SEO-BLOG-21',
     '/blog/roofing-insurance-claims-utah-wind-hail-guide': 'P-SEO-BLOG-22',
+    '/blog/rhive-abundance-feature-local-utah-businesses': 'P-SEO-BLOG-23',
+    '/blog/rhive-abundance-network-community-referrals':   'P-SEO-BLOG-24',
     '/privacy':                               'P-PRIVACY',
     '/terms':                                 'P-TERMS',
 };

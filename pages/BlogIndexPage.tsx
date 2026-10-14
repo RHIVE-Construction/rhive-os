@@ -11,6 +11,24 @@ interface BlogMeta {
 }
 
 const BLOGS_DATA: BlogMeta[] = [
+  // ── COMMUNITY & ABUNDANCE INITIATIVES ──────────────────────────────────────────
+  {
+    title: 'RHIVE Abundance Feature: Uplifting Local Utah Businesses & Building Stronger Communities',
+    slug: '/blog/rhive-abundance-feature-local-utah-businesses',
+    description: 'A dedicated monthly initiative spotlighting and promoting locally owned Utah small businesses 100% free of charge to foster community connection and growth.',
+    category: 'Company Culture',
+    readTime: '4 min read',
+    badge: 'Community Spotlight'
+  },
+  {
+    title: 'The RHIVE Abundance Network: How RHIVE Construction Rewards Community Referrals & Empowers Utah Homeowners',
+    slug: '/blog/rhive-abundance-network-community-referrals',
+    description: 'Transforming clients into active partners with tiered referral rewards up to $2,000, free lifetime gutter cleaning, and funded local roof donations.',
+    category: 'Company Culture',
+    readTime: '5 min read',
+    badge: 'Community Spotlight'
+  },
+
   // ── 9 AEO & SEO NEW BLOG ARTICLES ───────────────────────────────────────────────
   {
     title: 'How Do I Know My Roof Only Needs a Repair or a Full Replacement?',

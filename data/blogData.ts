@@ -8,7 +8,7 @@ export interface BlogPost {
   title: string;
   bluf: string; // Bottom Line Up Front - direct 2-3 sentence answer for AEO / AI overviews
   description: string;
-  category: 'Residential' | 'Commercial' | 'Insurance & Storm Damage' | 'Maintenance';
+  category: 'Residential' | 'Commercial' | 'Insurance & Storm Damage' | 'Maintenance' | 'Company Culture';
   readTime: string;
   publishedDate: string;
   modifiedDate: string;
@@ -953,6 +953,196 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         question: 'How does RHIVE assist with insurance claims?',
         answer: 'RHIVE provides itemized Xactimate-compatible estimates, high-resolution photo proof, drone footage, and meets directly with your insurance adjuster on-site.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // COMMUNITY & ABUNDANCE INITIATIVES
+  // ==========================================
+  {
+    slug: 'rhive-abundance-feature-local-utah-businesses',
+    title: 'RHIVE Abundance Feature: Uplifting Local Utah Businesses & Building Stronger Communities',
+    bluf: 'The RHIVE Abundance Feature is a dedicated monthly initiative by RHIVE Construction designed to spotlight and promote locally owned Utah small businesses 100% free of charge across our digital channels. Through custom social showcases, founder stories, and community outreach, we build lasting local connections and empower Utah entrepreneurs.',
+    description: 'Discover the RHIVE Abundance Feature: RHIVE Construction\'s monthly program spotlighting local Utah small businesses 100% free of charge to foster community connection and economic growth.',
+    category: 'Company Culture',
+    readTime: '4 min read',
+    publishedDate: '2026-10-15T08:00:00.000Z',
+    modifiedDate: '2026-10-15T08:00:00.000Z',
+    author: {
+      name: 'RHIVE Community Leadership Team',
+      role: 'Community Engagement & Abundance Directors',
+    },
+    image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Utah Small Business', 'Community Outreach', 'RHIVE Abundance', 'Female Leadership', 'Local Utah Economy'],
+    content: [
+      {
+        sectionHeading: 'Why We Launched the RHIVE Abundance Feature',
+        directAnswer: 'We launched the RHIVE Abundance Feature to give Utah small business entrepreneurs a free platform to tell their story, build local partnerships, and strengthen our community economy without marketing costs.',
+        bodyParagraphs: [
+          'At RHIVE Construction, we believe that true leadership in the construction industry goes beyond installing high-quality roofs. Our core mission is anchored in transparency, integrity, and genuine community support.',
+          'Giving back is woven into everything we do, which is why we created the RHIVE Abundance Feature—a dedicated monthly initiative designed to highlight and support local businesses across Utah 100% free of charge.',
+          'Strong small businesses are the backbone of vibrant local communities. Through the RHIVE Abundance Feature, we select a different local business each month to feature on our social media platforms based on four guiding principles:'
+        ],
+        bulletPoints: [
+          'Building Strong Local Connections: Establishing meaningful partnerships with Utah business owners who share our commitment to service and integrity.',
+          'Assisting Small Businesses to Thrive: Giving local entrepreneurs a free platform to showcase their products, tell their stories, and reach new customers.',
+          'Creating a Positive Ripple Effect: When we support and uplift local businesses, we strengthen the local economy and foster a more connected community.',
+          'Honoring Our Core Mission: Living out RHIVE’s core values of transparency, community engagement, and mutual growth.'
+        ]
+      },
+      {
+        sectionHeading: 'What Type of Businesses Are Featured?',
+        directAnswer: 'The program features locally owned and operated Utah businesses of all sizes outside of the construction trades that provide valuable products or services and share our commitment to transparency and community.',
+        bodyParagraphs: [
+          'We love connecting with businesses of all shapes and sizes—whether you operate a brick-and-mortar storefront, an online shop, or a service-based business.',
+          'To ensure the program remains fair and focused on community growth, featured businesses must meet a few simple criteria:'
+        ],
+        bulletPoints: [
+          '1. Locally Owned & Operated: Must be based in Utah (or our active service state).',
+          '2. Community Value: Provides valuable products or services to local residents.',
+          '3. Shared Core Values: Operates with a commitment to transparency, integrity, and community support.',
+          '4. Non-Construction Trades: To avoid any conflicts of interest, the program focuses exclusively on businesses outside of the construction trades.'
+        ]
+      },
+      {
+        sectionHeading: 'What Featured Businesses Receive',
+        directAnswer: 'Selected businesses receive customized social media spotlights across RHIVE’s active channels, founder story showcases, direct website and handle links, and high-quality photo/video presentation—100% free of charge.',
+        bodyParagraphs: [
+          'When your business is selected for the RHIVE Monthly Spotlight, RHIVE Construction handles the promotion at zero cost to you. The feature includes:'
+        ],
+        bulletPoints: [
+          'Dedicated Social Media Post: A customized feature across RHIVE’s active social channels introducing your business to our audience.',
+          'Showcasing Your Unique Story: Highlighting what your business offers, what makes it special, and any upcoming promotions, events, or causes you support.',
+          'Direct Tagging & Promotion: Direct links to your website and social media handles so customers can follow, tag, and order from you directly.',
+          'Engaging Visual Media: Incorporating high-quality photos and short video clips to represent your brand professionally.'
+        ]
+      },
+      {
+        sectionHeading: 'The Long-Term Vision for Our Community',
+        directAnswer: 'The RHIVE Abundance Feature serves as the foundation for an expanding local support network, including joint cross-promotions, local small business networking events, and collaborative charitable giveaways.',
+        bodyParagraphs: [
+          'The RHIVE Abundance Feature is more than just a social media spotlight—it is the foundation for an expanding local support network. As the initiative grows, RHIVE plans to expand the program into:'
+        ],
+        bulletPoints: [
+          'Cross-Promotional Partnerships: Collaborating with featured businesses for joint community outreach.',
+          'Local Networking Events: Bringing small business owners together to share resources and ideas.',
+          'Expanded Giving-Back Initiatives: Hosting community giveaways, local event sponsorships, and charitable partnerships.'
+        ]
+      },
+      {
+        sectionHeading: 'How to Get Featured or Nominate a Business',
+        directAnswer: 'To get featured or nominate a deserving Utah small business, submit your business basics, unique story, and high-resolution media directly via DM to RHIVE Construction on Instagram or Facebook.',
+        bodyParagraphs: [
+          'Getting involved in the RHIVE Abundance Feature is simple! If you own a local Utah business or know an amazing business owner who deserves recognition, here is what you need to provide:'
+        ],
+        bulletPoints: [
+          '1. Business Basics: Business name, location, website, contact info, and social handles.',
+          '2. Your Unique Story: A brief description of what you do, what sets your business apart, and any special offers or community causes you wish to highlight.',
+          '3. Visual Content: High-resolution photos and an optional short video introducing your business.',
+          'Ready to join the movement? Send a direct message to RHIVE Construction on Instagram (@rhive_construction) or Facebook, or comment on our monthly spotlight announcement post to secure your spot for an upcoming feature!'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Is there any charge for a business to be featured in the RHIVE Abundance Spotlight?',
+        answer: 'No. The RHIVE Abundance Feature is 100% free of charge. RHIVE Construction provides the photography, write-ups, and social distribution at zero cost as part of our core mission of community reinvestment.'
+      },
+      {
+        question: 'What types of Utah businesses qualify for the feature?',
+        answer: 'Any locally owned and operated Utah business providing valuable products or services outside of the construction trades qualifies—including retail shops, bakeries, cafes, health and wellness practices, and professional service providers.'
+      },
+      {
+        question: 'How do I nominate a Utah business for the monthly feature?',
+        answer: 'Send a direct message with the business name, owner details, contact info, and website/social links to RHIVE Construction on Instagram (@rhive_construction) or Facebook.'
+      }
+    ]
+  },
+  {
+    slug: 'rhive-abundance-network-community-referrals',
+    title: 'The RHIVE Abundance Network: How RHIVE Construction Rewards Community Referrals & Empowers Utah Homeowners',
+    bluf: 'The RHIVE Abundance Network is RHIVE Construction’s community referral ecosystem that eliminates wasteful sales commissions and redirects marketing capital directly into homeowner rewards—offering up to $2,000 cash bonuses, free lifetime gutter cleaning, and funded roof donations for local veterans, educators, and families in need.',
+    description: 'Learn how the RHIVE Abundance Network rewards community referrals with $500 to $2,000 cash payouts, free lifetime gutter cleaning, and digital Home Asset Management in Utah.',
+    category: 'Company Culture',
+    readTime: '5 min read',
+    publishedDate: '2026-10-15T08:00:00.000Z',
+    modifiedDate: '2026-10-15T08:00:00.000Z',
+    author: {
+      name: 'RHIVE Client Advocacy & Abundance Division',
+      role: 'Community Referral & Asset Directors',
+    },
+    image: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Referral Program', 'RHIVE Abundance Network', 'Utah Roofing Rewards', 'Community Reinvestment', 'Home Asset Vault'],
+    content: [
+      {
+        sectionHeading: '1. The Core Purpose: Shared Value Over Excessive Marketing',
+        directAnswer: 'Instead of spending thousands on sales commissions and marketing campaigns, RHIVE’s Abundance Engine redirects those funds back to clients and community members as direct referral bonuses and charitable roof donations.',
+        bodyParagraphs: [
+          'At RHIVE Construction, roofing is more than just a transaction—it is about building long-term, high-trust relationships with our clients and communities. Built on our core values of transparency, integrity, and genuine value, RHIVE operates as a female-owned and operated contractor delivering certified residential and commercial roofing backed by our direct Lifetime Installer No-Leak Guarantee.',
+          'To go beyond the single roof installation and create a lasting, mutually beneficial ecosystem, we created the RHIVE Abundance Network. This program transforms past clients, property managers, and community advocates into active partners who share in RHIVE\'s success through transparent referral rewards, long-term asset management, and community reinvestment.',
+          'In traditional contracting, companies spend thousands of dollars on heavy advertising, sales commissions, and long follow-up campaigns. At RHIVE, our Abundance Engine redirects those marketing dollars back into the hands of our clients and local community members.',
+          'By participating in the Abundance Network, you help us eliminate unnecessary administrative overhead, allowing RHIVE to pass direct financial rewards back to you while continuing to fund roof donations for local veterans, teachers, first responders, and families in need across every state where we operate.'
+        ]
+      },
+      {
+        sectionHeading: '2. The 3-Tier Abundance Referral Protocol',
+        directAnswer: 'The Abundance Referral Protocol features three escalating tiers: Tier 1 Scout ($500 cash payout), Tier 2 Partner ($2,000 cash bonus + Free Gutter Cleaning for Life), and Tier 3 RHIVE Legend (Lifetime Inspection Priority + Direct Founder Line).',
+        bodyParagraphs: [
+          'The RHIVE Abundance Network uses a gamified, tiered payout structure managed through our Zoho Thrive affiliate integration and the RHIVE Client Portal. As your referred friends, family, or neighbors choose RHIVE for their full roof replacements, your tier status and rewards grow exponentially:'
+        ],
+        bulletPoints: [
+          'Tier 1: Scout (1 Signed Referral): $500 Cash Payout. Once your first referred client approves their quote and signs their agreement, a $500 referral credit is issued directly to your wallet.',
+          'Tier 2: Partner (3 Signed Referrals): $2,000 Cash Bonus + Free Gutter Cleaning for Life. At 3 completed referrals, you receive a $2,000 cash bonus and unlock complimentary annual gutter maintenance for your home for as long as you own it.',
+          'Tier 3: RHIVE Legend (10 Signed Referrals): Lifetime Inspection Priority + Direct Founder Line. Achieve top-tier ambassador status with VIP priority scheduling for storm evaluations and direct access to founders Kara Robinson (President) and Michael Robinson (CEO).',
+          'Promotional Campaigns: Additional promotional referral rewards, such as $350 lead bonuses or $250 mutual discount vouchers, are also integrated across specific seasonal campaigns.'
+        ]
+      },
+      {
+        sectionHeading: '3. The Digital "Home Asset Manager" & Credit Wallet',
+        directAnswer: 'Members track rewards and manage their roofing asset through the RHIVE Client Portal (C-10 My Home Vault), featuring real-time payout tracking, warranty archives, and one-click referral sharing.',
+        bodyParagraphs: [
+          'Members of the Abundance Network access their rewards seamlessly through the RHIVE Client Portal (C-10 My Home Vault):'
+        ],
+        bulletPoints: [
+          'Real-Time Tracking: View active referral links, pending quote statuses, and cleared payouts in a transparent digital dashboard.',
+          'Digital Asset Vault: Store your roof age, shingle dye lot numbers, warranty certificates, and complete photo inspection archives.',
+          'One-Click Share Tools: Easily share custom, auto-filled SMS and email invite links ("Give $500, Get $500") with neighbors or on local community channels.',
+          'Transferable Warranty Export: If you ever sell your property, you can export a complete Transferable Warranty Package directly from your vault, adding tangible resale value to your home.'
+        ]
+      },
+      {
+        sectionHeading: '4. Portfolio & Commercial Scaling for Property Managers',
+        directAnswer: 'The Abundance Network extends to HOAs, commercial property managers, and real estate developers, allowing multi-property owners to apply tiered efficiency credits while earning referral credits.',
+        bodyParagraphs: [
+          'The Abundance Network extends beyond single-family homes. For HOAs, commercial property managers, and real estate developers, the Abundance framework aligns with the RHIVE Project Savings Promotion (RPSP):'
+        ],
+        bulletPoints: [
+          'Multi-Property Savings: Commercial clients managing multiple structures can apply tiered efficiency credits across their CapEx portfolios while earning affiliate referral credits for introducing other asset managers to RHIVE.',
+          'Full Cost Breakdown: Every commercial quote features a clear, itemized breakdown of materials, labor, overhead, and profit to simplify board approvals and audit reporting.'
+        ]
+      },
+      {
+        sectionHeading: '5. How to Get Started with the RHIVE Abundance Network',
+        directAnswer: 'Joining the Abundance Network is simple and free for all past customers and community partners—contact RHIVE Construction today to activate your referral portal and custom link.',
+        bodyParagraphs: [
+          'Joining the Abundance Network is simple and free for all past customers and community partners.',
+          'Contact RHIVE Construction today at (801) 449-1451 or connect through the client portal to activate your custom referral link, start earning cash rewards, and empower Utah communities.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'How and when are referral rewards paid out in the RHIVE Abundance Network?',
+        answer: 'Referral rewards are issued directly through your digital wallet or direct payment as soon as your referred contact approves their certified quote and executes their project agreement.'
+      },
+      {
+        question: 'What does "Free Gutter Cleaning for Life" include for Tier 2 Partners?',
+        answer: 'Tier 2 Partners unlock complimentary annual gutter cleanings and water flow inspections for their residential home for as long as they own the property, conducted by certified RHIVE technicians.'
+      },
+      {
+        question: 'Can real estate agents and commercial property managers join the Abundance Network?',
+        answer: 'Yes. Realtors, property managers, and HOA board members can join the Abundance Network to provide verified clients with guaranteed discounts while tracking referral compensation in real time.'
       }
     ]
   }
