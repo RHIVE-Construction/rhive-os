@@ -122,7 +122,10 @@ const SignVerifyRenderer: React.FC = () => {
 // ── Canonical URL Synchronizer ───────────────────────────────────────────────
 const updateCanonicalUrl = (pathname: string = window.location.pathname) => {
     try {
-        const cleanPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '');
+        let cleanPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '');
+        if (cleanPath === '/commercial-roofing') {
+            cleanPath = '/services/commercial-flat-roofing';
+        }
         const canonicalUrl = `https://www.rhiveconstruction.com${cleanPath}`;
         let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
         if (!link) {
