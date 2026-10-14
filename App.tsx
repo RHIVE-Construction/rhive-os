@@ -42,6 +42,7 @@ const PATH_ROUTES: Record<string, string> = {
     '/estimate-tool': 'estimate-tool',
     '/map':           'INTERNAL-BPM',
     '/services/residential-roof-replacement': 'P-SEO-RESIDENTIAL',
+    '/commercial-roofing':                   'P-SEO-COMMERCIAL',
     '/services/commercial-flat-roofing':     'P-SEO-COMMERCIAL',
     '/services/roofing-accessories':         'P-SEO-ACCESSORIES',
     '/zero-surprises-pricing':                'P-SEO-PRICING',
