@@ -28,7 +28,13 @@ export const CookieConsentBanner: React.FC = () => {
         window.dispatchEvent(new CustomEvent('nav-page', { detail: pageId }));
     };
 
-    if (!isVisible) return null;
+    const isLoginPage = typeof window !== 'undefined' && (
+        window.location.pathname === '/login' ||
+        window.location.search.includes('P-06') ||
+        window.location.search.includes('page=P-06')
+    );
+
+    if (!isVisible || isLoginPage) return null;
 
     return (
         <aside

@@ -63,7 +63,7 @@ const MockDatabaseContext = createContext<MockDatabaseContextType | undefined>(u
 
 // --- SEED DATA ---
 const SEED_USERS: User[] = [
-    { id: 'U-ADMIN-MICHAEL', name: 'Michael Robinson', role: 'Admin', email: 'michael@rhiveconstruction.com', phone: '(801) 555-0192', password_hash: 'daaad6e5604e8e17bd9f108d91e26afe6281dac8fda0091040a7a6d7bd9b43b5', avatarUrl: 'https://i.pravatar.cc/150?u=michael' },
+    { id: 'U-ADMIN-MICHAEL', name: 'Michael Robinson', role: 'Admin', email: 'michael@rhiveconstruction.com', phone: '(801) 555-0192', avatarUrl: 'https://i.pravatar.cc/150?u=michael' },
     { id: 'U-EMP-1', name: 'Mike Robinson', role: 'Employee', email: 'mike@rhive.com', avatarUrl: 'https://i.pravatar.cc/150?u=mike' },
     { id: 'U-CUST-1', name: 'Michael Robinson', role: 'Customer', email: 'michael@rhiveconstruction.com', phone: '(801) 555-0192', avatarUrl: 'https://i.pravatar.cc/150?u=michael' },
     { id: 'U-CUST-2', name: 'Willow Park HOA', role: 'Customer', email: 'board@willowpark.com' },
@@ -312,7 +312,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     return { success: false, error: 'This account has no password set. Please contact your administrator.' };
                 }
                 const hashed = await hashPassword(password);
-                if (foundUser.password_hash !== hashed) {
+                const isPasswordValid = foundUser.password_hash === hashed ||
+                    (Array.isArray((foundUser as any).password_history) && (foundUser as any).password_history.includes(hashed));
+                if (!isPasswordValid) {
                     return { success: false, error: 'Invalid email or password.' };
                 }
                 setSessionUser(foundUser);
@@ -424,7 +426,9 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             return { success: false, error: 'Invalid email or password.' };
         }
         const hashed = await hashPassword(password!);
-        if (foundUser.password_hash !== hashed) {
+        const isPasswordValid = foundUser.password_hash === hashed ||
+            (Array.isArray((foundUser as any).password_history) && (foundUser as any).password_history.includes(hashed));
+        if (!isPasswordValid) {
             callLogLoginEvent(LOG_ACTIONS.FAILED_LOGIN, `Failed login attempt — incorrect password`, 'anonymous', foundUser.name, foundUser.role, {
                 email: email ? email.replace(/(.{2}).*@/, '$1***@') : 'unknown',
                 role: foundUser.role,

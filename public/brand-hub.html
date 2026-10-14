@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RHIVE BRAND HUB 2.0 // Single Source of Truth</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Rubik:ital,wght@0,300..900;1,300..900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            rhivePink: '#ec028b',
+            rhiveGold: '#e2ab49',
+            rhiveBlue: '#08137C',
+            rhiveBlack: '#000000',
+          },
+          fontFamily: {
+            sans: ['Rubik', 'sans-serif'],
+            serif: ['EB Garamond', 'serif'],
+            mono: ['Space Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .chamfer-24 {
+      clip-path: polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px);
+    }
+    .chamfer-16 {
+      clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+    }
+    .checker-pattern {
+      background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+      background-size: 12px 12px;
+    }
+    html, body {
+      height: 100%;
+      overflow-y: auto !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen selection:bg-pink-100 selection:text-pink-600 pb-24">
+
+  <!-- Sticky Top Header -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 px-6 py-4 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <img src="/brand-assets/rhive-tricolor-crest-black.png" alt="RHIVE" class="w-8 h-8 object-contain">
+        <div>
+          <h1 class="text-base font-black tracking-tight text-slate-900 uppercase">RHIVE BRAND HUB 2.0</h1>
+          <p class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">Internal Master Guideline &bull; All 30 Drive Versions Live</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- View Switcher -->
+        <div class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-mono">
+          <button id="tab-standards-btn" onclick="switchView('standards')" class="px-3 py-1.5 rounded font-bold bg-white text-slate-900 shadow-sm transition-all flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            <span>Brand Standards &amp; Vault</span>
+          </button>
+          <button id="tab-audit-btn" onclick="switchView('audit')" class="px-3 py-1.5 rounded font-bold text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <span>Competitive Brand Audit (HKL &amp; Utah)</span>
+          </button>
+        </div>
+
+        <a href="/RHIVE_Brand_Guide_8.5x11_Master_Presentation.pdf" download="RHIVE_Brand_Guide_8.5x11_Master_Presentation.pdf" class="px-3.5 py-1.5 bg-[#ec028b] hover:bg-[#d0027a] text-white text-xs font-bold rounded shadow transition-colors flex items-center gap-2">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Download 8.5x11 Master PDF</span>
+        </a>
+        <a href="https://drive.google.com/drive/folders/1Y1BClHpBBZrKYtdmmS5dYV0msO57pZiq" target="_blank" class="px-3.5 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-mono font-bold rounded flex items-center gap-2 transition-all">
+          <span>Google Drive Brand Vault</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-6 pt-8 space-y-12">
+
+    <!-- ═════════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW 1: BRAND STANDARDS & VAULT                                       -->
+    <!-- ═════════════════════════════════════════════════════════════════════ -->
+    <div id="view-standards" class="space-y-12">
+
+      <!-- TOP SECTION: TWO PRIMARY & TWO SECONDARY MAIN COLORS (WITH FULL CHAMFER BORDER) -->
+      <div class="relative p-[2px] bg-slate-400 shadow-sm chamfer-24">
+        <section class="bg-white p-6 sm:p-8 chamfer-24">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-6">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-pink-50 border border-pink-200 text-[#ec028b] text-xs font-mono font-bold uppercase tracking-wider mb-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 5 5 0 015-5h12a4 4 0 014 4 5 5 0 01-5 5H7z"/></svg>
+                <span>Primary Color Discipline // Click Any Swatch to Copy HEX</span>
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight uppercase">
+                OUR TWO PRIMARY &amp; SECONDARY MAIN COLORS
+              </h2>
+              <p class="text-xs sm:text-sm text-slate-600 font-mono mt-1">
+                Strict 80/15/5 Palette Formula &bull; Pure White Canvas (80%), Pitch Black (15%), RHIVE Neon Pink (5%) + Sovereign Gold &amp; Deep Void Blue Accents.
+              </p>
+            </div>
+            <div class="text-right font-mono text-xs text-slate-400 hidden lg:block">
+              ACTIVE PALETTE V2.0<br>
+              HEX &bull; RGB &bull; CMYK VERIFIED
+            </div>
+          </div>
+
+          <!-- Two Primary Main Colors -->
+          <div class="space-y-3 mb-8">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-mono font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#ec028b]"></span>
+                <span>The Two Primary Main Colors (Brand Foundation &amp; Energy)</span>
+              </h3>
+              <span class="text-[11px] font-mono text-slate-400">80/15/5 System Weight</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Primary 01 -->
+              <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+                <div onclick="copyHex('#ec028b', this)" class="bg-white p-4 h-full flex items-center justify-between cursor-pointer chamfer-16 group">
+                  <div class="flex items-center gap-3">
+                    <div class="w-14 h-14 rounded-lg border-2 border-slate-300 shadow-sm shrink-0" style="background-color: #ec028b;"></div>
+                    <div>
+                      <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">Primary Main 01</span>
+                      <div class="font-bold text-sm text-slate-900 group-hover:text-[#ec028b] transition-colors mt-1">RHIVE Neon Pink</div>
+                      <div class="text-[11px] text-slate-500 leading-tight mt-0.5">Primary Identity, Main CTAs (5% Weight)</div>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0 pl-2 font-mono">
+                    <div class="text-xs font-bold text-slate-900">#ec028b</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">RGB: 236, 2, 139</div>
+                    <div class="text-[10px] text-slate-400 mt-1 copy-label">Click to copy</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Primary 02 -->
+              <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+                <div onclick="copyHex('#000000', this)" class="bg-white p-4 h-full flex items-center justify-between cursor-pointer chamfer-16 group">
+                  <div class="flex items-center gap-3">
+                    <div class="w-14 h-14 rounded-lg border-2 border-slate-300 shadow-sm shrink-0" style="background-color: #000000;"></div>
+                    <div>
+                      <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-200 text-slate-800">Primary Main 02</span>
+                      <div class="font-bold text-sm text-slate-900 group-hover:text-[#ec028b] transition-colors mt-1">Pitch Black</div>
+                      <div class="text-[11px] text-slate-500 leading-tight mt-0.5">Headlines, Primary Typography (15%)</div>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0 pl-2 font-mono">
+                    <div class="text-xs font-bold text-slate-900">#000000</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">RGB: 0, 0, 0</div>
+                    <div class="text-[10px] text-slate-400 mt-1 copy-label">Click to copy</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Primary Canvas -->
+              <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+                <div onclick="copyHex('#FFFFFF', this)" class="bg-white p-4 h-full flex items-center justify-between cursor-pointer chamfer-16 group">
+                  <div class="flex items-center gap-3">
+                    <div class="w-14 h-14 rounded-lg border-2 border-slate-300 shadow-sm shrink-0" style="background-color: #FFFFFF;"></div>
+                    <div>
+                      <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-200 text-slate-800">Primary Canvas</span>
+                      <div class="font-bold text-sm text-slate-900 group-hover:text-[#ec028b] transition-colors mt-1">Pure White Canvas</div>
+                      <div class="text-[11px] text-slate-500 leading-tight mt-0.5">Dominant Background (80% Weight) &amp; Field Apparel</div>
+                    </div>
+                  </div>
+                  <div class="text-right shrink-0 pl-2 font-mono">
+                    <div class="text-xs font-bold text-slate-900">#FFFFFF</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">RGB: 255, 255, 255</div>
+                    <div class="text-[10px] text-slate-400 mt-1 copy-label">Click to copy</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two Secondary Main Colors -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-mono font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#e2ab49]"></span>
+                <span>The Two Secondary Main Colors (Functional Certifications &amp; Architecture)</span>
+              </h3>
+              <span class="text-[11px] font-mono text-slate-400">Guarantees &amp; Infrastructure</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <!-- Secondary 01 -->
+              <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+                <div onclick="copyHex('#e2ab49', this)" class="bg-white p-3.5 h-full flex items-center justify-between cursor-pointer chamfer-16 group">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-lg border border-slate-300 shadow-sm shrink-0" style="background-color: #e2ab49;"></div>
+                    <div>
+                      <span class="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">Secondary Main 01</span>
+                      <div class="font-bold text-xs text-slate-900 mt-0.5">Sovereign Gold</div>
+                      <div class="text-[10px] text-slate-500 leading-tight mt-0.5">50-Yr Warranty Seals</div>
+                    </div>
+                  </div>
+                  <div class="text-right font-mono text-[11px] font-bold text-slate-800 shrink-0 pl-1">#e2ab49</div>
+                </div>
+              </div>
+
+              <!-- Secondary 02 -->
+              <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+                <div onclick="copyHex('#08137C', this)" class="bg-white p-3.5 h-full flex items-center justify-between cursor-pointer chamfer-16 group">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-lg border border-slate-300 shadow-sm shrink-0" style="background-color: #08137C;"></div>
+                    <div>
+                      <span class="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">Secondary Main 02</span>
+                      <div class="font-bold text-xs text-slate-900 mt-0.5">Deep Void Blue</div>
+                      <div class="text-[10px] text-slate-500 leading-tight mt-0.5">Architectural Base</div>
+                    </div>
+                  </div>
+                  <div class="text-right font-mono text-[11px] font-bold text-slate-800 shrink-0 pl-1">#08137C</div>
+                </div>
+              </div>
+
+              <!-- Secondary Utility -->
+              <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+                <div onclick="copyHex('#374151', this)" class="bg-white p-3.5 h-full flex items-center justify-between cursor-pointer chamfer-16 group">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-lg border border-slate-300 shadow-sm shrink-0" style="background-color: #374151;"></div>
+                    <div>
+                      <span class="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">Secondary Utility</span>
+                      <div class="font-bold text-xs text-slate-900 mt-0.5">Circuit Slate</div>
+                      <div class="text-[10px] text-slate-500 leading-tight mt-0.5">HUD &amp; Telemetry</div>
+                    </div>
+                  </div>
+                  <div class="text-right font-mono text-[11px] font-bold text-slate-800 shrink-0 pl-1">#374151</div>
+                </div>
+              </div>
+
+              <!-- Priority Red -->
+              <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+                <div onclick="copyHex('#DC2626', this)" class="bg-white p-3.5 h-full flex items-center justify-between cursor-pointer chamfer-16 group">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-lg border border-slate-300 shadow-sm shrink-0" style="background-color: #DC2626;"></div>
+                    <div>
+                      <span class="text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">Emergency Lane 01</span>
+                      <div class="font-bold text-xs text-slate-900 mt-0.5">Priority Red</div>
+                      <div class="text-[10px] text-slate-500 leading-tight mt-0.5">&lt;24hr Leak Dispatch</div>
+                    </div>
+                  </div>
+                  <div class="text-right font-mono text-[11px] font-bold text-slate-800 shrink-0 pl-1">#DC2626</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Executive Hero Section -->
+      <div class="relative p-[2px] bg-slate-400 shadow-sm chamfer-24">
+        <section class="bg-white p-8 sm:p-10 chamfer-24">
+          <div class="max-w-3xl space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-pink-50 border border-pink-200 text-[#ec028b] text-xs font-mono font-bold uppercase tracking-wider">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <span>STANDARD 2.0 // WASATCH FRONT, UT // (801) 449-1451</span>
+            </div>
+            <h2 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight uppercase">
+              FINISH ON TOP.
+            </h2>
+            <p class="text-xl font-serif italic text-slate-700 leading-relaxed">
+              &ldquo;Advanced aerial mapping to manufacturer-certified installation. 100% transparent costs, 100% satisfaction, zero surprises. We challenge an industry known for inflated pricing and poor communication.&rdquo;
+            </p>
+            <div class="pt-4 flex flex-wrap gap-4 text-xs font-mono text-slate-500 border-t border-slate-100">
+              <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> White Palette Standard</span>
+              <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 24px Chamfer Cut System</span>
+              <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Zero Checkbox Rule</span>
+              <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Warranty Activation Exclusive</span>
+              <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Hundredths SQ Precision (e.g. 1.00 SQ, 2.22 SQ)</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- LOGO HIERARCHY DISCIPLINE GUIDE (PRIMARY VS SECONDARY) -->
+      <div class="relative p-[2px] bg-slate-400 shadow-sm chamfer-24">
+        <section class="bg-white p-6 sm:p-8 space-y-4 chamfer-24">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">
+              LOGO HIERARCHY DISCIPLINE: HOW TO IDENTIFY PRIMARY VS. SECONDARY LOGOS
+            </h3>
+          </div>
+          <p class="text-xs text-slate-500 font-mono">
+            Strict architectural guidelines for selecting between the master stacked format and the wide horizontal navigation format.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            <!-- Primary Guide -->
+            <div class="p-4 rounded bg-slate-50 border border-slate-300">
+              <div class="flex items-center gap-2 text-xs font-mono font-bold uppercase text-[#ec028b] mb-2">
+                <span class="w-2 h-2 rounded-full bg-[#ec028b]"></span>
+                <span>PRIMARY LOGO SUITE (STACKED / CENTERED)</span>
+              </div>
+              <h4 class="font-bold text-sm text-slate-900 mb-1">Crest Vertically Centered Over Wordmark</h4>
+              <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                The authoritative master mark of RHIVE Construction. Features vertical symmetry with the hexagon shield centered directly above the brand typography.
+              </p>
+              <div class="text-[11px] font-mono text-slate-700 bg-white p-2.5 rounded border border-slate-200">
+                <strong>&bull; WHERE TO USE:</strong> Master proposals, binding legal contracts, invoice headers, formal letterhead, presentation title covers, center chest apparel.
+                <br><span class="text-rose-600 font-bold">&bull; NEVER USE:</span> In narrow horizontal website navigation headers where vertical height is constrained.
+              </div>
+            </div>
+
+            <!-- Secondary Guide -->
+            <div class="p-4 rounded bg-slate-50 border border-slate-300">
+              <div class="flex items-center gap-2 text-xs font-mono font-bold uppercase text-[#e2ab49] mb-2">
+                <span class="w-2 h-2 rounded-full bg-[#e2ab49]"></span>
+                <span>SECONDARY LOGO SUITE (HORIZONTAL: ICON ON LEFT)</span>
+              </div>
+              <h4 class="font-bold text-sm text-slate-900 mb-1">Crest Pinned on Left, Wordmark on Right</h4>
+              <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                The dynamic wide horizontal lockup. Engineered specifically for asymmetric wide viewports, vehicle fleet profiles, and web navigation ribbons.
+              </p>
+              <div class="text-[11px] font-mono text-slate-700 bg-white p-2.5 rounded border border-slate-200">
+                <strong>&bull; WHERE TO USE:</strong> Website top navigation bars, vehicle wrap sides, email signature banners, sponsorship footers, and compact HUD ribbons.
+                <br><span class="text-rose-600 font-bold">&bull; NEVER USE:</span> In centered formal certificates where vertical architectural balance is required.
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- SECTION 1: ALL 30 LOGO VERSIONS IN DRIVE (NUMBERED IN ORDER) -->
+      <section id="logos" class="space-y-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-300 pb-4">
+          <div>
+            <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+              <svg class="w-5 h-5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              <span>All 30 Official Logo Versions in Google Drive (Numbered in Order)</span>
+            </h3>
+            <p class="text-xs text-slate-500 font-mono mt-1">Directly synchronized from Google Drive folder <code class="bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">BRAND ASSETS (1YBJ4oyefvShB1gLcwHhNPVrVd7wJfsBN)</code>.</p>
+          </div>
+
+          <!-- Filter tabs -->
+          <div class="flex flex-wrap items-center gap-1.5 bg-slate-200 p-1.5 rounded-lg border border-slate-300 text-xs font-mono">
+            <button onclick="filterLogos('all', this)" class="filter-btn active px-3 py-1.5 rounded font-bold bg-white text-slate-900 shadow-sm border border-slate-300 transition-all">All in Drive (30)</button>
+            <button onclick="filterLogos('primary', this)" class="filter-btn px-3 py-1.5 rounded font-bold text-slate-600 hover:text-slate-900 transition-all">1. Primary Stacked (6)</button>
+            <button onclick="filterLogos('secondary', this)" class="filter-btn px-3 py-1.5 rounded font-bold text-slate-600 hover:text-slate-900 transition-all">2. Secondary Horizontal (6)</button>
+            <button onclick="filterLogos('crest', this)" class="filter-btn px-3 py-1.5 rounded font-bold text-slate-600 hover:text-slate-900 transition-all">3. Standalone Crests (8)</button>
+            <button onclick="filterLogos('badges', this)" class="filter-btn px-3 py-1.5 rounded font-bold text-slate-600 hover:text-slate-900 transition-all">4. Circular Badges (4)</button>
+            <button onclick="filterLogos('app-icons', this)" class="filter-btn px-3 py-1.5 rounded font-bold text-slate-600 hover:text-slate-900 transition-all">5. App Icons &amp; Favs (6)</button>
+          </div>
+        </div>
+
+        <!-- 30 Logo Cards Grid -->
+        <div id="logo-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="primary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">PRIMARY 01</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">WHITE CANVAS MASTER</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">A - PRIMARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-white border-slate-200 chamfer-16">
+            <img src="/brand-assets/rhive-primary-black.png" alt="Primary Stacked (Black, Pink & Gold)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Primary Stacked (Black, Pink & Gold)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Master tricolor crest vertically centered over wordmark on transparent canvas for white/light proposals, invoices, and executive letterhead.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Master center-aligned headers, printed proposals, invoices, contracts, and formal letterhead.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-primary-black.png" download="primary-black.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-primary-black.svg" download="primary-black.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-primary-black.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="primary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">PRIMARY 02</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">DARK CANVAS INVERTED</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">A - PRIMARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-primary-white.png" alt="Primary Stacked (White, Pink & Gold)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Primary Stacked (White, Pink & Gold)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Inverted tricolor crest & wordmark on transparent canvas for dark digital interfaces, vehicle wraps, and evening presentation decks.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Dark mode user interfaces, night presentations, vehicle hoods, and black substrates.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-primary-white.png" download="primary-white.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-primary-white.svg" download="primary-white.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-primary-white.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="primary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">PRIMARY 03</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">SOVEREIGN GOLD LUXURY</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">A - PRIMARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-primary-gold.png" alt="Primary Stacked (Sovereign Gold Edition)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Primary Stacked (Sovereign Gold Edition)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Certified luxury edition for 50-year warranty document headers, executive investor decks, and premium commercial packages.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> 50-Year warranty certificate headers, VIP owner packages, and certified price lock locks.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-primary-gold.png" download="primary-gold.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-primary-gold.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="primary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">PRIMARY 04</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">RHIVE NEON PINK</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">A - PRIMARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-100 border-slate-200 checker-pattern chamfer-16">
+            <img src="/brand-assets/rhive-primary-pink.png" alt="Primary Stacked (RHIVE Neon Pink Edition)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Primary Stacked (RHIVE Neon Pink Edition)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Mono-pink vibrant variant for marketing campaigns, high-energy banners, trade show backdrops, and promotional merchandise.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Promotional marketing materials, digital ad campaigns, and community event banners.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-primary-pink.png" download="primary-pink.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-primary-pink.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="primary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">PRIMARY 05</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">SOLID WHITE CANVAS</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">A - PRIMARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-white border-slate-200 chamfer-16">
+            <img src="/brand-assets/rhive-primary-white-bg.png" alt="Primary Stacked (White Solid Card Tile)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Primary Stacked (White Solid Card Tile)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Pre-rendered high-res logo centered on solid white background tile for drag-and-drop presentation slides and social cards.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Slide decks, partner collateral sheets, and social square posts requiring a solid white canvas.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-primary-white-bg.png" download="primary-white-bg.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-primary-white-bg.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="primary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">PRIMARY 06</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">SOLID BLACK CANVAS</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">A - PRIMARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-primary-black-bg.png" alt="Primary Stacked (Black Solid Card Tile)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Primary Stacked (Black Solid Card Tile)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Pre-rendered high-res logo centered on solid pitch-black background tile for dark slide decks and social media covers.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Dark slide decks, YouTube video thumbnails, and social media banners on black.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-primary-black-bg.png" download="primary-black-bg.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-primary-black-bg.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="secondary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">SECONDARY 01</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">HORIZONTAL LIGHT NAV</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">B - SECONDARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-white border-slate-200 chamfer-16">
+            <img src="/brand-assets/rhive-secondary-black.png" alt="Secondary Horizontal (Black - Icon on Left)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Secondary Horizontal (Black - Icon on Left)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Official wide header lockup: Crest pinned on LEFT, wordmark on RIGHT. Transparent BG for website navigation and vehicle sides.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Desktop & mobile website top headers, vehicle fleet doors, wide billboard spans, email signatures.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-secondary-black.png" download="secondary-black.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-secondary-black.svg" download="secondary-black.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-secondary-black.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="secondary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">SECONDARY 02</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">HORIZONTAL DARK NAV</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">B - SECONDARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-secondary-white.png" alt="Secondary Horizontal (White - Icon on Left)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Secondary Horizontal (White - Icon on Left)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Inverted wide header lockup: White crest on LEFT, white wordmark on RIGHT. Transparent BG for dark navigation headers.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Dark mode navigation bars, software HUD header ribbons, and black vehicle fleet wraps.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-secondary-white.png" download="secondary-white.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-secondary-white.svg" download="secondary-white.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-secondary-white.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="secondary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">SECONDARY 03</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">HORIZONTAL GOLD LUXURY</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">B - SECONDARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-secondary-gold.png" alt="Secondary Horizontal (Gold - Icon on Left)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Secondary Horizontal (Gold - Icon on Left)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Wide horizontal lockup in metallic gold for premium quote headers and official guarantee certs.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Commercial quote ribbons, certified lifetime warranty ribbons, and corporate bids.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-secondary-gold.png" download="secondary-gold.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-secondary-gold.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="secondary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">SECONDARY 04</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">HORIZONTAL PINK PROMO</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">B - SECONDARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-100 border-slate-200 checker-pattern chamfer-16">
+            <img src="/brand-assets/rhive-secondary-pink.png" alt="Secondary Horizontal (Pink - Icon on Left)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Secondary Horizontal (Pink - Icon on Left)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Wide horizontal lockup in RHIVE Neon Pink for marketing footers, digital ads, and active promo strips.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Digital ad banners, sponsorship banners, event booth skirting, and promotional strips.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-secondary-pink.png" download="secondary-pink.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-secondary-pink.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="secondary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">SECONDARY 05</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">SOLID WHITE BANNER</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">B - SECONDARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-white border-slate-200 chamfer-16">
+            <img src="/brand-assets/rhive-secondary-white-bg.png" alt="Secondary Horizontal (White Solid Card Tile)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Secondary Horizontal (White Solid Card Tile)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Pre-rendered horizontal banner on solid white background tile for document headers and letterheads.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> PDF sub-headers, partner portals, and horizontal web hero cards with white background.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-secondary-white-bg.png" download="secondary-white-bg.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-secondary-white-bg.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="secondary">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">SECONDARY 06</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">SOLID BLACK BANNER</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">B - SECONDARY LOGO</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-secondary-black-bg.png" alt="Secondary Horizontal (Black Solid Card Tile)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Secondary Horizontal (Black Solid Card Tile)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Pre-rendered horizontal banner on solid black background tile for dark navigation headers.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> High-contrast dark navigation bars, widescreen presentation banners, and social headers.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-secondary-black-bg.png" download="secondary-black-bg.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-secondary-black-bg.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="crest">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">CREST 01</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">AUTHENTIC TRICOLOR</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-white border-slate-200 chamfer-16">
+            <img src="/brand-assets/rhive-tricolor-crest-black.png" alt="Authentic Tricolor Crest (Black, Pink & Gold)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Authentic Tricolor Crest (Black, Pink & Gold)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Master tricolor hexagon crest with pink 'R' and gold accents. For white canvas avatars, badges, and apparel chest marks.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> White polo chest embroidery, circular badges, avatar icons, and hard hat stickers.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-tricolor-crest-black.png" download="crest-tricolor-black.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-tricolor-crest-black.svg" download="crest-tricolor-black.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-tricolor-crest-black.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="crest">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">CREST 02</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">TRICOLOR INVERTED</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-tricolor-crest-white.png" alt="Authentic Tricolor Crest (White, Pink & Gold)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Authentic Tricolor Crest (White, Pink & Gold)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Inverted master hexagon crest with white frame, pink 'R', and gold accents for dark UI and hard hats.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Dark UI avatars, black jacket left chest, dark website favicon, and hard hat decals.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-tricolor-crest-white.png" download="crest-tricolor-white.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-tricolor-crest-white.svg" download="crest-tricolor-white.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-tricolor-crest-white.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="crest">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">CREST 03</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">MONO PITCH BLACK</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-white border-slate-200 chamfer-16">
+            <img src="/brand-assets/rhive-submark-crest-black.png" alt="Submark Crest (Pitch Black)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Submark Crest (Pitch Black)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">High-contrast monochrome black shield crest on transparent canvas for single-color print runs and stamps.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Single-color print collateral, embossed folders, watermarks, and black apparel embroidery.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-submark-crest-black.png" download="crest-mono-black.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-submark-crest-black.svg" download="crest-mono-black.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-submark-crest-black.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="crest">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">CREST 04</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">MONO PURE WHITE</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-submark-crest-white.png" alt="Submark Crest (Pure White)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Submark Crest (Pure White)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">High-contrast monochrome white shield crest on transparent canvas for dark overlays.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Dark mode button icons, laser etching, dark photo overlays, and black vehicle side crests.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-submark-crest-white.png" download="crest-mono-white.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-submark-crest-white.svg" download="crest-mono-white.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-submark-crest-white.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="crest">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">CREST 05</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">MONO SOVEREIGN GOLD</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-submark-crest-gold.png" alt="Submark Crest (Sovereign Gold)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Submark Crest (Sovereign Gold)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Monochrome metallic gold shield crest for luxury finishes and certified warranty collateral.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Gold foil stamping on warranty certificates, VIP membership cards, and premium badges.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-submark-crest-gold.png" download="crest-mono-gold.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-submark-crest-gold.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="crest">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">CREST 06</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">MONO NEON PINK</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-100 border-slate-200 checker-pattern chamfer-16">
+            <img src="/brand-assets/rhive-submark-crest-pink.png" alt="Submark Crest (RHIVE Neon Pink)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Submark Crest (RHIVE Neon Pink)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">High-energy monochrome pink shield crest for mobile notifications, favicons, and urgent CTAs.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Urgent notification icons, high-visibility badges, social profile pictures, and stickers.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-submark-crest-pink.png" download="crest-mono-pink.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-submark-crest-pink.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="crest">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">CREST 07</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">WHITE SOLID TILE</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-white border-slate-200 chamfer-16">
+            <img src="/brand-assets/rhive-submark-crest-white-bg.png" alt="Submark Crest (White Solid Card Tile)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Submark Crest (White Solid Card Tile)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Shield crest centered on solid white background tile for quick avatar integration.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Square avatar uploads (Google Workspace, Slack, Zoom), app launcher icons, and partner tiles.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-submark-crest-white-bg.png" download="crest-white-bg.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-submark-crest-white-bg.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="crest">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">CREST 08</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">BLACK SOLID TILE</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-submark-crest-black-bg.png" alt="Submark Crest (Black Solid Card Tile)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Submark Crest (Black Solid Card Tile)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Shield crest centered on solid black background tile for dark avatars and profile pictures.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Dark mode social avatars, GitHub organization profile icon, and dark dashboard tiles.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-submark-crest-black-bg.png" download="crest-black-bg.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-submark-crest-black-bg.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="badges">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">BADGE 01</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">INSPECTION STAMP BLACK</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-white border-slate-200 chamfer-16">
+            <img src="/brand-assets/rhive-badge-round-black.png" alt="Inspection Submark Stamp (Black)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Inspection Submark Stamp (Black)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Circular certification seal for aerial orthomosaic inspection sign-offs and city permit packages.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Field inspection reports, city permit application covers, and quality audit sign-offs.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-badge-round-black.png" download="badge-round-black.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-badge-round-black.svg" download="badge-round-black.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-badge-round-black.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="badges">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">BADGE 02</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">INSPECTION STAMP WHITE</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-badge-round-white.png" alt="Inspection Submark Stamp (White)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Inspection Submark Stamp (White)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Inverted circular certification seal for dark blueprint packages and vehicle decals.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Dark blueprint sets, rear vehicle window stickers, and dark presentation stamps.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-badge-round-white.png" download="badge-round-white.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-badge-round-white.svg" download="badge-round-white.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-badge-round-white.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="badges">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">BADGE 03</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">WARRANTY GOLD MEDALLION</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-badge-round-gold.png" alt="Certified 50-Year Warranty Gold Seal" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Certified 50-Year Warranty Gold Seal</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Official metallic gold warranty medallion for final customer handoffs and lifetime warranty activation.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Lifetime warranty certificates, final payment milestone sign-offs, and luxury folders.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-badge-round-gold.png" download="badge-round-gold.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-badge-round-gold.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="badges">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">BADGE 04</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">CERTIFICATION PINK STAMP</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">C - SUBMARK</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-100 border-slate-200 checker-pattern chamfer-16">
+            <img src="/brand-assets/rhive-badge-round-pink.png" alt="Certification Submark Stamp (Pink)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Certification Submark Stamp (Pink)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">High-energy circular certification seal in neon pink for marketing badges and warranty stickers.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Digital marketing badges, customer warranty stickers, and high-energy promo collateral.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-badge-round-pink.png" download="badge-round-pink.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-badge-round-pink.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="app-icons">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">APP ICON 01</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">MASTER APP TILE (BLACK)</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">PNG + SVG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">D - FAVICON</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-100 border-slate-200 checker-pattern chamfer-16">
+            <img src="/brand-assets/rhive-app-icon-black-pink.png" alt="Master App Icon Tile (2196x2416 - Black)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Master App Icon Tile (2196x2416 - Black)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Official high-resolution master square app launcher tile for iOS, Android, PWA, and Chrome bookmarks.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> iOS app store icon, Android adaptive icon, PWA web manifest icon, and high-res app stores.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-app-icon-black-pink.png" download="app-icon-black-pink.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            <a href="/brand-assets/rhive-app-icon-black-pink.svg" download="app-icon-black-pink.svg" class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded flex items-center justify-center gap-1.5 border border-slate-300 transition-colors">SVG</a>
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-app-icon-black-pink.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="app-icons">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">APP ICON 02</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">MASTER APP TILE (PINK)</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">D - FAVICON</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-100 border-slate-200 checker-pattern chamfer-16">
+            <img src="/brand-assets/rhive-app-icon-pink-black.png" alt="Master App Icon Tile (2196x2416 - Pink)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Master App Icon Tile (2196x2416 - Pink)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Vibrant neon pink square app launcher tile with black crest for special edition releases and badges.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Marketing release tiles, special beta tester app icons, and high-visibility digital ads.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-app-icon-pink-black.png" download="app-icon-pink-black.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-app-icon-pink-black.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="app-icons">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">APP ICON 03</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">FAVICON PITCH BLACK</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">D - FAVICON</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-white border-slate-200 chamfer-16">
+            <img src="/brand-assets/rhive-fav-black.png" alt="Favicon & Tile Mark (Black)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Favicon & Tile Mark (Black)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Optimized square favicon in pitch black for web browser tabs, shortcut icons, and small UI stamps.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Light mode browser tabs, bookmark bars, and micro navigation UI (16x16 / 32x32 / 48x48).
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-fav-black.png" download="fav-black.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-fav-black.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="app-icons">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">APP ICON 04</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">FAVICON PURE WHITE</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">D - FAVICON</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-fav-white.png" alt="Favicon & Tile Mark (White)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Favicon & Tile Mark (White)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Optimized square favicon in pure white for dark browser bars and dark UI bookmarks.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Dark mode browser tabs, MacOS dark dock shortcuts, and dark HUD taskbars.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-fav-white.png" download="fav-white.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-fav-white.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="app-icons">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">APP ICON 05</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">FAVICON SOVEREIGN GOLD</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">D - FAVICON</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-950 border-slate-800 chamfer-16">
+            <img src="/brand-assets/rhive-fav-gold.png" alt="Favicon & Tile Mark (Sovereign Gold)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Favicon & Tile Mark (Sovereign Gold)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Optimized square favicon in metallic gold for premium quote links and customer portal shortcuts.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> VIP customer portal shortcuts, executive login portals, and luxury property dashboards.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-fav-gold.png" download="fav-gold.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-fav-gold.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="logo-card relative p-[1.5px] bg-slate-300 hover:bg-slate-800 transition-colors shadow-sm group chamfer-16" data-cat="app-icons">
+      <div class="bg-white p-5 h-full w-full flex flex-col justify-between chamfer-16">
+        <div>
+          <!-- Order Number & Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">APP ICON 06</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">FAVICON RHIVE NEON PINK</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400 uppercase">HIGH-RES PNG</span>
+          </div>
+
+          <!-- Drive Folder Tag -->
+          <div class="text-[10px] font-mono text-slate-500 mb-2">
+            📁 Drive: <span class="font-bold text-slate-700">D - FAVICON</span>
+          </div>
+
+          <!-- Canvas Container -->
+          <div class="h-44 rounded flex items-center justify-center p-6 border mb-4 bg-slate-100 border-slate-200 checker-pattern chamfer-16">
+            <img src="/brand-assets/rhive-fav-pink.png" alt="Favicon & Tile Mark (RHIVE Neon Pink)" class="max-h-28 max-w-full object-contain drop-shadow">
+          </div>
+
+          <h4 class="font-bold text-sm text-slate-900 mb-1 group-hover:text-[#ec028b] transition-colors">Favicon & Tile Mark (RHIVE Neon Pink)</h4>
+          <p class="text-xs text-slate-500 leading-relaxed mb-3">Optimized square favicon in neon pink for high-visibility browser tab identification.</p>
+
+          <!-- Usage Box -->
+          <div class="p-2.5 bg-slate-50 rounded border border-slate-200 text-[11px] font-mono text-slate-600 mb-4">
+            <strong class="text-slate-800 uppercase">Use:</strong> Active live estimating tool tabs, urgent dispatch portals, and web app notifications.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <a href="/brand-assets/rhive-fav-pink.png" download="fav-pink.png" class="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PNG</span>
+            </a>
+            
+          </div>
+          <button onclick="copyLink('/brand-assets/rhive-fav-pink.png', this)" class="w-full py-1.5 px-3 text-xs font-mono font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 rounded flex items-center justify-center gap-1.5 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+            <span>Copy Public Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+        </div>
+      </section>
+
+      <!-- SECTION 2: TYPOGRAPHY SYSTEM -->
+      <section class="space-y-6">
+        <div>
+          <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+            <span>Typography System</span>
+          </h3>
+          <p class="text-xs text-slate-500 font-mono mt-1">Mathematical typographic hierarchy across print, digital applications, and telemetry.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+            <div class="bg-white p-5 h-full chamfer-16">
+              <div class="text-xs font-mono font-bold text-[#ec028b] uppercase tracking-wider mb-2">01 // Universal Headers &amp; Web</div>
+              <div class="text-3xl font-black text-slate-900 mb-2 font-sans">Rubik Bold</div>
+              <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                Used across all digital web interfaces, hero banners, buttons, and bold callouts. Eliminates harsh serif stiffness on high-contrast surfaces.
+              </p>
+              <div class="p-3 bg-slate-50 border border-slate-200 rounded font-sans text-xs text-slate-800">
+                ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>
+                abcdefghijklmnopqrstuvwxyz 0123456789
+              </div>
+            </div>
+          </div>
+
+          <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+            <div class="bg-white p-5 h-full chamfer-16">
+              <div class="text-xs font-mono font-bold text-[#e2ab49] uppercase tracking-wider mb-2">02 // Editorial &amp; Legal</div>
+              <div class="text-3xl font-serif italic text-slate-900 mb-2">EB Garamond</div>
+              <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                Reserved exclusively for leadership editorial quotes, mission statements, formal contractual fine print, and high-prestige warranty declarations.
+              </p>
+              <div class="p-3 bg-slate-50 border border-slate-200 rounded font-serif italic text-sm text-slate-800">
+                &ldquo;Honesty, mathematical precision, and female-led operational excellence.&rdquo;
+              </div>
+            </div>
+          </div>
+
+          <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+            <div class="bg-white p-5 h-full chamfer-16">
+              <div class="text-xs font-mono font-bold text-slate-700 uppercase tracking-wider mb-2">03 // Telemetry &amp; Coordinates</div>
+              <div class="text-3xl font-mono font-bold text-slate-900 mb-2">Space Mono</div>
+              <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                Used for mathematical equations, pricing multipliers, GPS rooftop coordinates, technical data boundaries, and timestamps.
+              </p>
+              <div class="p-3 bg-slate-50 border border-slate-200 rounded font-mono text-xs text-slate-800">
+                PITCH: 6/12 &bull; MULTIPLIER: 1.1180<br>
+                SLOPE: 26.57&deg; &bull; CAD_VERIFY: OK
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: QUOTING ENGINE PRECISION & SQUARE DISCIPLINE (HUNDREDTHS SQ) -->
+      <section class="space-y-6">
+        <div>
+          <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Quoting Engine Precision &amp; Square Discipline (Hundredths SQ)</span>
+          </h3>
+          <p class="text-xs text-slate-500 font-mono mt-1">Multi-variable mathematical calculations replacing single-line contractor guesswork.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="relative p-[2px] bg-slate-400 hover:bg-slate-800 transition-colors shadow-sm chamfer-24">
+            <div class="bg-white p-6 h-full chamfer-24">
+              <h4 class="font-bold text-sm text-slate-900 uppercase tracking-wider mb-3 text-[#ec028b]">
+                Geometric Slope Multipliers &amp; Hundredths SQ Standard
+              </h4>
+              <div class="divide-y divide-slate-100 font-mono text-xs mb-4">
+                <div class="py-2 flex justify-between"><span>0/12 (Flat Membrane / TPO)</span><span class="font-bold text-[#ec028b]">1.0000x</span></div>
+                <div class="py-2 flex justify-between"><span>3/12 Pitch (14.04&deg;)</span><span class="font-bold text-[#ec028b]">1.0308x</span></div>
+                <div class="py-2 flex justify-between"><span>6/12 Pitch (26.57&deg;)</span><span class="font-bold text-[#ec028b]">1.1180x</span></div>
+                <div class="py-2 flex justify-between"><span>9/12 Pitch (36.87&deg;)</span><span class="font-bold text-[#ec028b]">1.2500x</span></div>
+                <div class="py-2 flex justify-between"><span>12/12+ Steep Slope (45&deg;+)</span><span class="font-bold text-[#ec028b]">1.4142x</span></div>
+              </div>
+              
+              <div class="p-3 bg-pink-50 border border-pink-200 rounded text-xs text-slate-800 font-mono">
+                <strong class="text-[#ec028b]">Square Discipline:</strong> All roofing square areas and scope quantities are strictly calculated and displayed to two decimal places (hundredths), e.g., <strong>1.00 SQ</strong> or <strong>2.22 SQ</strong>, ensuring complete billing transparency.
+              </div>
+
+              <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded font-mono text-[11px] text-slate-600 space-y-1">
+                <div class="font-bold text-slate-800">Sample Residential 2,850 sq ft Audit:</div>
+                <div>&bull; Base Footprint Area: 28.50 SQ</div>
+                <div>&bull; True Surface Area (6/12 Pitch @ 1.1180x): 31.86 SQ</div>
+                <div>&bull; Tear-Off Layer Allowance: 31.86 SQ</div>
+                <div>&bull; Ridge &amp; Hip Linear Allowance: 2.75 SQ</div>
+                <div>&bull; Valley Membrane Protection: 1.25 SQ</div>
+                <div>&bull; Parapet Wall &amp; Flashing: 2.22 SQ</div>
+                <div>&bull; Geometric Waste Allowance (10.00%): 3.81 SQ</div>
+                <div class="font-bold text-[#ec028b] pt-1 border-t border-slate-200">&bull; Total Certified Billable Scope: 41.89 SQ</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative p-[2px] bg-slate-400 hover:bg-slate-800 transition-colors shadow-sm chamfer-24">
+            <div class="bg-white p-6 h-full chamfer-24">
+              <h4 class="font-bold text-sm text-slate-900 uppercase tracking-wider mb-3 text-[#e2ab49]">
+                The 50/40/10 Milestone Settlement Logic
+              </h4>
+              <div class="space-y-3">
+                <div class="p-3 rounded bg-slate-50 border border-slate-200">
+                  <div class="text-xs font-mono font-bold text-slate-900">50% MILESTONE 01 // DISPATCH</div>
+                  <div class="text-xs text-slate-600 mt-1">Triggers certified Owens Corning material procurement, staging calendar lock, and crew assignment.</div>
+                </div>
+                <div class="p-3 rounded bg-slate-50 border border-slate-200">
+                  <div class="text-xs font-mono font-bold text-slate-900">40% MILESTONE 02 // INSTALLATION</div>
+                  <div class="text-xs text-slate-600 mt-1">Due immediately upon complete shingle/membrane laydown and initial site clean.</div>
+                </div>
+                <div class="p-3 rounded bg-pink-50 border border-pink-200">
+                  <div class="text-xs font-mono font-bold text-[#ec028b]">10% MILESTONE 03 // WARRANTY ACTIVATION</div>
+                  <div class="text-xs text-slate-700 mt-1">
+                    <strong>Zero punchlist policy:</strong> Only invoiced after the Master Envelope Audit and triple magnetic nail sweep are certified and locked into the digital vault.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: APPAREL & HEAT STANDARDS -->
+      <section class="space-y-6">
+        <div>
+          <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span>Team Apparel &amp; Summer Heat Standards</span>
+          </h3>
+          <p class="text-xs text-slate-500 font-mono mt-1">Standardized white performance apparel protecting crew health in 135&deg;F+ rooftop heat.</p>
+        </div>
+
+        <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+          <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <div class="text-xs text-amber-900 leading-relaxed font-mono">
+            <strong>Mandatory Summer Heat Policy:</strong> Black field shirts are strictly purged across Utah and Idaho operations. In rooftop surface temperatures exceeding 135&deg;F&ndash;150&deg;F, white technical apparel reflects over 85% of solar radiation to prevent heat exhaustion.
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+            <div class="bg-white p-5 h-full chamfer-16">
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">Executive &amp; Inspection</span>
+              <h4 class="text-base font-bold text-slate-900 mt-2 mb-1">White Technical Performance Polo</h4>
+              <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                Mandatory for client meetings, drone aerial mapping, and warranty audits. Embroidered with Authentic Tricolor Crest on left chest.
+              </p>
+              <div class="space-y-1 text-xs font-mono text-slate-700">
+                <div>&bull; Fabric: UPF 50+ Moisture-Wicking Poly-Spandex</div>
+                <div>&bull; Color: Solid Pure White (#FFFFFF)</div>
+                <div>&bull; Crest: 2.25&quot; Tricolor (Pink R + Gold Shield)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+            <div class="bg-white p-5 h-full chamfer-16">
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-pink-100 text-[#ec028b]">Tear-Off &amp; Dirty Operations</span>
+              <h4 class="text-base font-bold text-slate-900 mt-2 mb-1">White Performance Hooded Crew Shirt</h4>
+              <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                Mandatory for tear-off crews, dry-in underlayment work, and dirty attic investigations. Integrated hood provides neck UV sunblock.
+              </p>
+              <div class="space-y-1 text-xs font-mono text-slate-700">
+                <div>&bull; Fabric: Lightweight UPF 50+ Solar Hooded Mesh</div>
+                <div>&bull; Color: Solid Pure White (#FFFFFF)</div>
+                <div>&bull; Rear Print: Bold RHIVE Wordmark in Pitch Black</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: GOVERNANCE & 6-POINT GATE -->
+      <div class="relative p-[2px] bg-slate-400 shadow-sm chamfer-24">
+        <section class="bg-white p-6 sm:p-8 space-y-6 chamfer-24">
+          <div>
+            <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+              <svg class="w-5 h-5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <span>Pre-Flight Compliance Checklist (6-Point Gate)</span>
+            </h3>
+            <p class="text-xs text-slate-500 font-mono mt-1">Every proposal, contract, flyer, and web screen must satisfy all 6 criteria before founder approval.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-mono font-bold text-slate-900 mb-1 text-[#ec028b]">1. Visual Geometry</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">All cards, hero blocks, and buttons use 16px or 24px chamfer cut styling. Rounded corners are rejected.</div>
+            </div>
+            <div class="p-4 rounded bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-mono font-bold text-slate-900 mb-1 text-[#ec028b]">2. Zero Checkbox Rule</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">Checkboxes are 100% eliminated from digital software interfaces (permitted only on paper printout worksheets).</div>
+            </div>
+            <div class="p-4 rounded bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-mono font-bold text-slate-900 mb-1 text-[#ec028b]">3. Color Accuracy</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">Strict hex compliance: #ec028b (Pink), #e2ab49 (Gold), #000000 (Black), #FFFFFF (White Canvas 80%).</div>
+            </div>
+            <div class="p-4 rounded bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-mono font-bold text-slate-900 mb-1 text-[#ec028b]">4. Typography Strictness</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">Rubik Bold on headers/buttons, EB Garamond on quotes, Space Mono on telemetry/prices.</div>
+            </div>
+            <div class="p-4 rounded bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-mono font-bold text-slate-900 mb-1 text-[#ec028b]">5. Warranty Activation Only</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">Final 10% milestone must read "Warranty Activation" (the contentious phrase "punch list" is permanently purged).</div>
+            </div>
+            <div class="p-4 rounded bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-mono font-bold text-slate-900 mb-1 text-[#ec028b]">6. White Summer Apparel</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">All field photos, videos, and collateral must depict crews in white UPF 50+ apparel. No black shirts.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════════════════════ -->
+    <!-- VIEW 2: COMPETITIVE BRAND AUDIT (HKL & UTAH COMPETITORS)               -->
+    <!-- ═════════════════════════════════════════════════════════════════════ -->
+    <div id="view-audit" class="space-y-12" style="display: none;">
+
+      <!-- Market Intelligence Header Card -->
+      <div class="relative p-[2px] bg-slate-400 shadow-sm chamfer-24">
+        <section class="bg-white p-8 sm:p-10 chamfer-24">
+          <div class="max-w-4xl space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-pink-50 border border-pink-200 text-[#ec028b] text-xs font-mono font-bold uppercase tracking-wider">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              <span>MARKET INTELLIGENCE // WASATCH FRONT COMPETITIVE AUDIT</span>
+            </div>
+            <h2 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight uppercase">
+              RHIVE BRAND ANALYSIS &amp; COMPETITIVE AUDIT
+            </h2>
+            <p class="text-base sm:text-lg font-serif italic text-slate-700 leading-relaxed">
+              Deep-dive empirical teardown of top Utah &amp; Mountain West roofing competitors &mdash; featuring an exhaustive audit of direct online quoting rival <strong>HKL Roofing</strong> alongside traditional legacy contractors, solar bundlers, and storm chasers.
+            </p>
+            <div class="pt-4 flex flex-wrap gap-4 text-xs font-mono text-slate-500 border-t border-slate-100">
+              <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Target Competitor: HKL Roofing (hklroofing.com)</span>
+              <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Legacy Utah: Whitaker Roofing &amp; Shingle Pro</span>
+              <span class="flex items-center gap-1.5"><svg class="w-4 h-4 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Solar Cross-Sell: Mynt Solar &amp; Roofing</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- DIRECT COMPETITOR TEARDOWN 01: HKL ROOFING -->
+      <div class="relative p-[2px] bg-rose-400 shadow-sm chamfer-24">
+        <section class="bg-white p-6 sm:p-8 space-y-6 chamfer-24">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-rose-100 pb-5">
+            <div>
+              <div class="flex items-center gap-2 text-xs font-mono font-bold text-rose-600 uppercase tracking-wider mb-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Direct Competitor Teardown 01 // Online Quoting Rival</span>
+              </div>
+              <h3 class="text-2xl font-black text-slate-900 tracking-tight uppercase">
+                HKL ROOFING (HKLROOFING.COM)
+              </h3>
+              <p class="text-xs text-slate-500 font-mono mt-0.5">
+                Operations: Utah, Colorado &amp; Idaho &bull; Positioning: &ldquo;High Quality Roofing With A Low Price Guarantee&rdquo;
+              </p>
+            </div>
+            <div class="p-3 bg-rose-50 border border-rose-200 rounded text-xs font-mono text-rose-900 max-w-sm">
+              <strong class="uppercase text-rose-700">Their Pitch:</strong> &ldquo;Can Jackie quote your roof? Measure, price, sign, and schedule in one conversation.&rdquo;
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="p-4 bg-slate-50 rounded border border-slate-200 space-y-3">
+              <h4 class="font-bold text-xs font-mono uppercase text-slate-800 flex items-center gap-2">
+                <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                <span>Their Operational &amp; Pricing Architecture</span>
+              </h4>
+              <ul class="text-xs text-slate-600 space-y-2 leading-relaxed">
+                <li>&bull; <strong>Front-End AI Chatbot (&ldquo;Jackie&rdquo;):</strong> Conversational lead capture promising instant address-based pricing without an initial sales visit.</li>
+                <li>&bull; <strong>Generic Home-Size Buckets:</strong> Advertises pricing tiers by home square footage (e.g. 2,000 sq ft, 3,000 sq ft, 4,000 sq ft home).</li>
+                <li>&bull; <strong>Warranty Tier:</strong> Limited Lifetime manufacturer shingle warranty + 10-year workmanship warranty.</li>
+                <li>&bull; <strong>Low Price Guarantee:</strong> Competes heavily on low upfront cost to trigger contract signing.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 bg-rose-50/60 rounded border border-rose-200 space-y-3">
+              <h4 class="font-bold text-xs font-mono uppercase text-rose-800 flex items-center gap-2">
+                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>The 4 Fatal Flaws in HKL's Strategy</span>
+              </h4>
+              <ul class="text-xs text-rose-950 space-y-2 leading-relaxed">
+                <li>&bull; <strong>1. The Square-Foot Bucket Trap:</strong> Quoting roofs by living area square footage (e.g. 2,000 sq ft home) is fundamentally deceptive. An 8/12 hip roof on a 2,000 sq ft footprint has over 2,800 sq ft of roof area.</li>
+                <li>&bull; <strong>2. Fine-Print Change Order Loophole:</strong> Their own terms state: <em>&ldquo;Illustrative asphalt pricing. Your exact price is based on the verified roof and quoted scope. Additional layers, damaged decking, and customer-requested changes may cost more.&rdquo;</em></li>
+                <li>&bull; <strong>3. The 10-Year Workmanship Cap:</strong> Providing only a 10-year workmanship warranty leaves homeowners exposed for 40 years on a 50-year architectural shingle.</li>
+                <li>&bull; <strong>4. Front-Loaded Collection:</strong> Lacks a 50/40/10 milestone holdback, leaving homeowners without leverage when cleanup or punch list disputes arise.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- How RHIVE Wins -->
+          <div class="p-5 rounded-lg border" style="background-color: #F8FAFC; border-color: #CBD5E1;">
+            <div class="flex items-center gap-2 text-xs font-mono font-bold uppercase mb-2" style="color: #0F172A;">
+              <svg class="w-4 h-4 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>RHIVE's Mathematical Counter-Strike</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-700">
+              <div>
+                <strong class="text-slate-900 block font-mono">1. True Geometric Photogrammetry</strong>
+                Every quote calculated to exact hundredths (e.g., <strong>28.50 SQ</strong>, <strong>1.00 SQ</strong>, <strong>2.22 SQ</strong>) with exact slope pitch multipliers (1.1180x) and documented tear-off layers.
+              </div>
+              <div>
+                <strong class="text-slate-900 block font-mono">2. 50-Year Sovereign Gold Warranty</strong>
+                5x the workmanship coverage of HKL (50 years vs 10 years) backed by Owens Corning Duration Flex SBS Class 4 impact resistance.
+              </div>
+              <div>
+                <strong class="text-slate-900 block font-mono">3. 50/40/10 Milestone Holdback</strong>
+                Homeowner holds the final 10% until Warranty Activation sign-off and forensic magnetic nail sweep certification.
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- COMPETITOR TEARDOWN #2, #3, #4 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Legacy Utah Contractors -->
+        <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+          <div class="bg-white p-5 h-full flex flex-col justify-between chamfer-16">
+            <div>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                Legacy Utah Contractors
+              </span>
+              <h4 class="text-base font-black text-slate-900 mt-2 mb-1">Whitaker Roofing &amp; Traditional</h4>
+              <p class="text-xs text-slate-500 leading-relaxed mb-3">
+                Established 50&ndash;75+ year contractors operating on high-pressure commission salesmen, manual tape measures, and opaque paper lump sums.
+              </p>
+              <div class="space-y-1.5 text-xs text-slate-700 font-mono">
+                <div>&bull; Salesman commission: 25%&ndash;35% built into quote</div>
+                <div>&bull; Workmanship warranty: 2&ndash;5 years max</div>
+                <div>&bull; Portal access: None (paper contracts)</div>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] font-mono font-bold text-[#ec028b]">
+              RHIVE Advantage: Zero salesmen, 100% transparent TrueCost formulas, real-time homeowner portal.
+            </div>
+          </div>
+        </div>
+
+        <!-- Solar Cross-Sell Bundlers -->
+        <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+          <div class="bg-white p-5 h-full flex flex-col justify-between chamfer-16">
+            <div>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                Solar Bundlers
+              </span>
+              <h4 class="text-base font-black text-slate-900 mt-2 mb-1">Mynt Solar &amp; Roofing Bundlers</h4>
+              <p class="text-xs text-slate-500 leading-relaxed mb-3">
+                Treats roofing as a secondary financing vehicle to solar PPA contracts. Rooftop tear-off and shingles are subcontracted to lowest bidders.
+              </p>
+              <div class="space-y-1.5 text-xs text-slate-700 font-mono">
+                <div>&bull; Subcontracted crews without envelope certification</div>
+                <div>&bull; Penetration leak risk from solar racking mounts</div>
+                <div>&bull; Multi-month delays waiting for net metering</div>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] font-mono font-bold text-[#ec028b]">
+              RHIVE Advantage: Master envelope roofers, SureNail 130 MPH fastening, dedicated 48hr turnarounds.
+            </div>
+          </div>
+        </div>
+
+        <!-- Storm Chasers & Transient Crews -->
+        <div class="relative p-[1.5px] bg-slate-300 hover:bg-slate-700 transition-colors shadow-sm chamfer-16">
+          <div class="bg-white p-5 h-full flex flex-col justify-between chamfer-16">
+            <div>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                Storm Chasers
+              </span>
+              <h4 class="text-base font-black text-slate-900 mt-2 mb-1">Rhino, Big Red &amp; Out-of-State</h4>
+              <p class="text-xs text-slate-500 leading-relaxed mb-3">
+                Door-to-door storm chasing following Wasatch Front hail storms. Lures homeowners with low bids then hits them with change orders upon tear-off.
+              </p>
+              <div class="space-y-1.5 text-xs text-slate-700 font-mono">
+                <div>&bull; Out-of-state license plates &amp; transient labor</div>
+                <div>&bull; 1-year warranty that vanishes by winter</div>
+                <div>&bull; Cheap 3-tab shingles prone to 60 MPH blowoff</div>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] font-mono font-bold text-[#ec028b]">
+              RHIVE Advantage: Permanent Wasatch Front presence, Class 4 SBS hail resistance, lifetime warranty vault.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MASTER 10-POINT BENCHMARK MATRIX -->
+      <div class="relative p-[2px] bg-slate-400 shadow-sm chamfer-24">
+        <section class="bg-white p-6 sm:p-8 space-y-4 chamfer-24">
+          <div>
+            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+              <svg class="w-5 h-5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              <span>Comprehensive 10-Point Competitive Benchmark Matrix</span>
+            </h3>
+            <p class="text-xs text-slate-500 font-mono">
+              Direct architectural comparison of RHIVE vs HKL Roofing and traditional Utah competitors.
+            </p>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b-2 border-slate-200 font-mono text-[11px] uppercase text-slate-600 bg-slate-50">
+                  <th class="py-3 px-3">Benchmark Dimension</th>
+                  <th class="py-3 px-3 text-[#ec028b] font-black">RHIVE Construction</th>
+                  <th class="py-3 px-3 text-rose-700 font-bold">HKL Roofing</th>
+                  <th class="py-3 px-3 text-slate-700">Legacy Contractors</th>
+                  <th class="py-3 px-3 text-slate-700">Solar Bundlers</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-mono">
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Quoting Precision</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>40-Variable Solar/CAD to Hundredths (e.g. 28.50 SQ)
+                  </td>
+                  <td class="py-2.5 px-3 text-rose-600">Broad Home Size Buckets (2,000 / 3,000 / 4,000)</td>
+                  <td class="py-2.5 px-3 text-slate-600">Manual Tape Measure &bull; Opaque Lump Sum</td>
+                  <td class="py-2.5 px-3 text-slate-600">Blended into Solar PPA Monthly Payment</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Workmanship Warranty</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>50-Year Sovereign Gold Lifetime
+                  </td>
+                  <td class="py-2.5 px-3 text-amber-700">10-Year Limited Workmanship</td>
+                  <td class="py-2.5 px-3 text-slate-600">2&ndash;5 Years Standard</td>
+                  <td class="py-2.5 px-3 text-slate-600">Subcontractor Dependent (1&ndash;5 Yrs)</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Settlement Architecture</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>50% Deposit / 40% Dry-in / 10% Warranty Activation
+                  </td>
+                  <td class="py-2.5 px-3 text-slate-600">Standard Progress Billing (No Holdback)</td>
+                  <td class="py-2.5 px-3 text-slate-600">50% Down / 50% Completion (Day of Install)</td>
+                  <td class="py-2.5 px-3 text-slate-600">Bundled into 25-Year Loan Financing</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Punch List Protocol</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>100% Permanently Purged &bull; Forensic Vault Sign-Off
+                  </td>
+                  <td class="py-2.5 px-3 text-slate-600">Standard Contractor Punch List</td>
+                  <td class="py-2.5 px-3 text-rose-600">Disputed Final Payment Holdouts</td>
+                  <td class="py-2.5 px-3 text-slate-600">Delayed Until Solar Inspection Passed</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Change Order Rate</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>0.00% Guaranteed Price Lock on Scope
+                  </td>
+                  <td class="py-2.5 px-3 text-amber-700">Fine Print Clause for Layers &amp; Decking</td>
+                  <td class="py-2.5 px-3 text-rose-600">Frequent Day-of-Tear-Off Price Hikes</td>
+                  <td class="py-2.5 px-3 text-slate-600">Rerouting Conduit Add-On Fees</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Shingle Specification</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>Owens Corning Duration Flex SBS Class 4 Impact
+                  </td>
+                  <td class="py-2.5 px-3 text-slate-600">Standard Architectural Asphalt Shingle</td>
+                  <td class="py-2.5 px-3 text-slate-600">Contractor Grade Standard Shingles</td>
+                  <td class="py-2.5 px-3 text-slate-600">Economy Shingles to Keep Solar Bids Low</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Nail Fastening Standard</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>SureNail 6-Nail 130 MPH High-Wind Pattern
+                  </td>
+                  <td class="py-2.5 px-3 text-slate-600">Standard 4-Nail Pattern</td>
+                  <td class="py-2.5 px-3 text-slate-600">Standard 4-Nail Pattern</td>
+                  <td class="py-2.5 px-3 text-slate-600">Varies by Subcontractor</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Flashing &amp; Valleys</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>Hand-Bent Step/Counter Kits + Ice &amp; Water Shield
+                  </td>
+                  <td class="py-2.5 px-3 text-slate-600">Full Synthetic Underlayment Standard</td>
+                  <td class="py-2.5 px-3 text-slate-600">Often Re-uses Existing Rusty Step Flashing</td>
+                  <td class="py-2.5 px-3 text-rose-600">Tile/Shingle Cuts Around Solar Mounts</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Team Heat Safety Standard</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>White Performance UPF 50+ (85%+ Solar Reflective)
+                  </td>
+                  <td class="py-2.5 px-3 text-slate-600">Standard Crew Attire (Black / Navy)</td>
+                  <td class="py-2.5 px-3 text-rose-600">Black Cotton Shirts (Heat Exhaustion Risk)</td>
+                  <td class="py-2.5 px-3 text-slate-600">High-Vis Yellow Polyester Vests</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 px-3 font-bold text-slate-900">Operational Leadership</td>
+                  <td class="py-2.5 px-3 font-bold" style="background-color: #F8FAFC; color: #0F172A;">
+                    <span class="text-[#ec028b] font-black mr-1.5">✓</span>Female-Led Precision (Kara Robinson, President)
+                  </td>
+                  <td class="py-2.5 px-3 text-slate-600">Automated &ldquo;Jackie&rdquo; Chatbot Frontend</td>
+                  <td class="py-2.5 px-3 text-slate-600">Male-Dominated Traditional Contractor Culture</td>
+                  <td class="py-2.5 px-3 text-slate-600">Venture-Backed Solar Financial Sales Reps</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- THE 6 SOVEREIGN MOATS -->
+      <div class="relative p-[2px] bg-slate-400 shadow-sm chamfer-24">
+        <section class="bg-white p-6 sm:p-8 space-y-4 chamfer-24">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#ec028b]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">
+              The 6 Sovereign Moats: Why RHIVE Dominates the Wasatch Front
+            </h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div class="p-3.5 rounded bg-slate-50 border border-slate-300 text-xs">
+              <div class="font-mono font-bold text-[#ec028b] mb-1">1. True Area Math</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">Roofing area calculated to exact hundredths (e.g. 28.50 SQ, 1.00 SQ, 2.22 SQ), exposing the misleading generic square-foot home tiers used by HKL.</div>
+            </div>
+            <div class="p-3.5 rounded bg-slate-50 border border-slate-300 text-xs">
+              <div class="font-mono font-bold text-[#ec028b] mb-1">2. 50-Yr Sovereign Warranty</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">5x longer workmanship protection than HKL’s 10-year cap, backed by Owens Corning Platinum Duration Flex SBS.</div>
+            </div>
+            <div class="p-3.5 rounded bg-slate-50 border border-slate-300 text-xs">
+              <div class="font-mono font-bold text-[#ec028b] mb-1">3. 50/40/10 Financial Leverage</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">The homeowner holds 10% until Warranty Activation sign-off; the contentious "punch list" is permanently eliminated.</div>
+            </div>
+            <div class="p-3.5 rounded bg-slate-50 border border-slate-300 text-xs">
+              <div class="font-mono font-bold text-[#ec028b] mb-1">4. Female-Led Operational Rigor</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">Led by President Kara Robinson, delivering meticulous administrative communication that traditional contractors cannot match.</div>
+            </div>
+            <div class="p-3.5 rounded bg-slate-50 border border-slate-300 text-xs">
+              <div class="font-mono font-bold text-[#ec028b] mb-1">5. Thermal Crew Safety Protocol</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">Standardized white UPF 50+ performance apparel reflecting 85%+ solar radiation in 135&deg;F+ Wasatch summer heat.</div>
+            </div>
+            <div class="p-3.5 rounded bg-slate-50 border border-slate-300 text-xs">
+              <div class="font-mono font-bold text-[#ec028b] mb-1">6. Sovereign Quantum OS Stack</div>
+              <div class="text-slate-600 leading-relaxed text-[11px]">Integrated 3-Lane Telephony Swarm, photogrammetric CAD verification, and automated digital customer portal.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    function switchView(view) {
+      const standardsView = document.getElementById('view-standards');
+      const auditView = document.getElementById('view-audit');
+      const standardsBtn = document.getElementById('tab-standards-btn');
+      const auditBtn = document.getElementById('tab-audit-btn');
+
+      if (view === 'standards') {
+        standardsView.style.display = 'block';
+        auditView.style.display = 'none';
+
+        standardsBtn.className = 'px-3 py-1.5 rounded font-bold bg-white text-slate-900 shadow-sm transition-all flex items-center gap-1.5';
+        auditBtn.className = 'px-3 py-1.5 rounded font-bold text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5';
+      } else {
+        standardsView.style.display = 'none';
+        auditView.style.display = 'block';
+
+        auditBtn.className = 'px-3 py-1.5 rounded font-bold bg-white text-slate-900 shadow-sm transition-all flex items-center gap-1.5';
+        standardsBtn.className = 'px-3 py-1.5 rounded font-bold text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5';
+      }
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    function filterLogos(cat, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.className = 'filter-btn px-3 py-1.5 rounded font-bold text-slate-600 hover:text-slate-900 transition-all';
+      });
+      btn.className = 'filter-btn active px-3 py-1.5 rounded font-bold bg-white text-slate-900 shadow-sm border border-slate-300 transition-all';
+
+      document.querySelectorAll('.logo-card').forEach(card => {
+        if (cat === 'all' || card.getAttribute('data-cat') === cat) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function copyHex(hex, el) {
+      navigator.clipboard.writeText(hex);
+      const label = el.querySelector('.copy-label');
+      if (label) {
+        const orig = label.innerText;
+        label.innerText = 'COPIED!';
+        label.style.color = '#ec028b';
+        label.style.fontWeight = 'bold';
+        setTimeout(() => {
+          label.innerText = orig;
+          label.style.color = '';
+          label.style.fontWeight = '';
+        }, 2000);
+      }
+    }
+
+    function copyLink(url, btn) {
+      const fullUrl = window.location.origin + url;
+      navigator.clipboard.writeText(fullUrl);
+      const span = btn.querySelector('span');
+      if (span) {
+        const orig = span.innerText;
+        span.innerText = 'Copied URL to Clipboard!';
+        btn.style.color = '#ec028b';
+        btn.style.fontWeight = 'bold';
+        setTimeout(() => {
+          span.innerText = orig;
+          btn.style.color = '';
+          btn.style.fontWeight = '';
+        }, 2000);
+      }
+    }
+  </script>
+</body>
+</html>
