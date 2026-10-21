@@ -1561,6 +1561,127 @@ export const BLOG_POSTS: BlogPost[] = [
       }
     ]
   }
+,
+  // ==========================================
+  // ARTICLE 30 (RHIVE Fall Roof Maintenance Guide)
+  // ==========================================
+  {
+    slug: 'rhive-fall-roof-maintenance-guide-utah',
+    title: 'RHIVE Fall Roof Maintenance Guide: Preparing Utah Roofs for Winter Weather',
+    metaTitle: 'RHIVE Fall Maintenance Guide | Utah Roof Inspection | RHIVE Construction',
+    bluf: 'Fall roof maintenance in Utah requires a 7-step pre-winter preparation protocol: 1) Clear gutters & downspouts, 2) Clear organic debris from valleys, 3) Inspect metal pipe boots and flashings, 4) Test self-regulating heat trace cables, 5) Trim overhanging limbs back at least 12 inches, 6) Verify balanced ridge and soffit attic airflow, and 7) Schedule a remote satellite aerial inspection to catch loose shingles before snowpack accumulates.',
+    description: 'Essential autumn roof maintenance guide for Utah homeowners. Learn how to clean gutters, prevent winter ice dams, check shingle health, and schedule a professional fall inspection with RHIVE Construction.',
+    category: 'Maintenance',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'President & Co-founder',
+    },
+    image: 'https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?auto=format&fit=crop&w=1200&q=80',
+    tags: ['RHIVE Fall Maintenance Guide', 'Fall Roof Maintenance Utah', 'Autumn Roof Inspection Salt Lake City', 'Preparing Roof For Winter Utah', 'Winter Roof Care Utah'],
+    content: [
+      {
+        sectionHeading: 'Why Autumn Roof Care Matters in Utah',
+        directAnswer: 'Utah’s autumn is the final weather window to prepare rooflines against 80°F single-day thermal swings, heavy alpine snow accumulation, and destructive Wasatch freeze-thaw cycles.',
+        bodyParagraphs: [
+          'Utah’s autumn brings pleasant daytime weather, but it also marks the final window to prepare rooflines for extreme winter weather along the Wasatch Front. Properties across Salt Lake County, Davis County, and high-altitude mountain benches face severe winter conditions:',
+          'Conducting a thorough fall inspection prevents minor issues—such as a cracked pipe boot collar or clogged gutter miter—from expanding into catastrophic winter roof leaks.'
+        ],
+        bulletPoints: [
+          'Single-Day Thermal Swings Exceeding 80°F: Rapid expansion and contraction stress shingle seals, flashings, and decking.',
+          'Heavy Alpine Snowpack: Accumulated snow adds intense weight to roof decks and creates standing water in valleys.',
+          'Severe Freeze-Thaw Cycles & Ice Damming: Trapped attic heat melts snowpack, which runs down to cold eave lines, refreezes, and forces backing water under shingles unless protected by continuous waterproofing barriers.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE 7-Step Fall Roof Maintenance Checklist',
+        directAnswer: 'Co-founded by Kara Robinson (President) and Michael Robinson (CEO), RHIVE Construction provides a master-craftsman 7-step checklist to systematically evaluate gutters, valleys, flashings, heat cables, and attic ventilation.',
+        bodyParagraphs: [
+          'Co-founded by Kara Robinson (President) and Michael Robinson (CEO), RHIVE Construction is a female-owned and operated contractor committed to radical cost transparency and master-craftsman execution.',
+          'Use this step-by-step checklist to evaluate your home before winter arrives:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│             RHIVE FALL MAINTENANCE CHECKLIST           │
+├────────────────────────────────────────────────────────┤
+│ • 1. Clean & Flush Gutters / Downspouts                │
+│ • 2. Clear Organic Debris from Roof Valleys            │
+│ • 3. Inspect Pipe Boots & Flashing Sealants            │
+│ • 4. Test Self-Regulating Eave Heat Trace Cables       │
+│ • 5. Trim Overhanging Tree Limbs (12" Clearance)       │
+│ • 6. Verify Balanced Attic Airflow (Ridge & Soffit)    │
+│ • 7. Request Remote Aerial Satellite Audit             │
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          '1. Clean & Flush Gutters and Downspouts: Manually remove organic waste from 5-inch and 6-inch K-Style, Round, or Box aluminum gutters. Flush downspouts to verify 100% flow capacity, and check that heavy-duty screw-in hangers are securely fastened every 24 inches to support heavy snow loads.',
+          '2. Clear Organic Debris from Valleys & Low-Slope Areas: Leaves and pine needles act like sponges, holding moisture against shingle granules and blocking natural drainage channels. Clear perimeters and curbs with soft-bristle tools or air blowers. On commercial TPO/PVC flat roofs, clear scuppers and internal drains.',
+          '3. Inspect Flashing, Pipe Boots & Penetrations: Inspect neoprene collars around pipe jacks for UV dry rot. RHIVE replaces failing collars with Full Metal Pipe Jacks, sealed with clear UV-rated sealant and painted to prevent oxidation. Check 28-gauge steel L-metal and chimney flashings.',
+          '4. Test Eave Heat Trace Cable Systems: Check self-regulating heat trace cables (5W/lin ft, 110V) anchored in valleys and gutters. Test automatic thermostats (activating in the 35°F–45°F range) to guarantee open melt channels during snowstorms.',
+          '5. Trim Overhanging Tree Branches: Trim limbs back at least 12 inches to 3 feet from shingle edges. This prevents branches from scraping granules during high canyon wind events and eliminates snow-weighted limb collapse hazards.',
+          '6. Verify Balanced Attic Airflow & Insulation: Ensure Owens Corning VentSure® continuous ridge vents and open soffits continuously exhaust heat, keeping the roof deck cold to prevent ice dam formation.',
+          '7. Schedule a Remote Aerial Satellite Audit: Avoid climbing steep roofs. RHIVE conducts remote satellite audits using Roofr aerial imagery and Google Maps data to inspect every facet and shingle line safely.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE Standard: Built for Utah Winters',
+        directAnswer: 'If your roof has reached the end of its lifespan, RHIVE installs complete certified systems engineered for Wasatch winters—including 100% full tear-offs, 6 feet of continuous ice & water shield, and 130 MPH wind ratings.',
+        bodyParagraphs: [
+          'If your fall inspection reveals that your roof has reached the end of its 20- to 30-year service life, RHIVE Construction installs complete, manufacturer-certified replacement systems engineered specifically for Utah winter weather:'
+        ],
+        bulletPoints: [
+          '100% Residential Full Tear-Off Policy: We strip old shingles down to bare OSB decking (never performing layovers that trap moisture or conceal rotted sheathing).',
+          'Decking Replacement Included: Up to 100 sq ft of 7/16 OSB decking replacement is included at no extra charge if wood rot is discovered.',
+          'Synthetic Field Barrier: 100% field coverage with Owens Corning ProArmor® synthetic underlayment.',
+          'Double-Layer Eave Protection: A minimum of 6 feet of continuous Owens Corning WeatherLock® Ice & Water Shield self-adhering membrane along eaves and valleys (extending well past the 24-inch IRC code requirement).',
+          'High-Wind SureNail® Fastening: Electro-galvanized coil nails driven in a strict 6-nail pattern per shingle through the SureNail woven fabric strip, delivering a certified 130 MPH wind uplift rating.',
+          '28-Gauge Steel Drip Edge: Installed along all perimeter eaves and rakes for clean water diversion.',
+          'Dual Warranty Protection: Owens Corning Preferred Protection 50-Year Non-Prorated Material Coverage paired with RHIVE\'s direct Lifetime Installer No-Leak Guarantee.'
+        ]
+      },
+      {
+        sectionHeading: 'Transparent Financial Options & RPSP Savings',
+        directAnswer: 'RHIVE eliminates salesman markups and offers a transparent 50/40/10 milestone payment structure, a 10% RPSP efficiency credit (up to $1,000), and 3-day statutory rescission rights.',
+        bodyParagraphs: [
+          'RHIVE Construction protects your financial security with transparent investment terms and accessible financing partnerships:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            RHIVE MILESTONE INVESTMENT SCHEDULE         │
+├────────────────────────────────────────────────────────┤
+│ • 50% Initial Investment: Secured at signing to order   │
+│   permits & drop materials.                            │
+│ • 40% Second Milestone: Due on final build day once    │
+│   primary system is watertight.                        │
+│ • 10% Final Settlement: Retained until 100% project    │
+│   completion & quality audit.                          │
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          'RHIVE Project Savings Promotion (RPSP): Approve your certified quote within the presentation window to unlock an immediate 10% Efficiency Credit (up to $1,000 for residential / up to $3,000 for commercial) by stripping out administrative chase costs.',
+          'Protected by Law: Locked under Utah’s statutory 3-Day Right of Rescission, giving you 3 full business days to verify your decision with zero financial risk.',
+          'Flexible Financing: Partnered with Enhancify to offer 0% APR for 18 months or low-APR long-term payment plans.',
+          'Community Impact: Every project supports "Our Hive" community initiatives, funding complete roof replacements for local veterans, teachers, and first responders.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'When is the best time in the fall to inspect my roof in Utah?',
+        answer: 'Early to mid-autumn (September through late October) provides ideal weather conditions to inspect shingles, clean gutters, and make necessary repairs before freezing snowstorms begin.'
+      },
+      {
+        question: 'Can RHIVE inspect my roof without coming inside or climbing on it?',
+        answer: 'Yes. Using high-definition Roofr satellite measurements, aerial imagery, and Google Maps data, we assess your roof deck remotely and deliver a Certified Quote within 24–48 hours.'
+      },
+      {
+        question: 'What happens if unexpected wood rot is discovered during a reroof?',
+        answer: 'Every full residential replacement includes up to 100 sq ft of 7/16 OSB decking replacement at no additional charge. Any additional sheets needed are billed at pre-agreed contract rates ($72.50 per 7/16 OSB sheet) specified upfront in your agreement.'
+      },
+      {
+        question: 'What is the fee for emergency leak containment or tarping?',
+        answer: 'RHIVE dispatches emergency crews under our Quantum Rapid-Response Protocol. Emergency synthetic tarping carries a flat $350 fee, and 100% of this $350 fee is credited back directly toward your permanent repair or full replacement.'
+      }
+    ]
+  }
 ];
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {

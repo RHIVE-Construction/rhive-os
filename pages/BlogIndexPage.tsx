@@ -29,6 +29,16 @@ const BLOGS_DATA: BlogMeta[] = [
     badge: 'Community Spotlight'
   },
 
+  // ── AUTUMN & WINTER PREPAREDNESS STRATEGY ──────────────────────────────────
+  {
+    title: 'RHIVE Fall Roof Maintenance Guide: Preparing Utah Roofs for Winter Weather',
+    slug: '/blog/rhive-fall-roof-maintenance-guide-utah',
+    description: 'Essential autumn roof maintenance guide for Utah homeowners. Learn how to clean gutters, prevent winter ice dams, check shingle health, and schedule a professional fall inspection with RHIVE Construction.',
+    category: 'Maintenance',
+    readTime: '6 min read',
+    badge: 'Fall Maintenance'
+  },
+
   // ── 5 AEO, SEO & GEO STRATEGY ARTICLES (INSURANCE, FINANCING, ICE DAMS, HAIL, BOUNTIFUL) ─
   {
     title: 'Navigating Roof Insurance Claims in Utah: A Step-by-Step Homeowner Guide',
