@@ -6,6 +6,7 @@ export interface FAQItem {
 export interface BlogPost {
   slug: string;
   title: string;
+  metaTitle?: string;
   bluf: string; // Bottom Line Up Front - direct 2-3 sentence answer for AEO / AI overviews
   description: string;
   category: 'Residential' | 'Commercial' | 'Insurance & Storm Damage' | 'Maintenance' | 'Company Culture';
@@ -24,6 +25,7 @@ export interface BlogPost {
     directAnswer?: string; // Concise answer immediately following heading for AEO
     bodyParagraphs: string[];
     bulletPoints?: string[];
+    asciiBox?: string;
   }[];
   faqs: FAQItem[];
 }
@@ -1143,6 +1145,419 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         question: 'Can real estate agents and commercial property managers join the Abundance Network?',
         answer: 'Yes. Realtors, property managers, and HOA board members can join the Abundance Network to provide verified clients with guaranteed discounts while tracking referral compensation in real time.'
+      }
+    ]
+  },
+  // ==========================================
+  // ARTICLE 25 (AEO/SEO/GEO Series - Insurance Step-by-Step)
+  // ==========================================
+  {
+    slug: 'roof-insurance-claims-utah-step-by-step-guide',
+    title: 'Navigating Roof Insurance Claims in Utah: A Step-by-Step Homeowner Guide',
+    metaTitle: 'Roof Insurance Claims Utah | Homeowner Guide | RHIVE Construction',
+    bluf: 'Homeowners insurance in Utah covers full roof replacements or repairs if the damage is caused by sudden, accidental storm events—such as 60+ MPH canyon winds, hail impact bruising, or fallen tree debris. Insurance does not cover routine aging, lack of maintenance, or normal wear and tear. To qualify for a full replacement, roofs typically require evidence of widespread storm damage across multiple slopes or unmatchable shingles under active Utah building codes.',
+    description: 'Learn how to navigate roof insurance claims in Utah. Discover covered storm damage, ACV vs. RCV payouts, building code mandates, and RHIVE\'s adjuster advocacy.',
+    category: 'Insurance & Storm Damage',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Michael Robinson',
+      role: 'CEO & Lead Insurance Adjuster Advocate',
+    },
+    image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Roof Insurance Claims Utah', 'Roof Insurance Claim Process Utah', 'Will Insurance Cover Roof Replacement Utah', 'Storm Damage Roof Repair', 'Salt Lake County Roofing'],
+    content: [
+      {
+        sectionHeading: 'Understanding Utah Storm Damage Coverage',
+        directAnswer: 'Utah homeowners insurance policies cover sudden peril-based damage from canyon winds, hail strikes, and storm debris, but strictly exclude natural aging, granule depletion, and deferred home maintenance.',
+        bodyParagraphs: [
+          'Utah’s extreme climate—featuring 80°F+ single-day temperature fluctuations, intense canyon wind shears, and severe hail events—subjects asphalt shingle roofs to intense environmental stress. When severe weather strikes, knowing your rights under your homeowners insurance policy is essential to securing a fair payout.',
+          'Insurance coverage splits sharply between sudden catastrophic storm events and gradual deterioration:'
+        ],
+        bulletPoints: [
+          'Wind Damage Coverage: Lifted, creased, or missing shingles caused by high wind gusts exceeding 60+ MPH.',
+          'Hail Impact Coverage: Bruised shingle asphalt, fractured fiberglass mats, and crushed vent caps.',
+          'Collateral Damage Coverage: Dented metal drip edge, cracked pipe boot collars, and damaged gutters.',
+          'Age-Related Wear Exclusions: Shingles exceeding 20–30 years of natural lifespan exhibiting normal granule wear.',
+          'Deferred Maintenance Exclusions: Leaks caused by uncleaned gutters, moss accumulation, or unaddressed pipe boot decay.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE Insurance Claim Process: From Storm to Settlement',
+        directAnswer: 'At RHIVE Construction, co-founded by Kara Robinson (President) and Michael Robinson (CEO), we eliminate contractor confusion by offering radical transparency throughout the insurance claim journey.',
+        bodyParagraphs: [
+          'Navigating an insurance claim without professional advocacy often leads to carrier underpayment or wrongful denial. RHIVE Construction provides structured guidance throughout the entire process:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            RHIVE INSURANCE CLAIM TIMELINE               │
+├────────────────────────────────────────────────────────┤
+│ 1. Free Remote Satellite & Aerial Storm Inspection     │
+│ 2. Hands-On Damage Audit & Photo Documentation          │
+│ 3. On-Site Adjuster Meeting with CEO Michael Robinson  │
+│ 4. ACV Check + Deductible Deposit to Commence Permits  │
+│ 5. 100% Full Tear-Off & Lifetime Certified Reroof      │
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          '1. Pre-Claim Storm Assessment: Before filing a claim, RHIVE conducts a free remote satellite analysis using Roofr aerial imagery and historical NOAA weather swaths to verify if your neighborhood was impacted by a confirmed storm.',
+          '2. On-Site Adjuster Advocacy: RHIVE CEO Michael Robinson personally meets your insurance adjuster on-site at your property. We walk the roof together, marking hail strike circles, wind creases, and code-required items—such as 28-gauge steel drip edge and continuous 6-foot Owens Corning WeatherLock® Ice & Water Shield.',
+          '3. Transparent Financial Terms: Under Utah contract terms, the initial investment required to begin municipal permitting consists of your insurance Actual Cash Value (ACV) check plus your policy Deductible.',
+          '4. 100% Full Tear-Off Standard: Once approved, we strip old shingles down to bare OSB decking (including up to 100 sq ft of OSB replacement at no extra charge), install Owens Corning ProArmor® synthetic underlayment, and lay 6-nail SureNail® Duration® shingles.'
+        ]
+      },
+      {
+        sectionHeading: 'RHIVE Service Area Coverage & Local Representation',
+        directAnswer: 'RHIVE Construction provides expert insurance claim representation and reroofing services across all primary Utah service hubs in Salt Lake, Davis, Weber, Summit, and Tooele counties.',
+        bodyParagraphs: [
+          'From foothill wind corridors in Bountiful to hailstorm swaths in West Jordan and snow load demands in Park City, our team represents homeowners across every major Utah metro:'
+        ],
+        bulletPoints: [
+          'Salt Lake County: Salt Lake City, South Jordan (HQ), Sandy, Draper, West Jordan, West Valley City, Herriman, Taylorsville, Midvale, Millcreek, Holladay, Kearns, Magna, Sugar House.',
+          'Davis & Weber Counties: Bountiful, Layton, Clearfield, North Salt Lake, Ogden.',
+          'Summit & Tooele Counties: Park City, Tooele.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Will homeowners insurance cover a full roof replacement in Utah?',
+        answer: 'Yes. Homeowners insurance in Utah covers full roof replacements or repairs if the damage is caused by sudden, accidental storm events—such as 60+ MPH canyon winds, hail impact bruising, or fallen tree debris. Insurance does not cover routine aging, lack of maintenance, or normal wear and tear.'
+      },
+      {
+        question: 'What is the difference between ACV and RCV payouts in Utah?',
+        answer: 'Actual Cash Value (ACV) represents the depreciated value of your roof at the time of damage, which the insurer pays initially minus your deductible. Replacement Cost Value (RCV) represents the total cost to replace the roof with new materials. Once RHIVE completes the installation, your insurer releases the withheld depreciation (RCV balance).'
+      },
+      {
+        question: 'Why should I have RHIVE on-site during the insurance adjuster inspection?',
+        answer: 'Insurance adjusters often oversee hundreds of regional claims and may overlook subtle hail bruising, cracked pipe boots, or local Utah building code mandates. RHIVE CEO Michael Robinson personally walks the roof with your adjuster to ensure all legitimate storm damage and required code upgrades (like 6-foot ice and water barrier) are approved.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 26 (AEO/SEO/GEO Series - Roof Financing)
+  // ==========================================
+  {
+    slug: 'roof-replacement-financing-utah-options',
+    title: 'Roof Replacement Financing in Utah: Low APRs, 0% Interest & Flexible Options',
+    metaTitle: 'Roof Replacement Financing Utah | 0% APR Options | RHIVE Construction',
+    bluf: 'Homeowners in Utah can finance a full roof replacement through RHIVE Construction\'s financing partnership with Enhancify. Key financing terms include 0% APR for 18 months for same-as-cash payoffs, low-APR plans from 4.99% to 7.99% spread across 5 to 20 years, and instant soft-credit prequalification in 60 seconds with zero upfront equity requirements.',
+    description: 'Explore roof replacement financing options in Utah. Learn about 0% APR for 18 months, low monthly rate plans with Enhancify, and RHIVE\'s RPSP efficiency credits.',
+    category: 'Residential',
+    readTime: '5 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'Co-Founder & President',
+    },
+    image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Roof Replacement Financing Utah', 'Roof Financing Low Monthly Payment', 'How to Finance a New Roof Utah', '0% APR Roof Financing', 'Enhancify Roofing Loan'],
+    content: [
+      {
+        sectionHeading: 'Managing the Cost of a New Roof in Utah',
+        directAnswer: 'A leaking or aging roof cannot wait for liquid cash reserves. Modern financing bridges emergency capital needs with fixed low monthly payments, promotional decision-speed credits, and structured payment milestones.',
+        bodyParagraphs: [
+          'A leaking or aging roof cannot wait for liquid cash reserves. Left unaddressed, roof leaks damage attic insulation, rot wood decking, and create costly interior drywall repairs.',
+          'Through modern, tech-enabled contractors like RHIVE Construction, Utah homeowners can secure fast capital bridges, decision-speed promotional credits, and structured payment milestones.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            RHIVE CAPITAL & SAVINGS MATRIX              │
+├──────────────────────────┬─────────────────────────────┤
+│ FINANCING PLAN           │ KEY BENEFIT                 │
+├──────────────────────────┼─────────────────────────────┤
+│ 0% APR for 18 Months     │ Same-as-cash payoff window  │
+│ 4.99% - 7.99% APR Plans  │ Low monthly installments    │
+│ RPSP Efficiency Credit   │ Immediate 10% credit        │
+│                          │ (Up to $1,000 off)         │
+└──────────────────────────┴─────────────────────────────┘`
+      },
+      {
+        sectionHeading: '1. Enhancify Partnership: Flexible Monthly Payment Plans',
+        directAnswer: 'RHIVE partners directly with Enhancify to offer 0% APR same-as-cash terms for 18 months and extended 20-year low monthly payment plans with instant 60-second soft prequalification.',
+        bodyParagraphs: [
+          'RHIVE Construction partners directly with Enhancify to provide seamless, accessible loan programs for residential reroofing:'
+        ],
+        bulletPoints: [
+          '0% APR Same-As-Cash: Pay off your new roof within 18 months with zero interest accumulation.',
+          '20-Year Low-Monthly Options: Spread investments over extended terms to fit tight monthly budgets.',
+          'Instant Prequalification: Check active rates directly through the RHIVE Client Portal in under 1 minute with no impact on your credit score.'
+        ]
+      },
+      {
+        sectionHeading: '2. The RHIVE Project Savings Promotion (RPSP) "Efficiency Credit"',
+        directAnswer: 'RHIVE eliminates commissioned sales reps and physical warehouse overhead to provide an immediate 10% efficiency credit (up to $1,000 residential / $3,000 commercial) when approving your quote within the presentation window.',
+        bodyParagraphs: [
+          'Traditional contractors pad quotes with a 10–15% "chase cost"—the administrative overhead required for repeated sales visits, phone follow-ups, and long decision windows.',
+          'At RHIVE Construction, we eliminate sales commissions and physical warehouse bloat to keep overhead under 10%:'
+        ],
+        bulletPoints: [
+          'Immediate 10% Efficiency Credit: By approving your certified quote within the presentation window, we strip out administrative chase costs and credit 10% (up to $1,000 for residential / up to $3,000 for commercial) directly back to your project ledger.',
+          'Protected by Utah’s 3-Day Right of Rescission: Lock in your efficiency discount immediately while retaining a full 3-business-day statutory window to verify your decision with zero financial risk.'
+        ]
+      },
+      {
+        sectionHeading: '3. The Transparent 50/40/10 Milestone Investment Schedule',
+        directAnswer: 'Beware of contractors demanding 100% upfront payment. RHIVE protects your money with a transparent 50/40/10 payment milestone schedule.',
+        bodyParagraphs: [
+          'RHIVE Construction never asks for total project funding upfront. We align contractor accountability with construction progress:'
+        ],
+        bulletPoints: [
+          '50% Initial Investment: Due at contract signing to lock your schedule, file municipal permits, and order manufacturer-certified materials.',
+          '40% Second Milestone: Due on final installation day once the roof is fully installed and watertight.',
+          '10% Final Settlement: Retained by you until 100% project completion, including final detail checks and magnetic lawn cleanup.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'What financing options are available for a roof replacement in Utah?',
+        answer: 'Homeowners in Utah can finance a full roof replacement through RHIVE Construction\'s partnership with Enhancify, including 0% APR for 18 months, low-APR plans from 4.99% to 7.99% over 5 to 20 years, and instant soft-credit checks.'
+      },
+      {
+        question: 'How does the RHIVE Project Savings Promotion (RPSP) reduce roof replacement costs?',
+        answer: 'The RPSP eliminates the 10-15% overhead traditional contractors spend chasing sales leads. By making a timely decision within your quote presentation window, RHIVE credits that efficiency savings (up to $1,000 residential / $3,000 commercial) directly back to you.'
+      },
+      {
+        question: 'Is my deposit protected when financing a roof replacement with RHIVE?',
+        answer: 'Yes. All contracts are safeguarded by Utah\'s statutory 3-day right of rescission, and funds are disbursed according to our strict 50/40/10 milestone schedule—with the final 10% held until you confirm 100% satisfactory completion.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 27 (AEO/SEO/GEO Series - Ice Dam Prevention)
+  // ==========================================
+  {
+    slug: 'ice-dam-prevention-mitigation-utah-guide',
+    title: 'Ice Dam Prevention & Mitigation in Utah: Stopping Destructive Winter Roof Leaks',
+    metaTitle: 'Ice Dam Prevention Utah | Eave Protection | RHIVE Construction',
+    bluf: 'Ice dams form when heat escapes from an under-insulated or poorly ventilated attic, melting snow on the upper roof deck. Meltwater runs down to the cold, unheated eave line, refreezes, and forms an ice ridge that traps backing water beneath shingles. The 3 best ways to prevent ice dams in Utah are installing a minimum of 6 feet of continuous Owens Corning WeatherLock® Ice & Water Shield along eaves, mounting commercial self-regulating heat trace cables, and balancing attic ventilation with VentSure® continuous ridge vents.',
+    description: 'Prevent destructive winter ice dams in Utah. Discover continuous WeatherLock Ice & Water Shield, self-regulating heat trace cable systems, and attic ventilation fixes.',
+    category: 'Maintenance',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Michael Robinson',
+      role: 'CEO & Master Roofing Specialist',
+    },
+    image: 'https://images.unsplash.com/photo-1548777123-e216912df7d8?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Ice Dam Prevention Utah', 'How to Stop Ice Dams Utah', 'Heat Cable Installation Salt Lake City', 'Winter Roof Leaks', 'WeatherLock Ice and Water Shield'],
+    content: [
+      {
+        sectionHeading: 'The Mechanics of Winter Ice Dam Damage in Utah',
+        directAnswer: 'During Utah winters, attic heat loss melts upper roof snowpack, which runs down to freezing eaves and forms ice dams that force water upward under shingle courses.',
+        bodyParagraphs: [
+          'During Utah winters, snowpack accumulates heavily on rooflines. When indoor attic heat rises due to inadequate insulation or blocked airflow, the temperature of the upper roof deck exceeds 32°F. Snow melts, trickles down the roof plane, and hits the cold overhang above the eaves, refreezing into a solid ice dam.',
+          'As meltwater backs up behind this ice ridge, it penetrates standard shingle overlaps, rotting wood sheathing, soaking attic insulation, and ruining ceiling drywall.'
+        ],
+        asciiBox: `       [HEAT ESCAPES FROM ATTIC] ──> Snow Melts on Upper Deck
+                                           │
+                                           ▼
+[COLD UNHEATED EAVE] ───────────────> Meltwater Refreezes
+                                           │
+                                           ▼
+ [ICE DAM FORMS] ───────────────────> Water Backs Up Under Shingles!`
+      },
+      {
+        sectionHeading: 'RHIVE’s 3-Layer Ice Defense System',
+        directAnswer: 'RHIVE engineers every residential reroof with 6 feet of continuous Owens Corning WeatherLock® membrane, self-regulating heat trace cables, and balanced VentSure® ridge ventilation.',
+        bodyParagraphs: [
+          'At RHIVE Construction, we engineer every residential roof replacement to withstand extreme Utah winter freeze-thaw cycles:'
+        ],
+        bulletPoints: [
+          '1. Double-Layer Eave Waterproofing (WeatherLock®): Under standard building codes, ice barrier underlayment is required only 24 inches past the interior warm wall. RHIVE goes further: we enforce a strict minimum of 6 feet of self-adhering Owens Corning WeatherLock® Ice & Water Shield continuously along all eaves and valleys. This self-sealing rubberized membrane grips around coil nails to prevent backing water from touching wood decking.',
+          '2. Self-Regulating Commercial Heat Trace Cable Systems: For high-elevation homes in Park City, foothill bench properties in Sandy, or shaded rooflines in Bountiful, we install heavy-duty self-regulating heat trace cables that automatically adjust wattage (5W per linear foot, 110V) based on outdoor temperatures.',
+          '3. Thermostat Automation: Built-in thermostats activate cables only when freezing precipitation is present (35°F–45°F window), creating continuous zig-zag melt channels along eaves and downspouts.',
+          '4. Balanced Attic Airflow (Owens Corning VentSure®): Preventing ice dams starts with keeping the roof deck cold. We install Owens Corning VentSure® continuous ridge vents combined with soffit intake vents to maintain constant airflow, flushing trapped heat out of the attic.'
+        ]
+      },
+      {
+        sectionHeading: 'RHIVE Winter Service Area Coverage',
+        directAnswer: 'RHIVE Construction provides ice dam mitigation, heat cable installation, and winter emergency roof repairs across Salt Lake, Davis, Weber, Summit, and Tooele counties.',
+        bodyParagraphs: [
+          'Whether your property is located along high-snow mountain benches or valley neighborhoods, RHIVE provides complete winter roof protection:'
+        ],
+        bulletPoints: [
+          'Salt Lake County: Salt Lake City, South Jordan, Sandy, Draper, West Jordan, West Valley City, Herriman, Taylorsville, Midvale, Millcreek, Holladay, Kearns, Magna, Sugar House.',
+          'Davis & Weber Counties: Bountiful, Layton, Clearfield, North Salt Lake, Ogden.',
+          'Summit & Tooele Counties: Park City, Tooele.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'What causes ice dams in Utah and how do you prevent them?',
+        answer: 'Ice dams form when heat escaping from an under-insulated or poorly ventilated attic melts snow on the upper roof deck. The meltwater refreezes at the cold eave overhang. Prevent them by installing 6 feet of continuous Owens Corning WeatherLock® Ice & Water Shield, commercial self-regulating heat trace cables, and balanced VentSure® ridge ventilation.'
+      },
+      {
+        question: 'How do self-regulating heat trace cables prevent gutter and eave ice damage?',
+        answer: 'Self-regulating heat trace cables automatically increase thermal output as temperatures drop (5 watts per linear foot), melting open channels through snowpack and gutters so meltwater drains freely off the roof before refreezing.'
+      },
+      {
+        question: 'Will chipping away an ice dam damage my shingles?',
+        answer: 'Yes. Never hack at ice dams with shovels, axes, or ice picks. In freezing weather, asphalt shingles are brittle, and impacts tear the fiberglass matting and void your warranty. RHIVE uses low-pressure steam and heated containment to safely melt ice dams without roof damage.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 28 (AEO/SEO/GEO Series - Hail Damage)
+  // ==========================================
+  {
+    slug: 'hail-damage-insurance-claims-utah-inspection-guide',
+    title: 'Hail Damage Insurance Claims in Utah: How to Spot Bruises & Secure Approval',
+    metaTitle: 'Hail Damage Insurance Claim Utah | Inspection Guide | RHIVE',
+    bluf: 'Roof hail damage in Utah appears as dark, soft circular bruises where severe impacts dislodge protective mineral granules and expose the underlying asphalt black tar layer. Key indicators include spongy shingle depressions, heavy granule accumulation in downspouts, and round pockmarks on aluminum gutters, downspouts, metal vents, and AC fins.',
+    description: 'How to identify roof hail damage in Utah and secure insurance claim approval. Learn about shingle bruising, soft-metal pockmarks, and RHIVE\'s adjuster advocacy.',
+    category: 'Insurance & Storm Damage',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Michael Robinson',
+      role: 'CEO & Lead Insurance Adjuster Advocate',
+    },
+    image: 'https://images.unsplash.com/photo-1516912481808-3406841bd33c?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Hail Damage Insurance Claim Utah', 'How to Spot Roof Hail Damage Utah', 'Hail Damage Roof Repair Salt Lake City', 'Duration FLEX Impact Shingles', 'Roof Hail Inspection'],
+    content: [
+      {
+        sectionHeading: 'The Hidden Danger of Hail Damage on Utah Roofs',
+        directAnswer: 'Severe summer hail storms dislodge mineral granules and fracture underlying fiberglass mats, leaving exposed asphalt vulnerable to rapid UV cracking and leaks within 12 to 24 months.',
+        bodyParagraphs: [
+          'Severe summer hail storms frequently sweep across Salt Lake County, Davis County, and the Wasatch Front. Hailstones falling at high velocity bruise shingle asphalt, fracture underlying fiberglass matting, and strip away protective granules.',
+          'Unaddressed hail damage exposes raw asphalt to intense solar UV radiation, causing rapid cracking, premature shingle failure, and roof leaks within 12 to 24 months.'
+        ],
+        asciiBox: `  [HIGH-VELOCITY HAIL IMPACT] ──> Dislodges Mineral Granules
+                                           │
+                                           ▼
+   [EXPOSED ASPHALT TAR] ───────────> Direct Solar UV Baking
+                                           │
+                                           ▼
+[BRITTLE CRACKING & LEAKS] ────────> Systemic Roof Failure!`
+      },
+      {
+        sectionHeading: 'How RHIVE Proves Hail Claims to Insurance Adjusters',
+        directAnswer: 'RHIVE deploys a 3-step proof methodology—combining NOAA satellite storm swaths, physical 10\'x10\' test squares, and on-site adjuster advocacy led by CEO Michael Robinson.',
+        bodyParagraphs: [
+          'Filing an insurance claim without clear proof can harm your record. If an adjuster determines roof breakdown is due to age or wear rather than storm impact, the claim is denied.',
+          'At RHIVE Construction, we deploy a rigorous 3-step proof methodology:'
+        ],
+        bulletPoints: [
+          '1. NOAA & Satellite Storm Swath Verification: We cross-reference your exact address against NOAA radar data and historical hail event maps (e.g., September 18, 2026 quarter-inch hail events in Salt Lake/Davis counties).',
+          '2. Physical Test Square Diagnostics: We inspect your roof slopes, establishing 10\' x 10\' test squares to count verified hail strike bruises, fractured mats, and damaged metal penetrations.',
+          '3. On-Site Adjuster Meeting with Michael Robinson: RHIVE CEO Michael Robinson attends your insurance inspection in person. We mark hail impact circles, document soft-metal collateral, and ensure local building code requirements—like 28-gauge steel drip edge and continuous WeatherLock® Ice & Water Shield—are included in the carrier\'s approved estimate.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE Replacement Guarantee',
+        directAnswer: 'Approved hail reroofs receive 100% tear-offs down to bare OSB decking, 100 sq ft free deck replacement, WeatherLock® membranes, and Class 4 impact-rated Owens Corning Duration FLEX® shingles.',
+        bodyParagraphs: [
+          'Once your hail claim is approved, our crews install an institutional-grade roofing system engineered to resist future storms:'
+        ],
+        bulletPoints: [
+          '100% Full Tear-Off: We strip the damaged roof down to bare OSB decking (including up to 100 sq ft of OSB replacement at no extra charge).',
+          'High-Performance Underlayment: We install Owens Corning ProArmor® synthetic underlayment and 6-foot eave barriers of WeatherLock® Ice & Water Shield.',
+          'Class 4 Impact Resistance: We fasten Class 4 Impact Rated Owens Corning Duration FLEX® (SBS polymer-modified) or standard Duration® shingles using 6-nail SureNail® patterns.',
+          'Lifetime Warranties: Backed by Owens Corning 50-year Preferred Protection and RHIVE\'s direct Lifetime Installer No-Leak Guarantee.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'How do you know if your roof has hail damage in Utah?',
+        answer: 'Roof hail damage appears as dark, soft circular bruises where severe impacts dislodge protective mineral granules and expose the underlying asphalt black tar layer. Key indicators include circular spongy depressions, heavy granule accumulation in downspouts, and round pockmarks on gutters, downspouts, and AC fins.'
+      },
+      {
+        question: 'Can hail damage cause my roof to leak immediately?',
+        answer: 'Rarely. Hail usually creates micro-fractures in the fiberglass mat and dislodges UV-protecting granules. The roof begins leaking 12 to 24 months later after intense sun exposure degrades the raw asphalt.'
+      },
+      {
+        question: 'Will installing Class 4 Impact Rated shingles lower my insurance premiums?',
+        answer: 'Yes. Installing Class 4 Impact Rated shingles like Owens Corning Duration FLEX® often qualifies Utah homeowners for annual homeowners insurance premium discounts of up to 15% to 25%.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 29 (AEO/SEO/GEO Series - Bountiful Contractor)
+  // ==========================================
+  {
+    slug: 'top-rated-roofing-contractor-bountiful-ut',
+    title: 'Top-Rated Roofing Contractor in Bountiful, UT: Local Reroofing & Storm Repair',
+    metaTitle: 'Roofing Contractor Bountiful UT | Local Roofers | RHIVE Construction',
+    bluf: 'RHIVE Construction is a top-rated, female-owned roofing contractor serving Bountiful, Utah, and Davis County. RHIVE operates with radical cost transparency—providing itemized cost breakdowns showing exact costs for Materials, Labor, Operating Overhead (<10%), and Net Profit on every quote. Every residential reroof includes a 100% full tear-off policy, Owens Corning Duration® 130 MPH high-wind shingles, and RHIVE’s direct Lifetime Installer No-Leak Guarantee.',
+    description: 'Looking for a top-rated roofing contractor in Bountiful, UT? RHIVE Construction offers 100% full tear-offs, high-wind SureNail shingles, and 50-year no-leak guarantees.',
+    category: 'Residential',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'Co-Founder & President',
+    },
+    image: 'https://images.unsplash.com/photo-1541888946425-d0fbb186156f?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Roofing Contractor Bountiful', 'Roof Repair Bountiful UT', 'Best Roofer in Bountiful Utah', 'Davis County Roofing', 'Bountiful Bench Roofing'],
+    content: [
+      {
+        sectionHeading: 'Solving Bountiful\'s Foothill Canyon Wind & Heavy Snowpack Challenges',
+        directAnswer: 'Bountiful homes experience 70+ MPH canyon wind gusts and shaded winter snowpack retention, requiring SureNail® 130 MPH shingles, 28-gauge steel drip edges, and 6 feet of continuous WeatherLock® eave protection.',
+        bodyParagraphs: [
+          'Nestled along the Wasatch Bench in southern Davis County, properties in Bountiful experience demanding environmental conditions. Severe downslope canyon wind gusts blowing through Weber and Sessions canyons frequently exceed 60–70 MPH, testing shingle edge adhesion and tearing unreinforced roofs.',
+          'Simultaneously, heavy foothill snowpack retention and shade along mountain slopes cause severe winter ice damming. Protecting Bountiful homes requires high-wind SureNail® fastening bands, 28-gauge steel drip metal, and continuous eave waterproofing.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│             RHIVE BOUNTIFUL ROOFING STANDARD           │
+├────────────────────────────────────────────────────────┤
+│ ✓ 100% Full Tear-Off Down to Bare Wood Decking         │
+│ ✓ Owens Corning ProArmor® Synthetic Underlayment       │
+│ ✓ 6 Feet Minimum WeatherLock® Ice & Water Shield       │
+│ ✓ SureNail® 6-Nail Fastening Pattern (130 MPH Wind)    │
+│ ✓ 28-Gauge Perimeter Steel Drip Edge Metal             │
+│ ✓ 50-Year Non-Prorated Installer No-Leak Guarantee     │
+└────────────────────────────────────────────────────────┘`
+      },
+      {
+        sectionHeading: 'Municipal Compliance & Local Bountiful Service Area',
+        directAnswer: 'RHIVE manages 100% of municipal permitting through the Bountiful City Community Development Department, ensuring code-compliant eave ice barrier extensions across all bench and valley neighborhoods.',
+        bodyParagraphs: [
+          'Full roof replacements in Bountiful require municipal building permits issued through the Bountiful City Community Development Department. RHIVE Construction manages 100% of the permitting process, ensuring full compliance with local building codes and eave ice barrier extensions.'
+        ],
+        bulletPoints: [
+          'Bountiful Bench & Val Verda: High-elevation properties requiring reinforced eave ice defense and canyon wind fastening.',
+          'Summerhays & Orchard Drive Corridors: Established residential neighborhoods benefiting from full tear-offs and rotted deck replacements.',
+          'Mueller Park & Eggett Park Foothills: Shaded canyon-mouth homes needing self-regulating heat trace cables and Class A fire-rated shingles.',
+          'Bountiful Main Street & Downtown Commercial District: Retail flat roofs receiving GAF EverGuard® TPO/PVC single-ply membrane systems.',
+          'Adjoining Davis Communities: Seamless service extending into North Salt Lake, Centerville, Woods Cross, and West Bountiful.'
+        ]
+      },
+      {
+        sectionHeading: 'Why Bountiful Homeowners Choose RHIVE Construction',
+        directAnswer: 'Co-founded by Kara Robinson (President) and Michael Robinson (CEO), RHIVE brings radical cost transparency, 0% salesman markups, the RPSP efficiency credit, and community reinvestment to Davis County.',
+        bodyParagraphs: [
+          'Co-founded by Kara Robinson (President) and Michael Robinson (CEO), RHIVE Construction brings complete transparency to Davis County homeowners:'
+        ],
+        bulletPoints: [
+          'No Salesman Markups: We utilize AI automation and remote aerial diagnostic tools to eliminate commissioned sales reps and warehouse overhead, keeping administrative expenses under 10%.',
+          'Itemized Quote Breakdown: You receive a detailed mathematical statement showing exact line-item costs for Materials, Labor, Overhead, and Profit.',
+          'Project Savings Promotion (RPSP): Commit within the presentation window to unlock an immediate 10% credit (up to $1,000), protected by Utah\'s statutory 3-day right of rescission.',
+          'Community Reinvestment: Through "Our Hive" community initiatives, a portion of every completed roof helps fund free roof replacements for local veterans, teachers, and first responders.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Who is the best roofing contractor in Bountiful, UT?',
+        answer: 'RHIVE Construction is a top-rated, female-owned roofing contractor serving Bountiful, Utah, and Davis County. RHIVE operates with radical cost transparency—providing itemized cost breakdowns showing exact costs for Materials, Labor, Operating Overhead (<10%), and Net Profit on every quote. Every residential reroof includes a 100% full tear-off policy, Owens Corning Duration® 130 MPH high-wind shingles, and RHIVE’s direct Lifetime Installer No-Leak Guarantee.'
+      },
+      {
+        question: 'Do I need a building permit to replace my roof in Bountiful, UT?',
+        answer: 'Yes. Bountiful City requires a building permit and final inspection for all full roof replacements. RHIVE pulls the municipal permit on your behalf and manages all required city inspections.'
+      },
+      {
+        question: 'What shingles can withstand high canyon winds in Bountiful?',
+        answer: 'Owens Corning Duration® shingles featuring patented SureNail® Technology. Their woven fabric nail strip provides certified 130 MPH wind uplift resistance when installed using RHIVE\'s 6-nail fastening pattern.'
       }
     ]
   }

@@ -238,6 +238,11 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-SEO-BLOG-22':     () => <DynamicBlogPostPage slug="roofing-insurance-claims-utah-wind-hail-guide" />,
   'P-SEO-BLOG-23':     () => <DynamicBlogPostPage slug="rhive-abundance-feature-local-utah-businesses" />,
   'P-SEO-BLOG-24':     () => <DynamicBlogPostPage slug="rhive-abundance-network-community-referrals" />,
+  'P-SEO-BLOG-25':     () => <DynamicBlogPostPage slug="roof-insurance-claims-utah-step-by-step-guide" />,
+  'P-SEO-BLOG-26':     () => <DynamicBlogPostPage slug="roof-replacement-financing-utah-options" />,
+  'P-SEO-BLOG-27':     () => <DynamicBlogPostPage slug="ice-dam-prevention-mitigation-utah-guide" />,
+  'P-SEO-BLOG-28':     () => <DynamicBlogPostPage slug="hail-damage-insurance-claims-utah-inspection-guide" />,
+  'P-SEO-BLOG-29':     () => <DynamicBlogPostPage slug="top-rated-roofing-contractor-bountiful-ut" />,
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,
   'A-02': UserManagementPage,

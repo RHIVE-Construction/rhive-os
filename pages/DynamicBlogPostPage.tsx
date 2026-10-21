@@ -12,7 +12,7 @@ export const DynamicBlogPostPage: React.FC<DynamicBlogPostPageProps> = ({ slug }
 
   useEffect(() => {
     if (post) {
-      document.title = `${post.title} | RHIVE Construction Utah`;
+      document.title = post.metaTitle || `${post.title} | RHIVE Construction Utah`;
 
       // Update meta description
       let metaDescription = document.querySelector('meta[name="description"]');
@@ -242,6 +242,13 @@ export const DynamicBlogPostPage: React.FC<DynamicBlogPostPageProps> = ({ slug }
                   {para}
                 </p>
               ))}
+
+              {/* ASCII Diagram or Visual Blueprint */}
+              {section.asciiBox && (
+                <pre className="my-6 p-4 bg-zinc-950 border border-white/15 rounded-md font-mono text-xs sm:text-sm text-[#ec028b] overflow-x-auto leading-relaxed whitespace-pre">
+                  {section.asciiBox}
+                </pre>
+              )}
 
               {/* Bullet Points */}
               {section.bulletPoints && section.bulletPoints.length > 0 && (
