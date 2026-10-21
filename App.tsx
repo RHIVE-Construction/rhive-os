@@ -95,6 +95,11 @@ const PATH_ROUTES: Record<string, string> = {
     '/blog/roofing-insurance-claims-utah-wind-hail-guide': 'P-SEO-BLOG-22',
     '/blog/rhive-abundance-feature-local-utah-businesses': 'P-SEO-BLOG-23',
     '/blog/rhive-abundance-network-community-referrals':   'P-SEO-BLOG-24',
+    '/blog/roof-insurance-claims-utah-step-by-step-guide': 'P-SEO-BLOG-25',
+    '/blog/roof-replacement-financing-utah-options': 'P-SEO-BLOG-26',
+    '/blog/ice-dam-prevention-mitigation-utah-guide': 'P-SEO-BLOG-27',
+    '/blog/hail-damage-insurance-claims-utah-inspection-guide': 'P-SEO-BLOG-28',
+    '/blog/top-rated-roofing-contractor-bountiful-ut': 'P-SEO-BLOG-29',
     '/privacy':                               'P-PRIVACY',
     '/terms':                                 'P-TERMS',
 };

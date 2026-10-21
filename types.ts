@@ -380,3 +380,86 @@ export interface Contact {
   responsibilities: string[];
   preferredContactMethod?: 'Phone' | 'Text' | 'Email';
 }
+
+// ── 5-Tier Relational Customers Hierarchy ───────────────────────────────────
+export type CustomerType = 'Commercial' | 'Government' | 'Residential';
+
+export interface ProjectJob {
+    id: string;
+    building_id: string;
+    title: string;
+    job_number?: string;
+    scope_type: string;
+    current_stage: string;
+    contract_value: number;
+    status: 'Active' | 'Under Review' | 'Completed' | 'Pending Invoice';
+    assigned_contractor?: string;
+    target_completion?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface BuildingAsset {
+    id: string;
+    phase_id: string;
+    name: string;
+    building_code?: string;
+    roof_type: string;
+    roof_sqft: number;
+    stories?: number;
+    pitch?: string;
+    year_installed?: number;
+    condition?: 'Good' | 'Fair' | 'Critical' | 'Under Replacement';
+    map_annotation?: {
+        pin_color?: string;
+        notes?: string;
+        coordinates?: { lat: number; lng: number };
+    };
+    jobs: ProjectJob[];
+}
+
+export interface SubPropertyPhase {
+    id: string;
+    campus_id: string;
+    name: string;
+    phase_number?: string;
+    description?: string;
+    buildings: BuildingAsset[];
+}
+
+export interface PropertyCampus {
+    id: string;
+    client_id: string;
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    coordinates?: { lat: number; lng: number };
+    manager_contact?: {
+        name: string;
+        phone: string;
+        email: string;
+    };
+    notes?: string;
+    phases: SubPropertyPhase[];
+}
+
+export interface CustomerClient {
+    id: string;
+    name: string;
+    customer_type: CustomerType;
+    account_code?: string;
+    billing_address?: string;
+    primary_contact?: {
+        name: string;
+        email: string;
+        phone: string;
+        role?: string;
+    };
+    notes?: string;
+    created_at: string;
+    updated_at: string;
+    campuses: PropertyCampus[];
+}
+

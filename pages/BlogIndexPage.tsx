@@ -29,6 +29,48 @@ const BLOGS_DATA: BlogMeta[] = [
     badge: 'Community Spotlight'
   },
 
+  // ── 5 AEO, SEO & GEO STRATEGY ARTICLES (INSURANCE, FINANCING, ICE DAMS, HAIL, BOUNTIFUL) ─
+  {
+    title: 'Navigating Roof Insurance Claims in Utah: A Step-by-Step Homeowner Guide',
+    slug: '/blog/roof-insurance-claims-utah-step-by-step-guide',
+    description: 'Learn how to navigate roof insurance claims in Utah. Discover covered storm damage, ACV vs. RCV payouts, building code mandates, and RHIVE\'s adjuster advocacy.',
+    category: 'Insurance',
+    readTime: '6 min read',
+    badge: 'Insurance Guide'
+  },
+  {
+    title: 'Roof Replacement Financing in Utah: Low APRs, 0% Interest & Flexible Options',
+    slug: '/blog/roof-replacement-financing-utah-options',
+    description: 'Explore roof financing options in Utah. Learn how 0% promotional APR, fixed low monthly payment terms, and RHIVE\'s 50/40/10 structure make replacement accessible.',
+    category: 'Residential',
+    readTime: '5 min read',
+    badge: 'Financing Guide'
+  },
+  {
+    title: 'Ice Dam Prevention & Mitigation in Utah: Stopping Destructive Winter Roof Leaks',
+    slug: '/blog/ice-dam-prevention-mitigation-utah-guide',
+    description: 'Prevent severe ice dam leaks in Utah. Learn why ice dams form along the Wasatch Front, R-60 attic insulation codes, self-regulating heat trace cables, and safe steaming.',
+    category: 'Maintenance',
+    readTime: '6 min read',
+    badge: 'Winter Guide'
+  },
+  {
+    title: 'Hail Damage Insurance Claims in Utah: How to Spot Bruises & Secure Approval',
+    slug: '/blog/hail-damage-insurance-claims-utah-inspection-guide',
+    description: 'Identify hidden hail damage on Utah asphalt roofs. Learn how hail bruises shingles, fractures fiberglass mats, and how RHIVE secures full insurance claim approvals.',
+    category: 'Insurance',
+    readTime: '6 min read',
+    badge: 'Hail Damage'
+  },
+  {
+    title: 'Top-Rated Roofing Contractor in Bountiful, UT: Local Reroofing & Storm Repair',
+    slug: '/blog/top-rated-roofing-contractor-bountiful-ut',
+    description: 'Looking for the best roofing contractor in Bountiful, UT? Discover RHIVE Construction\'s high-wind SureNail shingles, Davis County permit compliance, and zero salesman markup.',
+    category: 'Residential',
+    readTime: '5 min read',
+    badge: 'Local Spotlight'
+  },
+
   // ── 9 AEO & SEO NEW BLOG ARTICLES ───────────────────────────────────────────────
   {
     title: 'How Do I Know My Roof Only Needs a Repair or a Full Replacement?',
