@@ -23,6 +23,7 @@ import { DevNavigator } from './components/DevNavigator';
 import { FloatingBackButton } from './components/FloatingBackButton';
 import { GlobalCustomerLookupModal } from './components/GlobalCustomerLookupModal';
 import { GlobalWeatherModal } from './components/GlobalWeatherModal';
+import { navigateToIntake } from './lib/intakeRouting';
 import { cn } from './lib/utils';
 import { session } from './lib/session';
 
@@ -283,9 +284,12 @@ const AppContentAuthenticated: React.FC = () => {
         };
         window.addEventListener('nav-page', handleCustomNav);
         window.addEventListener('open-roof-configurator', handleRoofConfigurator);
+        const handleOpenIntake = () => setActivePageId('E-02a');
+        window.addEventListener('open-intake', handleOpenIntake);
         return () => {
             window.removeEventListener('nav-page', handleCustomNav);
             window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
+            window.removeEventListener('open-intake', handleOpenIntake);
         };
     }, [setActivePageId]);
 
@@ -355,7 +359,7 @@ const LoginBridge: React.FC = () => {
     const mainRef = React.useRef<HTMLElement>(null);
 
     // Derive the public page target — computed unconditionally so useMemo is always at top level
-    const isPagePublic = !!(activePageId && activePageId.startsWith('P-'));
+    const isPagePublic = !!(activePageId && (activePageId.startsWith('P-') || activePageId === 'E-02a'));
     const targetPageId = isPagePublic ? activePageId : 'P-00';
 
     // Stable component reference — only recreated when the target page actually changes
@@ -371,27 +375,48 @@ const LoginBridge: React.FC = () => {
             if (e.detail) setActivePageId(e.detail);
         };
         const handleRoofConfigurator = (e: any) => {
-            const concern = e.detail?.mode === 'quote' ? 'Certified Quote' : 'Instant Estimate';
-            window.dispatchEvent(new CustomEvent('open-estimator', { 
-                detail: { 
-                    concern, 
-                    address: e.detail?.address 
-                } 
-            }));
+            const isQuote = e.detail?.mode === 'quote';
+            navigateToIntake({
+                intent: isQuote ? 'Certified Quote' : 'Instant Estimate',
+                address: e.detail?.address
+            });
+        };
+        const handleOpenEstimatorEvent = (e: any) => {
+            const concern = e.detail?.concern || e.detail?.protocol;
+            if (!concern) return;
+
+            if (concern === 'Emergency Leak') {
+                navigateToIntake({ scope: 'Repair', activeLeak: true });
+            } else if (concern === 'Certified Quote' || concern === 'CERTIFIED QUOTE') {
+                navigateToIntake({ intent: 'Certified Quote', address: e.detail?.address });
+            } else if (concern === 'Instant Estimate' || concern === 'INSTANT ESTIMATE') {
+                navigateToIntake({ intent: 'Instant Estimate', address: e.detail?.address });
+            } else if (concern === 'Commercial / Industrial') {
+                navigateToIntake({ category: 'Commercial', intent: 'Certified Quote' });
+            } else if (concern === 'Portfolio Management') {
+                navigateToIntake({ category: 'Commercial', intent: 'Inspection' });
+            } else if (concern === 'Inspection' || concern === 'Schedule Inspection') {
+                navigateToIntake({ intent: 'Inspection' });
+            }
         };
         window.addEventListener('nav-page', handleCustomNav);
         window.addEventListener('open-roof-configurator', handleRoofConfigurator);
+        const handleOpenIntake = () => setActivePageId('E-02a');
+        window.addEventListener('open-intake', handleOpenIntake);
+        window.addEventListener('open-estimator', handleOpenEstimatorEvent);
 
         return () => {
             window.removeEventListener('nav-page', handleCustomNav);
             window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
+            window.removeEventListener('open-intake', handleOpenIntake);
+            window.removeEventListener('open-estimator', handleOpenEstimatorEvent);
         };
     }, [setActivePageId]);
 
     // Force non-public pages back to home if logged out
     useEffect(() => {
         if (!currentUser) {
-            if (activePageId && !activePageId.startsWith('P-')) {
+            if (activePageId && !activePageId.startsWith('P-') && activePageId !== 'E-02a') {
                 setActivePageId('P-00-V3');
             }
         }

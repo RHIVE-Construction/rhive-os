@@ -5,6 +5,7 @@ import PlexusShape from '../components/PlexusShape';
 import ShingleDurationLightbox from '../components/ShingleDurationLightbox';
 import ShingleFlexLightbox from '../components/ShingleFlexLightbox';
 import { InteractiveRoofAnatomy } from '../components/InteractiveRoofAnatomy';
+import { navigateToIntake } from '../lib/intakeRouting';
 import InteractiveOCMascot from '../components/InteractiveOCMascot';
 
 // New Ultimate Asphalt Sections
@@ -113,7 +114,7 @@ const AsphaltRoofingPage = () => {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <button
-                            onClick={() => window.location.href = '#quote'}
+                            onClick={() => navigateToIntake({ intent: 'Certified Quote' })}
                             className="group relative px-10 py-5 bg-[var(--rhive-pink)] text-white font-black uppercase text-base tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(236,2,139,0.3)]"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >

@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useState } from 'react';
 import { ShieldCheck, Zap, Award, CheckCircle2, Package, ArrowRight, Gauge, Activity, Building2, Gavel, HardHat, Home, Briefcase, Users, LayoutGrid, AlertCircle, Info, Trash2, Droplets, Fan, Ruler } from 'lucide-react';
 import PlexusShape from '../components/PlexusShape';
@@ -104,7 +105,7 @@ const MembraneRoofingPage = () => {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <button
-                            onClick={() => window.location.href = '#quote'}
+                            onClick={() => navigateToIntake({ category: 'Commercial', intent: 'Certified Quote' })}
                             className="group relative px-10 py-5 bg-[var(--rhive-pink)] text-white font-black uppercase text-base tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(236,2,139,0.3)]"
                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                         >

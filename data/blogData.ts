@@ -499,13 +499,13 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         sectionHeading: 'The RHIVE Project Savings Promotion (RPSP) "Efficiency Credit"',
-        directAnswer: 'Executing your quote within the presentation window eliminates contractor "chase costs," crediting an immediate 10% (up to $1,000 for residential / $3,000 for commercial) back to you with Utah 3-day right of rescission protection.',
+        directAnswer: 'Executing your quote within the presentation window eliminates contractor "chase costs," crediting an immediate 10% (up to $1,000) back to you with Utah 3-day right of rescission protection.',
         bodyParagraphs: [
           'In the traditional construction industry, contractors pad quotes with a 10–15% "chase cost"—the administrative overhead required to make repeated sales calls, send mailers, and manage long decision windows.',
           'At RHIVE Construction, we eliminate that waste:'
         ],
         bulletPoints: [
-          'Immediate 10% Credit (Up to $1,000 for Residential / $3,000 for Commercial): By executing your quote within the presentation window, we strip the "chase cost" out of your bid and credit it directly back to you.',
+          'Immediate 10% Credit (Up to $1,000): By executing your quote within the presentation window, we strip the "chase cost" out of your bid and credit it directly back to you.',
           'Protected by Utah\'s 3-Day Right of Rescission: You lock in the lowest efficiency price immediately while retaining a full 3-business-day statutory window to verify your decision with zero financial risk.'
         ]
       },
@@ -549,7 +549,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         question: 'What is the RHIVE Project Savings Promotion (RPSP)?',
-        answer: 'The RPSP is an immediate 10% credit (up to $1,000 for residential / $3,000 for commercial) awarded when you approve your quote within the presentation window, passing our administrative sales savings directly back to you.'
+        answer: 'The RPSP is an immediate 10% credit (up to $1,000) awarded when you approve your quote within the presentation window, passing our administrative sales savings directly back to you.'
       },
       {
         question: 'How do I apply for the "Our Hive" community roof donation program?',
@@ -1292,7 +1292,7 @@ export const BLOG_POSTS: BlogPost[] = [
           'At RHIVE Construction, we eliminate sales commissions and physical warehouse bloat to keep overhead under 10%:'
         ],
         bulletPoints: [
-          'Immediate 10% Efficiency Credit: By approving your certified quote within the presentation window, we strip out administrative chase costs and credit 10% (up to $1,000 for residential / up to $3,000 for commercial) directly back to your project ledger.',
+          'Immediate 10% Efficiency Credit: By approving your certified quote within the presentation window, we strip out administrative chase costs and credit 10% (up to $1,000) directly back to your project ledger.',
           'Protected by Utah’s 3-Day Right of Rescission: Lock in your efficiency discount immediately while retaining a full 3-business-day statutory window to verify your decision with zero financial risk.'
         ]
       },
@@ -1656,7 +1656,7 @@ export const BLOG_POSTS: BlogPost[] = [
 │   completion & quality audit.                          │
 └────────────────────────────────────────────────────────┘`,
         bulletPoints: [
-          'RHIVE Project Savings Promotion (RPSP): Approve your certified quote within the presentation window to unlock an immediate 10% Efficiency Credit (up to $1,000 for residential / up to $3,000 for commercial) by stripping out administrative chase costs.',
+          'RHIVE Project Savings Promotion (RPSP): Approve your certified quote within the presentation window to unlock an immediate 10% Efficiency Credit (up to $1,000) by stripping out administrative chase costs.',
           'Protected by Law: Locked under Utah’s statutory 3-Day Right of Rescission, giving you 3 full business days to verify your decision with zero financial risk.',
           'Flexible Financing: Partnered with Enhancify to offer 0% APR for 18 months or low-APR long-term payment plans.',
           'Community Impact: Every project supports "Our Hive" community initiatives, funding complete roof replacements for local veterans, teachers, and first responders.'

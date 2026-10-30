@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { Phone, Shield, ArrowRight, CheckCircle2, Zap, DollarSign, Calendar, FileText, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { navigateToIntake } from '../lib/intakeRouting';
 
 export default function ZeroSurprisesPricingPage() {
     useEffect(() => {
@@ -17,7 +18,7 @@ export default function ZeroSurprisesPricingPage() {
     const [openFaq, setOpenFaq] = React.useState<string | null>('faq-itemized-quote');
 
     const handleEstimateClick = () => {
-        window.location.href = '/estimate-tool';
+        navigateToIntake({ intent: 'Instant Estimate' });
     };
 
     const toggleFaq = (id: string) => {
@@ -209,19 +210,12 @@ export default function ZeroSurprisesPricingPage() {
                         </h2>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-2 gap-6">
                         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
                             <div className="text-sm font-bold text-white">Residential RPSP</div>
                             <div className="text-xs text-rhive-pink font-bold uppercase tracking-wider font-mono">10% / $1,000 Credit</div>
                             <p className="text-xs sm:text-sm text-gray-300 font-serif leading-relaxed">
                                 Approve your residential estimate within 48 hours to apply an immediate 10% Efficiency Credit (up to $1,000) directly to your project invoice.
-                            </p>
-                        </div>
-                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
-                            <div className="text-sm font-bold text-white">Commercial RPSP</div>
-                            <div className="text-xs text-cyan-400 font-bold uppercase tracking-wider font-mono">10% / $3,000 Credit</div>
-                            <p className="text-xs sm:text-sm text-gray-300 font-serif leading-relaxed">
-                                Commercial projects executed within 7 days receive tiered credits up to $3,000 on TPO and PVC single-ply membrane installations.
                             </p>
                         </div>
                         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">

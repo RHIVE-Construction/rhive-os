@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect, useState } from 'react';
 import { 
     Phone, Shield, ArrowRight, CheckCircle2, Zap, 
@@ -52,7 +53,7 @@ export default function CommercialFlatRoofingServicePage() {
             metaDesc.setAttribute('name', 'description');
             document.head.appendChild(metaDesc);
         }
-        metaDesc.setAttribute('content', "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, and transparent RPSP pricing.");
+        metaDesc.setAttribute('content', "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, and transparent itemized pricing.");
 
         // Canonical Tag Enforcement — points strictly to this page's standardized canonical path
         let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
@@ -125,7 +126,7 @@ export default function CommercialFlatRoofingServicePage() {
                     "provider": {
                         "@id": "https://www.rhiveconstruction.com/services/commercial-flat-roofing#organization"
                     },
-                    "description": "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, modified bitumen, and transparent RPSP pricing.",
+                    "description": "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, modified bitumen, and transparent itemized pricing.",
                     "serviceType": "Commercial Roofing, Flat Roofing, TPO Roofing, PVC Roofing, Modified Bitumen, Industrial Roofing"
                 },
                 {
@@ -187,15 +188,13 @@ export default function CommercialFlatRoofingServicePage() {
 
                 <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8">
                     <button
-                        onClick={handleEstimateClick}
-                        className="bg-rhive-pink text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded shadow-[0_0_20px_rgba(236,2,139,0.4)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                        onClick={() => navigateToIntake({ category: 'Commercial', intent: 'Certified Quote' })} className="bg-rhive-pink text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded shadow-[0_0_20px_rgba(236,2,139,0.4)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                         style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                     >
                         Request Commercial CapEx Analysis
                     </button>
                     <a
-                        href="/estimate-tool"
-                        className="flex items-center gap-2 border border-white/20 hover:border-rhive-pink text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                        onClick={(e) => { e.preventDefault(); navigateToIntake({ category: 'Commercial', intent: 'Instant Estimate' }); }} href="/intake" className="flex items-center gap-2 border border-white/20 hover:border-rhive-pink text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
                         style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                     >
                         Launch Instant Aerial Estimator
@@ -470,17 +469,17 @@ export default function CommercialFlatRoofingServicePage() {
                 </div>
             </section>
 
-            {/* ── SECTION 4: CODE & COMMERCIAL LAYOVER ANALYSIS ───────────────── */}
-            <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10">
+            {/* ── SECTION 4: CODE & COMMERCIAL ENGINEERING STANDARD ───────────────── */}
+            <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10" id="engineering-standard">
                 <div className="text-center mb-12">
                     <span className="text-xs font-mono text-rhive-gold uppercase tracking-[0.2em] block mb-2 font-bold">
                         Utah Building Code Compliance
                     </span>
                     <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                        Full System Tear-Off vs. Certified Code Layover
+                        Full Tear-Off to Decking vs. 1-Layer Re-Cover
                     </h2>
                     <p className="text-gray-400 font-serif italic text-base max-w-2xl mx-auto mt-3">
-                        Navigating Utah commercial building code compliance (IBC Chapter 15) is critical when optimizing capital expense and long-term asset value.
+                        Navigating Utah commercial building code compliance (IBC Chapter 15) with rigorous engineering standards that preserve capital and guarantee long-term asset value.
                     </p>
                     <div className="w-16 h-1 bg-rhive-gold mx-auto mt-4" />
                 </div>
@@ -488,25 +487,26 @@ export default function CommercialFlatRoofingServicePage() {
                 {/* Visual Matrix Block */}
                 <div className="max-w-4xl mx-auto bg-black/80 border border-white/15 rounded-xl overflow-hidden mb-12">
                     <div className="bg-white/5 p-4 text-center font-mono text-xs font-bold uppercase text-white tracking-widest border-b border-white/10">
-                        COMMERCIAL FLAT ROOF EVALUATION MATRIX
+                        COMMERCIAL FLAT ROOF ENGINEERING MATRIX
                     </div>
                     <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10 p-6 sm:p-8 gap-6 sm:gap-8 font-serif">
                         <div className="space-y-3">
-                            <div className="text-base font-bold text-white font-sans uppercase text-rhive-pink">Full Tear-Off Protocol</div>
+                            <div className="text-base font-bold text-white font-sans uppercase text-rhive-pink">Best Practice: Full Tear-Off to Decking</div>
                             <ul className="text-xs sm:text-sm text-gray-300 space-y-2">
-                                <li className="flex items-center gap-2">• Complete removal down to the steel, concrete, or wood deck</li>
-                                <li className="flex items-center gap-2">• Full structural deck inspection and replacement where corroded</li>
-                                <li className="flex items-center gap-2">• Maximum R-value upgrade with custom multi-layer tapered ISO</li>
-                                <li className="flex items-center gap-2">• Mandatory under IBC for multi-layered or moisture-saturated assemblies</li>
+                                <li className="flex items-center gap-2">• Complete removal down to the steel, concrete, or wood structural deck</li>
+                                <li className="flex items-center gap-2">• Full structural deck inspection and replacement where corroded or decayed</li>
+                                <li className="flex items-center gap-2">• Maximum R-value upgrade with custom multi-layer tapered polyiso insulation</li>
+                                <li className="flex items-center gap-2">• Mandatory under IBC Chapter 15 for multi-layered assemblies (2+ layers) or wet insulation</li>
                             </ul>
                         </div>
                         <div className="space-y-3 pt-6 md:pt-0">
-                            <div className="text-base font-bold text-white font-sans uppercase text-rhive-gold">Certified Layover Protocol</div>
+                            <div className="text-base font-bold text-white font-sans uppercase text-rhive-gold">How RHIVE Executes a 1-Layer Re-Cover</div>
                             <ul className="text-xs sm:text-sm text-gray-300 space-y-2">
-                                <li className="flex items-center gap-2">• Permitted on verified single-layer dry commercial substrates</li>
-                                <li className="flex items-center gap-2">• Mechanically fastened or adhered over high-density cover board</li>
-                                <li className="flex items-center gap-2">• Saves tens of thousands in landfill and disposal costs</li>
-                                <li className="flex items-center gap-2">• 100% eligible for full GAF NDL warranties up to 30 years</li>
+                                <li className="flex items-center gap-2">• Permitted under IBC Chapter 15 on verified single-layer dry commercial substrates</li>
+                                <li className="flex items-center gap-2">• RHIVE tears off the existing top membrane down to the insulation (never roofs over old membrane)</li>
+                                <li className="flex items-center gap-2">• 100% substrate inspection with immediate replacement of any soiled or damaged polyiso</li>
+                                <li className="flex items-center gap-2">• Installation of new fanfold cover board and brand-new GAF TPO or PVC membrane</li>
+                                <li className="flex items-center gap-2">• 100% manufacturer-warrantable system over verified substrate and structural decking</li>
                             </ul>
                         </div>
                     </div>
@@ -514,12 +514,12 @@ export default function CommercialFlatRoofingServicePage() {
 
                 <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-300 font-serif leading-relaxed">
                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <strong className="text-white font-sans block mb-2">IBC Code Compliance &amp; Asset Preservation:</strong>
-                        Under active Utah commercial building codes (IBC Chapter 15), properties with a single existing membrane are permitted a certified commercial layover if non-destructive moisture verification confirms the insulation and decking are dry and structurally sound.
+                        <strong className="text-white font-sans block mb-2">Best Practice (Full Tear-Off):</strong>
+                        Tearing all the way down to the structural decking (steel, concrete, or wood) is always best practice and is mandatory when there are 2+ roof layers or wet/damaged insulation. It guarantees 100% visibility into structural deck integrity.
                     </div>
                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <strong className="text-white font-sans block mb-2">The Layover CapEx Advantage:</strong>
-                        A certified GAF TPO or PVC layover over new high-density cover boards saves commercial property owners tens of thousands of dollars in tear-off labor and landfill disposal fees while maintaining 100% eligibility for GAF NDL warranties.
+                        <strong className="text-white font-sans block mb-2">How RHIVE Executes a 1-Layer Re-Cover:</strong>
+                        When there has only been 1 layer of roofing and we perform a Re-Cover, unlike standard industry practices that simply slit or leave the old membrane in place (which can trap moisture and hide bad substrate), RHIVE tears off the existing top membrane down to the insulation/substrate. We thoroughly inspect the substrate (replacing any soiled or damaged insulation) and install new fanfold cover board and a brand-new membrane—so it is a completely new, 100% manufacturer-warrantable system over verified substrate and decking.
                     </div>
                     <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
                         <strong className="text-white font-sans block mb-2">Moisture Audits &amp; Thermal Scanning:</strong>
@@ -698,67 +698,23 @@ export default function CommercialFlatRoofingServicePage() {
                 </div>
             </section>
 
-            {/* ── SECTION 8: FINANCIAL STRUCTURE & CAPEX PRESERVATION ─────────── */}
-            <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10" id="rpsp">
+            {/* ── SECTION 8: COMMERCIAL FINANCIAL STRUCTURE & INSTITUTIONAL TERMS ─────────── */}
+            <section className="relative z-10 py-16 px-6 max-w-6xl mx-auto border-t border-white/10" id="financials">
                 <div className="text-center mb-12">
                     <span className="text-xs font-mono text-rhive-pink uppercase tracking-[0.2em] block mb-2 font-bold">
-                        Capital Efficiency Engine
+                        Capital Preservation
                     </span>
                     <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                        The Commercial RHIVE Project Savings Promotion (RPSP)
+                        Commercial Financial Structure &amp; Institutional Terms
                     </h2>
                     <p className="text-gray-400 font-serif italic text-base max-w-3xl mx-auto mt-3">
-                        Commercial procurement delays and extended bid management often inflate contracting budgets by 15–20% in "soft costs". The RHIVE Project Savings Promotion (RPSP) rewards decision-speed by stripping out administrative "chase costs" and crediting the savings directly back to your project ledger.
+                        Commercial procurement demands capital predictability. RHIVE provides transparent milestone funding schedules and master service agreements engineered for property managers, REITs, and corporate asset directors.
                     </p>
                     <div className="w-16 h-1 bg-rhive-pink mx-auto mt-4" />
                 </div>
 
-                {/* Efficiency Credit Matrix */}
-                <div className="max-w-3xl mx-auto bg-black/80 border border-rhive-pink/40 rounded-xl overflow-hidden mb-10 shadow-[0_0_25px_rgba(236,2,139,0.15)]">
-                    <div className="bg-rhive-pink/15 p-4 text-center font-mono text-xs font-bold uppercase text-white tracking-widest border-b border-rhive-pink/30">
-                        COMMERCIAL RPSP EFFICIENCY MATRIX
-                    </div>
-                    <table className="w-full text-left text-xs sm:text-sm font-mono">
-                        <thead className="bg-white/5 border-b border-white/10 text-gray-300">
-                            <tr>
-                                <th className="p-4">Project Value Tier</th>
-                                <th className="p-4">Maximum Efficiency Credit</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5 text-gray-200 font-serif">
-                            <tr>
-                                <td className="p-4 font-bold text-white font-mono">Tier 1: Under $50,000</td>
-                                <td className="p-4 text-rhive-pink font-bold font-mono">Up to $1,000 Credit</td>
-                            </tr>
-                            <tr>
-                                <td className="p-4 font-bold text-white font-mono">Tier 2: $50,000 - $100,000</td>
-                                <td className="p-4 text-rhive-gold font-bold font-mono">Starts at $1,500 Credit</td>
-                            </tr>
-                            <tr>
-                                <td className="p-4 font-bold text-white font-mono">Tier 3: Large Scale ($100k+)</td>
-                                <td className="p-4 text-cyan-400 font-bold font-mono">+$500 per additional $50k (e.g. $150k = $2,500)</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-300 font-serif leading-relaxed mb-12">
-                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <strong className="text-white font-sans block mb-2">How It Works:</strong>
-                        Execute your commercial agreement within 72 hours of presentation to unlock your Tiered Efficiency Credit directly onto your balance sheet.
-                    </div>
-                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <strong className="text-white font-sans block mb-2">Portfolio Scaling:</strong>
-                        Managing multiple commercial buildings or HOA communities? RPSP efficiency credits stack across your entire portfolio, lowering capital expenditures across all assets.
-                    </div>
-                    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <strong className="text-white font-sans block mb-2">Protected by Utah’s 3-Day Rescission:</strong>
-                        Lock in your efficiency pricing immediately while retaining a full 3-business-day statutory window for internal board review or stakeholder verification with zero risk.
-                    </div>
-                </div>
-
                 {/* Investment Schedule Box */}
-                <div className="bg-white/[0.02] border border-white/10 p-8 rounded-2xl">
+                <div className="bg-white/[0.02] border border-white/10 p-8 rounded-2xl max-w-4xl mx-auto">
                     <h3 className="text-xl font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">
                         Commercial Investment Schedule &amp; Institutional Terms
                     </h3>
@@ -795,7 +751,7 @@ export default function CommercialFlatRoofingServicePage() {
                         { num: "01", name: "LEAD INTAKE", desc: "High-definition aerial Roofr reports and Google Solar API rooftop mapping generate preliminary parameters." },
                         { num: "02", name: "ESTIMATE", desc: "Instant itemized data range generated without sales pressure or in-person disruption." },
                         { num: "03", name: "QUOTE", desc: "Multi-option proposal detailing GAF TPO/PVC packages, insulation R-values, and perimeter details." },
-                        { num: "04", name: "SIGN & INVEST", desc: "Digital contract execution via secure portal with RPSP credit lock and deposit confirmation." },
+                        { num: "04", name: "SIGN & INVEST", desc: "Digital contract execution via secure portal with transparent milestone terms and deposit confirmation." },
                         { num: "05", name: "SCHEDULE", desc: "City permit acquisition, GAF submittal package filing, material delivery, and crew dispatch." },
                         { num: "06", name: "PRE-INSTALL", desc: "Automated weekly SMS/email status reports keep facility directors fully informed." },
                         { num: "07", name: "INSTALL", desc: "Mobile-first site logs capture real-time photos of tear-off, Polyiso layout, and heat-welded seams." },
@@ -970,8 +926,7 @@ export default function CommercialFlatRoofingServicePage() {
 
                     <div>
                         <button
-                            onClick={handleEstimateClick}
-                            className="bg-rhive-pink text-white font-black text-xs uppercase tracking-widest px-10 py-5 rounded shadow-[0_0_25px_rgba(236,2,139,0.5)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                            onClick={() => navigateToIntake({ category: 'Commercial', intent: 'Certified Quote' })} className="bg-rhive-pink text-white font-black text-xs uppercase tracking-widest px-10 py-5 rounded shadow-[0_0_25px_rgba(236,2,139,0.5)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                         >
                             Request Your Free Commercial Certified Quote Today
