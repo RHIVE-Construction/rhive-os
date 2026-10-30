@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect } from 'react';
 
 const BlogSolarPanelsPage: React.FC = () => {
@@ -16,12 +17,12 @@ const BlogSolarPanelsPage: React.FC = () => {
     {
       step: "01",
       title: "Electrical Disconnect & Safety",
-      desc: "A licensed electrician de-energizes your solar system at the inverter and connection points before any tear-off. (ELEC-DET-RES for residential, ELEC-DET-COM for commercial)."
+      desc: "A licensed electrician de-energizes your solar system at the inverter and connection points before any tear-off."
     },
     {
       step: "02",
       title: "Detachment & Staging",
-      desc: "Our crews unbolt the photovoltaic modules, detach rails, and stage panels securely on-site (or off-site using SOLAR-PANEL-STORAGE for tight yards)."
+      desc: "Our crews unbolt the photovoltaic modules, detach rails, and stage panels securely on-site (or off-site using dedicated secure storage for tight yards)."
     },
     {
       step: "03",
@@ -129,7 +130,7 @@ const BlogSolarPanelsPage: React.FC = () => {
             If you purchased a home with an old, non-functional, or outdated solar array that you no longer wish to maintain, we provide complete decommissioning services:
           </p>
           <ul className="list-disc pl-6 space-y-2 text-slate-400 text-base">
-            <li><strong>System Cancellation (SOLAR-PANEL-CANCEL):</strong> Our licensed electrician safely de-energizes and detaches all electrical conduit lines.</li>
+            <li><strong>System Cancellation & Removal:</strong> Our licensed electrician safely de-energizes and detaches all electrical conduit lines.</li>
             <li><strong>Hardware Disposal:</strong> Our crew removes all panels, racking, and hardware, and we manage all municipal disposal and waste recycling fees.</li>
             <li><strong>Seamless Re-roofing:</strong> We patch all pre-existing lag-bolt penetrations in your wood deck during the teardown phase, ensuring your new roof is completely monolithic and watertight.</li>
           </ul>
@@ -157,17 +158,17 @@ const BlogSolarPanelsPage: React.FC = () => {
               Need a safe solar detach-and-reset to facilitate a reroof? Let Utah's tech-forward contracting experts manage the integration.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <a
-                href="/estimator"
+              <button
+                onClick={() => navigateToIntake({ intent: 'Inspection' })}
                 className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
               >
                 Configure Solar-Integrated Estimate
-              </a>
+              </button>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
-                📞 Click to Call Tech Office
+                📞 Call (435) 417-6637
               </a>
             </div>
           </div>

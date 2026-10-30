@@ -73,10 +73,13 @@ const MembraneFinancialSection = () => {
                                 Keep your portfolio capital liquid. Leverage our commercial lending partnerships to access aggressive, zero-friction financing for your flat roof replacement. Approval takes seconds, allowing you to secure vital structural defense without depleting operating reserves.
                             </p>
 
-                            <button className="px-8 py-4 bg-white/5 border border-white/20 text-white font-black text-base uppercase tracking-widest hover:bg-[var(--rhive-pink)] hover:border-transparent transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(236,2,139,0.3)] relative z-10"
-                                    style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
-                                Configure Commercial Finance
-                            </button>
+                            <button 
+        onClick={() => { window.location.href = '/financing'; }}
+        className="px-8 py-4 bg-white/5 border border-white/20 text-white font-black text-base uppercase tracking-widest hover:bg-[var(--rhive-pink)] hover:border-transparent transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(236,2,139,0.3)] relative z-10 cursor-pointer"
+        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+    >
+        Configure Commercial Finance
+    </button>
                         </div>
                     </div>
 
@@ -130,11 +133,13 @@ const MembraneFinancialSection = () => {
                             </p>
 
                             <button 
-                                className="px-8 py-4 bg-white/5 border border-white/20 text-white font-black text-base uppercase tracking-widest hover:bg-[#08137C] hover:border-transparent transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(8,19,124,0.3)] relative z-10 flex items-center gap-3"
-                                style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
-                                <FileText className="w-4 h-4" />
-                                Insurance Data Hub
-                            </button>
+        onClick={() => { window.location.href = '/insurance'; }}
+        className="px-8 py-4 bg-white/5 border border-white/20 text-white font-black text-base uppercase tracking-widest hover:bg-[#08137C] hover:border-transparent transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(8,19,124,0.3)] relative z-10 flex items-center gap-3 cursor-pointer"
+        style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
+    >
+        <FileText className="w-4 h-4" />
+        Insurance Data Hub
+    </button>
                         </div>
                     </div>
 

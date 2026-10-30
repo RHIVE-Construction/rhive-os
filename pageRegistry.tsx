@@ -243,6 +243,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-SEO-BLOG-27':     () => <DynamicBlogPostPage slug="ice-dam-prevention-mitigation-utah-guide" />,
   'P-SEO-BLOG-28':     () => <DynamicBlogPostPage slug="hail-damage-insurance-claims-utah-inspection-guide" />,
   'P-SEO-BLOG-29':     () => <DynamicBlogPostPage slug="top-rated-roofing-contractor-bountiful-ut" />,
+  'P-SEO-BLOG-30':     () => <DynamicBlogPostPage slug="rhive-fall-roof-maintenance-guide-utah" />,
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,
   'A-02': UserManagementPage,

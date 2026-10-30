@@ -2060,7 +2060,7 @@ const CustomerInputPage: React.FC = () => {
     const [billingStatus, setBillingStatus] = useState<'auto' | 'confirmed'>('auto');
     const [scopeType, setScopeType] = useState<'Repair' | 'Replacement'>('Replacement');
     const [repairDetails, setRepairDetails] = useState({ isOld: false, activeLeak: false, hasPhotos: false, emergencyTarp: false });
-    const [purchaseIntent, setPurchaseIntent] = useState<'Ready' | 'Exploring' | ''>('');
+    const [purchaseIntent, setPurchaseIntent] = useState<'Ready' | 'Exploring' | 'Inspection' | ''>('');
     const [isIntentCollapsed, setIsIntentCollapsed] = useState(false);
     const [scheduledDetails, setScheduledDetails] = useState<string | null>(null);
     const [existingContacts, setExistingContacts] = useState<any[]>([]);
@@ -2075,7 +2075,14 @@ const CustomerInputPage: React.FC = () => {
 
     // Session Restore from sessionStorage telemetry states on mount
     useEffect(() => {
-        const intakeScopeType = sessionStorage.getItem('intakeScopeType');
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const intakeCategory = sessionStorage.getItem('intakeCategory') || urlParams?.get('category');
+        if (intakeCategory === 'Commercial' || intakeCategory === 'Residential' || intakeCategory === 'Government') {
+            setProjectCategory(intakeCategory);
+
+            sessionStorage.removeItem('intakeCategory');
+        }
+        const intakeScopeType = sessionStorage.getItem('intakeScopeType') || urlParams?.get('scope');
         const intakeActiveLeak = sessionStorage.getItem('intakeActiveLeak');
         const intakeEmergencyTarp = sessionStorage.getItem('intakeEmergencyTarp');
         const intakePurchaseIntent = sessionStorage.getItem('intakePurchaseIntent');
@@ -2094,7 +2101,13 @@ const CustomerInputPage: React.FC = () => {
             if (intakeEmergencyTarp === 'true') sessionStorage.removeItem('intakeEmergencyTarp');
         }
         if (intakePurchaseIntent) {
-            setPurchaseIntent(intakePurchaseIntent as 'Ready' | 'Exploring');
+            if (intakePurchaseIntent === 'Ready' || intakePurchaseIntent === 'Certified Quote') {
+                setPurchaseIntent('Ready');
+            } else if (intakePurchaseIntent === 'Exploring' || intakePurchaseIntent === 'Instant Estimate') {
+                setPurchaseIntent('Exploring');
+            } else if (intakePurchaseIntent === 'Inspection') {
+                setPurchaseIntent('Inspection');
+            }
             sessionStorage.removeItem('intakePurchaseIntent');
         }
     }, []);
@@ -3274,7 +3287,32 @@ const CustomerInputPage: React.FC = () => {
                                                         <p className="font-bold mb-1">Just looking for ballpark pricing</p>
                                                         <p className="text-xs opacity-70">I want an Instant Estimate (Need A Ballpark Price).</p>
                                                     </div>
+                                                    <div 
+                                                        onClick={() => setPurchaseIntent('Inspection')}
+                                                        className={cn(
+                                                            "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
+                                                            purchaseIntent === 'Inspection' 
+                                                                ? "bg-[#ec028b]/20 border-[#ec028b] text-white" 
+                                                                : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
+                                                        )}
+                                                    >
+                                                        <p className="font-bold mb-1">Schedule Roof Inspection</p>
+                                                        <p className="text-xs opacity-70">I want an on-site inspection and assessment by a certified specialist.</p>
+                                                    </div>
                                                 </div>
+                                                {purchaseIntent === 'Inspection' && (
+                                                    <div className="mt-4 pt-4 border-t border-gray-700 animate-fade-in">
+                                                        <h4 className="text-[#ec028b] font-bold mb-4 uppercase text-sm">Schedule Inspection</h4>
+                                                        <SchedulingBlock 
+                                                            onScheduleConfirm={(details) => { 
+                                                                alert(`Scheduled: ${details}`); 
+                                                                setIsIntentCollapsed(true); 
+                                                            }}
+                                                            isBlocked={isOutOfBounds}
+                                                            isAdminBypass={isAdminBypass}
+                                                        />
+                                                    </div>
+                                                )}
                                                 {purchaseIntent && (
                                                     <div className="flex justify-center -mb-2 mt-4 animate-fade-in">
                                                         <svg className="w-6 h-10 overflow-visible" viewBox="0 0 24 40">

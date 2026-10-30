@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect } from 'react';
 
 const BlogFemaleLeadershipPage: React.FC = () => {
@@ -110,7 +111,7 @@ const BlogFemaleLeadershipPage: React.FC = () => {
             Traditional construction companies often protect their margins by keeping customers in the dark. They hide administrative waste, sales commissions, and material markups inside single-number, opaque lump-sum bids.
           </p>
           <p>
-            Under female leadership, RHIVE is using technology to strip away this legacy bloat and pass the savings directly back to you. Through our partnership with Qubit Turnkey, we operate as a remote-first, highly automated operation. We do not maintain physical warehouses or pay high-pressure salespeople.
+            Under female leadership, RHIVE is using technology to strip away this legacy bloat and pass the savings directly back to you. We operate as a remote-first, highly automated operation. We do not maintain physical warehouses or pay high-pressure salespeople.
           </p>
           <p>
             Because we have optimized our administrative costs to <strong>strictly under 10%</strong>, we can deliver premium, manufacturer-certified roof systems at a price point that makes uncertified, old-school contractors obsolete.
@@ -166,14 +167,14 @@ const BlogFemaleLeadershipPage: React.FC = () => {
               Ready to experience a contractor built on clarity and empathy? Configure your quote online.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <a
-                href="/estimator"
+              <button
+                onClick={() => navigateToIntake({ intent: 'Instant Estimate' })}
                 className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
               >
                 Configure Your Transparent Estimate
-              </a>
+              </button>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
                 📞 Call Our Founders

@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect, useState } from 'react';
 
 const BlogDiyChecklistPage: React.FC = () => {
@@ -174,14 +175,14 @@ const BlogDiyChecklistPage: React.FC = () => {
               If your roof is older (15+ years) or you need your mandatory biennial check, let our factory-certified team handle the heights safely.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <a
-                href="/estimator"
+              <button
+                onClick={() => navigateToIntake({ intent: 'Inspection' })}
                 className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
               >
                 Schedule Free Maintenance Check
-              </a>
+              </button>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
                 📞 Call Sandy Office

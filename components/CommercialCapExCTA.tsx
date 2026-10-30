@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useState } from 'react';
 import { Building2, TrendingUp, ShieldCheck, Activity, Target, HardHat } from 'lucide-react';
 import CapExDiagnosticLightbox from './CapExDiagnosticLightbox.tsx';
@@ -44,7 +45,7 @@ const CommercialCapExCTA: React.FC = () => {
                         </div>
 
                         <button 
-                            onClick={() => setLightboxOpen(true)}
+                            onClick={() => navigateToIntake({ category: 'Commercial', intent: 'Inspection' })}
                             className="group relative inline-flex items-center gap-4 px-8 py-5 bg-[var(--rhive-pink)] text-white font-black uppercase tracking-[0.2em] text-base transition-all hover:bg-white hover:text-black shadow-[0_0_20px_rgba(236,2,139,0.4)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]"
                             style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                         >
