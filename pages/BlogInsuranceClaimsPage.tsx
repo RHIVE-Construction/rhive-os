@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect } from 'react';
 
 const BlogInsuranceClaimsPage: React.FC = () => {
@@ -132,7 +133,7 @@ const BlogInsuranceClaimsPage: React.FC = () => {
             RHIVE works directly with your approved insurance funds, maintaining complete structural and financial integrity. Our insurance agreement is governed by clear, legally compliant payment terms designed to protect both parties:
           </p>
           <ul className="list-disc pl-6 space-y-2 text-slate-400 text-base">
-            <li><strong>ACV Check & Deductible:</strong> The initial Actual Cash Value check and deductible must be paid to RHIVE to procure materials and start permits. endorsem*nts by mortgage payees are managed by the homeowner.</li>
+            <li><strong>ACV Check & Deductible:</strong> The initial Actual Cash Value check and deductible must be paid to RHIVE to procure materials and start permits. Endorsements by mortgage payees are managed by the homeowner.</li>
             <li><strong>Direct proceeds:</strong> You can sign our Direct Insurance Proceeds Authorization Clause to let the carrier issue subsequent supplement payments directly to RHIVE once inspections pass.</li>
             <li><strong>Final Depreciation:</strong> Released to RHIVE within two weeks of your receipt once Certificate of Completion is submitted.</li>
           </ul>
@@ -149,20 +150,20 @@ const BlogInsuranceClaimsPage: React.FC = () => {
           <div className="mt-12 p-8 bg-zinc-950 border border-white/10 rounded-md text-center">
             <h3 className="text-xl font-bold text-white mb-4">Secure Your Free Utah Storm Inspection Today</h3>
             <p className="text-slate-400 text-sm mb-6 max-w-[50ch] mx-auto">
-              neighborhood recently experienced heavy wind or hail storms? Act quickly before coverage windows close.
+              Neighborhood recently experienced heavy wind or hail storms? Act quickly before coverage windows close.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <a
-                href="/estimator"
+              <button
+                onClick={() => navigateToIntake({ intent: 'Inspection' })}
                 className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
               >
                 Schedule Free Storm Inspection
-              </a>
+              </button>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
-                📞 Click to Call Tech Office
+                📞 Call (435) 417-6637
               </a>
             </div>
           </div>

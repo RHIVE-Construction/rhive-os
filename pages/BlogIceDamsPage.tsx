@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect } from 'react';
 
 const BlogIceDamsPage: React.FC = () => {
@@ -166,14 +167,14 @@ const BlogIceDamsPage: React.FC = () => {
               Don’t wait for the first heavy snowstorm to find out if your ventilation is failing. Secure peace of mind today.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <a
-                href="/estimator"
+              <button
+                onClick={() => navigateToIntake({ intent: 'Inspection' })}
                 className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
               >
                 Configure Your Free Inspection
-              </a>
+              </button>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
                 📞 Call Sandy Office

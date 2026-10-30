@@ -199,7 +199,7 @@ const BlogTpoPvcPage: React.FC = () => {
                 Schedule Flat Roof Consultation
               </a>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
                 📞 Call South Jordan Office

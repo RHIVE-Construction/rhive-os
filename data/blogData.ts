@@ -881,7 +881,7 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'commercial-tpo-vs-pvc-roofing-utah-guide',
     title: 'Commercial TPO vs. PVC Roofing in Utah: Cost, Durability & Energy Performance',
-    bluf: 'TPO (Thermoplastic Polyolefin) offers the best cost-to-performance ratio for commercial flat roofs ($5.50–$9.50/sq ft installed), while PVC (Polyvinyl Chloride) provides superior chemical and grease resistance for restaurants and industrial buildings ($7.00–$12.00/sq ft installed). Both feature heat-welded seams with 20–30 year lifespans in Utah climates.',
+    bluf: 'TPO (Thermoplastic Polyolefin) offers the best cost-to-performance ratio for commercial flat roofs, while PVC (Polyvinyl Chloride) provides superior chemical and grease resistance for restaurants and industrial buildings. Both feature heat-welded seams with 20–30 year lifespans in Utah climates.',
     description: 'Compare commercial TPO vs PVC flat roofing membrane systems in Utah. Discover cost breakdowns, chemical resistance, seam strength, and energy efficiency ratings.',
     category: 'Commercial',
     readTime: '6 min read',
@@ -904,7 +904,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         sectionHeading: 'TPO vs. PVC Cost Comparison in Utah',
-        directAnswer: 'TPO roofing typically costs between $5.50 and $9.50 per square foot installed in Utah, while PVC roofing ranges from $7.00 to $12.00 per square foot installed due to higher raw material and manufacturing costs.',
+        directAnswer: 'Commercial flat roofing costs depend on decking condition, insulation thickness, and required membrane mil thickness determined via an on-site core inspection. TPO provides the most cost-efficient upfront capital expenditure, while PVC commands a modest premium due to specialized chemical-resistant polymers.',
         bodyParagraphs: [
           'For warehouses, distribution hubs, office complexes, and retail stores without commercial grease vents, TPO provides the highest return on investment and energy savings.',
           'For food service facilities, restaurants with rooftop grease exhausts, and manufacturing plants with chemical emissions, PVC is the required standard to prevent animal fat and chemical membrane degradation.'

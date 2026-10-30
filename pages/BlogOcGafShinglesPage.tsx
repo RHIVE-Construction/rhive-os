@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect } from 'react';
 
 const BlogOcGafShinglesPage: React.FC = () => {
@@ -84,7 +85,7 @@ const BlogOcGafShinglesPage: React.FC = () => {
           <h2 className="text-2xl font-bold text-white tracking-tight">2. The Impact Battle: Duration FLEX® vs. GAF SBS Class 4</h2>
 
           <p>
-            hailstorms can strike Utah valleys with high velocity, bruising shingles and causing immediate granule loss. Upgrading to impact-resistant shingles is a smart move that often qualifies you for <strong>significant long-term homeowner insurance discounts</strong>.
+            Hailstorms can strike Utah valleys with high velocity, bruising shingles and causing immediate granule loss. Upgrading to impact-resistant shingles is a smart move that often qualifies you for <strong>significant long-term homeowner insurance discounts</strong>.
           </p>
 
           <h3 className="text-xl font-bold text-white tracking-tight">Owens Corning Duration FLEX® (The Storm Shield)</h3>
@@ -205,14 +206,14 @@ const BlogOcGafShinglesPage: React.FC = () => {
               Ready to see how these premium shingles look on your home’s architectural rendering? Get an accurate, zero-pressure estimate.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <a
-                href="/estimator"
+              <button
+                onClick={() => navigateToIntake({ intent: 'Instant Estimate' })}
                 className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
               >
                 Configure Your Shingle System
-              </a>
+              </button>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
                 📞 Call South Jordan Office
