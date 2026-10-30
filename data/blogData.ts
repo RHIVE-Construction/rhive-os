@@ -1091,7 +1091,7 @@ export const BLOG_POSTS: BlogPost[] = [
         sectionHeading: '2. The 3-Tier Abundance Referral Protocol',
         directAnswer: 'The Abundance Referral Protocol features three escalating tiers: Tier 1 Scout ($500 cash payout), Tier 2 Partner ($2,000 cash bonus + Free Gutter Cleaning for Life), and Tier 3 RHIVE Legend (Lifetime Inspection Priority + Direct Founder Line).',
         bodyParagraphs: [
-          'The RHIVE Abundance Network uses a gamified, tiered payout structure managed through our Zoho Thrive affiliate integration and the RHIVE Client Portal. As your referred friends, family, or neighbors choose RHIVE for their full roof replacements, your tier status and rewards grow exponentially:'
+          'The RHIVE Abundance Network uses a gamified, tiered payout structure managed directly through the RHIVE Client Portal. As your referred friends, family, or neighbors choose RHIVE for their full roof replacements, your tier status and rewards grow exponentially:'
         ],
         bulletPoints: [
           'Tier 1: Scout (1 Signed Referral): $500 Cash Payout. Once your first referred client approves their quote and signs their agreement, a $500 referral credit is issued directly to your wallet.',
@@ -1102,9 +1102,9 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         sectionHeading: '3. The Digital "Home Asset Manager" & Credit Wallet',
-        directAnswer: 'Members track rewards and manage their roofing asset through the RHIVE Client Portal (C-10 My Home Vault), featuring real-time payout tracking, warranty archives, and one-click referral sharing.',
+        directAnswer: 'Members track rewards and manage their roofing asset through the RHIVE Client Portal, featuring real-time payout tracking, warranty archives, and one-click referral sharing.',
         bodyParagraphs: [
-          'Members of the Abundance Network access their rewards seamlessly through the RHIVE Client Portal (C-10 My Home Vault):'
+          'Members of the Abundance Network access their rewards seamlessly through the RHIVE Client Portal:'
         ],
         bulletPoints: [
           'Real-Time Tracking: View active referral links, pending quote statuses, and cleared payouts in a transparent digital dashboard.',
@@ -1115,12 +1115,12 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         sectionHeading: '4. Portfolio & Commercial Scaling for Property Managers',
-        directAnswer: 'The Abundance Network extends to HOAs, commercial property managers, and real estate developers, allowing multi-property owners to apply tiered efficiency credits while earning referral credits.',
+        directAnswer: 'The Abundance Network extends to HOAs, commercial property managers, and real estate developers, allowing multi-property owners to streamline volume efficiencies while earning referral credits.',
         bodyParagraphs: [
-          'The Abundance Network extends beyond single-family homes. For HOAs, commercial property managers, and real estate developers, the Abundance framework aligns with the RHIVE Project Savings Promotion (RPSP):'
+          'The Abundance Network extends beyond single-family homes. For HOAs, commercial property managers, and real estate developers, our framework delivers multi-property volume efficiencies:'
         ],
         bulletPoints: [
-          'Multi-Property Savings: Commercial clients managing multiple structures can apply tiered efficiency credits across their CapEx portfolios while earning affiliate referral credits for introducing other asset managers to RHIVE.',
+          'Multi-Property Savings: Commercial clients managing multiple structures can apply tiered volume efficiencies across their CapEx portfolios while earning community referral credits for introducing other asset managers to RHIVE.',
           'Full Cost Breakdown: Every commercial quote features a clear, itemized breakdown of materials, labor, overhead, and profit to simplify board approvals and audit reporting.'
         ]
       },
