@@ -244,7 +244,12 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-SEO-BLOG-28':     () => <DynamicBlogPostPage slug="hail-damage-insurance-claims-utah-inspection-guide" />,
   'P-SEO-BLOG-29':     () => <DynamicBlogPostPage slug="top-rated-roofing-contractor-bountiful-ut" />,
   'P-SEO-BLOG-30':     () => <DynamicBlogPostPage slug="rhive-fall-roof-maintenance-guide-utah" />,
-  'P-SEO-BLOG-31':     () => <DynamicBlogPostPage slug="utah-services-by-rhive" />,
+    'P-SEO-BLOG-31':     () => <DynamicBlogPostPage slug="utah-services-by-rhive" />,
+  'P-SEO-BLOG-32':     () => <DynamicBlogPostPage slug="owens-corning-duration-vs-duration-flex-utah" />,
+  'P-SEO-BLOG-33':     () => <DynamicBlogPostPage slug="commercial-tpo-vs-pvc-flat-roofing-utah" />,
+  'P-SEO-BLOG-34':     () => <DynamicBlogPostPage slug="seamless-aluminum-gutters-leaf-protection-utah" />,
+  'P-SEO-BLOG-35':     () => <DynamicBlogPostPage slug="solar-panel-detach-reset-roof-replacement-utah" />,
+  'P-SEO-BLOG-36':     () => <DynamicBlogPostPage slug="roofing-contractor-south-jordan-ut" />,
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,
   'A-02': UserManagementPage,

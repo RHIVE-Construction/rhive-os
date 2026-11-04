@@ -97,6 +97,11 @@ export const PATH_TO_PAGE_MAP: Record<string, string> = {
   '/blog/top-rated-roofing-contractor-bountiful-ut': 'P-SEO-BLOG-29',
   '/blog/rhive-fall-roof-maintenance-guide-utah': 'P-SEO-BLOG-30',
   '/blog/utah-services-by-rhive': 'P-SEO-BLOG-31',
+  '/blog/owens-corning-duration-vs-duration-flex-utah': 'P-SEO-BLOG-32',
+  '/blog/commercial-tpo-vs-pvc-flat-roofing-utah': 'P-SEO-BLOG-33',
+  '/blog/seamless-aluminum-gutters-leaf-protection-utah': 'P-SEO-BLOG-34',
+  '/blog/solar-panel-detach-reset-roof-replacement-utah': 'P-SEO-BLOG-35',
+  '/blog/roofing-contractor-south-jordan-ut': 'P-SEO-BLOG-36',
     '/privacy':                              'P-PRIVACY',
     '/terms':                                'P-TERMS',
 };
@@ -201,6 +206,11 @@ export const PAGE_TO_PATH_MAP: Record<string, string> = {
   'P-SEO-BLOG-29':     '/blog/top-rated-roofing-contractor-bountiful-ut',
   'P-SEO-BLOG-30':     '/blog/rhive-fall-roof-maintenance-guide-utah',
   'P-SEO-BLOG-31':     '/blog/utah-services-by-rhive',
+  'P-SEO-BLOG-32':     '/blog/owens-corning-duration-vs-duration-flex-utah',
+  'P-SEO-BLOG-33':     '/blog/commercial-tpo-vs-pvc-flat-roofing-utah',
+  'P-SEO-BLOG-34':     '/blog/seamless-aluminum-gutters-leaf-protection-utah',
+  'P-SEO-BLOG-35':     '/blog/solar-panel-detach-reset-roof-replacement-utah',
+  'P-SEO-BLOG-36':     '/blog/roofing-contractor-south-jordan-ut',
     'P-PRIVACY':         '/privacy',
     'P-TERMS':           '/terms',
 };

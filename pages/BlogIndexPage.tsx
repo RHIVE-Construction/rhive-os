@@ -29,6 +29,48 @@ const BLOGS_DATA: BlogMeta[] = [
     badge: 'Community Spotlight'
   },
 
+  // ── 5 NEW HIGH-CONVERTING AEO/SEO/GEO STRATEGY ARTICLES ─────────────────
+  {
+    title: 'Owens Corning Duration® vs. Duration FLEX®: Which Shingle Is Best for Your Utah Home?',
+    slug: '/blog/owens-corning-duration-vs-duration-flex-utah',
+    description: 'Compare Owens Corning Duration® and Class 4 Impact Rated Duration FLEX® shingles for Utah homes. Learn how SureNail® Technology and 130 MPH ratings protect your roof.',
+    category: 'Residential',
+    readTime: '6 min read',
+    badge: 'Shingle Comparison'
+  },
+  {
+    title: 'Commercial TPO vs. PVC Flat Roofing in Utah: Performance, Engineering & Code Compliance',
+    slug: '/blog/commercial-tpo-vs-pvc-flat-roofing-utah',
+    description: 'Compare commercial GAF EverGuard® TPO and PVC flat roofing membranes for Utah warehouses, retail centers, and facilities. Learn about 30-year NDL warranties and substrate engineering.',
+    category: 'Commercial',
+    readTime: '7 min read',
+    badge: 'Commercial Flat'
+  },
+  {
+    title: 'The Complete Guide to Seamless Aluminum Gutters & Leaf Protection in Utah',
+    slug: '/blog/seamless-aluminum-gutters-leaf-protection-utah',
+    description: 'Everything Utah homeowners need to know about seamless aluminum gutters, heavy-duty 24-inch hanger spacing for snow loads, 5" vs 6" profiles, and custom leaf protection.',
+    category: 'Residential',
+    readTime: '6 min read',
+    badge: 'Seamless Gutters'
+  },
+  {
+    title: 'Solar Panel Detach & Reset During Roof Replacements in Utah: What Homeowners Need to Know',
+    slug: '/blog/solar-panel-detach-reset-roof-replacement-utah',
+    description: 'Planning a roof replacement with solar panels in Utah? Learn how RHIVE handles certified electrical disconnects, panel storage, upgraded stanchion flashings, and array reset.',
+    category: 'Residential',
+    readTime: '7 min read',
+    badge: 'Solar Reroof'
+  },
+  {
+    title: 'Top-Rated Roofing Contractor in South Jordan, UT: Local Reroofing & City Compliance',
+    slug: '/blog/roofing-contractor-south-jordan-ut',
+    description: 'Looking for a top-rated roofing contractor in South Jordan, UT? Headquartered at 10437 Shady Plum Way, RHIVE provides 100% full tear-offs and lifetime no-leak guarantees.',
+    category: 'Residential',
+    readTime: '6 min read',
+    badge: 'South Jordan HQ'
+  },
+
   // ── UTAH FULL ROOFING SERVICE DIRECTORY ────────────────────────────────────
   {
     title: 'UTAH Services by RHIVE: Comprehensive Residential, Commercial & Specialty Roofing Solutions',
