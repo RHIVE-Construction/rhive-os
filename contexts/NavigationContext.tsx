@@ -22,6 +22,7 @@ const PROFILE_LIST_CLEAR_MAP: Record<string, string[]> = {
     'E-34': ['selectedProjectId'],
     'E-35': ['selectedProjectId'],
     'E-36': ['selectedProjectId'],
+    'E-37': ['selectedProjectId'],
 };
 
 interface NavigationContextType {
@@ -100,7 +101,19 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (toClear.includes('selectedAccountId')) setSelectedAccountId(null);
         if (toClear.includes('selectedUserId')) setSelectedUserId(null);
         setActivePageId(id);
-    }, []);
+    }, [setActivePageId]);
+
+    // Listen for programmatic navigation events (e.g., E2E tests and global dispatch)
+    useEffect(() => {
+        const handleCustomNavigate = (e: Event) => {
+            const detail = (e as CustomEvent)?.detail;
+            if (detail?.pageId) {
+                navigateToPage(detail.pageId);
+            }
+        };
+        window.addEventListener('rhive-navigate', handleCustomNavigate);
+        return () => window.removeEventListener('rhive-navigate', handleCustomNavigate);
+    }, [navigateToPage]);
 
     // Automatically hide/show editor menu when changing pages
     React.useEffect(() => {

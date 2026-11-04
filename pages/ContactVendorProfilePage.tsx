@@ -7,7 +7,8 @@ import Button from '../components/Button';
 import { DocumentTextIcon, ArrowPathIcon, ShareIcon, PencilSquareIcon, CheckIcon, XIcon, TrashIcon } from '../components/icons';
 import { PAGE_GROUPS } from '../constants';
 import { useNavigation } from '../contexts/NavigationContext';
-import { firestoreService } from '../lib/firebaseService';
+import { firestoreService, userLogService } from '../lib/firebaseService';
+import { session } from '../lib/session';
 import { doc, onSnapshot, collection, query, where, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { MapPinIcon } from '../components/icons';
@@ -37,14 +38,21 @@ const ContactVendorProfilePage: React.FC = () => {
         if (!selectedContactId) return;
         setIsDeleting(true);
         try {
-            const { deleteDoc, doc } = await import('firebase/firestore');
-            await deleteDoc(doc(db, 'contacts', selectedContactId));
+            const actor = session.read();
+            await firestoreService.softDeleteDocument('contacts', selectedContactId, {
+                deleted_by: actor?.name || actor?.email || 'Admin',
+                deletion_reason: 'Moved to trash from contact profile',
+            });
+            await userLogService.logAction(
+                'DELETE_RECORD',
+                `Contact "${contactData?.name || contactData?.first_name || 'Contact'}" moved to trash`,
+                { recordId: selectedContactId, collection: 'contacts' }
+            );
             setShowDeleteModal(false);
             setSelectedContactId(null);
             setActivePageId('E-10');
         } catch (err) {
             console.error("Error deleting contact:", err);
-            alert("Failed to delete contact.");
         } finally {
             setIsDeleting(false);
         }
@@ -136,10 +144,14 @@ const ContactVendorProfilePage: React.FC = () => {
         setIsSaving(true);
         try {
             await updateDoc(doc(db, 'contacts', selectedContactId), editForm);
+            await userLogService.logAction(
+                'EDIT_RECORD',
+                `Contact "${editForm?.name || editForm?.first_name || 'Contact'}" updated`,
+                { recordId: selectedContactId, collection: 'contacts' }
+            );
             setIsEditing(false);
         } catch (err) {
             console.error("Error updating record:", err);
-            alert("Failed to save updates.");
         } finally {
             setIsSaving(false);
         }

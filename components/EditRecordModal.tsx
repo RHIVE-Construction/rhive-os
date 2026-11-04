@@ -156,8 +156,8 @@ const EditRecordModal: React.FC<EditRecordModalProps> = ({ record, onClose, onSa
 
                 {/* Footer */}
                 <div className="flex items-center justify-between px-6 py-4 border-t border-gray-800 bg-black/30">
-                    <p className="text-[10px] text-gray-600 font-mono">
-                        ID: {record?.id?.slice(-12) || '—'}
+                    <p className="text-[10px] text-gray-600 font-mono uppercase">
+                        {record?.current_stage || 'Record Details'}
                     </p>
                     <div className="flex items-center gap-3">
                         <button

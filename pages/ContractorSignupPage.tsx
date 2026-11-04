@@ -60,7 +60,7 @@ const ContractorSignupPage: React.FC = () => {
                                 />
                             </div>
                             <Button className="w-full h-14" onClick={nextStep}>
-                                Verify & Proceed
+                                Confirm & Continue
                                 <ArrowRightIcon className="w-4 h-4 ml-3" />
                             </Button>
                         </div>

@@ -127,7 +127,7 @@ export const ComponentLightbox: React.FC<ComponentLightboxProps> = ({ component,
                                 {component.title}
                             </h2>
                             <p className="text-gray-500 font-mono text-base mt-2 uppercase tracking-widest bg-white/5 px-2 py-1 inline-block">
-                                Standard ID: {component.id.toUpperCase()}
+                                System Spec: {component.category}
                             </p>
                         </div>
                         <button 

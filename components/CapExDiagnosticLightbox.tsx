@@ -102,7 +102,7 @@ const CapExDiagnosticLightbox: React.FC<CapExDiagnosticLightboxProps> = ({ isOpe
                                     className={`px-8 py-4 font-black uppercase tracking-[0.2em] text-base transition-all ${isStep1Valid ? 'bg-[var(--rhive-pink)] text-white hover:bg-white hover:text-black' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}`}
                                     style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                                 >
-                                    Proceed to Credentials
+                                    Continue to Credentials
                                 </button>
                             </div>
                         </div>

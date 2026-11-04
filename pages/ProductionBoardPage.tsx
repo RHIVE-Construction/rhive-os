@@ -1,32 +1,32 @@
-
 import React, { useState, useEffect } from 'react';
 import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
 import Button from '../components/Button';
-import { 
-    CalendarDaysIcon, 
-    TruckIcon, 
-    WrenchIcon, 
+import { useNavigation } from '../contexts/NavigationContext';
+import {
+    CalendarDaysIcon,
+    TruckIcon,
+    WrenchIcon,
     Check,
     MapPinIcon
 } from '../components/icons';
 import { projectService } from '../lib/firebaseService';
-import { cn } from '../lib/utils';
+import { cn, getStagePageId } from '../lib/utils';
+import { matchStageIndex } from '../components/ProjectStageLayout';
 
-// The 4 production stages this board tracks
-const PRODUCTION_STAGES: { label: string; icon: React.ReactNode; match: string[] }[] = [
-    { label: 'Schedule',         icon: <CalendarDaysIcon className="w-5 h-5" />, match: ['schedule'] },
-    { label: 'Pre-Installation', icon: <TruckIcon className="w-5 h-5" />,        match: ['pre-installation', 'pre-install'] },
-    { label: 'Install',          icon: <WrenchIcon className="w-5 h-5" />,       match: ['install'] },
-    { label: 'Punch List',       icon: <Check className="w-5 h-5" />,            match: ['punch list', 'punch-list'] },
+const PRODUCTION_STAGES: { label: string; icon: React.ReactNode; stageIndex: number }[] = [
+    { label: 'Schedule',            icon: <CalendarDaysIcon className="w-5 h-5" />, stageIndex: 4 },
+    { label: 'Pre-Installation',    icon: <TruckIcon className="w-5 h-5" />,        stageIndex: 5 },
+    { label: 'Install',             icon: <WrenchIcon className="w-5 h-5" />,       stageIndex: 6 },
+    { label: 'Warranty Activation', icon: <Check className="w-5 h-5" />,            stageIndex: 7 },
 ];
 
 const ProductionBoardPage: React.FC = () => {
+    const { setActivePageId, setSelectedProjectId } = useNavigation();
     const [viewMode, setViewMode] = useState<'Board' | 'Calendar'>('Board');
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Subscribe to Firebase real-time project data
     useEffect(() => {
         const unsubscribe = projectService.subscribe((data: any[]) => {
             setProjects(data);
@@ -36,10 +36,7 @@ const ProductionBoardPage: React.FC = () => {
     }, []);
 
     const getProjectsForStage = (stageConfig: typeof PRODUCTION_STAGES[number]) => {
-        return projects.filter(p => {
-            const cs = (p.current_stage || '').toLowerCase().trim();
-            return stageConfig.match.some(m => cs === m || cs.startsWith(m));
-        });
+        return projects.filter((p) => matchStageIndex(p.current_stage) === stageConfig.stageIndex);
     };
 
     const getAddress = (p: any): string => {
@@ -47,6 +44,11 @@ const ProductionBoardPage: React.FC = () => {
             return [p.property.address, p.property.city].filter(Boolean).join(', ');
         }
         return p.property_address || 'Address not set';
+    };
+
+    const openProjectStage = (project: any) => {
+        setSelectedProjectId(project.id);
+        setActivePageId(getStagePageId(project.current_stage));
     };
 
     const renderColumn = (stageConfig: typeof PRODUCTION_STAGES[number]) => {
@@ -73,11 +75,12 @@ const ProductionBoardPage: React.FC = () => {
                         stageProjects.map(project => (
                             <div
                                 key={project.id}
-                                className="bg-black/40 p-4 rounded-lg border border-gray-700 hover:border-[#ec028b] cursor-grab active:cursor-grabbing shadow-sm group transition-all"
+                                onClick={() => openProjectStage(project)}
+                                className="bg-black/40 p-4 rounded-lg border border-gray-700 hover:border-[#ec028b] cursor-pointer shadow-sm group transition-all"
                             >
-                                <h4 className="text-white font-bold text-sm group-hover:text-[#ec028b] transition-colors">
+                                <p className="text-white font-bold text-sm group-hover:text-[#ec028b] transition-colors">
                                     {project.name || 'Unnamed Project'}
-                                </h4>
+                                </p>
                                 <div className="flex items-center text-xs text-gray-500 mt-2">
                                     <MapPinIcon className="w-3 h-3 mr-1 shrink-0" />
                                     <span className="truncate">{getAddress(project)}</span>
@@ -88,11 +91,19 @@ const ProductionBoardPage: React.FC = () => {
                                     </span>
                                 )}
                                 <div className="mt-3 pt-3 border-t border-gray-800 flex justify-between items-center">
-                                    <span className="text-[10px] text-gray-600 font-mono uppercase tracking-wide">
-                                        {project.id.slice(-8)}
+                                    <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wide">
+                                        {stageConfig.label}
                                     </span>
-                                    <Button size="sm" variant="secondary" className="!py-1 !px-2 text-[10px] h-6 bg-gray-800 border-gray-700 text-gray-300 hover:text-white">
-                                        Manage
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            openProjectStage(project);
+                                        }}
+                                        className="!py-1 !px-2 text-[10px] h-6 bg-gray-800 border-gray-700 text-gray-300 hover:text-white"
+                                    >
+                                        Confirm
                                     </Button>
                                 </div>
                             </div>
@@ -109,12 +120,11 @@ const ProductionBoardPage: React.FC = () => {
     };
 
     return (
-        <PageContainer 
-            title="Production Board" 
-            description="Logistics, Scheduling, and Installation Tracking — live from Firebase."
+        <PageContainer
+            title="Production Board"
+            description="Logistics, Scheduling, Installation, and Warranty Activation — live from Firebase."
             headerAction={
                 <div className="flex items-center gap-4">
-                    {/* Live indicator */}
                     <div className={cn(
                         "flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest",
                         loading ? "text-yellow-400 animate-pulse" : "text-green-400"
@@ -123,13 +133,13 @@ const ProductionBoardPage: React.FC = () => {
                         {loading ? 'Syncing…' : 'Live'}
                     </div>
                     <div className="flex bg-black border border-gray-800 rounded-lg p-1">
-                        <button 
+                        <button
                             onClick={() => setViewMode('Board')}
                             className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${viewMode === 'Board' ? 'bg-gray-800 text-[#ec028b]' : 'text-gray-500 hover:text-white'}`}
                         >
                             Board
                         </button>
-                        <button 
+                        <button
                             onClick={() => setViewMode('Calendar')}
                             className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${viewMode === 'Calendar' ? 'bg-gray-800 text-[#ec028b]' : 'text-gray-500 hover:text-white'}`}
                         >
@@ -151,8 +161,8 @@ const ProductionBoardPage: React.FC = () => {
                 <Card className="h-[600px] flex items-center justify-center bg-gray-900/30 border-gray-800">
                     <div className="text-center text-gray-600">
                         <CalendarDaysIcon className="w-20 h-20 mx-auto mb-6 opacity-20" />
-                        <p className="text-lg font-medium">Calendar Integration Placeholder</p>
-                        <p className="text-sm mt-2">Syncs with Google/Outlook/Zoho</p>
+                        <p className="text-lg font-medium">Production Schedule Calendar</p>
+                        <p className="text-sm mt-2">Showing {projects.filter(p => [4, 5, 6, 7].includes(matchStageIndex(p.current_stage))).length} active production jobs</p>
                     </div>
                 </Card>
             )}

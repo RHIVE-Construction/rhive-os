@@ -84,6 +84,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ project, onClose, onConvert
                     <div className="grid grid-cols-2 gap-4 mt-4">
                         {/* Estimate Option */}
                         <button
+                            id="lead-convert-estimate-btn"
                             onClick={() => handleConvert('Estimate')}
                             disabled={!!converting}
                             className="group relative flex flex-col items-center gap-3 p-6 bg-gray-900/60 border border-gray-800 rounded-xl hover:border-blue-500/60 hover:bg-blue-900/10 hover:shadow-[0_0_30px_rgba(59,130,246,0.1)] transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none text-left"
@@ -103,12 +104,13 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ project, onClose, onConvert
                                 </p>
                             </div>
                             <div className="mt-1 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 rounded">
-                                Stage Ã¢â€ â€™ Estimate
+                                Stage → Estimate
                             </div>
                         </button>
 
                         {/* Quote Option */}
                         <button
+                            id="lead-convert-quote-btn"
                             onClick={() => handleConvert('Quote')}
                             disabled={!!converting}
                             className="group relative flex flex-col items-center gap-3 p-6 bg-gray-900/60 border border-gray-800 rounded-xl hover:border-[#ec028b]/60 hover:bg-[#ec028b]/5 hover:shadow-[0_0_30px_rgba(236,2,139,0.1)] transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none text-left"
@@ -128,7 +130,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ project, onClose, onConvert
                                 </p>
                             </div>
                             <div className="mt-1 text-[9px] font-black uppercase tracking-widest text-[#ec028b] border border-[#ec028b]/30 bg-[#ec028b]/10 px-2 py-0.5 rounded">
-                                Stage Ã¢â€ â€™ Quote
+                                Stage → Quote
                             </div>
                         </button>
                     </div>
@@ -263,43 +265,62 @@ const LeadPage: React.FC = () => {
         // Find the project data from local state
         const project = projects.find(p => p.id === selectedProjectId);
 
+        let activeProjId = selectedProjectId;
         try {
-            // Try updating in 'leads' collection first
-            const leadUpdate = await firestoreService.updateDocument('leads', selectedProjectId, {
-                current_stage: newStage,
-                status: 'Active',
-                converted_at: new Date().toISOString(),
-                converted_to: type,
-            });
-
-            if (leadUpdate.success) {
-                // Also copy (promote) the record to 'projects' collection so
-                // it shows up in the active pipeline
-                if (project) {
-                    const { id: _id, ...projectWithoutId } = project;
-                    await firestoreService.addDocument('projects', {
-                        ...projectWithoutId,
+            if (project?._source === 'leads') {
+                const { id: _id, _source: _src, ...projectWithoutId } = project;
+                const addRes = await firestoreService.addDocument('projects', {
+                    ...projectWithoutId,
+                    current_stage: newStage,
+                    status: 'Active',
+                    original_lead_id: selectedProjectId,
+                    converted_at: new Date().toISOString(),
+                    pizza_tracker: {
+                        stage: newStage,
+                        stageIndex: type === 'Estimate' ? 1 : 2,
+                        totalStages: 11,
+                        updatedAt: new Date().toISOString(),
+                    },
+                });
+                if (addRes.success && addRes.id) {
+                    activeProjId = addRes.id;
+                    await firestoreService.updateDocument('leads', selectedProjectId, {
                         current_stage: newStage,
-                        status: 'Active',
-                        original_lead_id: selectedProjectId,
+                        status: 'Converted',
+                        converted_to_project: true,
+                        converted_project_id: addRes.id,
                         converted_at: new Date().toISOString(),
+                        converted_to: type,
                     });
+                    setSelectedProjectId(addRes.id);
                 }
             } else {
-                // Wasn't in leads collection — update directly in projects
-                await firestoreService.updateDocument('projects', selectedProjectId, {
+                await projectService.updateRecord(selectedProjectId, {
                     current_stage: newStage,
                     status: 'Active',
                     converted_at: new Date().toISOString(),
                     converted_to: type,
-                });
+                    pizza_tracker: {
+                        stage: newStage,
+                        stageIndex: type === 'Estimate' ? 1 : 2,
+                        totalStages: 11,
+                        updatedAt: new Date().toISOString(),
+                    },
+                }, project?._source);
             }
 
-            // Log lead conversion successfully
             await userLogService.logAction(
-                'CONVERT_LEAD',
-                `Lead converted to ${type} (Project ID: ${selectedProjectId})`,
-                { projectId: selectedProjectId, convertTo: type, projectName: project?.name || 'Unknown' }
+                'STAGE_CHANGE',
+                `${project?.name || 'Lead'} moved to ${newStage}`,
+                {
+                    recordId: activeProjId,
+                    recordName: project?.name || 'Unknown',
+                    collection: 'projects',
+                    stage: newStage,
+                    projectId: activeProjId,
+                    convertTo: type,
+                    projectName: project?.name || 'Unknown'
+                }
             );
         } catch (err) {
             console.error('Conversion error:', err);
@@ -531,6 +552,7 @@ const LeadPage: React.FC = () => {
                                 <div className="space-y-3">
                                     {/* PRIMARY: Convert Lead */}
                                     <button
+                                        id="lead-open-convert-btn"
                                         onClick={() => setShowConvertModal(true)}
                                         className="group relative w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#ec028b]/10 border border-[#ec028b]/40 rounded-xl text-[#ec028b] font-black text-sm uppercase tracking-wider hover:bg-[#ec028b]/20 hover:border-[#ec028b]/70 hover:shadow-[0_0_25px_rgba(236,2,139,0.25)] transition-all duration-300 overflow-hidden"
                                     >

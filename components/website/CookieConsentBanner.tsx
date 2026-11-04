@@ -56,7 +56,7 @@ export const CookieConsentBanner: React.FC = () => {
                 <button
                     onClick={handleEssentialOnly}
                     className="text-gray-400 hover:text-white p-1 transition"
-                    title="Dismiss"
+                    title="Close"
                 >
                     <X size={16} />
                 </button>

@@ -166,7 +166,7 @@ const CustomerSignVerifyPage: React.FC = () => {
                     data = { id: projSnap.id, ...projSnap.data() } as ProjectData;
                 } else {
                     const leadSnap = await getDoc(doc(db, 'leads', token));
-                    if (leadSnap.exists()) data = { id: leadSnap.id, ...leadSnap.data() } as ProjectData;
+                    if (leadSnap.exists()) data = { id: leadSnap.id, _source: 'leads', ...leadSnap.data() } as any;
                 }
                 if (data) setProject(data);
                 else setProjectError('Project not found. Please contact RHIVE Construction for assistance.');

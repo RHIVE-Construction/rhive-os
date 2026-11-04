@@ -101,7 +101,7 @@ const FirestoreDebugPage: React.FC = () => {
                     {leads.map((l, i) => (
                         <div key={i} style={{ borderBottom: '1px solid #222', paddingBottom: 8, marginBottom: 8 }}>
                             <p style={{ color: '#fff', fontSize: 13 }}>{l.name || l.first_name + ' ' + l.last_name || 'No name'}</p>
-                            <p style={{ color: '#6b7280', fontSize: 11 }}>stage: {l.current_stage} | id: {l.id?.slice(-8)}</p>
+                            <p style={{ color: '#6b7280', fontSize: 11 }}>stage: {l.current_stage}</p>
                         </div>
                     ))}
                 </div>
@@ -113,7 +113,7 @@ const FirestoreDebugPage: React.FC = () => {
                     {projects.map((p, i) => (
                         <div key={i} style={{ borderBottom: '1px solid #222', paddingBottom: 8, marginBottom: 8 }}>
                             <p style={{ color: '#fff', fontSize: 13 }}>{p.name || 'No name'}</p>
-                            <p style={{ color: '#6b7280', fontSize: 11 }}>stage: {p.current_stage} | id: {p.id?.slice(-8)}</p>
+                            <p style={{ color: '#6b7280', fontSize: 11 }}>stage: {p.current_stage}</p>
                         </div>
                     ))}
                 </div>

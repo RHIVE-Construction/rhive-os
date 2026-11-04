@@ -39,7 +39,6 @@ const QuoteBuilderToolPage: React.FC = () => {
                 <div className="bg-gray-900 p-4 rounded-lg border border-gray-700 mb-4">
                     <h3 className="text-sm font-bold text-white mb-1">Active Project</h3>
                     <p className="text-xs text-[#ec028b] break-words">{project.name}</p>
-                    <p className="text-xs text-gray-500 mt-1">{project._id}</p>
                 </div>
             </aside>
 

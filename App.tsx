@@ -340,7 +340,7 @@ const AppContentAuthenticated: React.FC = () => {
                 </main>
             </div>
             <FloatingEstimator />
-            <CookieConsentBanner />
+            {isPublicRoute && <CookieConsentBanner />}
             <GlobalChatWidget />
             <FloatingBackButton />
             <HunniChatWidget />

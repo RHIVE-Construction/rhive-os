@@ -4,7 +4,9 @@ import Button from '../components/Button';
 import CircuitryCard from '../components/CircuitryCard';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useMockDB } from '../contexts/MockDatabaseContext';
-import { accountService, propertyService, projectService, userLogService } from '../lib/firebaseService';
+import { accountService, propertyService, projectService, firestoreService, userLogService } from '../lib/firebaseService';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { 
     UserIcon, 
     UsersIcon, 
@@ -418,69 +420,132 @@ export const CustomersPortalPage: React.FC = () => {
         } catch { /* ignore */ }
     }, [clients]);
 
-    // Integrate with Firestore accounts in real-time
+    const [fsAccountsRaw, setFsAccountsRaw] = useState<any[]>([]);
+    const [fsPropertiesRaw, setFsPropertiesRaw] = useState<any[]>([]);
+    const [fsProjectsRaw, setFsProjectsRaw] = useState<any[]>([]);
+
     useEffect(() => {
-        const unsub = accountService.subscribe((firestoreAccounts: any[]) => {
-            if (!firestoreAccounts || firestoreAccounts.length === 0) return;
-
-            setClients(prevClients => {
-                const existingNames = new Set(prevClients.map(c => c.name.toLowerCase().trim()));
-                const newClientsToAdd: CustomerClient[] = [];
-
-                firestoreAccounts.forEach(fa => {
-                    const accName = (fa.accountName || fa.name || fa.company || '').trim();
-                    if (!accName || existingNames.has(accName.toLowerCase())) return;
-
-                    // Determine customer_type
-                    let cType: CustomerType = 'Commercial';
-                    const rawType = (fa.accountType || fa.type || fa.customer_type || '').toLowerCase();
-                    if (rawType.includes('gov') || rawType.includes('city') || rawType.includes('state')) {
-                        cType = 'Government';
-                    } else if (rawType.includes('res') || rawType.includes('home') || rawType.includes('individual')) {
-                        cType = 'Residential';
-                    }
-
-                    const newClient: CustomerClient = {
-                        id: fa.id || `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                        name: accName,
-                        customer_type: cType,
-                        account_code: fa.accountId || undefined,
-                        billing_address: fa.billingAddress || fa.address || fa.projectAddress || undefined,
-                        primary_contact: {
-                            name: fa.contactName || `${fa.firstName || ''} ${fa.lastName || ''}`.trim() || 'Primary Contact',
-                            email: fa.email || fa.email_1 || '',
-                            phone: fa.phone || fa.phone_1 || '',
-                            role: fa.role || 'Account Representative'
-                        },
-                        notes: fa.notes || 'Synced from RHIVE account repository.',
-                        created_at: fa.created_at || new Date().toISOString(),
-                        updated_at: fa.updated_at || new Date().toISOString(),
-                        campuses: [
-                            {
-                                id: `CAMP-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                                client_id: fa.id || '',
-                                name: fa.propertyName || `${accName} Site`,
-                                address: fa.projectAddress || fa.address || 'Address pending verification',
-                                city: fa.city || 'Salt Lake City',
-                                state: fa.state || 'UT',
-                                zip: fa.zipCode || fa.zip || '',
-                                phases: []
-                            }
-                        ]
-                    };
-                    newClientsToAdd.push(newClient);
-                    existingNames.add(accName.toLowerCase());
-                });
-
-                if (newClientsToAdd.length > 0) {
-                    return [...prevClients, ...newClientsToAdd];
-                }
-                return prevClients;
-            });
-        });
-
-        return () => unsub();
+        const uAcc = accountService.subscribe((docs: any[]) => setFsAccountsRaw((docs || []).filter(d => !d.deleted)));
+        const uProp = firestoreService.subscribeToDocuments('properties', (docs: any[]) => setFsPropertiesRaw((docs || []).filter(d => !d.deleted)));
+        const uProj = projectService.subscribe((docs: any[]) => setFsProjectsRaw(docs || []));
+        return () => { uAcc(); uProp(); uProj(); };
     }, []);
+
+    // Integrate Firestore accounts + properties + buildings + projects in real-time
+    useEffect(() => {
+        if (fsAccountsRaw.length === 0) return;
+
+        setClients(prevClients => {
+            const byId = new Map<string, CustomerClient>();
+            prevClients.forEach(c => byId.set(c.id, c));
+
+            fsAccountsRaw.forEach(fa => {
+                const accId = fa.id;
+                const accName = (fa.accountName || fa.name || fa.company || '').trim();
+                if (!accId || !accName) return;
+
+                let cType: CustomerType = 'Commercial';
+                const rawType = (fa.accountType || fa.type || fa.customer_type || '').toLowerCase();
+                if (rawType.includes('gov') || rawType.includes('city') || rawType.includes('state') || rawType.includes('dfcm')) {
+                    cType = 'Government';
+                } else if (rawType.includes('res') || rawType.includes('home') || rawType.includes('individual')) {
+                    cType = 'Residential';
+                }
+
+                const linkedProps = fsPropertiesRaw.filter(
+                    p => p.owner_id === accId || p.account_id === accId || p.client_id === accId
+                );
+                const linkedProjects = fsProjectsRaw.filter(
+                    pr => pr.account_id === accId || pr.owner_id === accId
+                );
+
+                const campuses: PropertyCampus[] = linkedProps.length > 0
+                    ? linkedProps.map(prop => {
+                        const propId = prop.id || prop._id;
+                        const propBldgs = Array.isArray(prop.buildings) && prop.buildings.length > 0
+                            ? prop.buildings
+                            : [{ id: `${propId}-b1`, name: 'Primary Building', roof_sqft: prop.roof_sqft || 3200, roof_type: prop.roof_style || 'Architectural Shingle' }];
+                        const propJobs = linkedProjects.filter(pr => pr.property_id === propId || linkedProps.length === 1);
+
+                        const mappedBuildings: BuildingAsset[] = propBldgs.map((b: any, bIdx: number) => {
+                            const bId = b.id || `${propId}-b-${bIdx + 1}`;
+                            const bJobs: ProjectJob[] = propJobs
+                                .filter((pr, pIdx) => {
+                                    if (Array.isArray(pr.buildings) && pr.buildings.some((pb: any) => pb.id === bId || pb.name === b.name)) return true;
+                                    return bIdx === 0 && (!pr.buildings || pr.buildings.length === 0 || pIdx >= 0);
+                                })
+                                .map(pr => ({
+                                    id: pr.id,
+                                    building_id: bId,
+                                    title: pr.name || 'Roofing Project',
+                                    job_number: pr.job_number || undefined,
+                                    scope_type: pr.details?.scopeType || pr.project_type || 'Roofing Scope',
+                                    current_stage: pr.current_stage || 'Lead',
+                                    contract_value: Number(pr.quote?.total || 0),
+                                    status: (pr.current_stage || '').toLowerCase().includes('complet') || (pr.current_stage || '').toLowerCase().includes('past') ? 'Completed' : 'Active',
+                                    assigned_contractor: pr.ops_schedule?.crew_lead || 'RHIVE Certified Install',
+                                    target_completion: pr.ops_schedule?.install_date || undefined,
+                                    created_at: pr.created_at || new Date().toISOString(),
+                                    updated_at: pr.updated_at || new Date().toISOString(),
+                                }));
+
+                            return {
+                                id: bId,
+                                phase_id: `${propId}-phase-1`,
+                                name: b.name || `Building ${bIdx + 1}`,
+                                building_code: b.building_code || undefined,
+                                roof_type: b.roof_type || prop.roof_style || 'Architectural / TPO',
+                                roof_sqft: Number(b.roof_sqft || b.sqft || 4500),
+                                stories: Number(b.stories || 1),
+                                pitch: b.pitch || 'Standard',
+                                condition: (b.condition as any) || 'Good',
+                                jobs: bJobs,
+                            };
+                        });
+
+                        return {
+                            id: propId,
+                            client_id: accId,
+                            name: prop.name || prop.Property_Name || prop.property_address || prop.address_full || `${accName} Campus`,
+                            address: prop.property_address || prop.Property_Street || prop.address_full || '',
+                            city: prop.city || prop.Property_City || 'Salt Lake City',
+                            state: prop.state || prop.Property_State || 'UT',
+                            zip: prop.zip || prop.Property_Zip || '',
+                            phases: [
+                                {
+                                    id: `${propId}-phase-1`,
+                                    campus_id: propId,
+                                    name: prop.phase_name || 'Main Property Scope',
+                                    phase_number: 'Phase 1',
+                                    buildings: mappedBuildings,
+                                }
+                            ],
+                        };
+                    })
+                    : (byId.get(accId)?.campuses || []);
+
+                byId.set(accId, {
+                    id: accId,
+                    name: accName,
+                    customer_type: cType,
+                    account_code: fa.accountId || fa.account_code || undefined,
+                    billing_address: fa.billingAddress || fa.address || fa.projectAddress || undefined,
+                    primary_contact: {
+                        name: fa.contactName || `${fa.firstName || ''} ${fa.lastName || ''}`.trim() || 'Primary Contact',
+                        email: fa.email || fa.email_1 || '',
+                        phone: fa.phone || fa.phone_1 || '',
+                        role: fa.role || 'Account Representative'
+                    },
+                    notes: fa.notes || 'Synced from RHIVE Firestore.',
+                    created_at: fa.created_at || new Date().toISOString(),
+                    updated_at: fa.updated_at || new Date().toISOString(),
+                    campuses,
+                });
+            });
+
+            return Array.from(byId.values());
+        });
+    }, [fsAccountsRaw, fsPropertiesRaw, fsProjectsRaw]);
 
     // Filter and Search States
     const [selectedTypeFilter, setSelectedTypeFilter] = useState<'All' | CustomerType>('All');
@@ -711,6 +776,21 @@ export const CustomersPortalPage: React.FC = () => {
             billingAddress: '',
             notes: ''
         });
+
+        setDoc(doc(db, 'accounts', newClient.id), {
+            id: newClient.id,
+            name: newClient.name,
+            accountName: newClient.name,
+            accountType: newClient.customer_type,
+            accountId: newClient.account_code,
+            billingAddress: newClient.billing_address || '',
+            contactName: newClient.primary_contact?.name || '',
+            email: newClient.primary_contact?.email || '',
+            phone: newClient.primary_contact?.phone || '',
+            notes: newClient.notes || '',
+            created_at: newClient.created_at,
+            updated_at: newClient.updated_at,
+        }, { merge: true }).catch(() => {});
 
         userLogService.logAction(
             'CREATE_TIER1_CLIENT',
@@ -1862,6 +1942,7 @@ export const CustomersPortalPage: React.FC = () => {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
+                                                            setSelectedProjectId(job.id);
                                                             const stagePage = getStagePageId(job.current_stage);
                                                             setActivePageId(stagePage);
                                                         }}

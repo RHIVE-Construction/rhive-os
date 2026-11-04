@@ -38,7 +38,9 @@ import {
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { usePricing } from '../contexts/PricingContext';
-import { cn } from '../lib/utils';
+import { cn, getStagePageId } from '../lib/utils';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useGoogleMapsApi, useGoogleMapsApiStatus } from '../hooks/useGoogleMapsApi';
 import { generateMockBuildingData } from '../lib/mockData';
 import { calculateEstimate } from '../lib/calculations';
@@ -49,7 +51,7 @@ import { Card, CardContent } from '../components/ui/card';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, Property, EaveOverhang, ProjectStage } from '../types';
 import { createProject as createProjectApi } from '../lib/api';
 import { getMapsApiKey } from '../lib/mapsConfig';
-import { firestoreService, userLogService } from '../lib/firebaseService';
+import { firestoreService, accountService, userLogService } from '../lib/firebaseService';
 import { analyzeLidar, type LidarResult } from '../services/lidarService';
 
 // Mock Data for Utah Companies
@@ -365,7 +367,11 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass 
         }];
     });
     const [editableAddress, setEditableAddress] = useState(() => {
-        return `${data.address || ''}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''}${data.zip ? ` ${data.zip}` : ''}`;
+        const raw = (data.address || '').trim();
+        if (raw.includes(',') || (data.city && raw.toLowerCase().includes(data.city.toLowerCase()))) {
+            return raw;
+        }
+        return `${raw}${data.city ? `, ${data.city}` : ''}${data.state ? `, ${data.state}` : ''}${data.zip ? ` ${data.zip}` : ''}`;
     });
     const [propertyName, setPropertyName] = useState(data.name || '');
     
@@ -1884,7 +1890,8 @@ const SummaryDisplay = ({ items }: { items: { label: string, value: string | num
 
 const CustomerInputPage: React.FC = () => {
     const { addUser, createProject, properties, addProperty, users, projects, updateProperty, addCommunication, currentUser, setCurrentProjectId } = useMockDB();
-    const { setActivePageId } = useNavigation();
+    const { setActivePageId, setSelectedProjectId, setSelectedPropertyId } = useNavigation();
+    const [createdStage, setCreatedStage] = useState<string>('Lead');
     const { pricing } = usePricing();
     const isApiReady = useGoogleMapsApi();
     
@@ -2109,6 +2116,61 @@ const CustomerInputPage: React.FC = () => {
                 setPurchaseIntent('Inspection');
             }
             sessionStorage.removeItem('intakePurchaseIntent');
+        }
+        const prefillParentCompany = sessionStorage.getItem('intakeParentCompany');
+        const prefillPropName = sessionStorage.getItem('intakePropertyName');
+        if (prefillParentCompany || prefillPropName) {
+            setProjectCategory('Commercial');
+            setCompanyData(prev => ({
+                parentCompany: prefillParentCompany || prev.parentCompany,
+                propertyName: prefillPropName || prev.propertyName,
+            }));
+            sessionStorage.removeItem('intakeParentCompany');
+            sessionStorage.removeItem('intakePropertyName');
+        }
+        const rawPrefill = sessionStorage.getItem('rhive_prefill_intake');
+        if (rawPrefill) {
+            sessionStorage.removeItem('rhive_prefill_intake');
+            try {
+                const pf = JSON.parse(rawPrefill);
+                if (pf.projectCategory) setProjectCategory(pf.projectCategory);
+                if (pf.parentCompany || pf.propertyName) {
+                    setCompanyData(prev => ({
+                        parentCompany: pf.parentCompany || prev.parentCompany,
+                        propertyName: pf.propertyName || prev.propertyName,
+                    }));
+                }
+                if (pf.address) {
+                    setPropertyData(prev => ({
+                        ...prev,
+                        address: pf.address,
+                        city: pf.city || prev.city || 'Salt Lake City',
+                        state: pf.state || prev.state || 'UT',
+                        zip: pf.zip || prev.zip || '',
+                        latitude: Number(pf.latitude || prev.latitude || 40.7608),
+                        longitude: Number(pf.longitude || prev.longitude || -111.8910),
+                    }));
+                }
+                if (Array.isArray(pf.buildings) && pf.buildings.length > 0) {
+                    setPinnedBuildings(pf.buildings);
+                }
+                if (pf.contactName) {
+                    const parts = String(pf.contactName).trim().split(/\s+/);
+                    setContacts([{
+                        id: `C-${Date.now()}`,
+                        firstName: parts[0] || 'Client',
+                        lastName: parts.slice(1).join(' ') || '',
+                        phone: pf.contactPhone || '',
+                        email: pf.contactEmail || '',
+                        role: 'Property Owner',
+                        isPrimary: true,
+                        preferredContactMethod: 'Phone',
+                        affiliations: [],
+                        responsibilities: ['Bid', 'Billing'],
+                    }]);
+                    setIsAddingContact(false);
+                }
+            } catch {}
         }
     }, []);
     
@@ -2570,32 +2632,159 @@ const CustomerInputPage: React.FC = () => {
                 }
             );
             // Redirect smoothly to the existing project dashboard
-            setCurrentProjectId(activeProjectOnProp._id);
+            const mergedProjId = (activeProjectOnProp as any).id || activeProjectOnProp._id;
+            setCurrentProjectId(mergedProjId);
+            setSelectedProjectId(mergedProjId);
+            setCreatedStage(activeProjectOnProp.current_stage || 'Lead');
             setSubmissionSummary({ type: 'Project Merged', name: projectName });
             setIsSuccessModalOpen(true);
         } else {
-            // Determine the correct pipeline stage based on form selections:
-            // - Insurance claim → Quote (needs a quote built from claim)
-            // - Ready to buy → Quote (skip estimate, go straight to quote)
-            // - Exploring / estimate needed → Estimate
-            // - Default → Lead
+            // Determine the correct pipeline stage based on RHIVE intake rules:
+            // - Exploring (no insurance, no active leak) → Estimate (ballpark)
+            // - Ready for Certified Quote (no active leak/inspection block) → Quote
+            // - Inspection / Active Leak / Insurance / Commercial Inspection → Lead
             let initialStage: string = 'Lead';
-            if (isInsurance || purchaseIntent === 'Ready') {
+            if (!isInspectionRequired && purchaseIntent === 'Ready') {
                 initialStage = 'Quote';
-            } else if (purchaseIntent === 'Exploring') {
+            } else if (!isInspectionRequired && purchaseIntent === 'Exploring') {
                 initialStage = 'Estimate';
             }
 
-            // Create new project at the correct stage
-            const newProjId = createProject(projectName, projectCategory, targetPropertyId, ownerId, initialStage);
+            const nowIso = new Date().toISOString();
+            const fullAddressStr = [propertyData.address, propertyData.city, propertyData.state, propertyData.zip].filter(Boolean).join(', ');
+            const finalProjectBuildings = pinnedBuildings.length > 0
+                ? pinnedBuildings.map(b => ({
+                    id: b.id,
+                    name: b.name,
+                    coordinates: b.coordinates || { lat: propertyData.latitude, lng: propertyData.longitude },
+                }))
+                : (existingProperty?.buildings && existingProperty.buildings.length > 0
+                    ? existingProperty.buildings
+                    : [{ id: `BLDG-${Date.now()}-1`, name: 'Primary Structure', coordinates: { lat: propertyData.latitude, lng: propertyData.longitude } }]);
 
-            // Log the new lead/project creation
+            const accountDisplayName = requiresOrganization && companyData.parentCompany
+                ? companyData.parentCompany
+                : `${primaryContact.firstName} ${primaryContact.lastName}`.trim();
+
+            // Persist Account (Company or Residential Household) to Firestore accounts
+            setDoc(doc(db, 'accounts', ownerId), {
+                id: ownerId,
+                name: accountDisplayName,
+                accountName: accountDisplayName,
+                accountType: projectCategory,
+                accountId: `ACC-${Date.now().toString().slice(-5)}`,
+                contactName: `${primaryContact.firstName} ${primaryContact.lastName}`.trim(),
+                email: primaryContact.email || '',
+                phone: primaryContact.phone || '',
+                address: billingData.address || propertyData.address || '',
+                billingCity: billingData.city || propertyData.city || '',
+                billingState: billingData.state || propertyData.state || 'UT',
+                billingCode: billingData.zip || propertyData.zip || '',
+                created_at: nowIso,
+                updated_at: nowIso,
+            }, { merge: true }).catch(() => {});
+
+            const ballparkTotal = analysisData.result?.recommendedEstimate || analysisData.result?.tiers?.better?.totalPrice || 0;
+
+            // Create new project at the correct stage with complete CRM & Pipeline context
+            const newProjId = createProject(
+                projectName,
+                projectCategory,
+                targetPropertyId,
+                ownerId,
+                initialStage,
+                {
+                    job_number: `RC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                    account_name: accountDisplayName,
+                    property_address: fullAddressStr || propertyData.address,
+                    city: propertyData.city || '',
+                    state: propertyData.state || 'UT',
+                    zip: propertyData.zip || '',
+                    property: {
+                        address: propertyData.address || '',
+                        city: propertyData.city || '',
+                        state: propertyData.state || 'UT',
+                        zip: propertyData.zip || '',
+                        latitude: propertyData.latitude || 0,
+                        longitude: propertyData.longitude || 0,
+                    },
+                    buildings: finalProjectBuildings,
+                    contacts: resolvedContacts.map(rc => ({
+                        id: rc.resolvedId,
+                        firstName: rc.firstName,
+                        lastName: rc.lastName,
+                        name: `${rc.firstName} ${rc.lastName}`.trim(),
+                        email: rc.email || '',
+                        phone: rc.phone || '',
+                        role: rc.role || 'Property Owner',
+                        isPrimary: Boolean(rc.isPrimary),
+                        responsibilities: rc.responsibilities || [],
+                    })),
+                    contact_name: `${primaryContact.firstName} ${primaryContact.lastName}`.trim(),
+                    contact_email: primaryContact.email || '',
+                    contact_phone: primaryContact.phone || '',
+                    customer_name: `${primaryContact.firstName} ${primaryContact.lastName}`.trim(),
+                    customer_email: primaryContact.email || '',
+                    email: primaryContact.email || '',
+                    phone: primaryContact.phone || '',
+                    lead_source: customerProfile.leadSource || 'Smart Intake',
+                    notes: detailedScope.projectDetails || '',
+                    insurance: isInsurance ? { ...insuranceInfo, status: insuranceStatus, damageType } : null,
+                    details: {
+                        scopeType,
+                        repairDetails,
+                        purchaseIntent,
+                        detailedScope,
+                        customerProfile,
+                    },
+                    pizza_tracker: {
+                        current_stage: initialStage,
+                        updated_at: nowIso,
+                    },
+                    ...(ballparkTotal > 0 ? {
+                        quote: {
+                            total: Math.round(ballparkTotal),
+                            status: 'Draft',
+                            items: [{ name: `${scopeType} Scope (${finalProjectBuildings.length} structure${finalProjectBuildings.length === 1 ? '' : 's'})`, cost: Math.round(ballparkTotal) }],
+                        },
+                    } : {}),
+                }
+            );
+
+            // Persist every contact to Firestore contacts collection linked to account, property, and project
+            resolvedContacts.forEach(rc => {
+                setDoc(doc(db, 'contacts', rc.resolvedId), {
+                    id: rc.resolvedId,
+                    first_name: rc.firstName || '',
+                    last_name: rc.lastName || '',
+                    name: `${rc.firstName || ''} ${rc.lastName || ''}`.trim(),
+                    email: rc.email || '',
+                    phone: rc.phone || '',
+                    role: rc.role || (projectCategory === 'Residential' ? 'Property Owner' : 'Property Manager'),
+                    preferred_contact_method: rc.preferredContactMethod || 'Phone',
+                    responsibilities: rc.responsibilities || [],
+                    isPrimary: Boolean(rc.isPrimary),
+                    account_id: ownerId,
+                    account_name: accountDisplayName,
+                    property_id: targetPropertyId,
+                    project_id: newProjId,
+                    address: fullAddressStr || '',
+                    created_at: nowIso,
+                    updated_at: nowIso,
+                }, { merge: true }).catch(() => {});
+            });
+
+            // Log the new lead/project creation (System Rules §7)
             userLogService.logAction(
-                'NEW_LEAD_CREATED',
-                `New lead "${projectName}" (${projectCategory} / ${initialStage}) created at ${propertyData.address || 'unknown address'}, ${propertyData.city || ''}`,
+                'RECORD_CREATED',
+                `${projectName} was created`,
                 {
                     page: 'New Lead Entry',
                     action: 'Create New Lead',
+                    recordId: newProjId,
+                    recordName: projectName,
+                    collection: 'projects',
+                    stage: initialStage,
                     projectId: newProjId,
                     projectName: projectName,
                     projectType: projectCategory,
@@ -2614,15 +2803,18 @@ const CustomerInputPage: React.FC = () => {
             );
 
             setCurrentProjectId(newProjId);
+            setSelectedProjectId(newProjId);
+            setCreatedStage(initialStage);
             setSubmissionSummary({ type: 'Project Created', name: projectName });
             setIsSuccessModalOpen(true);
         }
     };
 
     const handleGoToPropertyProfile = () => {
-        setActivePageId('E-13'); // Simulate navigation to property page
-        // In a real app, we would route to /property/:id
-        alert("Navigating to Property Profile (Simulated)");
+        if (matchedProperty) {
+            setSelectedPropertyId((matchedProperty as any).id || matchedProperty._id);
+        }
+        setActivePageId('E-12');
     };
 
     const MAPS_API_KEY = 'AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA';
@@ -2698,7 +2890,7 @@ const CustomerInputPage: React.FC = () => {
                             <Button className="w-full bg-green-600 hover:bg-green-500" onClick={handleFormReset}>
                                 <ArrowRightIcon className="w-4 h-4 mr-2" /> Start New Intake
                             </Button>
-                            <Button variant="secondary" className="w-full" onClick={() => { setIsSuccessModalOpen(false); setActivePageId(isEstimateRequest ? 'E-27' : 'E-28'); }}>
+                            <Button id="intake-view-in-pipeline-btn" variant="secondary" className="w-full" onClick={() => { setIsSuccessModalOpen(false); setActivePageId(getStagePageId(createdStage)); }}>
                                 View in Pipeline
                             </Button>
                         </div>

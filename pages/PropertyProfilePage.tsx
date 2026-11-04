@@ -5,8 +5,8 @@ import Card from '../components/Card';
 import CollapsibleSection from '../components/CollapsibleSection';
 import { MapPinIcon, BriefcaseIcon, UserIcon, BuildingStorefrontIcon, PencilSquareIcon, CheckIcon, XIcon } from '../components/icons';
 import { useNavigation } from '../contexts/NavigationContext';
-import { propertyService, contactService, projectService, firestoreService } from '../lib/firebaseService';
-import { cn } from '../lib/utils';
+import { propertyService, contactService, projectService, firestoreService, userLogService } from '../lib/firebaseService';
+import { cn, getStagePageId } from '../lib/utils';
 import PropertyPage from './PropertyPage';
 import { getMapsApiKey } from '../lib/mapsConfig';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -31,7 +31,7 @@ const stageBadgeColor = (stage?: string) => {
 };
 
 const PropertyProfilePage: React.FC = () => {
-    const { selectedPropertyId, setActivePageId, setSelectedContactId, setSelectedProjectId } = useNavigation();
+    const { selectedPropertyId, setActivePageId, setSelectedContactId, setSelectedProjectId, setSelectedAccountId } = useNavigation();
     const { properties: allProperties, projects: allProjects, updateProperty } = useMockDB();
 
     const handleContactClick = (contactId: string) => {
@@ -135,10 +135,14 @@ const PropertyProfilePage: React.FC = () => {
         setShowConfirmSave(false);
         try {
             await updateDoc(doc(db, 'properties', selectedPropertyId), editForm);
+            await userLogService.logAction(
+                'EDIT_RECORD',
+                `Property "${editForm.Property_Name || editForm.address_full || 'Property'}" updated`,
+                { recordId: selectedPropertyId, collection: 'properties' }
+            );
             setIsEditing(false);
         } catch (err) {
             console.error("Error updating property:", err);
-            alert("Failed to save updates.");
         } finally {
             setIsSaving(false);
         }
@@ -247,14 +251,26 @@ const PropertyProfilePage: React.FC = () => {
             .finally(() => setLoading(false));
     }, [selectedPropertyId, allProperties]);
 
-    // Load projects linked to this property
+    // Subscribe to live Firestore projects linked to this property
     useEffect(() => {
         if (!property) { setProjects([]); return; }
         const propId = property.id || property._id;
-        const filteredProjects = allProjects.filter(
-            (p: any) => p.property_id === propId
-        );
-        setProjects(filteredProjects);
+        const propStreet = String(property.Property_Street || property.property_address || property.address_full || '').toLowerCase().trim();
+        const unsub = projectService.subscribe((liveProjects: any[]) => {
+            const merged = new Map<string, any>();
+            [...allProjects, ...liveProjects].forEach((p: any) => {
+                if (p.deleted || p.converted_to_project) return;
+                const pId = p.id || p._id;
+                const pAddr = String(p.property_address || p.property?.address || '').toLowerCase().trim();
+                const matchesId = propId && p.property_id === propId;
+                const matchesAddr = propStreet.length > 5 && pAddr.length > 5 && (pAddr.includes(propStreet) || propStreet.includes(pAddr));
+                if (matchesId || matchesAddr) {
+                    merged.set(pId, p);
+                }
+            });
+            setProjects(Array.from(merged.values()));
+        });
+        return () => unsub();
     }, [property, allProjects]);
 
     // Load contacts linked to this property
@@ -456,6 +472,19 @@ const PropertyProfilePage: React.FC = () => {
                                     </div>
                                 </div>
                             )}
+                            {(property.account_id || property.owner_id) && property.owner_id !== 'Unknown' && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedAccountId(property.account_id || property.owner_id);
+                                        setActivePageId('E-08');
+                                    }}
+                                    className="w-full mt-3 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-[#ec028b] text-gray-200 font-bold py-2 px-4 rounded-lg flex items-center justify-between transition-all text-xs"
+                                >
+                                    <span className="truncate">Parent Account: {property.account_name || 'Open Account Profile'}</span>
+                                    <span className="text-[#ec028b]">→</span>
+                                </button>
+                            )}
                             <button
                                 id="btn-manage-buildings"
                                 onClick={() => setIsManageModalOpen(true)}
@@ -463,6 +492,31 @@ const PropertyProfilePage: React.FC = () => {
                             >
                                 <BuildingStorefrontIcon className="w-5 h-5 mr-2" />
                                 Manage Buildings
+                            </button>
+                            <button
+                                id="property-create-project-btn"
+                                type="button"
+                                onClick={() => {
+                                    sessionStorage.setItem('rhive_prefill_intake', JSON.stringify({
+                                        propertyId: property.id || property._id,
+                                        accountId: property.account_id || property.owner_id,
+                                        parentCompany: property.account_name || '',
+                                        propertyName: pName || addressTitle,
+                                        projectCategory: pType.toLowerCase().includes('gov') ? 'Government' : pType.toLowerCase().includes('comm') ? 'Commercial' : 'Residential',
+                                        address: pStreet || fullAddressForMap,
+                                        city: pCity,
+                                        state: pState || 'UT',
+                                        zip: pZip,
+                                        latitude: Number(pLat || property.coordinates?.lat || 0),
+                                        longitude: Number(pLng || property.coordinates?.lng || 0),
+                                        buildings: property.buildings || [],
+                                    }));
+                                    setActivePageId('E-02a');
+                                }}
+                                className="w-full mt-2 bg-black hover:bg-gray-900 border border-[#ec028b]/50 text-[#ec028b] hover:text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-all text-xs uppercase tracking-wider"
+                            >
+                                <BriefcaseIcon className="w-4 h-4 mr-2" />
+                                Create
                             </button>
                         </div>
                     </Card>
@@ -513,7 +567,7 @@ const PropertyProfilePage: React.FC = () => {
                                         <div key={projId}
                                             onClick={() => {
                                                 setSelectedProjectId(projId);
-                                                setActivePageId('E-15'); // Go to Project details
+                                                setActivePageId(getStagePageId(proj.current_stage));
                                             }}
                                             className="flex items-center justify-between p-4 bg-gray-900/40 border border-gray-800/50 rounded-xl hover:border-[#ec028b]/30 transition-all group cursor-pointer">
                                             <div className="flex items-center gap-4">
@@ -523,7 +577,7 @@ const PropertyProfilePage: React.FC = () => {
                                                 <div>
                                                     <p className="text-white font-bold">{proj.name || 'Unnamed Project'}</p>
                                                     <p className="text-gray-500 text-xs font-mono mt-0.5">
-                                                        {proj.project_type || ''} • {projId.slice(-8)}
+                                                        {[proj.project_type || 'Roofing', proj.job_number].filter(Boolean).join(' • ')}
                                                     </p>
                                                 </div>
                                             </div>

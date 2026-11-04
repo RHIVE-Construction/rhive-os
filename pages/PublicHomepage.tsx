@@ -1050,7 +1050,7 @@ const PublicHomepage: React.FC = () => {
                                     >
                                         <div className="flex justify-between items-center mb-4">
                                             <span className="text-[10px] font-mono text-gray-500 uppercase">Verification Checksum</span>
-                                            <span className="text-rhive-pink">OK</span>
+                                            <span className="text-rhive-pink">VERIFIED</span>
                                         </div>
                                         <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden mb-4">
                                             <div className="h-full bg-gradient-to-r from-rhive-pink to-rhive-blue" style={{ width: stage.progress }} />

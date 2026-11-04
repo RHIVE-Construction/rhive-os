@@ -91,6 +91,8 @@ const PROJECT_ACTION_TYPES = new Set([
     'CREATE_PROJECT', 'STAGE_CHANGE', 'SAVE_QUOTE', 'APPROVE_QUOTE',
     // Record-level events (System Rules §7)
     'RECORD_CREATED', 'EDIT_RECORD', 'DELETE_RECORD', 'RESTORE_RECORD', 'PERMANENT_DELETE',
+    // Additional intake & stage event aliases
+    'NEW_LEAD_CREATED', 'LEAD_MERGED_INTO_ACTIVE_PROJECT', 'CONVERT_LEAD', 'PIPELINE_STAGE_ADVANCED', 'RECORD_DELETED',
     // Standardized lower-case keys
     'lead_created', 'lead_updated', 'project_stage_changed',
     'estimate_created', 'estimate_updated',

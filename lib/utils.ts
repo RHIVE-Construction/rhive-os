@@ -23,7 +23,8 @@ export function getStagePageId(stage: string = ''): string {
     if (s.includes('schedule')) return 'E-30';
     if (s.includes('pre-install')) return 'E-31';
     if (s.includes('install')) return 'E-32';
-    if (s.includes('punch')) return 'E-33';
+    if (s.includes('warranty') || s.includes('punch')) return 'E-33';
+    if (s.includes('payment')) return 'E-35';
     if (s.includes('invoic')) return 'E-34';
     if (s.includes('complet')) return 'E-36';
     if (s.includes('past')) return 'E-37';

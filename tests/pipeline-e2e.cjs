@@ -196,7 +196,7 @@ async function createLeadViaSearch() {
 
     // Verify we're on the intake page
     const onIntake = await page.locator(
-      'text="New Project", text="Property", text="Stage 1", input[placeholder*="address" i]'
+      ':is(:text("New Project"), :text("Property"), :text("Stage 1"), input[placeholder*="address" i])'
     ).first().isVisible({ timeout: 8000 }).catch(() => false);
 
     if (onIntake) { pass('Navigated to Stage 1 intake page'); }
@@ -212,13 +212,13 @@ async function verifyMapModal() {
   log('STEP 3: Verify address verification map modal appears');
   try {
     const mapModal = page.locator(
-      '.fixed.inset-0:has(canvas), [class*="verification"], [class*="satellite"], button:has-text("Confirm Address")'
+      'button:has-text("Confirm Target"), button:has-text("Confirm Address"), .fixed.inset-0:has(canvas), [class*="verification"], [class*="satellite"]'
     ).first();
     const visible = await mapModal.isVisible({ timeout: 10000 }).catch(() => false);
     if (visible) {
       pass('Map modal (address verification) appeared');
       await shot('04_map_modal');
-      await tryClick(['button:has-text("Confirm")', 'button:has-text("Confirm Address")', 'button:has-text("Yes")'], 5000);
+      await tryClick(['button:has-text("Confirm Target")', 'button:has-text("Confirm Address")', 'button:has-text("Confirm")', 'button:has-text("Yes")'], 5000);
       await page.waitForTimeout(1000);
       pass('Map modal confirmed');
     } else {
@@ -297,7 +297,7 @@ async function verifyLeadInList() {
 
     // Look for our test lead or John Test
     const leadVisible = await page.locator(
-      'text="John Test", text="1847 S 1100 E", text="Salt Lake City"'
+      ':is(:text("John Test"), :text("1847 S 1100 E"), :text("Salt Lake City"))'
     ).first().isVisible({ timeout: 8000 }).catch(() => false);
 
     if (leadVisible) { pass('Lead found in Stage 1 (LeadPage) list'); }
@@ -386,7 +386,7 @@ async function convertToEstimate() {
 
     // Verify estimate page fields carry over
     const hasAddress = await page.locator(
-      'text="1847 S 1100 E", text="Salt Lake City", text="John Test"'
+      ':is(:text("1847 S 1100 E"), :text("Salt Lake City"), :text("John Test"))'
     ).first().isVisible({ timeout: 5000 }).catch(() => false);
 
     if (hasAddress) { pass('Customer data carried over to Estimate stage'); }
@@ -420,7 +420,7 @@ async function verifySignAndVerifyPage() {
 
     // Check that key fields are visible
     const hasProjectInfo = await page.locator(
-      'text="sign", text="verify", text="link", text="email", text="portal"'
+      ':is(:text("Sign"), :text("Verify"), :text("Link"), :text("Email"), :text("Portal"))'
     ).first().isVisible({ timeout: 5000 }).catch(() => false);
 
     if (hasProjectInfo) { pass('Sign & Verify page has expected content'); }
@@ -519,8 +519,7 @@ async function testCustomerPortal() {
 
     // Check for form fields (only if a real project existed)
     const hasForm = await page.locator(
-      'input[placeholder*="claim" i], input[placeholder*="policy" i], ' +
-      'text="Deductible", text="Payment", text="Terms", text="Agree"'
+      ':is(input[placeholder*="claim" i], input[placeholder*="policy" i], :text("Deductible"), :text("Payment"), :text("Terms"), :text("Agree"))'
     ).first().isVisible({ timeout: 5000 }).catch(() => false);
 
     if (hasForm) { pass('Customer portal form fields visible (claim, payment, terms)'); }

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
-import { cn } from '../lib/utils';
+import { cn, getStagePageId } from '../lib/utils';
+import { accountService, projectService, firestoreService } from '../lib/firebaseService';
 
 // Local inline search icon
 const SearchIcon = (p: React.SVGProps<SVGSVGElement>) => (
@@ -82,8 +83,90 @@ const decipherQueryType = (q: string): 'Phone Number' | 'Address' | 'Name' | 'No
 };
 
 export const GlobalCustomerLookupModal: React.FC = () => {
-    const { users, properties, projects, setCurrentProjectId, currentUser } = useMockDB();
-    const { setActivePageId, setSelectedPropertyId, setSelectedContactId, setSelectedAccountId } = useNavigation();
+    const { users: mockUsers, properties: mockProperties, projects: mockProjects, setCurrentProjectId, currentUser } = useMockDB();
+    const { setActivePageId, setSelectedPropertyId, setSelectedContactId, setSelectedAccountId, setSelectedProjectId } = useNavigation();
+    const [fsAccounts, setFsAccounts] = useState<any[]>([]);
+    const [fsContacts, setFsContacts] = useState<any[]>([]);
+    const [fsProperties, setFsProperties] = useState<any[]>([]);
+    const [fsProjects, setFsProjects] = useState<any[]>([]);
+
+    useEffect(() => {
+        const u1 = accountService.subscribe((docs: any[]) => setFsAccounts(docs.filter(d => !d.deleted)));
+        const u2 = firestoreService.subscribeToDocuments('contacts', (docs: any[]) => setFsContacts(docs.filter(d => !d.deleted)));
+        const u3 = firestoreService.subscribeToDocuments('properties', (docs: any[]) => setFsProperties(docs.filter(d => !d.deleted)));
+        const u4 = projectService.subscribe((docs: any[]) => setFsProjects(docs));
+        return () => { u1(); u2(); u3(); u4(); };
+    }, []);
+
+    // Unified live + mock directories
+    const users = React.useMemo(() => {
+        const map = new Map<string, any>();
+        mockUsers.forEach(u => map.set(u.id, { ...u, _entityKind: 'user' }));
+        fsAccounts.forEach(a => {
+            const name = a.accountName || a.name || '';
+            if (!name) return;
+            map.set(a.id, {
+                id: a.id,
+                name,
+                role: 'Customer',
+                email: a.email || a.email_1 || '',
+                phone: a.phone || a.phone_1 || '',
+                _entityKind: 'account',
+                _accountType: a.accountType || a.type || 'Commercial',
+            });
+        });
+        fsContacts.forEach(c => {
+            const name = c.name || `${c.first_name || c.firstName || ''} ${c.last_name || c.lastName || ''}`.trim();
+            if (!name || map.has(c.id)) return;
+            map.set(c.id, {
+                id: c.id,
+                name,
+                role: 'Customer',
+                email: c.email || '',
+                phone: c.phone || c.mobile || '',
+                _entityKind: 'contact',
+                account_id: c.account_id,
+            });
+        });
+        return Array.from(map.values());
+    }, [mockUsers, fsAccounts, fsContacts]);
+
+    const properties = React.useMemo(() => {
+        const map = new Map<string, any>();
+        mockProperties.forEach(p => map.set(p._id, p));
+        fsProperties.forEach(p => {
+            const id = p.id || p._id;
+            if (!id) return;
+            map.set(id, {
+                _id: id,
+                address_full: p.address_full || p.Property_Name || [p.Property_Street || p.property_address, p.Property_City || p.city, p.Property_State || p.state].filter(Boolean).join(', ') || 'Property',
+                type: p.type || p.Property_Type || 'Commercial',
+                owner_id: p.owner_id || p.account_id || '',
+                account_id: p.account_id || p.owner_id || '',
+            });
+        });
+        return Array.from(map.values());
+    }, [mockProperties, fsProperties]);
+
+    const projects = React.useMemo(() => {
+        const map = new Map<string, any>();
+        mockProjects.forEach(pr => map.set(pr._id, pr));
+        fsProjects.forEach(pr => {
+            const id = pr.id || pr._id;
+            if (!id) return;
+            map.set(id, {
+                ...pr,
+                _id: id,
+                id,
+                name: pr.name || 'Project',
+                account_id: pr.account_id || pr.owner_id || pr.user_id || '',
+                property_id: pr.property_id || '',
+                current_stage: pr.current_stage || 'Lead',
+                status: pr.status || 'Active',
+            });
+        });
+        return Array.from(map.values());
+    }, [mockProjects, fsProjects]);
     
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -603,7 +686,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                                 {/* Satellite thumbnail */}
                                 <div className="relative shrink-0 w-28 h-20 overflow-hidden">
                                     <img
-                                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${confirmedAddress.lat},${confirmedAddress.lng}&zoom=18&size=224x160&maptype=satellite&markers=color:0xec028b%7C${confirmedAddress.lat},${confirmedAddress.lng}&key=AIzaSyAyDim_1uOJy6rS_GZ-EwNKmJyCrvSvqRA`}
+                                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${confirmedAddress.lat},${confirmedAddress.lng}&zoom=18&size=224x160&maptype=satellite&markers=color:0xec028b%7C${confirmedAddress.lat},${confirmedAddress.lng}&key=${(import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || ''}`}
                                         alt="Map preview"
                                         className="w-full h-full object-cover opacity-90"
                                     />
@@ -686,17 +769,17 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                         <div className="space-y-3">
                             {searchResults.length > 0 && (
                                 searchResults.map((cust) => {
-                                    const custProperties = properties.filter(p => p.owner_id === cust.id);
-                                    const custProjects = projects.filter(pr => pr.account_id === cust.id);
-                                    
-                                    const isCommercial = cust.name.includes('HOA') || 
-                                                         cust.name.includes('Group') || 
-                                                         cust.name.includes('Corp') || 
-                                                         cust.name.includes('Supply') || 
-                                                         cust.name.includes('Summit') || 
-                                                         cust.name.includes('Apex') || 
-                                                         cust.name.includes('Vanguard') || 
-                                                         cust.name.includes('BuildWest');
+                                    const custProperties = properties.filter(p => p.owner_id === cust.id || (p as any).account_id === cust.id || (cust.account_id && p.owner_id === cust.account_id));
+                                    const custProjects = projects.filter(pr => pr.account_id === cust.id || (cust.account_id && pr.account_id === cust.account_id));
+
+                                    const isCommercial = cust._entityKind === 'account' ||
+                                                         cust.name.includes('HOA') ||
+                                                         cust.name.includes('Group') ||
+                                                         cust.name.includes('Corp') ||
+                                                         cust.name.includes('UNPHC') ||
+                                                         cust.name.includes('ACS') ||
+                                                         cust.name.includes('ICON') ||
+                                                         cust.name.includes('DFCM');
 
                                     return (
                                         <div 
@@ -758,15 +841,11 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                                                             <button
                                                                 key={proj._id}
                                                                 onClick={() => {
-                                                                    setCurrentProjectId(proj._id);
+                                                                    const pid = (proj as any).id || proj._id;
+                                                                    setSelectedProjectId(pid);
+                                                                    setCurrentProjectId(pid);
                                                                     setIsOpen(false);
-                                                                    if (proj.current_stage === 'Quote') {
-                                                                        setActivePageId('E-28');
-                                                                    } else if (proj.current_stage === 'Estimate') {
-                                                                        setActivePageId('E-27');
-                                                                    } else {
-                                                                        setActivePageId('E-15');
-                                                                    }
+                                                                    setActivePageId(getStagePageId(proj.current_stage));
                                                                 }}
                                                                 className="text-xs text-[#ec028b] hover:text-white hover:underline transition-all text-left outline-none font-bold"
                                                             >

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { projectService, firestoreService, userLogService } from '../lib/firebaseService';
-import { cn, getStagePageId } from '../lib/utils';
+import { cn } from '../lib/utils';
 import { ArrowLeftIcon, MapPinIcon, BriefcaseIcon, ArrowRightIcon, CheckCircleIcon, CalendarIcon, TrashIcon } from './icons';
 import Button from './Button';
 import FollowUpModal from './FollowUpModal';
@@ -14,32 +14,34 @@ interface ProjectStageLayoutProps {
     headerActions?: (project: any) => React.ReactNode;
 }
 
-// ─── Full ordered pipeline ──────────────────────────────────────────────────
-const PIPELINE: { stage: string; pageId: string; short: string }[] = [
-    { stage: 'Lead',            pageId: 'E-26', short: 'Lead' },
-    { stage: 'Estimate',        pageId: 'E-27', short: 'Est.' },
-    { stage: 'Quote',           pageId: 'E-28', short: 'Quote' },
-    { stage: 'Sign & Verify',   pageId: 'E-29', short: 'Sign' },
-    { stage: 'Schedule',        pageId: 'E-30', short: 'Sched.' },
-    { stage: 'Pre-Installation',pageId: 'E-31', short: 'Pre-Install' },
-    { stage: 'Install',         pageId: 'E-32', short: 'Install' },
-    { stage: 'Punch List',      pageId: 'E-33', short: 'Punch' },
-    { stage: 'Invoicing',       pageId: 'E-34', short: 'Invoice' },
-    { stage: 'Completed',       pageId: 'E-36', short: 'Done' },
+// ─── Full ordered 11-stage pipeline ─────────────────────────────────────────
+export const PIPELINE: { stage: string; pageId: string; short: string; defaultSubSteps: string[] }[] = [
+    { stage: 'Lead',                pageId: 'E-26', short: 'Lead',        defaultSubSteps: ['Intake Received', 'Property Verified', 'Rep Assigned'] },
+    { stage: 'Estimate',            pageId: 'E-27', short: 'Est.',        defaultSubSteps: ['Roof Measurements', 'Scope Analyzed', 'Ballpark / Takeoff Saved'] },
+    { stage: 'Quote',               pageId: 'E-28', short: 'Quote',       defaultSubSteps: ['System Options Built', 'Certified Quote Sent', 'Client Reviewing'] },
+    { stage: 'Sign & Verify',       pageId: 'E-29', short: 'Sign',        defaultSubSteps: ['Agreement Sent', 'Signature Verified', 'Material Deposit Confirmed'] },
+    { stage: 'Schedule',            pageId: 'E-30', short: 'Sched.',      defaultSubSteps: ['Permit Approved', 'Material PO Confirmed', 'Certified Crew Scheduled'] },
+    { stage: 'Pre-Installation',    pageId: 'E-31', short: 'Pre-Install', defaultSubSteps: ['3-Day Prep Guide Sent', 'Materials Staged on Site', 'Weather & Crew Cleared'] },
+    { stage: 'Install',             pageId: 'E-32', short: 'Install',     defaultSubSteps: ['Tear-Off & Deck Audit', 'Synthetic & Ice Shield', 'Primary Roof System Installed'] },
+    { stage: 'Warranty Activation', pageId: 'E-33', short: 'Warranty',    defaultSubSteps: ['Envelope Audit', 'Triple Magnetic Nail Sweep', 'Official Warranty Active'] },
+    { stage: 'Invoicing',           pageId: 'E-34', short: 'Invoice',     defaultSubSteps: ['Final Invoice Issued', 'Milestone Ledger Verified', 'Final Balance Cleared'] },
+    { stage: 'Completed',           pageId: 'E-36', short: 'Done',        defaultSubSteps: ['Completion Packet Ready', 'Warranty Certificate Issued', 'Project Closed'] },
+    { stage: 'Past Customer',       pageId: 'E-37', short: 'Past',        defaultSubSteps: ['Abundance Network Active', 'Annual Roof Check Scheduled', 'Lifetime Care'] },
 ];
 
-function matchStageIndex(currentStage: string = ''): number {
+export function matchStageIndex(currentStage: string = ''): number {
     const s = currentStage.toLowerCase().trim();
-    if (s.includes('lead'))        return 0;
-    if (s.includes('estimate'))    return 1;
-    if (s.includes('quote'))       return 2;
-    if (s.includes('sign'))        return 3;
-    if (s.includes('schedule'))    return 4;
-    if (s.includes('pre-install')) return 5;
-    if (s.includes('install'))     return 6;
-    if (s.includes('punch'))       return 7;
-    if (s.includes('invoic'))      return 8;
-    if (s.includes('complet') || s.includes('past')) return 9;
+    if (!s || s.includes('lead'))                    return 0;
+    if (s.includes('estimate'))                      return 1;
+    if (s.includes('quote'))                         return 2;
+    if (s.includes('sign'))                          return 3;
+    if (s.includes('schedule'))                      return 4;
+    if (s.includes('pre-install'))                   return 5;
+    if (s.includes('install'))                       return 6;
+    if (s.includes('warranty') || s.includes('punch')) return 7;
+    if (s.includes('invoic') || s.includes('payment')) return 8;
+    if (s.includes('complet'))                       return 9;
+    if (s.includes('past'))                          return 10;
     return -1;
 }
 
@@ -51,6 +53,7 @@ const STAGE_COLORS: Record<string, string> = {
     schedule:     'border-cyan-500/60 text-cyan-400 bg-cyan-500/10',
     'pre-install':'border-sky-500/60 text-sky-400 bg-sky-500/10',
     install:      'border-orange-500/60 text-orange-400 bg-orange-500/10',
+    warranty:     'border-amber-500/60 text-amber-400 bg-amber-500/10',
     punch:        'border-amber-500/60 text-amber-400 bg-amber-500/10',
     invoic:       'border-green-500/60 text-green-400 bg-green-500/10',
     complet:      'border-emerald-500/60 text-emerald-400 bg-emerald-500/10',
@@ -59,6 +62,7 @@ const STAGE_COLORS: Record<string, string> = {
 
 export function getStageBadgeClass(stage: string = ''): string {
     const s = stage.toLowerCase();
+    if (s.includes('pre-install')) return STAGE_COLORS['pre-install'];
     for (const [key, cls] of Object.entries(STAGE_COLORS)) {
         if (s.includes(key)) return cls;
     }
@@ -100,19 +104,19 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
             if (!project || deleting) return;
             setDeleting(true);
             try {
-                const collection = project._source === 'leads' ? 'leads' : 'projects';
-                await firestoreService.updateDocument(collection, project.id, {
-                    deleted: true,
-                    deleted_at: new Date().toISOString(),
-                    delete_reason: reason || null,
-                    updated_at: new Date().toISOString(),
+                const col = project._source === 'leads' ? 'leads' : project._source === 'deals' ? 'deals' : 'projects';
+                await firestoreService.softDeleteDocument(col, project.id, {
+                    deletion_reason: reason || 'Removed from pipeline stage',
                 });
                 userLogService.logAction(
-                    'RECORD_DELETED',
-                    `Record "${project.name || project.id}" moved to Trash from ${stageLabel}`,
+                    'DELETE_RECORD',
+                    `${project.name || 'Record'} was moved to trash`,
                     {
                         page: stageLabel,
                         action: 'Delete Record',
+                        recordId: project.id,
+                        recordName: project.name || 'Unknown',
+                        collection: col,
                         projectId: project.id,
                         projectName: project.name || 'Unknown',
                         stage: project.current_stage,
@@ -133,9 +137,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
             if (p?.property?.address) {
                 return [p.property.address, p.property.city, p.property.state].filter(Boolean).join(', ');
             }
-            // property_address is set by normalizeLead / normalizeDeal / direct projects
             if (p?.property_address) return p.property_address;
-            // Fallback: assemble from loose fields (legacy leads schema)
             const parts = [p?.street || p?.projectStreet, p?.city, p?.state, p?.zipCode].filter(Boolean);
             return parts.length > 0 ? parts.join(', ') : 'Address not specified';
         };
@@ -151,26 +153,28 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
             setAdvancing(true);
 
             try {
-                // Try updating in 'projects' collection first
-                const projUpdate = await firestoreService.updateDocument('projects', project.id, {
+                await projectService.updateRecord(project.id, {
                     current_stage: next.stage,
+                    pizza_tracker: {
+                        stage: next.stage,
+                        stageIndex: currentIdx + 1,
+                        totalStages: PIPELINE.length,
+                        subSteps: next.defaultSubSteps.map((label, i) => ({ label, done: i === 0 })),
+                        updatedAt: new Date().toISOString(),
+                    },
                     updated_at: new Date().toISOString(),
-                });
-
-                // If not found in projects, try leads collection
-                if (!projUpdate.success) {
-                    await firestoreService.updateDocument('leads', project.id, {
-                        current_stage: next.stage,
-                        updated_at: new Date().toISOString(),
-                    });
-                }
+                }, project._source);
 
                 userLogService.logAction(
-                    'PIPELINE_STAGE_ADVANCED',
-                    `Project "${project.name || project.id}" advanced from stage "${prevStage}" → "${next.stage}"`,
+                    'STAGE_CHANGE',
+                    `${project.name || 'Project'} moved to ${next.stage}`,
                     {
                         page: 'Pipeline',
                         action: 'Advance Stage',
+                        recordId: project.id,
+                        recordName: project.name || 'Unknown',
+                        collection: project._source || 'projects',
+                        stage: next.stage,
                         projectId: project.id,
                         projectName: project.name || 'Unknown',
                         fromStage: prevStage,
@@ -181,10 +185,10 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
 
                 // Navigate to next stage page (keep selectedProjectId intact)
                 setActivePageId(next.pageId);
-            } catch (err) {
+            } catch {
                 userLogService.logAction(
                     'PIPELINE_STAGE_ADVANCE_FAILED',
-                    `Failed to advance project "${project.name || project.id}" from "${prevStage}" to "${next.stage}"`,
+                    `Failed to advance project "${project.name || 'Unknown'}" from "${prevStage}" to "${next.stage}"`,
                     {
                         page: 'Pipeline',
                         projectId: project.id,
@@ -225,7 +229,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
 
         const currentIdx = matchStageIndex(project.current_stage);
         const nextStage = currentIdx >= 0 && currentIdx < PIPELINE.length - 1 ? PIPELINE[currentIdx + 1] : null;
-        const isCompleted = currentIdx === PIPELINE.length - 1;
+        const isPastCustomer = currentIdx === PIPELINE.length - 1;
 
         return (
             <div className="h-full flex flex-col overflow-hidden">
@@ -248,18 +252,23 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                                     {project.name || 'Unnamed Project'}
                                 </h1>
                                 <span className={cn(
-                                    'flex-none text-base font-black uppercase tracking-widest px-2 py-0.5 rounded border',
+                                    'flex-none text-xs font-black uppercase tracking-widest px-2.5 py-0.5 rounded border',
                                     getStageBadgeClass(project.current_stage)
                                 )}>
                                     {project.current_stage || stageLabel}
                                 </span>
                                 {project.project_type && (
-                                    <span className="flex-none text-base font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-gray-700 text-gray-500 bg-gray-900">
+                                    <span className="flex-none text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-gray-700 text-gray-400 bg-gray-900">
                                         {project.project_type}
                                     </span>
                                 )}
+                                {project.job_number && (
+                                    <span className="flex-none text-xs font-mono font-bold px-2 py-0.5 rounded border border-gray-800 text-gray-400 bg-black">
+                                        {project.job_number}
+                                    </span>
+                                )}
                             </div>
-                            <div className="flex items-center gap-1 text-base text-gray-500 mt-0.5">
+                            <div className="flex items-center gap-1 text-sm text-gray-500 mt-0.5">
                                 <MapPinIcon className="w-3 h-3 flex-none" />
                                 <span className="truncate">{getAddress(project)}</span>
                             </div>
@@ -274,7 +283,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                             id="stage-record-delete-btn"
                             onClick={() => setShowDeleteModal(true)}
                             disabled={deleting}
-                            className="group flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 font-black text-base uppercase tracking-wider hover:bg-red-500/20 hover:border-red-500/60 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] transition-all duration-300 disabled:opacity-40 disabled:pointer-events-none"
+                            className="group flex items-center gap-2 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 font-black text-xs uppercase tracking-wider hover:bg-red-500/20 hover:border-red-500/60 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)] transition-all duration-300 disabled:opacity-40 disabled:pointer-events-none"
                             title="Move this record to Trash"
                         >
                             <TrashIcon className="w-3.5 h-3.5" />
@@ -284,7 +293,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                         {/* ── Schedule Follow-Up button ── */}
                         <button
                             onClick={() => setShowFollowUp(true)}
-                            className="group flex items-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400 font-black text-base uppercase tracking-wider hover:bg-purple-500/20 hover:border-purple-500/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300"
+                            className="group flex items-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400 font-black text-xs uppercase tracking-wider hover:bg-purple-500/20 hover:border-purple-500/60 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all duration-300"
                             title="Schedule a follow-up call or visit"
                         >
                             <CalendarIcon className="w-3.5 h-3.5" />
@@ -292,16 +301,17 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                         </button>
 
                         {/* ── Advance stage button ── */}
-                        {isCompleted ? (
-                            <div className="flex items-center gap-2 text-emerald-400 px-4 py-2 border border-emerald-500/30 bg-emerald-500/10 rounded-xl text-base font-black uppercase tracking-widest">
+                        {isPastCustomer ? (
+                            <div className="flex items-center gap-2 text-teal-400 px-4 py-2 border border-teal-500/30 bg-teal-500/10 rounded-xl text-xs font-black uppercase tracking-widest">
                                 <CheckCircleIcon className="w-4 h-4" />
-                                Completed
+                                Past Customer
                             </div>
                         ) : nextStage ? (
                             <button
+                                id="stage-header-advance-btn"
                                 onClick={handleAdvanceStage}
                                 disabled={advancing}
-                                className="group relative flex items-center gap-2 px-4 py-2 bg-[#ec028b]/10 border border-[#ec028b]/40 rounded-xl text-[#ec028b] font-black text-base uppercase tracking-wider hover:bg-[#ec028b]/20 hover:border-[#ec028b]/70 hover:shadow-[0_0_20px_rgba(236,2,139,0.2)] transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none overflow-hidden"
+                                className="group relative flex items-center gap-2 px-4 py-2 bg-[#ec028b]/10 border border-[#ec028b]/40 rounded-xl text-[#ec028b] font-black text-xs uppercase tracking-wider hover:bg-[#ec028b]/20 hover:border-[#ec028b]/70 hover:shadow-[0_0_20px_rgba(236,2,139,0.2)] transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none overflow-hidden"
                             >
                                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#ec028b] to-transparent opacity-60" />
                                 {advancing ? (
@@ -315,7 +325,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                     </div>
                 </div>
 
-                {/* ── Pipeline Progress Bar ── */}
+                {/* ── Interactive 11-Stage Pipeline Progress Bar ── */}
                 <div className="shrink-0 bg-black/40 border-b border-gray-800/50 px-6 py-2 overflow-x-auto scrollbar-hide">
                     <div className="flex items-center gap-0 min-w-max">
                         {PIPELINE.map((step, idx) => {
@@ -324,20 +334,24 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                             const isFuture = idx > currentIdx;
                             return (
                                 <React.Fragment key={step.stage}>
-                                    <div className={cn(
-                                        "flex items-center gap-1.5 px-2 py-1 rounded text-base font-black uppercase tracking-tighter transition-all",
-                                        isPast && "text-emerald-500 opacity-70",
-                                        isCurrent && "text-[#ec028b] bg-[#ec028b]/10 border border-[#ec028b]/30",
-                                        isFuture && "text-gray-700"
-                                    )}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActivePageId(step.pageId)}
+                                        className={cn(
+                                            "flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-black uppercase tracking-tight transition-all cursor-pointer",
+                                            isPast && "text-emerald-400 hover:bg-emerald-500/10",
+                                            isCurrent && "text-[#ec028b] bg-[#ec028b]/15 border border-[#ec028b]/50 shadow-[0_0_10px_rgba(236,2,139,0.25)]",
+                                            isFuture && "text-gray-600 hover:text-gray-300"
+                                        )}
+                                    >
                                         {isPast && <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />}
                                         {isCurrent && <span className="w-2 h-2 rounded-full bg-[#ec028b] shadow-[0_0_6px_#ec028b] shrink-0 animate-pulse" />}
                                         {isFuture && <span className="w-2 h-2 rounded-full bg-gray-800 shrink-0" />}
                                         {step.short}
-                                    </div>
+                                    </button>
                                     {idx < PIPELINE.length - 1 && (
                                         <div className={cn(
-                                            "w-4 h-px mx-0.5 shrink-0",
+                                            "w-3 h-px mx-0.5 shrink-0",
                                             idx < currentIdx ? "bg-emerald-500/40" : "bg-gray-800"
                                         )} />
                                     )}
@@ -372,11 +386,10 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
         );
     }
 
-    // ── No project selected: show a list of all projects for this stage ──
-    const stageLower = stageLabel.toLowerCase();
+    // ── No project selected: show a list of all projects matching this stage index ──
+    const targetStageIdx = matchStageIndex(stageLabel);
     const stageProjects = projects.filter((p) => {
-        const cs = (p.current_stage || '').toLowerCase().trim();
-        return cs.includes(stageLower.split(' ')[0]) || cs.startsWith(stageLower.split('-')[0]);
+        return matchStageIndex(p.current_stage || '') === targetStageIdx;
     });
 
     const getAddress = (p: any) => {
@@ -393,12 +406,12 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                     <h1 className="text-2xl font-extrabold text-white uppercase tracking-tight">
                         {stageLabel} Records
                     </h1>
-                    <p className="text-gray-500 text-base mt-1 uppercase tracking-widest font-bold">
-                        Click a record to open its detail view
+                    <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+                        {stageProjects.length} active record{stageProjects.length === 1 ? '' : 's'} — click a record to open its workspace
                     </p>
                 </div>
                 <div className={cn(
-                    'flex items-center gap-1.5 text-base font-bold uppercase tracking-widest',
+                    'flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest',
                     loading ? 'text-yellow-400 animate-pulse' : 'text-green-400'
                 )}>
                     <span className={cn('w-2 h-2 rounded-full', loading ? 'bg-yellow-400' : 'bg-green-400 shadow-[0_0_8px_#4ade80]')} />
@@ -416,7 +429,7 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                 <div className="flex flex-col items-center justify-center border border-dashed border-gray-800 rounded-xl p-20 bg-gray-900/20 text-center">
                     <BriefcaseIcon className="w-16 h-16 text-gray-700 mb-4 opacity-30" />
                     <p className="text-gray-500 font-bold text-lg">No projects in {stageLabel}</p>
-                    <p className="text-gray-700 text-base mt-2">
+                    <p className="text-gray-700 text-sm mt-2">
                         Records will appear here when they reach this pipeline stage.
                     </p>
                     <Button
@@ -439,25 +452,30 @@ export const ProjectStageLayout: React.FC<ProjectStageLayoutProps> = ({
                             className="group cursor-pointer bg-gray-900/50 border border-gray-800 hover:border-rhive-pink/60 hover:shadow-[0_0_20px_rgba(236,2,139,0.08)] rounded-xl p-5 transition-all duration-300 flex items-center justify-between gap-4"
                         >
                             <div className="min-w-0">
-                                <h3 className="text-white font-bold truncate group-hover:text-rhive-pink transition-colors">
+                                <p className="text-white font-bold truncate group-hover:text-rhive-pink transition-colors">
                                     {p.name || 'Unnamed Project'}
-                                </h3>
+                                </p>
                                 {getAddress(p) && (
-                                    <div className="flex items-center gap-1 text-base text-gray-500 mt-1">
+                                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
                                         <MapPinIcon className="w-3 h-3 flex-none" />
                                         <span className="truncate">{getAddress(p)}</span>
                                     </div>
                                 )}
-                                <div className="flex items-center gap-2 mt-2">
+                                <div className="flex items-center gap-2 mt-2 flex-wrap">
                                     <span className={cn(
-                                        'text-base font-black uppercase tracking-widest px-2 py-0.5 rounded border',
+                                        'text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border',
                                         getStageBadgeClass(p.current_stage)
                                     )}>
                                         {p.current_stage}
                                     </span>
                                     {p.project_type && (
-                                        <span className="text-base text-gray-600 font-bold uppercase tracking-wider">
+                                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
                                             {p.project_type}
+                                        </span>
+                                    )}
+                                    {p.quote?.total > 0 && (
+                                        <span className="text-xs font-mono font-bold text-[#ec028b]">
+                                            ${Number(p.quote.total).toLocaleString()}
                                         </span>
                                     )}
                                 </div>

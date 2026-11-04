@@ -1,15 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import PageContainer from '../components/PageContainer';
-import Card from '../components/Card';
 import Button from '../components/Button';
 import { useNavigation } from '../contexts/NavigationContext';
 import EditRecordModal from '../components/EditRecordModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
-import { 
-    UserIcon, 
-    CalculatorIcon, 
-    DocumentTextIcon, 
+import {
+    UserIcon,
+    CalculatorIcon,
+    DocumentTextIcon,
     PencilSquareIcon,
     BriefcaseIcon,
     MapPinIcon,
@@ -21,15 +19,13 @@ import { projectService, firestoreService, userLogService } from '../lib/firebas
 import { session } from '../lib/session';
 import { cn, getStagePageId } from '../lib/utils';
 
-// The 4 early-stage tabs this page focuses on
 const TABS = ['Lead', 'Estimate', 'Quote', 'Sign & Verify'] as const;
 type Tab = typeof TABS[number];
 
-// Maps tab labels to what the current_stage field might be in Firebase
 const STAGE_MATCH: Record<Tab, string[]> = {
-    'Lead':         ['lead'],
-    'Estimate':     ['estimate'],
-    'Quote':        ['quote'],
+    'Lead':          ['lead'],
+    'Estimate':      ['estimate'],
+    'Quote':         ['quote'],
     'Sign & Verify': ['sign & verify', 'sign', 'signed'],
 };
 
@@ -41,7 +37,6 @@ const SalesPipelinePage: React.FC = () => {
     const [editTarget, setEditTarget] = useState<any | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
-    // Subscribe to Firebase real-time updates
     useEffect(() => {
         const unsubscribe = projectService.subscribe((data: any[]) => {
             setProjects(data);
@@ -54,15 +49,16 @@ const SalesPipelinePage: React.FC = () => {
         const matchTerms = STAGE_MATCH[stage];
         return projects.filter(p => {
             const cs = (p.current_stage || p.status || '').toLowerCase().trim();
-            return matchTerms.some(m => cs === m || cs.startsWith(m));
+            return matchTerms.some(m => cs === m || cs.includes(m));
         });
     };
 
-    const handleProjectAction = (projectId: string, action: 'estimate' | 'quote' | 'view') => {
+    const handleProjectAction = (projectId: string, action: 'estimate' | 'quote' | 'sign' | 'view') => {
         setSelectedProjectId(projectId);
-        if (action === 'estimate') setActivePageId('E-EST-TOOL');
-        else if (action === 'quote') setActivePageId('E-G-02');
-        else if (action === 'view') setActivePageId('E-08');
+        if (action === 'estimate') setActivePageId('E-27');
+        else if (action === 'quote') setActivePageId('E-28');
+        else if (action === 'sign') setActivePageId('E-29');
+        else if (action === 'view') setActivePageId('E-15');
     };
 
     const handleCardClick = (project: any) => {
@@ -70,20 +66,18 @@ const SalesPipelinePage: React.FC = () => {
         setActivePageId(getStagePageId(project.current_stage));
     };
 
-    // --- EDIT HANDLER ---
     const handleEditSave = async (updates: Record<string, string>) => {
         if (!editTarget) return;
         const col = editTarget._source === 'leads' ? 'leads' : editTarget._source === 'deals' ? 'deals' : 'projects';
         await firestoreService.updateDocument(col, editTarget.id, updates);
         await userLogService.logAction(
             'EDIT_RECORD',
-            `Record edited from pipeline (ID: ${editTarget.id})`,
+            `Record "${editTarget.name || 'Project'}" edited from pipeline`,
             { recordId: editTarget.id, collection: col }
         );
         setEditTarget(null);
     };
 
-    // --- SOFT DELETE HANDLER ---
     const handleSoftDelete = async (reason: string) => {
         if (!deleteTarget) return;
         const col = deleteTarget._source === 'leads' ? 'leads' : deleteTarget._source === 'deals' ? 'deals' : 'projects';
@@ -94,7 +88,7 @@ const SalesPipelinePage: React.FC = () => {
         });
         await userLogService.logAction(
             'DELETE_RECORD',
-            `Record moved to trash from pipeline (ID: ${deleteTarget.id})`,
+            `Record "${deleteTarget.name || 'Project'}" moved to trash from pipeline`,
             { recordId: deleteTarget.id, collection: col, reason }
         );
         setDeleteTarget(null);
@@ -112,34 +106,36 @@ const SalesPipelinePage: React.FC = () => {
             <div onClick={() => handleCardClick(project)} className="bg-gray-900/50 border border-gray-700 p-5 rounded-xl hover:border-[#ec028b] transition-all duration-300 group shadow-lg cursor-pointer">
                 <div className="flex justify-between items-start mb-3">
                     <div className="flex-1 min-w-0 pr-2">
-                        <h3 className="text-white font-bold text-lg group-hover:text-[#ec028b] transition-colors truncate">
+                        <p className="text-white font-bold text-lg group-hover:text-[#ec028b] transition-colors truncate">
                             {project.name || 'Unnamed Project'}
-                        </h3>
+                        </p>
                         {getAddress(project) && (
                             <div className="flex items-center text-xs text-gray-500 mt-1">
                                 <MapPinIcon className="w-3 h-3 mr-1 shrink-0" />
                                 <span className="truncate">{getAddress(project)}</span>
                             </div>
                         )}
-                        <p className="text-xs text-gray-600 font-mono mt-1">{project.id.slice(-12)} • {project.updated_at ? new Date(project.updated_at).toLocaleDateString() : ''}</p>
+                        {project.updated_at && (
+                            <p className="text-xs text-gray-600 font-mono mt-1">{new Date(project.updated_at).toLocaleDateString()}</p>
+                        )}
                     </div>
                     <div className="text-gray-300 bg-black/40 border border-gray-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shrink-0">
                         {project.project_type || 'N/A'}
                     </div>
                 </div>
-                
+
                 <div className="mb-6 text-sm text-gray-400">
-                    {activeTab === 'Lead' && "Status: New Opportunity. Needs Qualification."}
-                    {activeTab === 'Estimate' && "Status: Awaiting AI Analysis."}
+                    {activeTab === 'Lead' && 'Status: New Opportunity. Ready for qualification.'}
+                    {activeTab === 'Estimate' && 'Status: Takeoff & Multi-Building Estimate.'}
                     {activeTab === 'Quote' && (
                         <div className="flex items-center">
                             <span>Quote Value: </span>
                             <span className="ml-2 text-white font-bold font-mono">
-                                {project.quote?.total ? '$' + project.quote.total.toLocaleString() : 'Drafting...'}
+                                {project.quote?.total ? '$' + Number(project.quote.total).toLocaleString() : 'Drafting...'}
                             </span>
                         </div>
                     )}
-                    {activeTab === 'Sign & Verify' && "Status: Pending Customer Signature."}
+                    {activeTab === 'Sign & Verify' && 'Status: Pending Customer Signature & 50% Deposit.'}
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t border-gray-800">
@@ -147,11 +143,11 @@ const SalesPipelinePage: React.FC = () => {
                         <>
                             <Button size="sm" onClick={(e) => { e.stopPropagation(); handleProjectAction(project.id, 'estimate'); }} className="flex-1">
                                 <CalculatorIcon className="w-4 h-4 mr-2" />
-                                Estimator
+                                Confirm
                             </Button>
                             <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleProjectAction(project.id, 'view'); }} className="flex-1">
                                 <UserIcon className="w-4 h-4 mr-2" />
-                                Profile
+                                Apply
                             </Button>
                         </>
                     )}
@@ -159,30 +155,34 @@ const SalesPipelinePage: React.FC = () => {
                         <>
                             <Button size="sm" onClick={(e) => { e.stopPropagation(); handleProjectAction(project.id, 'estimate'); }} className="flex-1">
                                 <CalculatorIcon className="w-4 h-4 mr-2" />
-                                Open Tool
+                                Confirm
                             </Button>
                             <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); handleProjectAction(project.id, 'quote'); }} className="flex-1">
                                 <DocumentTextIcon className="w-4 h-4 mr-2" />
-                                Build Quote
+                                Create
                             </Button>
                         </>
                     )}
                     {activeTab === 'Quote' && (
                         <Button size="sm" onClick={(e) => { e.stopPropagation(); handleProjectAction(project.id, 'quote'); }} className="w-full">
                             <PencilSquareIcon className="w-4 h-4 mr-2" />
-                            Edit / Send Quote
+                            Send
                         </Button>
                     )}
                     {activeTab === 'Sign & Verify' && (
-                        <Button size="sm" variant="secondary" className="w-full cursor-default border-gray-700 text-gray-500 hover:bg-transparent hover:text-gray-500 flex items-center justify-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={(e) => { e.stopPropagation(); handleProjectAction(project.id, 'sign'); }}
+                            className="w-full flex items-center justify-center gap-2"
+                        >
                             <ClockIcon className="w-4 h-4" />
-                            Awaiting Signature...
+                            Confirm
                         </Button>
                     )}
                 </div>
             </div>
 
-            {/* Edit / Delete action buttons — appear on card hover */}
             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 z-10">
                 <button
                     id={`pipeline-edit-btn-${project.id}`}
@@ -211,8 +211,6 @@ const SalesPipelinePage: React.FC = () => {
     return (
         <>
         <PageContainer title="Sales Pipeline" description="Manage customer acquisition from Lead to Contract — live from Firebase.">
-            
-            {/* Navigation Tabs */}
             <div className="flex space-x-1 mb-8 overflow-x-auto pb-1 border-b border-gray-800 items-center justify-between">
                 <div className="flex space-x-1">
                     {TABS.map((stage) => (
@@ -221,8 +219,8 @@ const SalesPipelinePage: React.FC = () => {
                             onClick={() => setActiveTab(stage)}
                             className={cn(
                                 "px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 border",
-                                activeTab === stage 
-                                    ? 'bg-[#ec028b]/20 text-[#ec028b] border-[#ec028b]/50 shadow-[0_0_15px_rgba(236,2,139,0.2)]' 
+                                activeTab === stage
+                                    ? 'bg-[#ec028b]/20 text-[#ec028b] border-[#ec028b]/50 shadow-[0_0_15px_rgba(236,2,139,0.2)]'
                                     : 'text-gray-500 border-gray-800 hover:text-white hover:bg-gray-800'
                             )}
                         >
@@ -242,7 +240,6 @@ const SalesPipelinePage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Project Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
                     [0, 1, 2].map(i => (
@@ -251,7 +248,7 @@ const SalesPipelinePage: React.FC = () => {
                 ) : (
                     tabProjects.map(renderProjectCard)
                 )}
-                
+
                 {!loading && tabProjects.length === 0 && (
                     <div className="col-span-full p-16 text-center border border-dashed border-gray-800 rounded-xl text-gray-600 bg-gray-900/20">
                         <BriefcaseIcon className="w-16 h-16 mx-auto mb-4 opacity-20" />
@@ -262,7 +259,6 @@ const SalesPipelinePage: React.FC = () => {
             </div>
         </PageContainer>
 
-        {/* Edit Modal */}
         {editTarget && (
             <EditRecordModal
                 record={editTarget}
@@ -271,7 +267,6 @@ const SalesPipelinePage: React.FC = () => {
             />
         )}
 
-        {/* Delete (Trash) Confirmation Modal */}
         {deleteTarget && (
             <DeleteConfirmModal
                 recordName={deleteTarget.name || 'Unnamed Project'}

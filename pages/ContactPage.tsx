@@ -11,6 +11,7 @@ const MAPS_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '';
 
 const ContactPage: React.FC = () => {
     const [mapsKey, setMapsKey] = useState('');
+    const [smsConsent, setSmsConsent] = useState(true);
 
     useEffect(() => {
         getMapsApiKey().then(setMapsKey);
@@ -54,21 +55,34 @@ const ContactPage: React.FC = () => {
                             />
                         </div>
 
-                        {/* TCR 10DLC Compliance SMS Consent */}
-                        <div className="flex items-start gap-2.5 p-3 bg-black/60 border border-gray-800 rounded-xl text-left">
-                            <input 
-                                type="checkbox" 
-                                id="contactPageSmsConsent" 
-                                defaultChecked={true}
-                                className="mt-0.5 h-4 w-4 rounded accent-[#ec028b] cursor-pointer shrink-0" 
-                            />
-                            <label htmlFor="contactPageSmsConsent" className="text-xs text-gray-400 leading-normal cursor-pointer select-none">
-                                By providing your phone number, you agree to receive SMS communications from RHIVE Construction regarding your project quote, scheduling, and service updates. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help. View our <a href="/privacy" className="text-[#ec028b] underline hover:text-white">Privacy Policy</a> & <a href="/privacy" className="text-[#ec028b] underline hover:text-white">Terms of Service</a>. Mobile information will not be shared with third parties for marketing purposes.
-                            </label>
+                        {/* TCR 10DLC Compliance SMS Consent (Highlighted when selected) */}
+                        <div
+                            onClick={() => setSmsConsent(prev => !prev)}
+                            role="button"
+                            tabIndex={0}
+                            aria-pressed={smsConsent}
+                            id="contactPageSmsConsent"
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSmsConsent(prev => !prev); } }}
+                            className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer select-none transition-all duration-200 text-left ${
+                                smsConsent
+                                    ? 'bg-[#ec028b]/15 border-[#ec028b] shadow-[0_0_12px_rgba(236,2,139,0.25)] text-white'
+                                    : 'bg-black/60 border-gray-800 text-gray-400 hover:border-gray-700'
+                            }`}
+                        >
+                            <span className={`mt-0.5 px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider rounded border transition-all ${
+                                smsConsent
+                                    ? 'bg-[#ec028b] border-[#ec028b] text-white'
+                                    : 'bg-transparent border-gray-700 text-gray-500'
+                            }`}>
+                                {smsConsent ? 'Selected' : 'Select'}
+                            </span>
+                            <span className="text-xs leading-normal">
+                                By providing your phone number, you agree to receive SMS communications from RHIVE Construction regarding your project quote, scheduling, and service updates. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help. View our <a href="/privacy" onClick={(e) => e.stopPropagation()} className="text-[#ec028b] underline hover:text-white">Privacy Policy</a> & <a href="/privacy" onClick={(e) => e.stopPropagation()} className="text-[#ec028b] underline hover:text-white">Terms of Service</a>. Mobile information will not be shared with third parties for marketing purposes.
+                            </span>
                         </div>
 
                         <Button size="lg" className="w-full md:w-auto px-12">
-                            Send Secure Message
+                            Send
                         </Button>
                     </form>
                 </Card>

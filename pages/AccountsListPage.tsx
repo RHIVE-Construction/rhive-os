@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import PageContainer from '../components/PageContainer';
 import Button from '../components/Button';
 import { useNavigation } from '../contexts/NavigationContext';
-import { accountService } from '../lib/firebaseService';
-import { UserIcon, ChevronRightIcon, PlusIcon, MailIcon, PhoneIcon, MapPinIcon, BriefcaseIcon } from '../components/icons';
+import { accountService, userLogService } from '../lib/firebaseService';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { ChevronRightIcon, PlusIcon, MailIcon, PhoneIcon, MapPinIcon, BriefcaseIcon, XIcon } from '../components/icons';
 import { cn } from '../lib/utils';
 
 /** Resolve account type label for badge */
@@ -13,10 +15,10 @@ const getAccountType = (a: any): string =>
 const typeColor = (type: string) => {
     const t = type.toLowerCase();
     if (t.includes('prospect'))  return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
-    if (t.includes('customer'))  return 'bg-[#ec028b]/10 text-[#ec028b] border-[#ec028b]/30';
+    if (t.includes('customer') || t.includes('commercial'))  return 'bg-[#ec028b]/10 text-[#ec028b] border-[#ec028b]/30';
     if (t.includes('partner'))   return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
-    if (t.includes('available')) return 'bg-green-500/10 text-green-400 border-green-500/30';
-    if (t.includes('hoa') || t.includes('association')) return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+    if (t.includes('residential')) return 'bg-green-500/10 text-green-400 border-green-500/30';
+    if (t.includes('hoa') || t.includes('association') || t.includes('government')) return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
     return 'bg-gray-800 text-gray-400 border-gray-700';
 };
 
@@ -27,10 +29,20 @@ const AccountsListPage: React.FC = () => {
     const [loading, setLoading]   = useState(true);
     const [search, setSearch]     = useState('');
     const [filterType, setFilterType] = useState('All');
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [newForm, setNewForm] = useState({
+        name: '',
+        accountType: 'Commercial',
+        email: '',
+        phone: '',
+        city: 'Salt Lake City',
+        state: 'UT',
+    });
 
     useEffect(() => {
         const unsub = accountService.subscribe((data: any[]) => {
-            setAccounts(data);
+            setAccounts(data.filter((a) => !a.deleted));
             setLoading(false);
         });
         return () => unsub();
@@ -41,7 +53,41 @@ const AccountsListPage: React.FC = () => {
         setActivePageId('E-08');
     };
 
-    // Build unique type filter chips
+    const handleCreateAccount = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newForm.name.trim()) return;
+        setIsSaving(true);
+        try {
+            const newId = `acc-${Date.now()}`;
+            const accountCode = `ACC-${Math.floor(1000 + Math.random() * 9000)}`;
+            const nowIso = new Date().toISOString();
+            const docData = {
+                name: newForm.name.trim(),
+                accountName: newForm.name.trim(),
+                accountType: newForm.accountType,
+                accountId: accountCode,
+                email: newForm.email.trim(),
+                phone: newForm.phone.trim(),
+                billingCity: newForm.city.trim(),
+                billingState: newForm.state.trim(),
+                created_at: nowIso,
+                updated_at: nowIso,
+            };
+            await setDoc(doc(db, 'accounts', newId), docData, { merge: true });
+            await userLogService.logAction(
+                'CREATE_RECORD',
+                `Created account "${docData.name}"`,
+                { recordId: newId, collection: 'accounts', accountType: docData.accountType }
+            );
+            setIsCreateOpen(false);
+            setNewForm({ name: '', accountType: 'Commercial', email: '', phone: '', city: 'Salt Lake City', state: 'UT' });
+            setSelectedAccountId(newId);
+            setActivePageId('E-08');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const allTypes = Array.from(
         new Set(accounts.map(a => getAccountType(a)).filter(Boolean))
     ).sort();
@@ -82,7 +128,6 @@ const AccountsListPage: React.FC = () => {
             {/* Toolbar */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div className="flex flex-wrap items-center gap-3">
-                    {/* Search */}
                     <div className="relative">
                         <input
                             type="text"
@@ -93,7 +138,6 @@ const AccountsListPage: React.FC = () => {
                         />
                     </div>
 
-                    {/* Type filter chips */}
                     <div className="flex gap-1 flex-wrap">
                         {filterOptions.slice(0, 7).map(opt => (
                             <button
@@ -116,9 +160,13 @@ const AccountsListPage: React.FC = () => {
                     </span>
                 </div>
 
-                <Button className="flex items-center gap-2 shadow-[0_0_15px_rgba(236,2,139,0.2)]">
+                <Button
+                    id="accounts-new-btn"
+                    onClick={() => setIsCreateOpen(true)}
+                    className="flex items-center gap-2 shadow-[0_0_15px_rgba(236,2,139,0.2)]"
+                >
                     <PlusIcon className="w-4 h-4" />
-                    New Account
+                    Create
                 </Button>
             </div>
 
@@ -130,7 +178,7 @@ const AccountsListPage: React.FC = () => {
                     <p className="text-gray-500 text-sm mt-2 text-center max-w-sm">
                         {search
                             ? `No accounts matching "${search}".`
-                            : 'No accounts found. Run the import script to populate accounts.'}
+                            : 'No accounts found. Create an account to get started.'}
                     </p>
                 </div>
             ) : (
@@ -147,11 +195,11 @@ const AccountsListPage: React.FC = () => {
 
                         const phone    = account.phone || '';
                         const email    = account.email || account.email_1 || '';
-                        const city     = account.billingCity || account.projectCity || account.shippingCity || '';
-                        const state    = account.billingState || account.projectState || account.shippingState || '';
+                        const city     = account.billingCity || account.projectCity || account.shippingCity || account.city || '';
+                        const state    = account.billingState || account.projectState || account.shippingState || account.state || '';
                         const location = [city, state].filter(Boolean).join(', ');
                         const type     = getAccountType(account);
-                        const rhiveId  = account.accountId || account.autoNumber_1 || '';
+                        const rhiveId  = account.accountId || account.account_code || account.autoNumber_1 || '';
 
                         return (
                             <div
@@ -159,21 +207,19 @@ const AccountsListPage: React.FC = () => {
                                 onClick={() => handleSelect(account.id)}
                                 className="group relative bg-gray-900/40 border border-gray-800 rounded-2xl p-6 cursor-pointer hover:border-[#ec028b]/60 transition-all duration-300 hover:shadow-[0_0_30px_rgba(236,2,139,0.1)] overflow-hidden"
                             >
-                                {/* Hover top-line accent */}
                                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#ec028b] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                                {/* Header */}
                                 <div className="flex items-start gap-4 mb-4">
                                     <div className="w-12 h-12 bg-gradient-to-br from-[#ec028b]/20 to-black border border-[#ec028b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
                                         <span className="text-[#ec028b] font-black text-sm">{initials || '?'}</span>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="text-white font-bold text-base line-clamp-1 group-hover:text-[#ec028b] transition-colors">
+                                        <p className="text-white font-bold text-base line-clamp-1 group-hover:text-[#ec028b] transition-colors">
                                             {name}
-                                        </h3>
+                                        </p>
                                         {type && (
                                             <span className={cn(
-                                                'text-[9px] px-2 py-0.5 rounded border font-black uppercase tracking-widest',
+                                                'text-[9px] px-2 py-0.5 rounded border font-black uppercase tracking-widest inline-block mt-1',
                                                 typeColor(type)
                                             )}>
                                                 {type}
@@ -182,7 +228,6 @@ const AccountsListPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Info rows */}
                                 <div className="space-y-2">
                                     {email && (
                                         <div className="flex items-center gap-1.5 text-gray-500 text-xs">
@@ -204,14 +249,13 @@ const AccountsListPage: React.FC = () => {
                                     )}
                                 </div>
 
-                                {/* Footer */}
                                 <div className="mt-4 pt-4 border-t border-gray-800/50 flex items-center justify-between">
                                     <span className="text-[10px] text-gray-600 font-mono">
                                         {rhiveId
                                             ? `# ${rhiveId}`
-                                            : account.createdTime
-                                            ? String(account.createdTime).slice(0, 10)
-                                            : 'Imported'}
+                                            : account.createdTime || account.created_at
+                                            ? String(account.createdTime || account.created_at).slice(0, 10)
+                                            : 'Verified'}
                                     </span>
                                     <div className="w-8 h-8 rounded-full border border-gray-700 flex items-center justify-center text-gray-500 group-hover:border-[#ec028b] group-hover:text-[#ec028b] group-hover:bg-[#ec028b]/10 transition-colors">
                                         <ChevronRightIcon className="w-4 h-4" />
@@ -220,6 +264,127 @@ const AccountsListPage: React.FC = () => {
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {/* Create Account Modal */}
+            {isCreateOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <form
+                        onSubmit={handleCreateAccount}
+                        className="w-full max-w-md bg-gray-900 border border-gray-700 rounded-xl p-6 space-y-4 shadow-2xl"
+                    >
+                        <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                            <p className="text-sm font-bold uppercase tracking-widest text-white">Create Account</p>
+                            <button
+                                type="button"
+                                onClick={() => setIsCreateOpen(false)}
+                                className="text-gray-500 hover:text-white"
+                            >
+                                <XIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">
+                                    Account / Company Name
+                                </label>
+                                <input
+                                    required
+                                    type="text"
+                                    value={newForm.name}
+                                    onChange={(e) => setNewForm((p) => ({ ...p, name: e.target.value }))}
+                                    placeholder="e.g. UNPHC Property Management"
+                                    className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#ec028b] focus:outline-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">
+                                    Account Type
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['Commercial', 'HOA Management', 'Residential', 'Government'].map((t) => (
+                                        <button
+                                            key={t}
+                                            type="button"
+                                            onClick={() => setNewForm((p) => ({ ...p, accountType: t }))}
+                                            className={cn(
+                                                'py-2 px-3 rounded-lg text-xs font-bold border transition-all',
+                                                newForm.accountType === t
+                                                    ? 'border-[#ec028b] bg-[#ec028b]/15 text-white shadow-[0_0_10px_rgba(236,2,139,0.25)]'
+                                                    : 'border-gray-800 bg-black/50 text-gray-400 hover:text-white'
+                                            )}
+                                        >
+                                            {t}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={newForm.email}
+                                        onChange={(e) => setNewForm((p) => ({ ...p, email: e.target.value }))}
+                                        placeholder="billing@company.com"
+                                        className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#ec028b] focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">
+                                        Phone
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newForm.phone}
+                                        onChange={(e) => setNewForm((p) => ({ ...p, phone: e.target.value }))}
+                                        placeholder="(801) 555-0100"
+                                        className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#ec028b] focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="col-span-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">
+                                        City
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newForm.city}
+                                        onChange={(e) => setNewForm((p) => ({ ...p, city: e.target.value }))}
+                                        className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#ec028b] focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">
+                                        State
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={newForm.state}
+                                        onChange={(e) => setNewForm((p) => ({ ...p, state: e.target.value }))}
+                                        className="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-[#ec028b] focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-3 border-t border-gray-800">
+                            <Button type="button" variant="secondary" onClick={() => setIsCreateOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={isSaving}>
+                                {isSaving ? 'Saving...' : 'Save'}
+                            </Button>
+                        </div>
+                    </form>
                 </div>
             )}
         </PageContainer>

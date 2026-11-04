@@ -1,4 +1,3 @@
-
 import { PageGroup, ProjectStage } from './types';
 
 // --- ESTIMATOR MATH CONSTANTS ---
@@ -25,7 +24,7 @@ export const PROJECT_STAGES: ProjectStage[] = [
     'Stage 5: SCHEDULE (Queue)',
     'Stage 6: PRE-INSTALLATION (Prep)',
     'Stage 7: INSTALL (In Progress)',
-    'Stage 8: PUNCH LIST (Quality Control)',
+    'Stage 8: WARRANTY ACTIVATION (QC & Audit)' as ProjectStage,
     'Stage 9: INVOICING (Balance Due)',
     'Stage 10: COMPLETED (Paid)',
     'Stage 11: PAST CUSTOMER (Referral System)'
@@ -50,7 +49,7 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'P-02c', name: 'Gutter Defense Systems', userType: 'Public', description: 'Seamless Gutter Hub', parentId: 'P-02' },
             { id: 'P-02d', name: 'Ice Management', userType: 'Public', description: 'Heat Trace Systems', parentId: 'P-02' },
             { id: 'P-02e', name: 'Roof Components/Options', userType: 'Public', description: 'Technical Peripheral Hub', parentId: 'P-02' },
-            { id: 'P-03', name: 'Our Process', userType: 'Public', description: 'The 10-Stage Journey' },
+            { id: 'P-03', name: 'Our Process', userType: 'Public', description: 'The 11-Stage Journey' },
             { id: 'P-09', name: 'CONTRACTOR SIGNUP', userType: 'Public', description: 'Vendor Vetting & Onboarding' },
             { id: 'P-10', name: 'PUBLIC CAREERS', userType: 'Public', description: 'Recruitment & Brand Manifesto' },
             { id: 'P-12', name: 'ESTIMATE TOOL', userType: 'Public', description: 'Instant Pricing Engine' },
@@ -88,7 +87,7 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'E-30', name: 'Stage 5: SCHEDULE (Queue)', userType: 'Employee', category: 'Stages' },
             { id: 'E-31', name: 'Stage 6: PRE-INSTALLATION (Prep)', userType: 'Employee', category: 'Stages' },
             { id: 'E-32', name: 'Stage 7: INSTALL (In Progress)', userType: 'Employee', category: 'Stages' },
-            { id: 'E-33', name: 'Stage 8: PUNCH LIST (Quality Control)', userType: 'Employee', category: 'Stages' },
+            { id: 'E-33', name: 'Stage 8: WARRANTY ACTIVATION (QC & Audit)', userType: 'Employee', category: 'Stages' },
             { id: 'E-34', name: 'Stage 9: INVOICING (Balance Due)', userType: 'Employee', category: 'Stages' },
             { id: 'E-36', name: 'Stage 10: COMPLETED (Paid)', userType: 'Employee', category: 'Stages' },
             { id: 'E-37', name: 'Stage 11: PAST CUSTOMER (Referral System)', userType: 'Employee', category: 'Stages' },
@@ -101,7 +100,7 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'P-00', name: 'Home', userType: 'Public', description: 'RHIVE Main Gateway', category: 'Website' },
             { id: 'P-01', name: 'About Us', userType: 'Public', description: 'Mission, Vision & Values', category: 'Website' },
             { id: 'P-02', name: 'Our Services', userType: 'Public', description: 'Residential & Commercial Solutions', category: 'Website' },
-            { id: 'P-03', name: 'Our Process', userType: 'Public', description: 'The 10-Stage Journey', category: 'Website' },
+            { id: 'P-03', name: 'Our Process', userType: 'Public', description: 'The 11-Stage Journey', category: 'Website' },
             { id: 'P-04', name: 'Financing', userType: 'Public', description: 'RPSP & Payment Options', category: 'Website' },
             { id: 'P-05', name: 'Contact', userType: 'Public', description: 'Directory & Lead Gen', category: 'Website' },
             { id: 'P-09', name: 'CONTRACTOR SIGNUP', userType: 'Public', description: 'Vendor Vetting & Onboarding', category: 'Website' },

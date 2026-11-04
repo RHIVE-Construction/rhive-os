@@ -613,18 +613,30 @@ export const projectService = {
         ];
         return { success: true, data: combined };
     },
+    updateRecord: async (id: string, updates: Record<string, any>, sourceHint?: string) => {
+        const order = sourceHint === 'leads'
+            ? ['leads', 'projects', 'deals']
+            : sourceHint === 'deals'
+            ? ['deals', 'projects', 'leads']
+            : ['projects', 'leads', 'deals'];
+        for (const col of order) {
+            const res = await firestoreService.updateDocument(col, id, updates);
+            if (res.success) return { ...res, collection: col };
+        }
+        return { success: false, error: 'Record not found in projects, leads, or deals' };
+    },
     subscribe: (callback: (data: any[]) => void) => {
         let projects: any[] = [];
         let leads: any[] = [];
         let deals: any[] = [];
 
-        // Only surface records that have not been soft-deleted (System Rules §7)
+        // Only surface records that have not been soft-deleted or promoted (System Rules §7)
         const notify = () => callback(
-            [...projects, ...leads, ...deals].filter(r => !r.deleted)
+            [...projects, ...leads, ...deals].filter(r => !r.deleted && !r.converted_to_project)
         );
 
         const unsubProjects = firestoreService.subscribeToDocuments('projects', (data) => {
-            projects = data;
+            projects = data.map((d: any) => ({ _source: 'projects', ...d }));
             notify();
         });
 

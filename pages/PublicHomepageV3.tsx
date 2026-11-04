@@ -733,7 +733,7 @@ const PublicHomepageV3: React.FC = () => {
                                             className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-black uppercase text-xs tracking-widest transition-all cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Dismiss Protocol
+                                            Close Protocol
                                         </button>
                                     </div>
                                 </div>
@@ -943,7 +943,7 @@ const PublicHomepageV3: React.FC = () => {
                                             className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-black uppercase text-xs tracking-widest transition-all cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Dismiss Overview
+                                            Close Overview
                                         </button>
                                     </div>
                                 </div>
@@ -985,7 +985,7 @@ const PublicHomepageV3: React.FC = () => {
                                             className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-black uppercase text-xs tracking-widest transition-all cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Dismiss Overview
+                                            Close Overview
                                         </button>
                                     </div>
                                 </div>
@@ -1349,7 +1349,7 @@ const PublicHomepageV3: React.FC = () => {
                                             className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-black uppercase text-xs tracking-widest transition-all cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Dismiss Matrix
+                                            Close Matrix
                                         </button>
                                     </div>
                                 </div>
@@ -1400,7 +1400,7 @@ const PublicHomepageV3: React.FC = () => {
                                             className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-black uppercase text-xs tracking-widest transition-all cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Dismiss Overview
+                                            Close Overview
                                         </button>
                                     </div>
                                 </div>
@@ -1450,7 +1450,7 @@ const PublicHomepageV3: React.FC = () => {
                                             className="px-8 py-4 border border-white/20 hover:bg-white/5 text-white font-black uppercase text-xs tracking-widest transition-all cursor-pointer"
                                             style={{ clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)' }}
                                         >
-                                            Dismiss Calculator
+                                            Close Calculator
                                         </button>
                                     </div>
                                 </div>
