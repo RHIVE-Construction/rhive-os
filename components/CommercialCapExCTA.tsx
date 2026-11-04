@@ -1,10 +1,8 @@
 import { navigateToIntake } from '../lib/intakeRouting';
-import React, { useState } from 'react';
+import React from 'react';
 import { Building2, TrendingUp, ShieldCheck, Activity, Target, HardHat } from 'lucide-react';
-import CapExDiagnosticLightbox from './CapExDiagnosticLightbox.tsx';
 
 const CommercialCapExCTA: React.FC = () => {
-    const [lightboxOpen, setLightboxOpen] = useState(false);
 
     return (
         <section className="py-24 bg-[#050505] relative overflow-hidden border-t border-white/5">
@@ -84,8 +82,6 @@ const CommercialCapExCTA: React.FC = () => {
 
                 </div>
             </div>
-
-            <CapExDiagnosticLightbox isOpen={lightboxOpen} onClose={() => setLightboxOpen(false)} />
         </section>
     );
 };

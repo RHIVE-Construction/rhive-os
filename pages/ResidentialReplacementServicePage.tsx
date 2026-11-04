@@ -4,14 +4,14 @@ import { cn } from '../lib/utils';
 
 export default function ResidentialReplacementServicePage() {
     useEffect(() => {
-        document.title = "Residential Roof Replacement Utah | RHIVE Construction";
+        document.title = "Utah Residential Roof Replacement | 100% Tear-Off Shingle Roofing | RHIVE";
         let metaDesc = document.querySelector('meta[name="description"]');
         if (!metaDesc) {
             metaDesc = document.createElement('meta');
             metaDesc.setAttribute('name', 'description');
             document.head.appendChild(metaDesc);
         }
-        metaDesc.setAttribute('content', "Experience Utah's most transparent residential roof replacement. Lifetime No-Leak Guarantees, transparent itemized cost breakdowns, and certified installs.");
+        metaDesc.setAttribute('content', "Utah's trusted residential roof replacement contractor. 100% full tear-off to OSB decking, Owens Corning Duration architectural shingles & lifetime no-leak guarantees.");
     }, []);
 
     const handleEstimateClick = () => {

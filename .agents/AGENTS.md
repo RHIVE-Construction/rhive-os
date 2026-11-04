@@ -48,6 +48,7 @@ The System Rules define:
 - **Testing protocol** — ALL features MUST pass `npm run build` and manual testing before any commit or push.
 - **Branch & commit workflow** — conventional commit format, branch naming, merge protocol.
 - **UI/Component standards** — RHIVE Design System, no checkboxes, no hardcoded colors, no debug logs.
+- **Website & Content standards** — follow `.agents/rules/WEBSITE_AND_CONTENT_STANDARDS.md` (no commercial RPSP, professional engineering re-cover tone, unified intake smart pre-selection, phone (435) 417-6637, no Qubit Turnkey or exposed SKU codes, no $0 deductible claims).
 - **Feature development sequence** — review rules → branch → develop → test → commit → test → push → merge → build → deploy.
 
 These rules are permanent, non-negotiable, and apply to every agent and every change.
