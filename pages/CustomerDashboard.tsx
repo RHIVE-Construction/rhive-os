@@ -3,7 +3,6 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import {
-    BriefcaseIcon,
     CheckCircleIcon,
     BuildingStorefrontIcon,
     MapPinIcon,
@@ -18,21 +17,26 @@ import { PIPELINE, matchStageIndex } from '../components/ProjectStageLayout';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { cn } from '../lib/utils';
+import {
+    buildMilestonesForProject,
+    PAYMENT_MODEL_LABELS,
+    resolvePaymentModel,
+} from '../lib/qosRules';
 
 type PortalTab = 'projects' | 'properties' | 'payments' | 'abundance';
 
 const DEFAULT_STAGE_SUBSTEPS: Record<string, string[]> = {
-    'Lead': ['Intake received', 'Property & roof profile verified', 'Specialist assigned'],
-    'Estimate': ['Aerial / LiDAR measurement complete', 'Building scope verified', 'Ballpark options prepared'],
-    'Quote': ['Certified inspection reviewed', 'Line-item quote finalized', 'Shopping cart & proposal ready'],
-    'Sign & Verify': ['Digital agreement issued', 'Customer signature verified', '50% material deposit confirmed'],
-    'Schedule': ['Production crew assigned', 'Material drop scheduled', 'Installation window locked'],
-    'Pre-Installation': ['Permits & HOA clearance verified', 'Materials staged', 'Site protection plan ready'],
-    'Install': ['Tear-off & deck inspection', 'Ice/water & synthetic underlayment', 'Primary roof system installed'],
-    'Warranty Activation': ['Envelope quality audit passed', 'Triple magnetic nail sweep complete', 'Official warranty activated'],
-    'Invoicing': ['50% Material deposit logged', '40% Roof completion milestone', '10% Warranty activation balance'],
-    'Completed': ['Final packet & certificate issued', 'Zero balance verified', 'Project archived'],
-    'Past Customer': ['Annual roof health check active', 'Warranty protection active', 'Abundance Network eligible'],
+    Lead: ['Intake received', 'Property & roof profile verified', 'Specialist assigned'],
+    Estimate: ['Aerial / LiDAR measurement complete', 'Building scope verified', 'Ballpark options prepared'],
+    Quote: ['Certified inspection reviewed', 'Line-item quote finalized', 'Shopping cart & proposal ready'],
+    'Sign & Verify': ['Digital agreement issued', 'Customer signature verified', 'Mobilization deposit confirmed'],
+    Schedule: ['Municipal permit verified', 'Material PO confirmed', 'Certified crew scheduled'],
+    'Pre-Installation': ['3-Day prep guide sent', 'Materials staged on site', 'Site & AC armor ready'],
+    Install: ['Tear-off & deck inspection', 'Mid-roof inspection & underlayment', 'Primary roof system installed'],
+    'Warranty Activation': ['Envelope QC audit passed', 'Triple magnetic nail sweep complete', 'Final inspection verified'],
+    Invoicing: ['Mobilization deposit logged', 'Installation milestone verified', 'Final balance unlocks warranty'],
+    Completed: ['Master Warranty certificate active', 'Paid-in-full receipt issued', 'Project archived'],
+    'Past Customer': ['Annual roof health check active', 'Master Warranty active', 'Abundance Network ($500) active'],
 };
 
 const stageBadgeColor = (stage?: string) => {
@@ -86,36 +90,50 @@ const CustomerDashboard: React.FC = () => {
         };
     }, []);
 
-    if (!currentUser) return <div className="p-10 text-white">Please log in.</div>;
+    if (!currentUser) return <div className="p-10 text-white">Sign in to view your Customer Portal.</div>;
 
-    // Match projects owned by or associated with the logged-in customer / corporate account
+    // Match projects strictly owned by or associated with the authenticated customer / corporate account
     const customerOwnedProjects = projects.filter((p) => {
         const uEmail = (currentUser.email || '').toLowerCase().trim();
         const uName = (currentUser.name || '').toLowerCase().trim();
         const pEmail = (p.email || p.customer_email || p.contact_email || p.primaryEmail || '').toLowerCase().trim();
         const pName = (p.name || p.customer_name || p.account_name || '').toLowerCase().trim();
+        const contactMatch = Array.isArray(p.contacts)
+            ? p.contacts.some((c: any) => uEmail && String(c.email || '').toLowerCase().trim() === uEmail)
+            : false;
         return (
             p.owner_id === currentUser.id ||
             p.account_id === currentUser.id ||
             p.customer_id === currentUser.id ||
+            contactMatch ||
             (uEmail && pEmail === uEmail) ||
-            (uName && pName.includes(uName))
+            (uName && uName.length > 3 && pName.includes(uName))
         );
     });
 
-    const visibleProjects = customerOwnedProjects.length > 0 ? customerOwnedProjects : projects.slice(0, 4);
+    // Security Gate: Never expose non-test unrelated customer projects; allow [TEST] demo records only in local/bypass review
+    const isDemoOrBypassSession =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' ||
+            window.location.search.includes('bypass=') ||
+            String(currentUser.email || '').includes('rhive-test') ||
+            String(currentUser.email || '').includes('example.com'));
+
+    const visibleProjects =
+        customerOwnedProjects.length > 0
+            ? customerOwnedProjects
+            : isDemoOrBypassSession
+            ? projects.filter((p) => p.is_test || String(p.name || '').includes('[TEST]')).slice(0, 6)
+            : [];
+
     const selectedProject =
-        visibleProjects.find((p) => p.id === selectedProjectId) ||
-        visibleProjects[0] ||
-        null;
+        visibleProjects.find((p) => p.id === selectedProjectId) || visibleProjects[0] || null;
 
     // Associated properties (multi-property & multi-building ready)
     const ownedAccountIds = new Set<string>(
         [currentUser.id, ...visibleProjects.map((p) => p.account_id).filter(Boolean)]
     );
-    const ownedPropIds = new Set<string>(
-        visibleProjects.map((p) => p.property_id).filter(Boolean)
-    );
+    const ownedPropIds = new Set<string>(visibleProjects.map((p) => p.property_id).filter(Boolean));
     const associatedProperties = properties.filter(
         (prop) =>
             ownedPropIds.has(prop.id) ||
@@ -136,7 +154,7 @@ const CustomerDashboard: React.FC = () => {
     const isEnrolledInAbundance =
         abundanceOptIn ||
         myReferrals.length > 0 ||
-        visibleProjects.some((p) => p.abundance_enrolled);
+        visibleProjects.some((p) => p.abundance_enrolled || p.abundance_network?.enrolled);
 
     const showBanner = (msg: string) => {
         setToast(msg);
@@ -152,6 +170,7 @@ const CustomerDashboard: React.FC = () => {
                 quote: { ...(project.quote || {}), status: 'Approved' },
                 pizza_tracker: {
                     ...(project.pizza_tracker || {}),
+                    stage: 'Sign & Verify',
                     current_stage: 'Sign & Verify',
                     updated_at: new Date().toISOString(),
                 },
@@ -159,9 +178,14 @@ const CustomerDashboard: React.FC = () => {
             project._source
         );
         await userLogService.logAction(
-            'APPROVE_QUOTE',
+            'STAGE_CHANGE',
             `Customer approved quote for "${project.name}" from Client Portal`,
-            { projectId: project.id }
+            {
+                recordId: project.id,
+                recordName: project.name || 'Project',
+                collection: project._source || 'projects',
+                stage: 'Sign & Verify',
+            }
         );
         showBanner('Quote approved! Moving to Sign & Verify.');
     };
@@ -169,20 +193,33 @@ const CustomerDashboard: React.FC = () => {
     const handleAbundanceEnroll = async () => {
         setAbundanceOptIn(true);
         if (selectedProject?.id) {
+            const nowIso = new Date().toISOString();
             await projectService.updateRecord(
                 selectedProject.id,
                 {
                     abundance_enrolled: true,
                     abundance_mode: programMode,
                     abundance_org: orgName || undefined,
+                    abundance_network: {
+                        enrolled: true,
+                        mode: programMode,
+                        organization: orgName || '',
+                        enrolledAt: nowIso,
+                    },
                 },
                 selectedProject._source
             );
         }
         await userLogService.logAction(
-            'ABUNDANCE_OPT_IN',
+            'EDIT_RECORD',
             `${currentUser.name} opted into Abundance Network (${programMode})`,
-            { mode: programMode, organization: orgName }
+            {
+                recordId: selectedProject?.id || currentUser.id,
+                recordName: selectedProject?.name || currentUser.name,
+                collection: 'projects',
+                mode: programMode,
+                organization: orgName,
+            }
         );
         showBanner('Enrolled in the RHIVE Abundance Network!');
     };
@@ -196,6 +233,7 @@ const CustomerDashboard: React.FC = () => {
             const nowIso = new Date().toISOString();
             await setDoc(doc(db, 'referrals', refId), {
                 id: refId,
+                project_id: selectedProject?.id || null,
                 referrer_id: currentUser.id,
                 referrer_name: currentUser.name,
                 referrer_email: currentUser.email || '',
@@ -209,9 +247,14 @@ const CustomerDashboard: React.FC = () => {
                 created_at: nowIso,
             });
             await userLogService.logAction(
-                'CREATE_REFERRAL',
+                'RECORD_CREATED',
                 `Abundance Network referral submitted for ${refName.trim()}`,
-                { referralId: refId, mode: programMode }
+                {
+                    recordId: refId,
+                    recordName: refName.trim(),
+                    collection: 'referrals',
+                    mode: programMode,
+                }
             );
             setAbundanceOptIn(true);
             setRefName('');
@@ -231,42 +274,54 @@ const CustomerDashboard: React.FC = () => {
         );
     };
 
-    // Compute 50/40/10 payment breakdown for selectedProject
+    // Polymorphic Payment Milestones (Customer-Safe: zero internal cost floor exposure)
     const baseContract = Number(selectedProject?.quote?.total || 0);
     const awoApproved = Array.isArray(selectedProject?.awos)
         ? selectedProject.awos
-              .filter((a: any) => a.status === 'Approved')
+              .filter((a: any) => !a.status || a.status === 'Approved')
               .reduce((s: number, a: any) => s + Number(a.amount || 0), 0)
         : 0;
-    const grandTotal = baseContract + awoApproved;
-    const milestones = selectedProject?.invoicing?.milestones || [
-        {
-            key: 'deposit_50',
-            label: '50% Material Deposit (Sign & Verify)',
-            percent: 50,
-            amount: Math.round(baseContract * 0.5),
-            paid: Boolean(selectedProject?.deposit_paid || matchStageIndex(selectedProject?.current_stage) >= 4),
-        },
-        {
-            key: 'completion_40',
-            label: '40% Roof Installation Complete',
-            percent: 40,
-            amount: Math.round(baseContract * 0.4),
-            paid: Boolean(matchStageIndex(selectedProject?.current_stage) >= 7),
-        },
-        {
-            key: 'warranty_10',
-            label: '10% Final Upon Warranty Activation',
-            percent: 10,
-            amount: Math.max(0, grandTotal - Math.round(baseContract * 0.9)),
-            paid: Boolean(matchStageIndex(selectedProject?.current_stage) >= 9),
-        },
-    ];
+    const creditAdj = Number(selectedProject?.invoicing?.creditAdjustment || 0);
+    const grandTotal = Math.max(0, baseContract + awoApproved - creditAdj);
+    const paymentModel = resolvePaymentModel(selectedProject);
+    const milestones = selectedProject ? buildMilestonesForProject(selectedProject, grandTotal) : [];
+    const paidTotal = milestones.reduce((s, m) => s + (m.paid ? Number(m.amount || 0) : 0), 0);
+    const remainingBalance = Math.max(0, grandTotal - paidTotal);
+    const isWarrantyUnlocked =
+        Boolean(selectedProject?.warranty_certificate?.active) ||
+        selectedProject?.invoicing?.status === 'paid' ||
+        (grandTotal > 0 && remainingBalance === 0 && matchStageIndex(selectedProject?.current_stage) >= 8);
 
     const activeStageIdx = Math.max(0, matchStageIndex(selectedProject?.current_stage));
     const activeStageLabel = PIPELINE[activeStageIdx]?.stage || 'Lead';
-    const subSteps = PIPELINE[activeStageIdx]?.defaultSubSteps || DEFAULT_STAGE_SUBSTEPS[activeStageLabel] || DEFAULT_STAGE_SUBSTEPS['Lead'];
-    const customTrackerNote = selectedProject?.pizza_tracker?.note || selectedProject?.ops_schedule?.customer_note || '';
+
+    // Hydrate live subSteps from ops stages (with done checkmarks) or fall back to stage defaults
+    const rawSubSteps = selectedProject?.pizza_tracker?.subSteps;
+    const normalizedSubSteps: Array<{ label: string; done: boolean }> =
+        Array.isArray(rawSubSteps) && rawSubSteps.length > 0
+            ? rawSubSteps.map((s: any, idx: number) =>
+                  typeof s === 'string'
+                      ? { label: s, done: idx === 0 }
+                      : { label: String(s.label || s.task || `Step ${idx + 1}`), done: Boolean(s.done) }
+              )
+            : (
+                  PIPELINE[activeStageIdx]?.defaultSubSteps ||
+                  DEFAULT_STAGE_SUBSTEPS[activeStageLabel] ||
+                  DEFAULT_STAGE_SUBSTEPS['Lead']
+              ).map((label: string, idx: number) => ({ label, done: idx === 0 }));
+
+    const scheduledInstallDate =
+        selectedProject?.ops_schedule?.installDate ||
+        selectedProject?.ops_schedule?.install_date ||
+        selectedProject?.pizza_tracker?.installDate ||
+        selectedProject?.install_date ||
+        '';
+
+    const customTrackerNote =
+        selectedProject?.pizza_tracker?.note ||
+        selectedProject?.ops_schedule?.permitNote ||
+        selectedProject?.ops_schedule?.customer_note ||
+        '';
 
     return (
         <div className="h-full flex flex-col text-white">
@@ -274,7 +329,7 @@ const CustomerDashboard: React.FC = () => {
                 <div>
                     <h1 className="text-xl font-bold tracking-tight">RHIVE Customer Portal</h1>
                     <p className="text-xs text-gray-400">
-                        Simple Project Tracking, Properties, Payments & Abundance Network
+                        Simple Project Tracking, Properties, Payments &amp; Abundance Network
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -303,10 +358,26 @@ const CustomerDashboard: React.FC = () => {
             {/* KISS Navigation Tabs — Highlighted when selected, un-highlighted when not */}
             <div className="px-6 md:px-10 pt-5 border-b border-gray-800/80 bg-black/40 flex gap-2 overflow-x-auto pb-3 shrink-0">
                 {[
-                    { id: 'projects' as PortalTab, label: `Projects & Tracker (${visibleProjects.length})`, domId: 'portal-tab-projects' },
-                    { id: 'properties' as PortalTab, label: `Properties & Buildings (${associatedProperties.length || 1})`, domId: 'portal-tab-properties' },
-                    { id: 'payments' as PortalTab, label: 'Payments (50 / 40 / 10)', domId: 'portal-tab-payments' },
-                    { id: 'abundance' as PortalTab, label: 'Abundance Network ($500)', domId: 'portal-tab-abundance' },
+                    {
+                        id: 'projects' as PortalTab,
+                        label: `Projects & Tracker (${visibleProjects.length})`,
+                        domId: 'portal-tab-projects',
+                    },
+                    {
+                        id: 'properties' as PortalTab,
+                        label: `Properties & Buildings (${associatedProperties.length || 1})`,
+                        domId: 'portal-tab-properties',
+                    },
+                    {
+                        id: 'payments' as PortalTab,
+                        label: 'Payments (50 / 40 / 10)',
+                        domId: 'portal-tab-payments',
+                    },
+                    {
+                        id: 'abundance' as PortalTab,
+                        label: 'Abundance Network ($500)',
+                        domId: 'portal-tab-abundance',
+                    },
                 ].map((tab) => {
                     const selected = activeTab === tab.id;
                     return (
@@ -332,7 +403,15 @@ const CustomerDashboard: React.FC = () => {
                 {/* TAB 1: PROJECTS & LIVE PIZZA TRACKER */}
                 {activeTab === 'projects' && (
                     <>
-                        {/* Project Switcher for Multi-Project / Commercial Clients */}
+                        {visibleProjects.length === 0 && !loading && (
+                            <Card title="No Active Projects Found">
+                                <p className="text-sm text-gray-400">
+                                    We could not find an active project linked to {currentUser.email || currentUser.name}.
+                                    Contact RHIVE Construction at (801) 441-0024 to link your property profile.
+                                </p>
+                            </Card>
+                        )}
+
                         {visibleProjects.length > 1 && (
                             <div className="space-y-2">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
@@ -364,23 +443,32 @@ const CustomerDashboard: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Live 11-Stage Pizza Tracker */}
                         {selectedProject && (
-                            <Card title={`Live Project Tracker: ${selectedProject.name || 'Roof Project'}`} className="border-gray-800">
+                            <Card
+                                title={`Live Project Tracker: ${selectedProject.name || 'Roof Project'}`}
+                                className="border-gray-800"
+                            >
                                 <div className="space-y-6">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                         <p className="text-xs text-gray-400 font-mono flex items-center gap-1.5">
                                             <MapPinIcon className="w-4 h-4 text-[#ec028b]" />
                                             {getAddress(selectedProject)}
                                         </p>
-                                        <span
-                                            className={cn(
-                                                'text-[10px] px-3 py-1 rounded-full border font-black uppercase tracking-widest',
-                                                stageBadgeColor(activeStageLabel)
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {selectedProject.job_number && (
+                                                <span className="text-[10px] font-mono text-gray-400 px-2.5 py-1 rounded-full bg-gray-900 border border-gray-800">
+                                                    {selectedProject.job_number}
+                                                </span>
                                             )}
-                                        >
-                                            Step {activeStageIdx + 1} of {PIPELINE.length}: {activeStageLabel}
-                                        </span>
+                                            <span
+                                                className={cn(
+                                                    'text-[10px] px-3 py-1 rounded-full border font-black uppercase tracking-widest',
+                                                    stageBadgeColor(activeStageLabel)
+                                                )}
+                                            >
+                                                Step {activeStageIdx + 1} of {PIPELINE.length}: {activeStageLabel}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     {/* 11-Step Horizontal Pizza Tracker */}
@@ -409,43 +497,54 @@ const CustomerDashboard: React.FC = () => {
                                         })}
                                     </div>
 
-                                    {/* Current Stage Sub-Steps */}
+                                    {/* Current Stage Live Sub-Steps + Wednesday Heartbeat */}
                                     <div className="p-4 rounded-xl bg-gray-900/60 border border-gray-800 space-y-3">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
                                             <p className="text-xs font-black uppercase tracking-widest text-[#ec028b]">
-                                                What Happens in {activeStageLabel}
+                                                Live Steps in {activeStageLabel}
                                             </p>
-                                            {selectedProject.ops_schedule?.install_date && (
+                                            {scheduledInstallDate && (
                                                 <span className="text-xs font-mono text-cyan-300 flex items-center gap-1">
                                                     <CalendarDaysIcon className="w-3.5 h-3.5" />
-                                                    Scheduled: {selectedProject.ops_schedule.install_date}
+                                                    Scheduled Window: {scheduledInstallDate}
                                                 </span>
                                             )}
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                            {subSteps.map((stepText, idx) => (
+                                            {normalizedSubSteps.map((stepObj, idx) => (
                                                 <div
-                                                    key={idx}
-                                                    className="p-3 rounded-lg bg-black/50 border border-gray-800 flex items-center gap-2.5 text-xs text-gray-200"
+                                                    key={`${stepObj.label}-${idx}`}
+                                                    className={cn(
+                                                        'p-3 rounded-lg border flex items-center gap-2.5 text-xs',
+                                                        stepObj.done
+                                                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+                                                            : 'bg-black/50 border-gray-800 text-gray-300'
+                                                    )}
                                                 >
-                                                    <span className="w-5 h-5 rounded-full bg-[#ec028b]/20 border border-[#ec028b] text-[#ec028b] flex items-center justify-center text-[10px] font-bold shrink-0">
-                                                        {idx + 1}
+                                                    <span
+                                                        className={cn(
+                                                            'w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold shrink-0',
+                                                            stepObj.done
+                                                                ? 'bg-emerald-500 border-emerald-400 text-black'
+                                                                : 'bg-[#ec028b]/20 border-[#ec028b] text-[#ec028b]'
+                                                        )}
+                                                    >
+                                                        {stepObj.done ? '✓' : idx + 1}
                                                     </span>
-                                                    <span>{stepText}</span>
+                                                    <span>{stepObj.label}</span>
                                                 </div>
                                             ))}
                                         </div>
                                         {customTrackerNote && (
-                                            <p className="text-xs text-gray-300 bg-black/40 border border-gray-800 rounded-lg p-3 font-mono">
-                                                RHIVE Team Update: {customTrackerNote}
-                                            </p>
+                                            <div className="text-xs text-cyan-200 bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3 font-mono">
+                                                Proactive RHIVE Update: {customTrackerNote}
+                                            </div>
                                         )}
                                     </div>
                                 </div>
                             </Card>
                         )}
 
-                        {/* Action Required: Quote / Shopping Cart Review */}
                         {activeQuoteProject && activeQuoteProject.quote && (
                             <Card title={`Quote Ready: ${activeQuoteProject.name}`} className="border-[#ec028b]">
                                 <div className="space-y-4">
@@ -453,13 +552,19 @@ const CustomerDashboard: React.FC = () => {
                                     <div className="bg-gray-900/60 p-5 rounded-xl border border-gray-800">
                                         <p className="text-base font-bold mb-1">Review Your Certified Proposal</p>
                                         <p className="text-gray-400 text-xs mb-4">
-                                            Review line items below or open your interactive Shopping Cart link to customize options and sign.
+                                            Review line items below or open your interactive Shopping Cart link to
+                                            customize options and e-sign.
                                         </p>
                                         <ul className="space-y-2 mb-5 border-t border-b border-gray-800 py-4">
                                             {(activeQuoteProject.quote.items || []).map((item: any, i: number) => (
                                                 <li key={i} className="flex justify-between text-sm">
                                                     <span>{item.name || item.description || 'Roofing Scope'}</span>
-                                                    <span className="font-mono">${Number(item.cost || item.total || 0).toLocaleString()}</span>
+                                                    <span className="font-mono">
+                                                        $
+                                                        {Number(
+                                                            item.price ?? item.cost ?? item.total ?? 0
+                                                        ).toLocaleString()}
+                                                    </span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -507,18 +612,21 @@ const CustomerDashboard: React.FC = () => {
                 {activeTab === 'properties' && (
                     <div className="space-y-6">
                         <p className="text-sm text-gray-400">
-                            View every property and building associated with your account, along with active or historical projects.
+                            View every property and building associated with your account, along with active or
+                            historical projects.
                         </p>
                         {associatedProperties.length === 0 ? (
                             <Card title={getAddress(selectedProject)}>
                                 <p className="text-xs text-gray-400">
-                                    {(selectedProject?.buildings || []).length || 1} building structure(s) registered under your project profile.
+                                    {(selectedProject?.buildings || []).length || 1} building structure(s) registered
+                                    under your project profile.
                                 </p>
                             </Card>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {associatedProperties.map((prop) => {
-                                    const propTitle = prop.name || prop.Property_Name || prop.address_full || 'Property';
+                                    const propTitle =
+                                        prop.name || prop.Property_Name || prop.address_full || 'Property';
                                     const bldgs = Array.isArray(prop.buildings) ? prop.buildings : [];
                                     const propProjects = visibleProjects.filter((p) => p.property_id === prop.id);
                                     return (
@@ -526,7 +634,10 @@ const CustomerDashboard: React.FC = () => {
                                             <div className="space-y-4">
                                                 <p className="text-xs text-gray-400 font-mono flex items-center gap-1.5">
                                                     <MapPinIcon className="w-3.5 h-3.5 text-[#ec028b]" />
-                                                    {prop.address_full || [prop.property_address, prop.city, prop.state].filter(Boolean).join(', ')}
+                                                    {prop.address_full ||
+                                                        [prop.property_address, prop.city, prop.state]
+                                                            .filter(Boolean)
+                                                            .join(', ')}
                                                 </p>
                                                 {bldgs.length > 0 && (
                                                     <div className="space-y-2">
@@ -585,26 +696,53 @@ const CustomerDashboard: React.FC = () => {
                     </div>
                 )}
 
-                {/* TAB 3: PAYMENTS (50 / 40 / 10 MILESTONE SCHEDULE) */}
+                {/* TAB 3: PAYMENTS & MASTER WARRANTY STATUS */}
                 {activeTab === 'payments' && (
                     <div className="space-y-6">
-                        <Card title={`50 / 40 / 10 Payment Schedule — ${selectedProject?.name || 'Active Project'}`}>
+                        <Card title={`Payment Schedule — ${selectedProject?.name || 'Active Project'}`}>
                             <div className="space-y-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-gray-800">
+                                    <span className="text-xs text-gray-400">
+                                        Payment Structure:{' '}
+                                        <strong className="text-white">{PAYMENT_MODEL_LABELS[paymentModel]}</strong>
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5',
+                                            isWarrantyUnlocked
+                                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                                                : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                                        )}
+                                    >
+                                        <ShieldCheckIcon className="w-3.5 h-3.5" />
+                                        {isWarrantyUnlocked
+                                            ? 'Master Warranty Active (Paid in Full)'
+                                            : 'Master Warranty Unlocks Upon $0.00 Balance'}
+                                    </span>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="p-4 rounded-xl bg-gray-900/50 border border-gray-800">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Base Contract</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                                            Base Contract
+                                        </p>
                                         <p className="text-xl font-black font-mono text-white mt-1">
                                             ${baseContract.toLocaleString()}
                                         </p>
                                     </div>
                                     <div className="p-4 rounded-xl bg-gray-900/50 border border-gray-800">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Approved Change Orders</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                                            Approved Change Orders / Credits
+                                        </p>
                                         <p className="text-xl font-black font-mono text-[#e2ab49] mt-1">
-                                            ${awoApproved.toLocaleString()}
+                                            {awoApproved - creditAdj >= 0 ? '+' : '-'}$
+                                            {Math.abs(awoApproved - creditAdj).toLocaleString()}
                                         </p>
                                     </div>
                                     <div className="p-4 rounded-xl bg-gray-900/50 border border-[#ec028b]/40">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">Total Project Value</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-[#ec028b]">
+                                            Total Project Value
+                                        </p>
                                         <p className="text-xl font-black font-mono text-white mt-1">
                                             ${grandTotal.toLocaleString()}
                                         </p>
@@ -612,7 +750,7 @@ const CustomerDashboard: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-3 pt-2">
-                                    {milestones.map((m: any) => (
+                                    {milestones.map((m) => (
                                         <div
                                             key={m.key}
                                             className={cn(
@@ -623,11 +761,13 @@ const CustomerDashboard: React.FC = () => {
                                             )}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <CurrencyDollarIcon className={cn('w-5 h-5', m.paid ? 'text-green-400' : 'text-[#ec028b]')} />
+                                                <CurrencyDollarIcon
+                                                    className={cn('w-5 h-5', m.paid ? 'text-green-400' : 'text-[#ec028b]')}
+                                                />
                                                 <div>
                                                     <p className="text-sm font-bold text-white">{m.label}</p>
                                                     <p className="text-xs text-gray-400 font-mono">
-                                                        {m.paid ? 'Verified Paid' : 'Scheduled Milestone'}
+                                                        {m.paid ? 'Verified Paid' : `${m.percent}% Scheduled Milestone`}
                                                     </p>
                                                 </div>
                                             </div>
@@ -660,10 +800,12 @@ const CustomerDashboard: React.FC = () => {
                         <Card title="RHIVE Abundance Network — $500 Per Roof">
                             <div className="space-y-5">
                                 <p className="text-sm text-gray-300 leading-relaxed">
-                                    Earn <strong className="text-[#ec028b]">$500</strong> for every completed roof replacement referral — or direct <strong className="text-[#e2ab49]">$500 per roof</strong> directly to a school, youth team, church, or local charity fundraiser.
+                                    Earn <strong className="text-[#ec028b]">$500</strong> for every completed roof
+                                    replacement referral — or direct{' '}
+                                    <strong className="text-[#e2ab49]">$500 per roof</strong> directly to a school,
+                                    youth team, church, or local charity fundraiser.
                                 </p>
 
-                                {/* Program Mode Selector (Highlighted when selected) */}
                                 <div className="grid grid-cols-2 gap-3">
                                     {(['Referral', 'Fundraising'] as const).map((mode) => {
                                         const active = programMode === mode;
@@ -680,7 +822,9 @@ const CustomerDashboard: React.FC = () => {
                                                 )}
                                             >
                                                 <p className="text-xs font-black uppercase tracking-wider">
-                                                    {mode === 'Referral' ? 'Personal Affiliate ($500)' : 'Youth / Charity Fundraising'}
+                                                    {mode === 'Referral'
+                                                        ? 'Personal Affiliate ($500)'
+                                                        : 'Youth / Charity Fundraising'}
                                                 </p>
                                                 <p className="text-[11px] text-gray-400 mt-1">
                                                     {mode === 'Referral'
@@ -762,14 +906,16 @@ const CustomerDashboard: React.FC = () => {
                         <Card title={`Your Abundance Network Updates (${myReferrals.length})`}>
                             {!isEnrolledInAbundance ? (
                                 <p className="text-xs text-gray-500 italic py-8 text-center">
-                                    Opt in on the left to activate live referral & fundraising payout tracking in your portal.
+                                    Opt in on the left to activate live referral &amp; fundraising payout tracking in
+                                    your portal.
                                 </p>
                             ) : myReferrals.length === 0 ? (
                                 <div className="p-6 text-center space-y-2">
                                     <Check className="w-8 h-8 text-[#ec028b] mx-auto" />
-                                    <p className="text-sm font-bold text-white">Account Enrolled & Ready</p>
+                                    <p className="text-sm font-bold text-white">Account Enrolled &amp; Ready</p>
                                     <p className="text-xs text-gray-400">
-                                        Submit your first referral to track inspection, installation, and your $500 reward payout right here.
+                                        Submit your first referral to track inspection, installation, and your $500
+                                        reward payout right here.
                                     </p>
                                 </div>
                             ) : (

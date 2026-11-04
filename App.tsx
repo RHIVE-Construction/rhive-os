@@ -339,11 +339,11 @@ const AppContentAuthenticated: React.FC = () => {
                     <CurrentPage />
                 </main>
             </div>
-            <FloatingEstimator />
+            {isPublicRoute && <FloatingEstimator />}
             {isPublicRoute && <CookieConsentBanner />}
             <GlobalChatWidget />
             <FloatingBackButton />
-            <HunniChatWidget />
+            {isPublicRoute && <HunniChatWidget />}
             <GlobalCustomerLookupModal />
             <GlobalWeatherModal />
             {window.location.hostname === 'localhost' && <DevNavigator />}

@@ -10,6 +10,7 @@ import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 import { projectService, firestoreService, userLogService } from '../lib/firebaseService';
 import { CalculatorIcon, CheckCircleIcon, PlusIcon, TrashIcon, ArrowRightIcon, MapPinIcon } from '../components/icons';
 import { cn } from '../lib/utils';
+import { calculateDualMathFromRetailOrItems } from '../lib/qosRules';
 import type { Place } from '../types';
 
 interface BuildingEstimateItem {
@@ -22,16 +23,20 @@ interface BuildingEstimateItem {
     systemKey: string;
     guttersLf: number;
     heatTraceLf: number;
+    coordinates?: { lat: number; lng: number };
 }
 
 const ROOF_SYSTEM_CATALOG: Record<string, { label: string; ratePerSq: number; category: 'Residential' | 'Commercial' }> = {
-    'oc-duration':      { label: 'Owens Corning TruDefinition Duration (Architectural)', ratePerSq: 495, category: 'Residential' },
-    'oc-flex':          { label: 'Owens Corning Duration Flex (SBS Class 4 Impact)',     ratePerSq: 565, category: 'Residential' },
-    'oc-designer':      { label: 'Owens Corning Designer Series',                        ratePerSq: 645, category: 'Residential' },
-    'tpo-60':           { label: '.060MIL Reinforced TPO Flat Membrane',                 ratePerSq: 780, category: 'Commercial' },
-    'tpo-80':           { label: '.080MIL RhinoBond Commercial TPO Membrane',            ratePerSq: 890, category: 'Commercial' },
-    'pvc-membrane':     { label: 'Chemical-Resistant Commercial PVC Membrane',           ratePerSq: 960, category: 'Commercial' },
-    'repair-diagnostic':{ label: 'Targeted Roof Repair & Envelope Seal',                 ratePerSq: 350, category: 'Residential' },
+    'oc-duration':      { label: 'Owens Corning TruDefinition Duration® (Architectural)',       ratePerSq: 495, category: 'Residential' },
+    'oc-flex':          { label: 'Owens Corning Duration FLEX® (SBS Class 4 Impact)',           ratePerSq: 565, category: 'Residential' },
+    'oc-woodcrest':     { label: 'Owens Corning Woodcrest® Designer Thick-Cut',                 ratePerSq: 665, category: 'Residential' },
+    'oc-woodmoor':      { label: 'Owens Corning Woodmoor® Heavyweight Premium Designer',        ratePerSq: 735, category: 'Residential' },
+    'tpo-60':           { label: 'GAF EverGuard® 60 mil Smooth TPO Membrane',                   ratePerSq: 780, category: 'Commercial' },
+    'tpo-80':           { label: 'GAF EverGuard® 80 mil Extreme Commercial TPO',                ratePerSq: 890, category: 'Commercial' },
+    'pvc-60':           { label: 'GAF EverGuard® 60 mil Chemical-Resistant PVC',                ratePerSq: 940, category: 'Commercial' },
+    'pvc-80':           { label: 'GAF EverGuard® 80 mil Heavy-Duty Commercial PVC',             ratePerSq: 1050, category: 'Commercial' },
+    'pvc-membrane':     { label: 'GAF EverGuard® Commercial PVC Membrane',                      ratePerSq: 960, category: 'Commercial' },
+    'repair-diagnostic':{ label: 'Targeted Roof Repair & Envelope Seal (Fast-Path)',            ratePerSq: 350, category: 'Residential' },
 };
 
 const PITCH_MULTIPLIERS: Record<string, number> = {
@@ -71,21 +76,30 @@ const ProjectEstimateWorkspace: React.FC<{ project: any }> = ({ project }) => {
                 }
             }
 
-            const defaultSystem = isCommercial ? 'tpo-60' : 'oc-duration';
+            const isRepairScope = (project?.scope_type || project?.details?.scopeType) === 'Repair';
+            const defaultSystem = isRepairScope ? 'repair-diagnostic' : (isCommercial ? 'tpo-60' : 'oc-duration');
             const defaultPitch = isCommercial ? 'Flat (0-2/12)' : 'Standard (6-8/12)';
+            const intakeTotalSqft = project?.roof_analysis?.finalSq ? Math.round(Number(project.roof_analysis.finalSq) * 100) : 0;
+            const intakeLayers = Number(project?.roof_analysis?.layerCount || 1);
+            const intakeGuttersLf = Number(project?.estimate_inputs?.gutters?.length || (isCommercial ? 0 : 160));
+            const intakeHeatTraceLf = Number(project?.estimate_inputs?.heatTrace?.length || 0);
 
             if (propBuildings.length > 0) {
+                const perBldgFallbackSqft = intakeTotalSqft > 0
+                    ? Math.max(400, Math.round(intakeTotalSqft / propBuildings.length))
+                    : (isRepairScope ? 600 : isCommercial ? 8500 : 2800);
                 if (mounted) {
                     setBuildings(propBuildings.map((b: any, idx: number) => ({
                         id: b.id || `BLDG-${idx + 1}`,
                         buildingName: b.name || `Building ${idx + 1}`,
-                        roofSqft: Number(b.roof_sqft) || (isCommercial ? 8500 : 2800),
+                        roofSqft: Number(b.roof_sqft) || perBldgFallbackSqft,
                         pitch: b.pitch || defaultPitch,
                         stories: Number(b.stories) || 1,
-                        layers: 1,
+                        layers: intakeLayers,
                         systemKey: defaultSystem,
-                        guttersLf: isCommercial ? 0 : 160,
-                        heatTraceLf: 0,
+                        guttersLf: idx === 0 ? intakeGuttersLf : 0,
+                        heatTraceLf: idx === 0 ? intakeHeatTraceLf : 0,
+                        coordinates: b.coordinates || (b.lat && b.lng ? { lat: Number(b.lat), lng: Number(b.lng) } : undefined),
                     })));
                 }
             } else {
@@ -171,20 +185,23 @@ const ProjectEstimateWorkspace: React.FC<{ project: any }> = ({ project }) => {
         setSaving(true);
         setSaveBanner('');
         try {
+            const dualMath = calculateDualMathFromRetailOrItems(summary.total);
+            const cleanQuote = { ...(project.quote || {}) };
+            delete (cleanQuote as any).internalCost;
+
             const updates: Record<string, any> = {
+                costs: dualMath.costs,
                 estimate: {
                     buildings,
                     totalSqft: summary.totalSqft,
                     totalSquares: Number((summary.totalSqft / 100).toFixed(1)),
                     total: summary.total,
-                    internalCost: summary.internalCost,
                     notes,
                     updatedAt: new Date().toISOString(),
                 },
                 quote: {
-                    ...(project.quote || {}),
+                    ...cleanQuote,
                     total: summary.total,
-                    internalCost: summary.internalCost,
                     breakdown: summary.breakdown,
                     items: summary.breakdown,
                     status: advanceToQuote ? 'Draft' : (project.quote?.status || 'Estimated'),
@@ -216,9 +233,9 @@ const ProjectEstimateWorkspace: React.FC<{ project: any }> = ({ project }) => {
                         pitch: b.pitch,
                         stories: b.stories,
                         roof_type: ROOF_SYSTEM_CATALOG[b.systemKey]?.label || '',
-                        coordinates: {
-                            lat: project?.property?.latitude || 40.7608,
-                            lng: project?.property?.longitude || -111.8910,
+                        coordinates: b.coordinates || {
+                            lat: Number(project?.property?.latitude || project?.latitude || 40.7608),
+                            lng: Number(project?.property?.longitude || project?.longitude || -111.8910),
                         }
                     })),
                 });

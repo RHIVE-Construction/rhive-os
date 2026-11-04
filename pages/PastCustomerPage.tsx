@@ -4,22 +4,43 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import FollowUpModal from '../components/FollowUpModal';
 import { ClockIcon, CalendarIcon, PlusIcon, MegaphoneIcon, CheckCircleIcon } from '../components/icons';
-import { projectService, userLogService } from '../lib/firebaseService';
+import { projectService, userLogService, firestoreService } from '../lib/firebaseService';
 import { useNavigation } from '../contexts/NavigationContext';
 import { getStagePageId, cn } from '../lib/utils';
+import { navigateToIntake } from '../lib/intakeRouting';
 
 const PastCustomerContent: React.FC<{ project: any }> = ({ project }) => {
     const { setActivePageId, setSelectedProjectId } = useNavigation();
     const [siblingProjects, setSiblingProjects] = useState<any[]>([]);
     const [showFollowUp, setShowFollowUp] = useState(false);
     const [banner, setBanner] = useState('');
-    const [enrolled, setEnrolled] = useState<boolean>(!!project?.abundance_network?.enrolled);
+    const [enrolled, setEnrolled] = useState<boolean>(!!(project?.abundance_network?.enrolled || project?.abundance_enrolled));
     const [referralsCount, setReferralsCount] = useState<number>(Number(project?.abundance_network?.referralsCount || 0));
+    const [warrantyTransferred, setWarrantyTransferred] = useState<boolean>(!!project?.warranty_transfer?.transferred);
+    const [newOwnerName, setNewOwnerName] = useState<string>(project?.warranty_transfer?.newOwnerName || '');
 
     useEffect(() => {
-        setEnrolled(!!project?.abundance_network?.enrolled);
+        setEnrolled(!!(project?.abundance_network?.enrolled || project?.abundance_enrolled));
         setReferralsCount(Number(project?.abundance_network?.referralsCount || 0));
-    }, [project?.id]);
+        setWarrantyTransferred(!!project?.warranty_transfer?.transferred);
+        setNewOwnerName(project?.warranty_transfer?.newOwnerName || '');
+    }, [project?.id, project?.abundance_enrolled, project?.abundance_network?.enrolled]);
+
+    useEffect(() => {
+        const unsubRefs = firestoreService.subscribeToDocuments('referrals', (allRefs) => {
+            const pEmail = String(project?.contact_email || project?.contact?.email || '').toLowerCase();
+            const pName = String(project?.contact_name || project?.name || '').toLowerCase();
+            const matched = allRefs.filter((r: any) => {
+                const rEmail = String(r.referrer_email || r.referrerEmail || '').toLowerCase();
+                const rName = String(r.referrer_name || r.referrerName || '').toLowerCase();
+                return (pEmail && rEmail === pEmail) || (pName && rName && rName === pName) || r.project_id === project?.id;
+            });
+            if (matched.length > 0) {
+                setReferralsCount(matched.length);
+            }
+        });
+        return () => unsubRefs();
+    }, [project?.id, project?.contact_email, project?.contact_name, project?.name]);
 
     useEffect(() => {
         const unsub = projectService.subscribe((all) => {
@@ -54,7 +75,7 @@ const PastCustomerContent: React.FC<{ project: any }> = ({ project }) => {
         setEnrolled(true);
         await projectService.updateRecord(
             project.id,
-            { abundance_network: nextAbundance },
+            { abundance_network: nextAbundance, abundance_enrolled: true },
             project._source
         );
         await userLogService.logAction(
@@ -65,29 +86,64 @@ const PastCustomerContent: React.FC<{ project: any }> = ({ project }) => {
                 recordName: project.name || 'Project',
                 collection: project._source || 'projects',
                 stage: 'Past Customer',
-                changes: ['abundance_network'],
+                changes: ['abundance_network', 'abundance_enrolled'],
             }
         );
         setBanner(`Abundance Network active (${referralCode}) — $500 referral & review invite logged.`);
     };
 
+    const handleWarrantyTransfer = async () => {
+        if (!project?.id) return;
+        const nextState = !warrantyTransferred;
+        const transferRecord = {
+            transferred: nextState,
+            newOwnerName: newOwnerName.trim() || 'New Property Owner',
+            fee: 150,
+            windowDays: 30,
+            transferredAt: nextState ? new Date().toISOString() : null,
+        };
+        setWarrantyTransferred(nextState);
+        await projectService.updateRecord(
+            project.id,
+            { warranty_transfer: transferRecord },
+            project._source
+        );
+        await userLogService.logAction(
+            'EDIT_RECORD',
+            `${nextState ? 'Registered' : 'Cleared'} 30-Day $150 Warranty Ownership Transfer for ${project.name || 'Project'}`,
+            {
+                recordId: project.id,
+                recordName: project.name || 'Project',
+                collection: project._source || 'projects',
+                stage: 'Past Customer',
+                changes: ['warranty_transfer'],
+            }
+        );
+        setBanner(nextState ? `30-Day Warranty Transfer ($150 fee) registered to ${transferRecord.newOwnerName}.` : 'Warranty Transfer reset.');
+    };
+
     const handleCreateRepeatProject = () => {
-        try {
-            sessionStorage.setItem(
-                'rhive_prefill_intake',
-                JSON.stringify({
-                    accountId: project.account_id || '',
-                    propertyId: project.property_id || '',
-                    address: project.property_address || '',
-                    customerName: project.contact_name || project.name || '',
-                    email: project.contact_email || project.contact?.email || '',
-                    phone: project.contact_phone || project.contact?.phone || '',
-                })
-            );
-        } catch {
-            // sessionStorage unavailable
-        }
-        setActivePageId('E-02a');
+        const prefill = {
+            accountId: project.account_id || '',
+            propertyId: project.property_id || '',
+            parentCompany: project.account_name || '',
+            address: project.property_address || project.address || '',
+            city: project.city || '',
+            state: project.state || 'UT',
+            zip: project.zip || '',
+            latitude: Number(project.latitude || project.lat || 0),
+            longitude: Number(project.longitude || project.lng || 0),
+            buildings: Array.isArray(project.buildings) ? project.buildings : [],
+            projectCategory: project.project_category || project.project_type || 'Residential',
+            contactName: project.contact_name || project.contact?.name || project.name || '',
+            contactEmail: project.contact_email || project.contact?.email || '',
+            contactPhone: project.contact_phone || project.contact?.phone || '',
+            contacts: project.contacts || [],
+        };
+        navigateToIntake({
+            category: prefill.projectCategory as any,
+            prefillPayload: prefill,
+        });
     };
 
     const historyList = siblingProjects.length > 0 ? siblingProjects : [project];
@@ -220,6 +276,42 @@ const PastCustomerContent: React.FC<{ project: any }> = ({ project }) => {
                                     <p className="text-[#ec028b] text-xs font-mono mt-2">
                                         Active RHIVE Protection
                                     </p>
+                                </div>
+
+                                <div className="p-4 border border-gray-800 bg-black/50 rounded-xl space-y-2.5 mt-3">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+                                            30-Day Ownership Transfer ($150)
+                                        </p>
+                                        <span className={cn(
+                                            'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                                            warrantyTransferred
+                                                ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
+                                                : 'text-gray-400 border-gray-700 bg-gray-900'
+                                        )}>
+                                            {warrantyTransferred ? 'Transferred' : 'Original Owner'}
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={newOwnerName}
+                                        onChange={(e) => setNewOwnerName(e.target.value)}
+                                        placeholder="New Homeowner / Buyer Name"
+                                        className="w-full bg-gray-900/80 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-[#ec028b] outline-none"
+                                    />
+                                    <button
+                                        type="button"
+                                        id="past-warranty-transfer-toggle"
+                                        onClick={handleWarrantyTransfer}
+                                        className={cn(
+                                            'w-full py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all cursor-pointer',
+                                            warrantyTransferred
+                                                ? 'bg-[#ec028b] border-[#ec028b] text-white shadow-[0_0_12px_rgba(236,2,139,0.35)]'
+                                                : 'bg-gray-900/60 border-gray-700 text-gray-300 hover:border-[#ec028b]/50'
+                                        )}
+                                    >
+                                        {warrantyTransferred ? 'Transfer Active ($150 Logged)' : 'Apply 30-Day Transfer'}
+                                    </button>
                                 </div>
                             </div>
                         </Card>

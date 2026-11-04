@@ -21,6 +21,7 @@ import { db } from '../lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { projectService, userLogService } from '../lib/firebaseService';
 import { cn } from '../lib/utils';
+import { resolvePaymentModel, buildMilestonesForProject, PAYMENT_MODEL_LABELS } from '../lib/qosRules';
 
 interface FileUploadZoneProps {
     id: string;
@@ -264,8 +265,25 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
         if (customerEmail && !emailTo) setEmailTo(customerEmail);
     }, [customerEmail]);
 
-    const quoteTotal = Number(project?.quote?.total || 0);
-    const requiredMaterialDeposit = quoteTotal > 0 ? Math.round(quoteTotal * 0.5) : 0;
+    const paymentModel = resolvePaymentModel({ ...project, ...firestoreData });
+    const isInsuranceFlow = paymentModel === 'insurance_acv_rcv';
+    const isRepairFlow = paymentModel === 'repair_100';
+    const isMsaFlow = paymentModel === 'msa_net_30';
+
+    const quoteTotal = Number(project?.quote?.total || firestoreData?.quote?.total || 0);
+    const milestones = buildMilestonesForProject({ ...project, ...firestoreData, payment_model: paymentModel });
+    const firstMilestone = milestones[0] || { label: 'Initial Deposit', amount: Math.round(quoteTotal * 0.5) };
+    const requiredMaterialDeposit = firstMilestone.amount;
+
+    const [shingleColorLock, setShingleColorLock] = useState<string>(project?.color_lock || 'Onyx Black');
+    const [permitResponsibility, setPermitResponsibility] = useState<'rhive_pulled' | 'client_pulled' | 'not_required'>(
+        project?.permit_responsibility || (isRepairFlow ? 'not_required' : 'rhive_pulled')
+    );
+
+    useEffect(() => {
+        if (firestoreData?.color_lock) setShingleColorLock(firestoreData.color_lock);
+        if (firestoreData?.permit_responsibility) setPermitResponsibility(firestoreData.permit_responsibility);
+    }, [firestoreData?.color_lock, firestoreData?.permit_responsibility]);
 
     const syncSignVerifyPizzaTracker = (overrides: { link?: boolean; signed?: boolean; deposit?: boolean }) => ({
         stage: 'Sign & Verify',
@@ -273,8 +291,8 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
         totalStages: PIPELINE.length,
         subSteps: [
             { label: 'Agreement Sent', done: overrides.link ?? linkSent },
-            { label: 'Signature Verified', done: overrides.signed ?? contractSigned },
-            { label: '50% Material Deposit Confirmed', done: overrides.deposit ?? depositConfirmed },
+            { label: 'Signature & Color Specs Verified', done: overrides.signed ?? contractSigned },
+            { label: isMsaFlow ? 'PO / Notice to Proceed Confirmed' : `${firstMilestone.label} Confirmed`, done: overrides.deposit ?? depositConfirmed },
         ],
         updatedAt: new Date().toISOString(),
     });
@@ -451,6 +469,9 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                     current_stage: 'Schedule',
                     contract_signed: true,
                     deposit_confirmed: true,
+                    payment_model: paymentModel,
+                    color_lock: shingleColorLock,
+                    permit_responsibility: permitResponsibility,
                     pizza_tracker: {
                         stage: 'Schedule',
                         stageIndex: 4,
@@ -530,22 +551,76 @@ const SignAndVerifyContent: React.FC<{ project: any }> = ({ project }) => {
                     </div>
                 </Card>
 
-                <Card title="Verification Checklist">
+                <Card title={`Verification Checklist — ${PAYMENT_MODEL_LABELS[paymentModel]}`}>
                     <div className="space-y-3">
                         {[
-                            { label: 'Insurance Policy Claim File', ready: !!(policyFile || firestoreData?.insurance_policy_file_name) },
-                            { label: 'Scope of Work File', ready: !!(scopeFile || firestoreData?.scope_of_work_file_name) },
-                            { label: 'Customer Agreement / Digital Contract', ready: contractSigned },
-                            { label: '50% Material Deposit Received', ready: depositConfirmed },
-                            { label: 'Policy Claim Number', ready: !!(customerData?.policy_claim_number || project?.insurance?.claim_number) },
-                            { label: 'Purchase Permit', ready: hasPermit },
-                            { label: 'Permit Verified by Admin', ready: permitVerified },
+                            { label: 'Customer Digital Agreement / Shopping Cart Signed', ready: contractSigned },
+                            {
+                                label: isMsaFlow ? 'Government / Corporate PO & Notice to Proceed ($0 Deposit)' : `${firstMilestone.label} ($${requiredMaterialDeposit.toLocaleString()})`,
+                                ready: depositConfirmed || isMsaFlow,
+                            },
+                            { label: `Material / Membrane Color Locked (${shingleColorLock})`, ready: Boolean(shingleColorLock) },
+                            { label: '100 sq ft Free 7/16" OSB Decking Clause Disclosed', ready: true },
+                            ...(isInsuranceFlow
+                                ? [
+                                    { label: 'Policy Claim Number', ready: !!(customerData?.policy_claim_number || project?.insurance?.claimNumber || project?.insurance?.claim_number) },
+                                    { label: 'Insurance Policy & Carrier Scope File', ready: !!(policyFile || firestoreData?.insurance_policy_file_name || scopeFile || firestoreData?.scope_of_work_file_name) },
+                                  ]
+                                : []),
+                            ...(permitResponsibility !== 'not_required'
+                                ? [{ label: `Municipal Building Permit (${permitResponsibility === 'rhive_pulled' ? 'RHIVE Pulled' : 'Client / GC Pulled'})`, ready: hasPermit || permitVerified || permitResponsibility === 'rhive_pulled' }]
+                                : [{ label: 'Fast-Path Repair Scope (No Municipal Permit Required)', ready: true }]),
                         ].map((item) => (
                             <div key={item.label} className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-800">
                                 <span className="text-gray-300 text-sm">{item.label}</span>
                                 <StatusBadge ready={item.ready} />
                             </div>
                         ))}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-gray-800">
+                            <div>
+                                <label className="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">
+                                    Locked Shingle / Membrane Color
+                                </label>
+                                <input
+                                    id="sv-color-lock-input"
+                                    type="text"
+                                    value={shingleColorLock}
+                                    onChange={(e) => setShingleColorLock(e.target.value)}
+                                    onBlur={() => project?.id && projectService.updateRecord(project.id, { color_lock: shingleColorLock }, project._source)}
+                                    className="w-full bg-black/60 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:border-[#ec028b] outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-1.5">
+                                    Permit Responsibility
+                                </label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {([
+                                        { key: 'rhive_pulled', label: 'RHIVE Pulled' },
+                                        { key: 'client_pulled', label: 'Client / GC' },
+                                        { key: 'not_required', label: 'Repair (Exempt)' },
+                                    ] as const).map((opt) => (
+                                        <button
+                                            key={opt.key}
+                                            type="button"
+                                            onClick={() => {
+                                                setPermitResponsibility(opt.key);
+                                                if (project?.id) projectService.updateRecord(project.id, { permit_responsibility: opt.key }, project._source);
+                                            }}
+                                            className={cn(
+                                                'px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer',
+                                                permitResponsibility === opt.key
+                                                    ? 'bg-[#ec028b] border-[#ec028b] text-white'
+                                                    : 'bg-gray-900/60 border-gray-700 text-gray-400 hover:text-white'
+                                            )}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </Card>
 

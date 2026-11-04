@@ -18,7 +18,7 @@ const formatRelativeTime = (timestamp: string): string => {
     const then = new Date(timestamp).getTime();
     const diffMs = now - then;
     const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return 'just now';
+    if (diffMins < 1) return 'moments ago';
     if (diffMins < 60) return `${diffMins}m ago`;
     const diffHrs = Math.floor(diffMins / 60);
     if (diffHrs < 24) return `${diffHrs}h ago`;
@@ -396,15 +396,17 @@ export const GlobalHeader: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Search Button */}
-                    <button
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-customer-lookup'))}
-                        id="header-search-btn"
-                        className="p-1.5 bg-black/40 border border-gray-700/60 hover:border-[#ec028b]/50 rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none"
-                        title="Search Contacts & Properties"
-                    >
-                        <MagnifyingGlassIcon className="w-4 h-4" />
-                    </button>
+                    {/* Search Button — restricted to internal Employee/Admin staff */}
+                    {activePageId !== 'P-06' && currentUser && ['Employee', 'Admin', 'Super Admin'].includes(currentUser.role) && (
+                        <button
+                            onClick={() => window.dispatchEvent(new CustomEvent('open-customer-lookup'))}
+                            id="header-search-btn"
+                            className="p-1.5 bg-black/40 border border-gray-700/60 hover:border-[#ec028b]/50 rounded-full text-gray-400 hover:text-[#ec028b] hover:shadow-[0_0_8px_rgba(236,2,139,0.3)] transition-all flex items-center justify-center cursor-pointer outline-none"
+                            title="Search Contacts & Properties"
+                        >
+                            <MagnifyingGlassIcon className="w-4 h-4" />
+                        </button>
+                    )}
 
                     {/* AI Assistant Button + Notification Bell — hidden on login page and when unauthenticated */}
                     {activePageId !== 'P-06' && currentUser && (

@@ -219,6 +219,16 @@ export const getPageIdFromPath = (pathname: string, search: string): string => {
 
     // Normalize path by stripping trailing slash
     const cleanPath = pathname.replace(/\/$/, '') || '/';
+
+    // 1b. Role bypass on root path (`/?bypass=Admin|Customer|Contractor|Supplier`) lands directly on that role's portal
+    const bypassRole = params.get('bypass')?.toLowerCase();
+    if (cleanPath === '/' && bypassRole) {
+        if (bypassRole === 'super admin') return 'SA-01';
+        if (bypassRole === 'admin' || bypassRole === 'employee') return 'E-01';
+        if (bypassRole === 'customer') return 'C-02';
+        if (bypassRole === 'contractor') return 'CO-01';
+        if (bypassRole === 'supplier') return 'S-01';
+    }
     
     // 2. Direct path check
     if (PATH_TO_PAGE_MAP[cleanPath]) {

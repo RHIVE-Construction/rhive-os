@@ -4,9 +4,11 @@ import Card from '../components/Card';
 import CollapsibleSection from '../components/CollapsibleSection';
 import StatusBadge from '../components/StatusBadge';
 import Button from '../components/Button';
-import { DocumentTextIcon, ArrowPathIcon, ShareIcon, PencilSquareIcon, CheckIcon, XIcon, TrashIcon } from '../components/icons';
+import { DocumentTextIcon, ArrowPathIcon, ShareIcon, PencilSquareIcon, CheckIcon, XIcon, TrashIcon, BriefcaseIcon } from '../components/icons';
 import { PAGE_GROUPS } from '../constants';
 import { useNavigation } from '../contexts/NavigationContext';
+import { useMockDB } from '../contexts/MockDatabaseContext';
+import { navigateToIntake } from '../lib/intakeRouting';
 import { firestoreService, userLogService } from '../lib/firebaseService';
 import { session } from '../lib/session';
 import { doc, onSnapshot, collection, query, where, updateDoc, getDocs } from 'firebase/firestore';
@@ -20,6 +22,7 @@ import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
 const ContactVendorProfilePage: React.FC = () => {
     const page = PAGE_GROUPS.flatMap(g => g.pages).find(p => p.id === 'E-10');
     const { selectedContactId, setSelectedContactId, setActivePageId } = useNavigation();
+    const { users: mockUsers } = useMockDB();
 
     const [contactData, setContactData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -173,10 +176,27 @@ const ContactVendorProfilePage: React.FC = () => {
             (snap) => {
                 if (snap.exists()) {
                     setContactData({ id: snap.id, ...snap.data() });
+                    setLoading(false);
                 } else {
-                    setContactData(null);
+                    const userDocRef = doc(db, 'users', selectedContactId);
+                    onSnapshot(
+                        userDocRef,
+                        (uSnap) => {
+                            if (uSnap.exists()) {
+                                setContactData({ id: uSnap.id, ...uSnap.data() });
+                            } else {
+                                const fallbackUser = (mockUsers || []).find((u: any) => u.id === selectedContactId);
+                                setContactData(fallbackUser ? { ...fallbackUser } : null);
+                            }
+                            setLoading(false);
+                        },
+                        () => {
+                            const fallbackUser = (mockUsers || []).find((u: any) => u.id === selectedContactId);
+                            setContactData(fallbackUser ? { ...fallbackUser } : null);
+                            setLoading(false);
+                        }
+                    );
                 }
-                setLoading(false);
             },
             (err) => {
                 console.warn("⚠️ [RHIVE QOS] Contacts Firestore listener failed (offline/mock):", err);
@@ -407,13 +427,47 @@ const ContactVendorProfilePage: React.FC = () => {
               title={contractor.name} 
               description={contractor.type}
               headerAction={
-                  <button 
-                      onClick={() => setShowDeleteModal(true)} 
-                      className="text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 p-2 rounded-lg border border-red-500/20 transition-all cursor-pointer flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]"
-                      title="Delete Contact"
-                  >
-                      <TrashIcon className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                      <button
+                          type="button"
+                          id="contact-create-project-btn"
+                          onClick={() => {
+                              navigateToIntake({
+                                  prefillPayload: {
+                                      accountId: contactData?.account_id || '',
+                                  parentCompany: contactData?.account_name || contactData?.company || '',
+                                  address: contractor.address || '',
+                                  contactName: contractor.name !== 'Unknown Contact' ? contractor.name : '',
+                                  contactEmail: contractor.email || '',
+                                  contactPhone: contractor.phone || '',
+                                  contacts: contractor.name !== 'Unknown Contact'
+                                      ? [{
+                                          id: contactData?.id || 'c_primary',
+                                          name: contractor.name,
+                                          email: contractor.email || '',
+                                          phone: contractor.phone || '',
+                                          role: contractor.type || 'Owner',
+                                          isMain: true,
+                                          functions: ['Quote', 'Billing', 'Site Access'],
+                                      }]
+                                      : [],
+                                  },
+                              });
+                          }}
+                          className="px-3 py-2 rounded-lg bg-[#ec028b] hover:bg-[#ec028b]/85 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-[0_0_15px_rgba(236,2,139,0.25)] cursor-pointer"
+                          title="Create New Project for Contact"
+                      >
+                          <BriefcaseIcon className="w-4 h-4" />
+                          <span>Create</span>
+                      </button>
+                      <button 
+                          onClick={() => setShowDeleteModal(true)} 
+                          className="text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 p-2 rounded-lg border border-red-500/20 transition-all cursor-pointer flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+                          title="Delete Contact"
+                      >
+                          <TrashIcon className="w-5 h-5" />
+                      </button>
+                  </div>
               }
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

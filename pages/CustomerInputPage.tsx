@@ -53,6 +53,7 @@ import { createProject as createProjectApi } from '../lib/api';
 import { getMapsApiKey } from '../lib/mapsConfig';
 import { firestoreService, accountService, userLogService } from '../lib/firebaseService';
 import { analyzeLidar, type LidarResult } from '../services/lidarService';
+import { resolvePaymentModel } from '../lib/qosRules';
 
 // Mock Data for Utah Companies
 const MOCK_UTAH_COMPANIES = [
@@ -675,7 +676,6 @@ const AddressVerificationModal = ({ data, onConfirm, onStartOver, isAdminBypass 
                                 const updatedAddr = parseAddressString(editableAddress);
                                 const mergedAddr = { ...data, ...updatedAddr, name: propertyName || undefined };
                                 if (checkAddressOutOfBounds(mergedAddr) && !isAdminBypass) {
-                                    alert("Out of Service Boundary: Scheduling blocked for out of state address.");
                                     return;
                                 }
                                 const finalBldgs = buildings.length > 0 
@@ -1256,21 +1256,6 @@ const AddressSection: React.FC<{
             streetViewHeading: 0 
         };
 
-        // Attempt to calculate street view heading using StreetViewService
-        const dispatchLookup = () => {
-            const fullAddress = [
-                newAddressData.address,
-                newAddressData.city,
-                newAddressData.state,
-                newAddressData.zip
-            ].filter(Boolean).join(', ');
-            setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('open-customer-lookup', {
-                    detail: { prefill: fullAddress }
-                }));
-            }, 200);
-        };
-
         try {
             if (window.google?.maps?.StreetViewService) {
                 const svService = new window.google.maps.StreetViewService();
@@ -1286,18 +1271,15 @@ const AddressSection: React.FC<{
                     } catch {}
                     onChange(newAddressData);
                     setIsCollapsed(true);
-                    dispatchLookup();
                 });
             } else {
                 onChange(newAddressData);
                 setIsCollapsed(true);
-                dispatchLookup();
             }
         } catch (err) {
             console.warn('[RHIVE] StreetView unavailable:', err);
             onChange(newAddressData);
             setIsCollapsed(true);
-            dispatchLookup();
         }
     };
 
@@ -1575,18 +1557,51 @@ const AddressSection: React.FC<{
 
 const CompanyLookup: React.FC<{ 
     onSelect: (company: typeof MOCK_UTAH_COMPANIES[0]) => void, 
+    onChangeText?: (text: string) => void,
     value: string, 
     placeholder?: string 
-}> = ({ onSelect, value, placeholder = "Search Companies..." }) => {
+}> = ({ onSelect, onChangeText, value, placeholder = "Search Companies or Type New..." }) => {
     const [searchTerm, setSearchTerm] = useState(value);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [liveAccounts, setLiveAccounts] = useState<any[]>([]);
 
     useEffect(() => {
         setSearchTerm(value);
     }, [value]);
 
-    const filteredCompanies = MOCK_UTAH_COMPANIES.filter(c => 
-        c.name.toLowerCase().includes(searchTerm.toLowerCase())
+    useEffect(() => {
+        const unsub = accountService.subscribe((docs) => {
+            setLiveAccounts(docs || []);
+        });
+        return () => unsub();
+    }, []);
+
+    const combinedDirectory = useMemo(() => {
+        const seen = new Set<string>();
+        const list: typeof MOCK_UTAH_COMPANIES = [];
+        for (const acc of liveAccounts) {
+            const nm = String(acc.name || acc.accountName || '').trim();
+            if (!nm || seen.has(nm.toLowerCase())) continue;
+            seen.add(nm.toLowerCase());
+            list.push({
+                name: nm,
+                address: acc.address || acc.billingAddress || '',
+                city: acc.billingCity || acc.city || 'Salt Lake City',
+                state: acc.billingState || acc.state || 'UT',
+                zip: acc.billingCode || acc.zip || '',
+            });
+        }
+        for (const mock of MOCK_UTAH_COMPANIES) {
+            if (!seen.has(mock.name.toLowerCase())) {
+                seen.add(mock.name.toLowerCase());
+                list.push(mock);
+            }
+        }
+        return list;
+    }, [liveAccounts]);
+
+    const filteredCompanies = combinedDirectory.filter(c => 
+        c.name.toLowerCase().includes((searchTerm || '').toLowerCase())
     );
 
     return (
@@ -1594,12 +1609,17 @@ const CompanyLookup: React.FC<{
             <div className="relative">
                 <input 
                     type="text" 
+                    id="intake-company-lookup-input"
                     className="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-[#ec028b] focus:ring-1 focus:ring-[#ec028b] focus:outline-none transition-all pl-10"
                     placeholder={placeholder}
                     value={searchTerm}
                     onChange={(e) => {
-                        setSearchTerm(e.target.value);
+                        const val = e.target.value;
+                        setSearchTerm(val);
                         setShowDropdown(true);
+                        if (onChangeText) {
+                            onChangeText(val);
+                        }
                     }}
                     onFocus={() => setShowDropdown(true)}
                     onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
@@ -1608,18 +1628,19 @@ const CompanyLookup: React.FC<{
             </div>
             {showDropdown && searchTerm && filteredCompanies.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                    {filteredCompanies.map((company, idx) => (
+                    {filteredCompanies.slice(0, 12).map((company, idx) => (
                         <div 
                             key={idx}
                             className="p-3 hover:bg-gray-800 cursor-pointer transition-colors border-b border-gray-800 last:border-0"
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                                e.preventDefault();
                                 onSelect(company);
                                 setSearchTerm(company.name);
                                 setShowDropdown(false);
                             }}
                         >
                             <p className="text-white font-medium text-sm">{company.name}</p>
-                            <p className="text-xs text-gray-400">{company.address}, {company.city}</p>
+                            <p className="text-xs text-gray-400">{[company.address, company.city].filter(Boolean).join(', ') || 'CRM Account'}</p>
                         </div>
                     ))}
                 </div>
@@ -1651,11 +1672,23 @@ const MethodButton: React.FC<{ label: string, active: boolean, onClick: () => vo
     </button>
 );
 
-const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, propertyName?: string, onSave: (c: Contact) => void, onCancel: () => void, isPrimary: boolean, projectCategory: string, existingContacts?: any[] }> = ({ initialData, companyName, propertyName, onSave, onCancel, isPrimary, projectCategory, existingContacts = [] }) => {
+const ContactForm: React.FC<{ initialData?: Partial<Contact>, companyName?: string, propertyName?: string, onSave: (c: Contact) => void, onCancel: () => void, onDraftChange?: (d: Partial<Contact>) => void, isPrimary: boolean, projectCategory: string, existingContacts?: any[] }> = ({ initialData, companyName, propertyName, onSave, onCancel, onDraftChange, isPrimary, projectCategory, existingContacts = [] }) => {
     const { users } = useMockDB();
-    const [data, setData] = useState<Partial<Contact>>(initialData || {
-        firstName: '', lastName: '', phone: '', email: '', role: projectCategory === 'Residential' ? 'Property Owner' : 'Property Manager', preferredContactMethod: 'Text', responsibilities: [], affiliations: []
+    const [data, setData] = useState<Partial<Contact>>({
+        firstName: '',
+        lastName: '',
+        phone: '',
+        email: '',
+        role: projectCategory === 'Residential' ? 'Property Owner' : projectCategory === 'Government' ? 'Contracting Officer' : 'Property Manager',
+        preferredContactMethod: 'Text',
+        responsibilities: ['Bid', 'Billing'],
+        affiliations: [],
+        ...initialData,
     });
+
+    useEffect(() => {
+        if (onDraftChange) onDraftChange(data);
+    }, [data, onDraftChange]);
     const [activeRoleCategory, setActiveRoleCategory] = useState<'Residential' | 'Commercial' | 'Government'>((projectCategory as any) || 'Residential');
 
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1719,10 +1752,10 @@ const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, prope
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                    <div className="space-y-2"><QuestionLabel required>First Name</QuestionLabel><InputField value={data.firstName} onChange={e => handleNameChange('firstName', e.target.value)} /></div>
-                    <div className="space-y-2"><QuestionLabel required>Last Name</QuestionLabel><InputField value={data.lastName} onChange={e => handleNameChange('lastName', e.target.value)} /></div>
-                    <div className="space-y-2"><QuestionLabel required>Phone Number</QuestionLabel><InputField placeholder="(000) 000-0000" value={data.phone} onChange={handlePhoneChange} /></div>
-                    <div className="space-y-2"><QuestionLabel required>Email Address</QuestionLabel><InputField type="email" placeholder="example@domain.com" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} /></div>
+                    <div className="space-y-2"><QuestionLabel required>First Name</QuestionLabel><InputField id="intake-contact-first-name" value={data.firstName} onChange={e => handleNameChange('firstName', e.target.value)} /></div>
+                    <div className="space-y-2"><QuestionLabel required>Last Name</QuestionLabel><InputField id="intake-contact-last-name" value={data.lastName} onChange={e => handleNameChange('lastName', e.target.value)} /></div>
+                    <div className="space-y-2"><QuestionLabel required>Phone Number</QuestionLabel><InputField id="intake-contact-phone" placeholder="(000) 000-0000" value={data.phone} onChange={handlePhoneChange} /></div>
+                    <div className="space-y-2"><QuestionLabel required>Email Address</QuestionLabel><InputField id="intake-contact-email" type="email" placeholder="example@domain.com" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} /></div>
                 </div>
 
                 {isDuplicate && (
@@ -1799,7 +1832,7 @@ const ContactForm: React.FC<{ initialData?: Contact, companyName?: string, prope
 
                 <div className="flex justify-end gap-4 pt-8 border-t border-gray-800/50">
                     <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-                    <button type="button" onClick={() => onSave({ id: data.id || String(Date.now()), ...data, isPrimary } as Contact)} className="px-12 py-4 bg-white/10 border border-white/30 text-white font-black text-[11px] uppercase tracking-[0.3em] rounded-xl hover:bg-white/20 transition-all shadow-xl" style={{ clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)" }}>Save Contact</button>
+                    <button id="intake-save-contact-btn" type="button" onClick={() => onSave({ id: data.id || String(Date.now()), ...data, isPrimary } as Contact)} className="px-12 py-4 bg-white/10 border border-white/30 text-white font-black text-[11px] uppercase tracking-[0.3em] rounded-xl hover:bg-white/20 transition-all shadow-xl cursor-pointer" style={{ clipPath: "polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)" }}>Save</button>
                 </div>
             </CardContent>
         </Card>
@@ -1906,6 +1939,33 @@ const CustomerInputPage: React.FC = () => {
         phone: '',
         email: ''
     });
+    const [draftContact, setDraftContact] = useState<Partial<Contact>>({});
+    const [prefilledAccountId, setPrefilledAccountId] = useState<string>('');
+    const [prefilledPropertyId, setPrefilledPropertyId] = useState<string>('');
+    const [existingPropertyMode, setExistingPropertyMode] = useState<'create_new' | 'merge_active'>('create_new');
+    const [intakeBanner, setIntakeBanner] = useState<{ type: 'info' | 'success' | 'error'; text: string } | null>(null);
+    const [assignedRep, setAssignedRep] = useState<string>('Michael');
+    const [needsMeasurementOrder, setNeedsMeasurementOrder] = useState<boolean>(true);
+    const [isRemoteBid, setIsRemoteBid] = useState<boolean>(false);
+    const [bidDueDate, setBidDueDate] = useState<string>('');
+    const [govCompliance, setGovCompliance] = useState({
+        solicitation_num: '',
+        wage_determination: 'Prevailing Wage Required',
+        surety_bond: 'Required (100% P&P)',
+        certified_payroll_status: true,
+        tax_exempt: true,
+    });
+    const [adjusterInfo, setAdjusterInfo] = useState({ name: '', phone: '', email: '' });
+    const [discProfile, setDiscProfile] = useState<string>('Owl (C - Specs & Line Items)');
+    const [uploadedSpecs, setUploadedSpecs] = useState<{ name: string; size: number; uploadedAt: string }[]>([]);
+    const specFileInputRef = useRef<HTMLInputElement>(null);
+    const [prefillTrigger, setPrefillTrigger] = useState<number>(0);
+
+    useEffect(() => {
+        const handlePrefillEvent = () => setPrefillTrigger((n) => n + 1);
+        window.addEventListener('rhive-apply-intake-prefill', handlePrefillEvent);
+        return () => window.removeEventListener('rhive-apply-intake-prefill', handlePrefillEvent);
+    }, []);
 
     useEffect(() => {
         const query = sessionStorage.getItem('globalSearchQuery');
@@ -1929,6 +1989,7 @@ const CustomerInputPage: React.FC = () => {
                     phone: '',
                     email: ''
                 });
+                setIsAddingContact(true);
             } else if (qType === 'Phone Number') {
                 setAutofilledContactData({
                     firstName: '',
@@ -1936,6 +1997,21 @@ const CustomerInputPage: React.FC = () => {
                     phone: formatPhoneNumber(query),
                     email: ''
                 });
+                setIsAddingContact(true);
+            } else if (qType === 'Email') {
+                setAutofilledContactData({
+                    firstName: '',
+                    lastName: '',
+                    phone: '',
+                    email: query.trim()
+                });
+                setIsAddingContact(true);
+            } else if (qType === 'Company') {
+                setProjectCategory('Commercial');
+                setCompanyData((prev) => ({ ...prev, parentCompany: query.trim() }));
+            } else if (qType === 'Note') {
+                setDetailedScope((prev) => ({ ...prev, projectDetails: query.trim() }));
+                setIntakeBanner({ type: 'info', text: 'Search note captured into Project Notes.' });
             } else if (qType === 'Address' || !qType) {
                 // Retry loop: wait up to 600ms for GlobalCustomerLookupModal's async pre-geocode to arrive
                 const attemptGeocode = (attempt: number) => {
@@ -2041,7 +2117,7 @@ const CustomerInputPage: React.FC = () => {
                 attemptGeocode(3);
             }
         }
-    }, [isApiReady]);
+    }, [isApiReady, prefillTrigger]);
 
     const [propertyData, setPropertyData] = useState<AddressData>({ address: '', city: '', state: '', zip: '', latitude: 0, longitude: 0 });
     const [pinnedBuildings, setPinnedBuildings] = useState<any[]>([]);
@@ -2133,46 +2209,112 @@ const CustomerInputPage: React.FC = () => {
             sessionStorage.removeItem('rhive_prefill_intake');
             try {
                 const pf = JSON.parse(rawPrefill);
-                if (pf.projectCategory) setProjectCategory(pf.projectCategory);
-                if (pf.parentCompany || pf.propertyName) {
-                    setCompanyData(prev => ({
-                        parentCompany: pf.parentCompany || prev.parentCompany,
-                        propertyName: pf.propertyName || prev.propertyName,
-                    }));
-                }
-                if (pf.address) {
-                    setPropertyData(prev => ({
-                        ...prev,
-                        address: pf.address,
-                        city: pf.city || prev.city || 'Salt Lake City',
-                        state: pf.state || prev.state || 'UT',
-                        zip: pf.zip || prev.zip || '',
-                        latitude: Number(pf.latitude || prev.latitude || 40.7608),
-                        longitude: Number(pf.longitude || prev.longitude || -111.8910),
-                    }));
-                }
-                if (Array.isArray(pf.buildings) && pf.buildings.length > 0) {
-                    setPinnedBuildings(pf.buildings);
-                }
-                if (pf.contactName) {
-                    const parts = String(pf.contactName).trim().split(/\s+/);
-                    setContacts([{
-                        id: `C-${Date.now()}`,
-                        firstName: parts[0] || 'Client',
-                        lastName: parts.slice(1).join(' ') || '',
-                        phone: pf.contactPhone || '',
-                        email: pf.contactEmail || '',
-                        role: 'Property Owner',
-                        isPrimary: true,
-                        preferredContactMethod: 'Phone',
-                        affiliations: [],
-                        responsibilities: ['Bid', 'Billing'],
-                    }]);
-                    setIsAddingContact(false);
+                if (pf.isNewCaller) {
+                    setPrefilledAccountId('');
+                    setPrefilledPropertyId('');
+                    setContacts([]);
+                    setDraftContact({});
+                    setEditingContactId(null);
+                    setIsContactsCollapsed(false);
+                    setIsAddingContact(true);
+                    setPinnedBuildings([]);
+                    setAdditionalProperties([]);
+                    setMatchedProperty(null);
+                    setPropertyData({
+                        address: pf.address || '',
+                        city: pf.city || '',
+                        state: pf.state || '',
+                        zip: pf.zip || '',
+                        latitude: Number(pf.latitude || 0),
+                        longitude: Number(pf.longitude || 0),
+                    });
+                    setIsPropertyCollapsed(false);
+                    setProjectCategory(pf.projectCategory || 'Residential');
+                    setCompanyData({
+                        parentCompany: pf.parentCompany || '',
+                        propertyName: pf.propertyName || '',
+                    });
+                    const rawCallerName = String(pf.contactName || '').trim();
+                    const callerParts = rawCallerName ? rawCallerName.split(/\s+/) : [];
+                    setAutofilledContactData({
+                        firstName: callerParts[0] || '',
+                        lastName: callerParts.slice(1).join(' ') || '',
+                        phone: pf.contactPhone ? formatPhoneNumber(String(pf.contactPhone)) : '',
+                        email: pf.contactEmail ? String(pf.contactEmail).trim() : '',
+                    });
+                    if (pf.projectNotes) {
+                        setDetailedScope((prev) => ({ ...prev, projectDetails: String(pf.projectNotes) }));
+                    }
+                    setIntakeBanner({
+                        type: 'info',
+                        text: 'Started clean intake for brand-new caller.',
+                    });
+                } else {
+                    if (pf.accountId) setPrefilledAccountId(String(pf.accountId));
+                    if (pf.propertyId) setPrefilledPropertyId(String(pf.propertyId));
+                    if (pf.projectCategory) setProjectCategory(pf.projectCategory);
+                    if (pf.parentCompany || pf.propertyName) {
+                        setCompanyData(prev => ({
+                            parentCompany: pf.parentCompany || prev.parentCompany,
+                            propertyName: pf.propertyName || prev.propertyName,
+                        }));
+                    }
+                    if (pf.address) {
+                        setPropertyData(prev => ({
+                            ...prev,
+                            address: pf.address,
+                            city: pf.city || prev.city || 'Salt Lake City',
+                            state: pf.state || prev.state || 'UT',
+                            zip: pf.zip || prev.zip || '',
+                            latitude: Number(pf.latitude || prev.latitude || 40.7608),
+                            longitude: Number(pf.longitude || prev.longitude || -111.8910),
+                        }));
+                    }
+                    if (Array.isArray(pf.buildings) && pf.buildings.length > 0) {
+                        setPinnedBuildings(pf.buildings);
+                    }
+                    if (Array.isArray(pf.contacts) && pf.contacts.length > 0) {
+                        const mappedContacts: Contact[] = pf.contacts.map((c: any, idx: number) => {
+                            const rawName = String(c.name || [c.firstName || c.first_name, c.lastName || c.last_name].filter(Boolean).join(' ') || 'Client').trim();
+                            const parts = rawName.split(/\s+/);
+                            return {
+                                id: c.id || ('C-' + Date.now() + '-' + idx),
+                                existingUserId: c.id || undefined,
+                                firstName: c.firstName || c.first_name || parts[0] || 'Client',
+                                lastName: c.lastName || c.last_name || parts.slice(1).join(' ') || '',
+                                phone: c.phone ? formatPhoneNumber(String(c.phone)) : '',
+                                email: c.email || '',
+                                role: c.role || (pf.projectCategory === 'Commercial' ? 'Property Manager' : pf.projectCategory === 'Government' ? 'Contracting Officer' : 'Property Owner'),
+                                isPrimary: c.isMain !== undefined ? Boolean(c.isMain) : idx === 0,
+                                preferredContactMethod: 'Phone',
+                                affiliations: pf.parentCompany ? ['Company', 'Property'] : [],
+                                responsibilities: ['Bid', 'Billing', 'Access'],
+                            };
+                        });
+                        setContacts(mappedContacts);
+                        setIsAddingContact(false);
+                    } else if (pf.contactName || pf.customerName) {
+                        const cName = String(pf.contactName || pf.customerName).trim();
+                        const parts = cName.split(/\s+/);
+                        setContacts([{
+                            id: 'C-' + Date.now(),
+                            firstName: parts[0] || 'Client',
+                            lastName: parts.slice(1).join(' ') || '',
+                            phone: pf.contactPhone || pf.phone ? formatPhoneNumber(String(pf.contactPhone || pf.phone)) : '',
+                            email: pf.contactEmail || pf.email || '',
+                            role: pf.projectCategory === 'Commercial' ? 'Property Manager' : 'Property Owner',
+                            isPrimary: true,
+                            preferredContactMethod: 'Phone',
+                            affiliations: pf.parentCompany ? ['Company', 'Property'] : [],
+                            responsibilities: ['Bid', 'Billing', 'Access'],
+                        }]);
+                        setIsAddingContact(false);
+                    }
+                    setIntakeBanner({ type: 'info', text: 'Pre-filled existing CRM record context. Ready for new project scope.' });
                 }
             } catch {}
         }
-    }, []);
+    }, [prefillTrigger]);
     
     // Workflow Logic State
     const [matchedProperty, setMatchedProperty] = useState<Property | null>(null);
@@ -2265,7 +2407,7 @@ const CustomerInputPage: React.FC = () => {
         return isOutOfBounds && !isAdminBypass;
     }, [isOutOfBounds, isAdminBypass]);
 
-    const isInspectionRequired = isInsurance || requiresOrganization || (scopeType === 'Repair' && (repairDetails.isOld || !repairDetails.hasPhotos || repairDetails.activeLeak));
+    const isInspectionRequired = !isRemoteBid && (isInsurance || requiresOrganization || (scopeType === 'Repair' && (repairDetails.isOld || !repairDetails.hasPhotos || repairDetails.activeLeak)));
     // IF Insurance Claim -> FORCE Quote/Inspection path (disable instant estimate)
     const isEstimateRequest = purchaseIntent === 'Exploring' && !isInsurance;
 
@@ -2409,14 +2551,36 @@ const CustomerInputPage: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (contacts.length === 0) return alert("Please add at least one contact.");
+        let workingContacts = [...contacts];
+        if (workingContacts.length === 0 && (draftContact.firstName || draftContact.phone || draftContact.email)) {
+            workingContacts = [{
+                id: String(Date.now()),
+                firstName: draftContact.firstName || 'Valued',
+                lastName: draftContact.lastName || 'Client',
+                phone: draftContact.phone || '',
+                email: draftContact.email || '',
+                role: draftContact.role || (projectCategory === 'Residential' ? 'Property Owner' : 'Property Manager'),
+                isPrimary: true,
+                preferredContactMethod: draftContact.preferredContactMethod || 'Phone',
+                affiliations: draftContact.affiliations || [],
+                responsibilities: draftContact.responsibilities || ['Bid', 'Billing'],
+            } as Contact];
+            setContacts(workingContacts);
+            setIsAddingContact(false);
+        }
+        if (workingContacts.length === 0) {
+            setIntakeBanner({ type: 'error', text: 'Please enter at least one project contact before creating the file.' });
+            window.scrollTo({ top: 180, behavior: 'smooth' });
+            return;
+        }
         
         if (isOutOfBounds && !isAdminBypass) {
-            return alert("Out of Service Boundary: This address is in the Boise region and is out of our service boundary. Submission blocked.");
+            setIntakeBanner({ type: 'error', text: 'Out of Service Boundary: Scheduling and intake blocked for out-of-region address.' });
+            return;
         }
 
         // 1. Resolve and register contacts
-        const resolvedContacts = contacts.map(contact => {
+        const resolvedContacts = workingContacts.map(contact => {
             if (contact.existingUserId) {
                 return { ...contact, resolvedId: contact.existingUserId };
             }
@@ -2465,11 +2629,12 @@ const CustomerInputPage: React.FC = () => {
         }
 
         // Determine owner ID for property/project
-        const ownerId = (requiresOrganization && resolvedCompanyId) ? resolvedCompanyId : primaryContactId;
+        const ownerId = prefilledAccountId || ((requiresOrganization && resolvedCompanyId) ? resolvedCompanyId : primaryContactId);
 
         // 3. Resolve Property
         const existingProperty = matchedProperty || properties.find(p => 
-            p.address_full.toLowerCase().trim() === propertyData.address.toLowerCase().trim()
+            (prefilledPropertyId && ((p as any).id === prefilledPropertyId || p._id === prefilledPropertyId)) ||
+            (propertyData.address && p.address_full.toLowerCase().trim() === propertyData.address.toLowerCase().trim())
         );
 
         let targetPropertyId = '';
@@ -2535,7 +2700,7 @@ const CustomerInputPage: React.FC = () => {
 
             targetPropertyId = addProperty({
                 address_full: propertyData.address,
-                type: requiresOrganization ? 'Commercial' : 'Residential',
+                type: projectCategory,
                 owner_id: ownerId,
                 coordinates: { lat: propertyData.latitude, lng: propertyData.longitude },
                 buildings: finalBuildings,
@@ -2596,14 +2761,18 @@ const CustomerInputPage: React.FC = () => {
 
         // 4. Resolve Active Project and Merge / Create
         const activeProjectOnProp = existingProperty
-            ? projects.find(p => p.property_id === existingProperty._id && p.status === 'Active')
+            ? projects.find(p => (p.property_id === existingProperty._id || p.property_id === (existingProperty as any).id) && p.status === 'Active')
             : null;
 
-        const projectName = requiresOrganization 
-            ? (companyData.propertyName || propertyData.address) 
-            : `${primaryContact.lastName} Residence`;
+        const scopeSuffix = scopeType === 'Repair' ? (repairDetails.activeLeak ? ' — Emergency Leak Repair' : ' — Roof Repair') : (isRemoteBid ? ' — Plan-Set Bid' : '');
+        const baseProjectName = requiresOrganization 
+            ? (companyData.propertyName || companyData.parentCompany || propertyData.address || 'Commercial Campus') 
+            : `${primaryContact.lastName || primaryContact.firstName || 'Client'} Residence`;
+        const projectName = activeProjectOnProp && existingPropertyMode === 'create_new'
+            ? `${baseProjectName}${scopeSuffix || ' (New Scope)'}`
+            : `${baseProjectName}${scopeType === 'Repair' && !baseProjectName.includes('Repair') ? scopeSuffix : ''}`;
 
-        if (activeProjectOnProp) {
+        if (activeProjectOnProp && existingPropertyMode === 'merge_active') {
             // MERGE INTO ACTIVE PROJECT: append contacts/notes, do NOT duplicate card
             const contactNames = resolvedContacts.map(c => `${c.firstName} ${c.lastName}`).join(', ');
             const infoMessage = `[Smart Intake Merge] Form submitted. New Contact(s): ${contactNames}. Category: ${projectCategory}. Scope Notes: ${detailedScope.projectDetails || 'None'}`;
@@ -2684,7 +2853,19 @@ const CustomerInputPage: React.FC = () => {
                 updated_at: nowIso,
             }, { merge: true }).catch(() => {});
 
-            const ballparkTotal = analysisData.result?.recommendedEstimate || analysisData.result?.tiers?.better?.totalPrice || 0;
+            const ballparkTotal = Number(
+                analysisData.result?.liveTotal ||
+                analysisData.result?.roofEstimate?.totalRetail ||
+                (scopeType === 'Repair' ? (requiresOrganization ? 1850 : 950) : 0)
+            );
+            const paymentModel = resolvePaymentModel({
+                project_category: projectCategory,
+                project_type: projectCategory,
+                isInsurance,
+                scope_type: scopeType,
+                details: { scopeType },
+                quote: { total: ballparkTotal },
+            });
 
             // Create new project at the correct stage with complete CRM & Pipeline context
             const newProjId = createProject(
@@ -2696,10 +2877,27 @@ const CustomerInputPage: React.FC = () => {
                 {
                     job_number: `RC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
                     account_name: accountDisplayName,
+                    project_category: projectCategory,
+                    scope_type: scopeType,
+                    payment_model: paymentModel,
+                    assigned_name: assignedRep || 'Unassigned',
+                    scheduled_appointment: scheduledDetails || null,
+                    needs_measurement_order: Boolean(scopeType === 'Repair' && repairDetails.isOld && needsMeasurementOrder),
+                    mitigation_type: repairDetails.emergencyTarp
+                        ? (requiresOrganization ? 'Commercial Flat Mitigation ($350-$600)' : 'Residential Emergency Tarp ($150-$350)')
+                        : 'None',
+                    is_remote_bid: isRemoteBid,
+                    bid_due_date: bidDueDate || null,
+                    compliance: projectCategory === 'Government' ? govCompliance : null,
+                    disc_profile: discProfile,
+                    eave_ventilation: detailedScope.eaveVentilation,
+                    uploaded_specs: uploadedSpecs,
                     property_address: fullAddressStr || propertyData.address,
                     city: propertyData.city || '',
                     state: propertyData.state || 'UT',
                     zip: propertyData.zip || '',
+                    latitude: propertyData.latitude || 0,
+                    longitude: propertyData.longitude || 0,
                     property: {
                         address: propertyData.address || '',
                         city: propertyData.city || '',
@@ -2708,6 +2906,26 @@ const CustomerInputPage: React.FC = () => {
                         latitude: propertyData.latitude || 0,
                         longitude: propertyData.longitude || 0,
                     },
+                    billing: {
+                        billToName: billToName || accountDisplayName,
+                        address: billingData.address || propertyData.address || '',
+                        city: billingData.city || propertyData.city || '',
+                        state: billingData.state || propertyData.state || 'UT',
+                        zip: billingData.zip || propertyData.zip || '',
+                        hasCustomBilling,
+                        status: billingStatus,
+                    },
+                    roof_analysis: analysisData.result ? {
+                        finalSq: Number(analysisData.result.finalSq || 0),
+                        dominantPitch: Number(analysisData.result.dominantPitch || 6),
+                        totalFacets: Number(analysisData.result.roofEstimate?.totalFacets || 8),
+                        pitchBreakdown: analysisData.result.pitchBreakdown || [],
+                        layerCount: analysisData.layerConfig.count,
+                        access: analysisData.access,
+                        ladders: analysisData.ladders,
+                        liveTotal: Math.round(ballparkTotal),
+                    } : null,
+                    estimate_inputs: estimateInputs,
                     buildings: finalProjectBuildings,
                     contacts: resolvedContacts.map(rc => ({
                         id: rc.resolvedId,
@@ -2718,7 +2936,11 @@ const CustomerInputPage: React.FC = () => {
                         phone: rc.phone || '',
                         role: rc.role || 'Property Owner',
                         isPrimary: Boolean(rc.isPrimary),
+                        isMain: Boolean(rc.isPrimary),
+                        preferredContactMethod: rc.preferredContactMethod || 'Phone',
+                        affiliations: rc.affiliations || [],
                         responsibilities: rc.responsibilities || [],
+                        functions: (rc.responsibilities || []).map((r: string) => r === 'Bid' ? 'Quote' : r === 'Access' ? 'Site Access' : r),
                     })),
                     contact_name: `${primaryContact.firstName} ${primaryContact.lastName}`.trim(),
                     contact_email: primaryContact.email || '',
@@ -2729,23 +2951,33 @@ const CustomerInputPage: React.FC = () => {
                     phone: primaryContact.phone || '',
                     lead_source: customerProfile.leadSource || 'Smart Intake',
                     notes: detailedScope.projectDetails || '',
-                    insurance: isInsurance ? { ...insuranceInfo, status: insuranceStatus, damageType } : null,
+                    insurance: isInsurance ? {
+                        ...insuranceInfo,
+                        claim_number: insuranceInfo.claimNumber,
+                        adjusterName: adjusterInfo.name,
+                        adjusterPhone: adjusterInfo.phone,
+                        adjusterEmail: adjusterInfo.email,
+                        status: insuranceStatus,
+                        damageType,
+                    } : null,
                     details: {
                         scopeType,
                         repairDetails,
                         purchaseIntent,
                         detailedScope,
-                        customerProfile,
+                        customerProfile: { ...customerProfile, discProfile },
                     },
                     pizza_tracker: {
                         current_stage: initialStage,
+                        subSteps: ['First Call & Property Verified'],
+                        note: scheduledDetails ? `Inspection Scheduled: ${scheduledDetails}` : 'Project file initialized by RHIVE Intake.',
                         updated_at: nowIso,
                     },
                     ...(ballparkTotal > 0 ? {
                         quote: {
                             total: Math.round(ballparkTotal),
                             status: 'Draft',
-                            items: [{ name: `${scopeType} Scope (${finalProjectBuildings.length} structure${finalProjectBuildings.length === 1 ? '' : 's'})`, cost: Math.round(ballparkTotal) }],
+                            items: [{ name: `${scopeType} Scope (${finalProjectBuildings.length} structure${finalProjectBuildings.length === 1 ? '' : 's'})`, price: Math.round(ballparkTotal), cost: Math.round(ballparkTotal) }],
                         },
                     } : {}),
                 }
@@ -2978,6 +3210,25 @@ const CustomerInputPage: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit} className="max-w-3xl mx-auto pb-20 space-y-6">
+                {intakeBanner && (
+                    <div
+                        id="intake-status-banner"
+                        className={cn(
+                            "p-4 rounded-xl border text-xs font-bold flex items-center justify-between gap-3 animate-fade-in",
+                            intakeBanner.type === 'error'
+                                ? "bg-red-500/10 border-red-500/40 text-red-300"
+                                : intakeBanner.type === 'success'
+                                    ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-300"
+                                    : "bg-[#ec028b]/10 border-[#ec028b]/40 text-pink-200"
+                        )}
+                    >
+                        <span>{intakeBanner.text}</span>
+                        <button type="button" onClick={() => setIntakeBanner(null)} className="text-gray-400 hover:text-white uppercase tracking-wider text-[10px] cursor-pointer">
+                            Close
+                        </button>
+                    </div>
+                )}
+
                 <div className="space-y-4">
                     <div className="animate-fade-in">
                         <AddressSection 
@@ -3042,6 +3293,54 @@ const CustomerInputPage: React.FC = () => {
                         </div>
                     ))}
 
+                    {matchedProperty && projects.some(p => (p.property_id === matchedProperty._id || p.property_id === (matchedProperty as any).id) && p.status === 'Active') && (
+                        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-3 animate-fade-in">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <p className="text-xs font-bold text-amber-300 uppercase tracking-wider">
+                                    Existing Active Project Detected on This Property
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={handleGoToPropertyProfile}
+                                    className="text-[10px] font-bold uppercase tracking-wider text-[#ec028b] hover:underline cursor-pointer"
+                                >
+                                    View Property File →
+                                </button>
+                            </div>
+                            <p className="text-xs text-gray-300">
+                                Choose whether to open a separate parallel project (e.g., Leak Repair alongside Roof Replacement, or Phase 2) or merge notes into the existing active project:
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    id="intake-mode-create-separate"
+                                    onClick={() => setExistingPropertyMode('create_new')}
+                                    className={cn(
+                                        "p-2.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+                                        existingPropertyMode === 'create_new'
+                                            ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]"
+                                            : "bg-black/40 border-gray-700 text-gray-400 hover:text-white"
+                                    )}
+                                >
+                                    Create Separate Project
+                                </button>
+                                <button
+                                    type="button"
+                                    id="intake-mode-merge-existing"
+                                    onClick={() => setExistingPropertyMode('merge_active')}
+                                    className={cn(
+                                        "p-2.5 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+                                        existingPropertyMode === 'merge_active'
+                                            ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]"
+                                            : "bg-black/40 border-gray-700 text-gray-400 hover:text-white"
+                                    )}
+                                >
+                                    Merge Into Active Project
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex justify-start pt-2">
                         <Button
                             type="button"
@@ -3103,8 +3402,9 @@ const CustomerInputPage: React.FC = () => {
 
                             {(isAddingContact || contacts.length === 0) && !editingContactId && (
                                 <ContactForm 
-                                    key={contacts.length === 0 ? `new-primary-${autofilledContactData.firstName}-${autofilledContactData.lastName}-${autofilledContactData.phone}` : 'adding-contact'}
+                                    key={contacts.length === 0 ? `new-primary-${autofilledContactData.firstName}-${autofilledContactData.lastName}-${autofilledContactData.phone}-${autofilledContactData.email}` : 'adding-contact'}
                                     initialData={contacts.length === 0 ? autofilledContactData : undefined}
+                                    onDraftChange={setDraftContact}
                                     onSave={(c) => { setContacts(prev => [...prev, c]); setIsAddingContact(false); }} 
                                     onCancel={() => setIsAddingContact(false)} 
                                     isPrimary={contacts.length === 0} 
@@ -3149,9 +3449,17 @@ const CustomerInputPage: React.FC = () => {
                         <CircuitryCard title="Project Type" icon={<BuildingStorefrontIcon className="w-5 h-5" />}>
                             <div className="space-y-6">
                                 <ToggleGroup idPrefix="project-type" options={['Residential', 'Commercial', 'Government']} value={projectCategory} onChange={(val) => { setProjectCategory(val as any); if(val==='Residential'){ setCompanyData({parentCompany:'', propertyName:''}); setHasCustomBilling(false); } }} />
-                                <div className="pt-4 border-t border-gray-700/50">
-                                    <div onClick={() => setIsInsurance(!isInsurance)} className={cn("mt-4 cursor-pointer px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center text-center", isInsurance ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]" : "bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800")}>
-                                        {isInsurance ? "✓ This is an Insurance Claim" : "Is this an Insurance Claim?"}
+                                <div className="pt-4 border-t border-gray-700/50 space-y-4">
+                                    <div id="intake-insurance-toggle" onClick={() => setIsInsurance(!isInsurance)} className={cn("mt-2 cursor-pointer px-4 py-3 rounded-lg border text-sm font-medium transition-all flex items-center justify-center text-center", isInsurance ? "bg-[#ec028b]/20 border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.2)]" : "bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:bg-gray-800")}>
+                                        {isInsurance ? "✓ Insurance / Storm Claim Active" : "Insurance / Storm Claim?"}
+                                    </div>
+                                    <div>
+                                        <QuestionLabel>Assigned RHIVE Specialist</QuestionLabel>
+                                        <ToggleGroup
+                                            options={['Michael', 'Vern', 'Sheena', 'Unassigned']}
+                                            value={assignedRep}
+                                            onChange={(v) => setAssignedRep(v)}
+                                        />
                                     </div>
                                 </div>
                                 <div className="flex justify-end mt-4"><Button size="sm" onClick={() => setIsTypeCollapsed(true)} type="button">Confirm Selection</Button></div>
@@ -3173,9 +3481,13 @@ const CustomerInputPage: React.FC = () => {
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <QuestionLabel>Parent Company / Owner</QuestionLabel>
-                                            <CompanyLookup onSelect={handleCompanySelect} value={companyData.parentCompany} />
-                                            <HelperText>Search existing accounts or type new.</HelperText>
+                                            <QuestionLabel>Parent Company / Agency / HOA</QuestionLabel>
+                                            <CompanyLookup
+                                                onSelect={handleCompanySelect}
+                                                onChangeText={(txt) => setCompanyData(prev => ({ ...prev, parentCompany: txt }))}
+                                                value={companyData.parentCompany}
+                                            />
+                                            <HelperText>Search existing accounts or type any custom HOA, LLC, GC, or agency.</HelperText>
                                         </div>
                                         <div>
                                             <QuestionLabel>Property Name / Site</QuestionLabel>
@@ -3206,8 +3518,74 @@ const CustomerInputPage: React.FC = () => {
                                             </div>
                                         </div>
                                     </div>
+                                    <div className="pt-4 border-t border-gray-800 space-y-4">
+                                        <div>
+                                            <QuestionLabel>Estimating Mode (Site Walk vs Remote Plan-Set Bid)</QuestionLabel>
+                                            <ToggleGroup
+                                                options={['On-Site Inspection', 'Remote Plan-Set Bid (GC / Blueprints)']}
+                                                value={isRemoteBid ? 'Remote Plan-Set Bid (GC / Blueprints)' : 'On-Site Inspection'}
+                                                onChange={(val) => {
+                                                    const remote = val.includes('Remote');
+                                                    setIsRemoteBid(remote);
+                                                    if (remote) setPurchaseIntent('Ready');
+                                                }}
+                                            />
+                                        </div>
+                                        {isRemoteBid && (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl bg-[#ec028b]/5 border border-[#ec028b]/30">
+                                                <div>
+                                                    <QuestionLabel>GC / Bid Due Date</QuestionLabel>
+                                                    <InputField
+                                                        id="intake-bid-due-date"
+                                                        type="date"
+                                                        value={bidDueDate}
+                                                        onChange={(e) => setBidDueDate(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="flex items-center text-xs text-gray-300">
+                                                    Remote Bid Desk mode bypasses mandatory field inspection so estimators can price directly from architectural PDFs in Stage 2/3.
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {projectCategory === 'Government' && (
+                                        <div className="p-4 rounded-xl bg-blue-950/30 border border-blue-500/30 space-y-4">
+                                            <h4 className="text-xs font-black uppercase tracking-widest text-blue-300">
+                                                Government / DFCM Procurement Compliance
+                                            </h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <QuestionLabel>Solicitation / DFCM Project #</QuestionLabel>
+                                                    <InputField
+                                                        id="intake-gov-solicitation"
+                                                        placeholder="e.g. DFCM #24372820"
+                                                        value={govCompliance.solicitation_num}
+                                                        onChange={(e) => setGovCompliance(p => ({ ...p, solicitation_num: e.target.value }))}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <QuestionLabel>Prevailing Wage / Davis-Bacon</QuestionLabel>
+                                                    <ToggleGroup
+                                                        options={['Prevailing Wage Required', 'Standard Wage']}
+                                                        value={govCompliance.wage_determination}
+                                                        onChange={(v) => setGovCompliance(p => ({ ...p, wage_determination: v }))}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <QuestionLabel>Performance & Payment Surety Bond</QuestionLabel>
+                                                <ToggleGroup
+                                                    options={['Required (100% P&P)', 'Waived / Under Threshold']}
+                                                    value={govCompliance.surety_bond}
+                                                    onChange={(v) => setGovCompliance(p => ({ ...p, surety_bond: v }))}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="flex justify-end mt-4">
-                                        <Button size="sm" onClick={() => setIsOrgCollapsed(true)} type="button">Next</Button>
+                                        <Button size="sm" onClick={() => setIsOrgCollapsed(true)} type="button">Confirm</Button>
                                     </div>
                                 </div>
                             </CircuitryCard>
@@ -3244,6 +3622,36 @@ const CustomerInputPage: React.FC = () => {
                                             <InputField ref={dateOfLossRef} type="date" value={insuranceInfo.dateOfLoss} onChange={e => setInsuranceInfo({...insuranceInfo, dateOfLoss: e.target.value})} />
                                         </div>
                                     </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-800 pt-4">
+                                        <div>
+                                            <QuestionLabel>Adjuster Name</QuestionLabel>
+                                            <InputField
+                                                id="intake-adjuster-name"
+                                                placeholder="Adjuster Full Name"
+                                                value={adjusterInfo.name}
+                                                onChange={(e) => setAdjusterInfo(p => ({ ...p, name: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div>
+                                            <QuestionLabel>Adjuster Phone</QuestionLabel>
+                                            <InputField
+                                                id="intake-adjuster-phone"
+                                                placeholder="(801) 555-0199"
+                                                value={adjusterInfo.phone}
+                                                onChange={(e) => setAdjusterInfo(p => ({ ...p, phone: formatPhoneNumber(e.target.value) }))}
+                                            />
+                                        </div>
+                                        <div>
+                                            <QuestionLabel>Adjuster Email</QuestionLabel>
+                                            <InputField
+                                                id="intake-adjuster-email"
+                                                type="email"
+                                                placeholder="adjuster@carrier.com"
+                                                value={adjusterInfo.email}
+                                                onChange={(e) => setAdjusterInfo(p => ({ ...p, email: e.target.value }))}
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="border-t border-gray-700 pt-4">
                                         <QuestionLabel>Storm History (Click row to set Date of Loss)</QuestionLabel>
                                         <WeatherReport onDateSelect={(date) => setInsuranceInfo(prev => ({...prev, dateOfLoss: date}))} />
@@ -3275,19 +3683,25 @@ const CustomerInputPage: React.FC = () => {
                                     <CompanyLookup 
                                         onSelect={(company) => {
                                             setBillToName(company.name);
-                                            setBillingData({
-                                                address: company.address,
-                                                city: company.city,
-                                                state: company.state,
-                                                zip: company.zip,
-                                                latitude: 0, longitude: 0
-                                            });
+                                            if (company.address) {
+                                                setBillingData({
+                                                    address: company.address,
+                                                    city: company.city,
+                                                    state: company.state,
+                                                    zip: company.zip,
+                                                    latitude: 0, longitude: 0
+                                                });
+                                            }
                                             setHasCustomBilling(true);
                                             setIsBillingCollapsed(true);
                                             setBillingStatus('confirmed');
                                         }}
+                                        onChangeText={(txt) => {
+                                            setBillToName(txt);
+                                            setHasCustomBilling(true);
+                                        }}
                                         value={billToName}
-                                        placeholder="Search Utah License / Business Name..."
+                                        placeholder="Search Business / Escrow / Homeowner Name..."
                                     />
                                     <HelperText>Auto-populates address if found in License DB.</HelperText>
                                 </div>
@@ -3329,10 +3743,11 @@ const CustomerInputPage: React.FC = () => {
                     ) : (
                         <CircuitryCard title="Project Intent" icon={<BuildingStorefrontIcon className="w-5 h-5" />}>
                             <div className="space-y-6">
-                                {requiresOrganization && (
+                                {requiresOrganization && !isRemoteBid && (
                                     <SchedulingBlock 
                                         onScheduleConfirm={(details) => { 
-                                            alert(`Scheduled: ${details}`); 
+                                            setScheduledDetails(details);
+                                            setIntakeBanner({ type: 'success', text: `Commercial Site Walk Scheduled: ${details}` });
                                             setIsIntentCollapsed(true); 
                                         }}
                                         isBlocked={isOutOfBounds}
@@ -3344,6 +3759,7 @@ const CustomerInputPage: React.FC = () => {
                                         <div>
                                             <QuestionLabel>Is this for a Repair or Replacement?</QuestionLabel>
                                             <ToggleGroup 
+                                                idPrefix="scope-type"
                                                 options={['Replacement', 'Repair']}
                                                 value={scopeType}
                                                 onChange={(val) => setScopeType(val as any)}
@@ -3364,13 +3780,17 @@ const CustomerInputPage: React.FC = () => {
                                                 {repairDetails.activeLeak && (
                                                     <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg space-y-3 animate-fade-in">
                                                         <div className="text-red-300 text-sm font-semibold">
-                                                            We recommend immediate inspection. We offer an Emergency Tarping Service for standard roof damage (up to desk size).
+                                                            {requiresOrganization
+                                                                ? 'Immediate dispatch recommended. Commercial Low-Slope Emergency Mitigation ($350–$600 membrane/mastic seal) available.'
+                                                                : 'Immediate dispatch recommended. Residential Emergency Tarping ($150–$350 desk-size tarp) available.'}
                                                         </div>
                                                         <div>
-                                                            <QuestionLabel>Add Emergency Tarp Service?</QuestionLabel>
+                                                            <QuestionLabel>
+                                                                {requiresOrganization ? 'Authorize Commercial Mitigation ($350–$600)?' : 'Authorize Emergency Tarp ($150–$350)?'}
+                                                            </QuestionLabel>
                                                             <ToggleGroup 
-                                                                options={['Yes, I need tarping', 'No, just inspection']}
-                                                                value={repairDetails.emergencyTarp ? 'Yes, I need tarping' : 'No, just inspection'}
+                                                                options={['Yes, authorize mitigation', 'No, inspection only']}
+                                                                value={repairDetails.emergencyTarp ? 'Yes, authorize mitigation' : 'No, inspection only'}
                                                                 onChange={(val) => setRepairDetails(p => ({...p, emergencyTarp: val.includes('Yes')}))}
                                                             />
                                                         </div>
@@ -3387,9 +3807,18 @@ const CustomerInputPage: React.FC = () => {
                                                 </div>
 
                                                 {repairDetails.isOld && (
-                                                    <div className="p-4 bg-yellow-900/10 border border-yellow-500/20 rounded text-sm text-yellow-200 italic">
-                                                        "Typically with roofs over 15 years, materials become unserviceable and can cause high repair costs. 
-                                                        I can schedule a repair inspection to verify if we can repair it or if it requires replacement."
+                                                    <div className="space-y-3">
+                                                        <div className="p-4 bg-yellow-900/10 border border-yellow-500/20 rounded text-sm text-yellow-200 italic">
+                                                            "With roofs over 15 years old, brittle materials often require full replacement comparison alongside repair options. Let's schedule a specialist inspection and prepare both options."
+                                                        </div>
+                                                        <div>
+                                                            <QuestionLabel>Order 3rd-Party Measurement Report (Roofr / EagleView)?</QuestionLabel>
+                                                            <ToggleGroup
+                                                                options={['Yes, Order Measurement', 'No, Field Measure Only']}
+                                                                value={needsMeasurementOrder ? 'Yes, Order Measurement' : 'No, Field Measure Only'}
+                                                                onChange={(v) => setNeedsMeasurementOrder(v.includes('Yes'))}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 )}
 
@@ -3418,11 +3847,11 @@ const CustomerInputPage: React.FC = () => {
                                                         {!repairDetails.hasPhotos && (
                                                             <Button 
                                                                 className="w-full border border-[#ec028b] bg-black hover:bg-[#ec028b] text-[#ec028b] hover:text-white transition-all"
-                                                                onClick={() => alert("Sent upload link to primary contact via text/email.")}
+                                                                onClick={() => setIntakeBanner({ type: 'success', text: 'Photo upload SMS/Email link dispatched to primary contact.' })}
                                                                 type="button"
                                                             >
                                                                 <ShareIcon className="w-4 h-4 mr-2" />
-                                                                Send Photo Upload Link to Customer
+                                                                Send Photo Upload Link
                                                             </Button>
                                                         )}
                                                     </div>
@@ -3431,8 +3860,8 @@ const CustomerInputPage: React.FC = () => {
                                                 <div className="text-yellow-400 text-sm font-medium flex items-center mt-2">
                                                     <BoltIcon className="w-4 h-4 mr-2" />
                                                     {!repairDetails.isOld && repairDetails.hasPhotos 
-                                                        ? "Create Quote Request based on Photos." 
-                                                        : "No instant pricing available without on-site inspection or property photos."}
+                                                        ? "Fast-Path Remote Repair Quote Ready (<15yr with Photos)." 
+                                                        : "On-site specialist inspection required to verify repairability."}
                                                 </div>
 
                                                 {isInspectionRequired && !isInsurance && (
@@ -3440,7 +3869,8 @@ const CustomerInputPage: React.FC = () => {
                                                         <h4 className="text-[#ec028b] font-bold mb-4 uppercase text-sm">Inspection Required</h4>
                                                         <SchedulingBlock 
                                                             onScheduleConfirm={(details) => { 
-                                                                alert(`Scheduled: ${details}`); 
+                                                                setScheduledDetails(details);
+                                                                setIntakeBanner({ type: 'success', text: `Repair Inspection Scheduled: ${details}` });
                                                                 setIsIntentCollapsed(true); 
                                                             }}
                                                             isBlocked={isOutOfBounds}
@@ -3456,6 +3886,7 @@ const CustomerInputPage: React.FC = () => {
                                                 <QuestionLabel>What is your goal today?</QuestionLabel>
                                                 <div className="grid grid-cols-1 gap-3">
                                                     <div 
+                                                        id="intent-option-ready"
                                                         onClick={() => setPurchaseIntent('Ready')}
                                                         className={cn(
                                                             "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
@@ -3465,9 +3896,10 @@ const CustomerInputPage: React.FC = () => {
                                                         )}
                                                     >
                                                         <p className="font-bold mb-1">Ready to compare bids & install</p>
-                                                        <p className="text-xs opacity-70">I need a Certified Quote (Need A Firm Quote).</p>
+                                                        <p className="text-xs opacity-70">Certified Quote path with line-item engineering scope.</p>
                                                     </div>
                                                     <div 
+                                                        id="intent-option-exploring"
                                                         onClick={() => setPurchaseIntent('Exploring')}
                                                         className={cn(
                                                             "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
@@ -3476,10 +3908,11 @@ const CustomerInputPage: React.FC = () => {
                                                                 : "bg-gray-900/40 border-gray-700 text-gray-400 hover:bg-gray-800"
                                                         )}
                                                     >
-                                                        <p className="font-bold mb-1">Just looking for ballpark pricing</p>
-                                                        <p className="text-xs opacity-70">I want an Instant Estimate (Need A Ballpark Price).</p>
+                                                        <p className="font-bold mb-1">Exploring ballpark pricing</p>
+                                                        <p className="text-xs opacity-70">Instant Satellite Estimate for budget planning.</p>
                                                     </div>
                                                     <div 
+                                                        id="intent-option-inspection"
                                                         onClick={() => setPurchaseIntent('Inspection')}
                                                         className={cn(
                                                             "cursor-pointer p-4 rounded-lg border text-sm text-left transition-all",
@@ -3489,7 +3922,7 @@ const CustomerInputPage: React.FC = () => {
                                                         )}
                                                     >
                                                         <p className="font-bold mb-1">Schedule Roof Inspection</p>
-                                                        <p className="text-xs opacity-70">I want an on-site inspection and assessment by a certified specialist.</p>
+                                                        <p className="text-xs opacity-70">On-site diagnostic inspection by a certified RHIVE specialist.</p>
                                                     </div>
                                                 </div>
                                                 {purchaseIntent === 'Inspection' && (
@@ -3497,7 +3930,8 @@ const CustomerInputPage: React.FC = () => {
                                                         <h4 className="text-[#ec028b] font-bold mb-4 uppercase text-sm">Schedule Inspection</h4>
                                                         <SchedulingBlock 
                                                             onScheduleConfirm={(details) => { 
-                                                                alert(`Scheduled: ${details}`); 
+                                                                setScheduledDetails(details);
+                                                                setIntakeBanner({ type: 'success', text: `Roof Inspection Scheduled: ${details}` });
                                                                 setIsIntentCollapsed(true); 
                                                             }}
                                                             isBlocked={isOutOfBounds}
@@ -3534,7 +3968,8 @@ const CustomerInputPage: React.FC = () => {
                                                     <h4 className="text-[#ec028b] font-bold mb-4 uppercase text-sm">Insurance Inspection Required</h4>
                                                     <SchedulingBlock 
                                                         onScheduleConfirm={(details) => { 
-                                                            alert(`Scheduled: ${details}`); 
+                                                            setScheduledDetails(details);
+                                                            setIntakeBanner({ type: 'success', text: `Insurance Adjuster/Specialist Inspection Scheduled: ${details}` });
                                                             setIsIntentCollapsed(true); 
                                                         }}
                                                         isBlocked={isOutOfBounds}
@@ -3827,14 +4262,13 @@ const CustomerInputPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* DETAILED SCOPE (Restored from Zoho) - Always Visible */}
-                {/* HIDE detailed scope if just looking for ballpark (Exploring) */}
-                {(purchaseIntent === 'Ready' && !isInsurance) && (
+                {/* DETAILED SCOPE - Visible for Certified Quote, Insurance, and Commercial/Gov */}
+                {((purchaseIntent === 'Ready' || isInsurance || requiresOrganization) && purchaseIntent !== 'Exploring') && (
                     <div className="animate-fade-in">
                         {isDetailedScopeCollapsed ? (
                             <RenderCollapsedSection 
                                 title="Detailed Scope" 
-                                summary={`${detailedScope.materialPreference} • Decking: ${detailedScope.deckingAction} • Satellite: ${detailedScope.satelliteAction} • Swamp Cooler: ${detailedScope.swampCoolerAction} • Solar: ${detailedScope.solarAction}${detailedScope.solarStorage !== 'N/A' && detailedScope.solarStorage ? ` (${detailedScope.solarStorage})` : ''}${detailedScope.additionalDetails ? ` • Additional: ${detailedScope.additionalDetails}` : ''}`}
+                                summary={`${detailedScope.materialPreference} • Decking: ${detailedScope.deckingAction} • Eave Vent: ${detailedScope.eaveVentilation} • Solar: ${detailedScope.solarAction}${uploadedSpecs.length > 0 ? ` • ${uploadedSpecs.length} File(s)` : ''}`}
                                 onEdit={() => setIsDetailedScopeCollapsed(false)} 
                             />
                         ) : (
@@ -3847,8 +4281,12 @@ const CustomerInputPage: React.FC = () => {
                                     <ToggleGroup options={['Asphalt Shingles', 'Metal', 'Tile', 'TPO/Membrane', 'Wood Shake']} value={detailedScope.materialPreference} onChange={v => setDetailedScope(p => ({...p, materialPreference: v}))} />
                                 </AssessmentQuestion>
 
-                                <AssessmentQuestion label="Decking / Wood Replacement">
+                                <AssessmentQuestion label="Decking / Wood Replacement (1st 100 sq ft / 3 Sheets Free)">
                                     <ToggleGroup options={['N/A - No Decking', 'Replace Damaged', 'Not Sure']} value={detailedScope.deckingAction} onChange={v => setDetailedScope(p => ({...p, deckingAction: v}))} />
+                                </AssessmentQuestion>
+
+                                <AssessmentQuestion label="Eave Intake / Soffit Ventilation (Manufacturer Warranty Check)">
+                                    <ToggleGroup options={['Yes - Vented Soffits', 'No - Solid / Unvented', 'Not Sure']} value={detailedScope.eaveVentilation} onChange={v => setDetailedScope(p => ({...p, eaveVentilation: v}))} />
                                 </AssessmentQuestion>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3894,12 +4332,53 @@ const CustomerInputPage: React.FC = () => {
                                     <InputField placeholder="Note details here..." value={detailedScope.additionalDetails} onChange={e => setDetailedScope(p => ({...p, additionalDetails: e.target.value}))} />
                                 </div>
 
-                                <div className="border-t border-gray-700 pt-4">
-                                    <QuestionLabel>Upload Blueprints / Specs</QuestionLabel>
-                                    <div className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-gray-400 transition-colors cursor-pointer bg-gray-900/20">
-                                        <CloudArrowUpIcon className="w-8 h-8 mx-auto text-gray-500 mb-2" />
-                                        <p className="text-sm text-gray-400">Drag & Drop or Click to Upload</p>
+                                <div className="border-t border-gray-700 pt-4 space-y-3">
+                                    <QuestionLabel>Upload Blueprints / Roofr PDF / Insurance Scope</QuestionLabel>
+                                    <input
+                                        ref={specFileInputRef}
+                                        type="file"
+                                        multiple
+                                        accept=".pdf,.png,.jpg,.jpeg,.dwg,.xlsx,.csv"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const files: File[] = e.target.files ? Array.from(e.target.files) : [];
+                                            if (files.length > 0) {
+                                                setUploadedSpecs(prev => [
+                                                    ...prev,
+                                                    ...files.map((f: File) => ({
+                                                        name: f.name,
+                                                        size: f.size,
+                                                        uploadedAt: new Date().toISOString(),
+                                                    })),
+                                                ]);
+                                            }
+                                        }}
+                                    />
+                                    <div
+                                        id="intake-upload-specs-dropzone"
+                                        onClick={() => specFileInputRef.current?.click()}
+                                        className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-[#ec028b] transition-colors cursor-pointer bg-gray-900/20"
+                                    >
+                                        <CloudArrowUpIcon className="w-8 h-8 mx-auto text-[#ec028b] mb-2" />
+                                        <p className="text-sm text-gray-300 font-bold">Click to Attach Blueprints, Roofr PDFs, or Photos</p>
+                                        <p className="text-xs text-gray-500 mt-1">Supports PDF, CAD/DWG, Xactimate, JPG/PNG</p>
                                     </div>
+                                    {uploadedSpecs.length > 0 && (
+                                        <ul className="space-y-1.5">
+                                            {uploadedSpecs.map((spec, idx) => (
+                                                <li key={idx} className="flex items-center justify-between px-3 py-2 rounded-lg bg-black/50 border border-gray-800 text-xs text-gray-200">
+                                                    <span className="truncate font-mono">{spec.name}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setUploadedSpecs(prev => prev.filter((_, i) => i !== idx))}
+                                                        className="text-red-400 hover:text-red-300 text-[10px] font-bold uppercase ml-3 cursor-pointer"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
                                 </div>
                                 <div className="flex justify-end mt-4">
                                     <Button size="sm" onClick={() => setIsDetailedScopeCollapsed(true)} type="button">Next</Button>
@@ -3920,7 +4399,10 @@ const CustomerInputPage: React.FC = () => {
 
 
                         <SchedulingBlock 
-                            onScheduleConfirm={(details) => alert(`Scheduled Call: ${details}`)} 
+                            onScheduleConfirm={(details) => {
+                                setScheduledDetails(details);
+                                setIntakeBanner({ type: 'success', text: `Estimate Review Call Scheduled: ${details}` });
+                            }} 
                             notesLabel="Notes for Call"
                             isBlocked={isOutOfBounds}
                             isAdminBypass={isAdminBypass}
@@ -3928,20 +4410,50 @@ const CustomerInputPage: React.FC = () => {
                     </CircuitryCard>
                 )}
 
-                {/* CUSTOMER PROFILE (Psychographics) - Always Visible */}
-                {(purchaseIntent === 'Ready' && !isInsurance) && (
+                {/* CUSTOMER PROFILE (Psychographics & Omni-Bird DISC) */}
+                {((purchaseIntent === 'Ready' || isInsurance || requiresOrganization) && purchaseIntent !== 'Exploring') && (
                     <div className="animate-fade-in">
                     {isProfileCollapsed ? (
                         <RenderCollapsedSection 
-                            title="Customer Profile" 
-                            summary={`${customerProfile.familiarity} • ${customerProfile.investmentStyle} • Readiness: ${customerProfile.readiness}${customerProfile.concerns.length > 0 ? ` • Concerns: ${customerProfile.concerns.join(', ')}` : ''}${customerProfile.decisionCriteria.length > 0 ? ` • Criteria: ${customerProfile.decisionCriteria.join(', ')}` : ''}`}
+                            title="Customer Profile & DISC" 
+                            summary={`${discProfile} • Source: ${customerProfile.leadSource || 'Direct'} • ${customerProfile.investmentStyle} • Readiness: ${customerProfile.readiness}`}
                             onEdit={() => setIsProfileCollapsed(false)} 
                         />
                         ) : (
                             <CircuitryCard 
-                                title="Customer Profile" 
+                                title="Customer Profile & Omni-Bird DISC" 
                                 icon={<MegaphoneIcon className="w-5 h-5" />}
                             >
+                                <div>
+                                    <QuestionLabel>Omni-Bird DISC Communication Style</QuestionLabel>
+                                    <ToggleGroup
+                                        options={[
+                                            'Eagle (D - Bottom Line)',
+                                            'Parrot (I - Vision & Curb Appeal)',
+                                            'Dove (S - Safety & Peace of Mind)',
+                                            'Owl (C - Specs & Line Items)',
+                                        ]}
+                                        value={discProfile}
+                                        onChange={(v) => setDiscProfile(v)}
+                                    />
+                                </div>
+
+                                <div>
+                                    <QuestionLabel>Lead Source</QuestionLabel>
+                                    <ToggleGroup
+                                        options={[
+                                            'Google / Website',
+                                            'Abundance Referral',
+                                            'Past Client',
+                                            'Canvass / Door Hanger',
+                                            'Property Manager / HOA',
+                                            'GC Bid Invite',
+                                            'JustCall Inbound',
+                                        ]}
+                                        value={customerProfile.leadSource || 'Google / Website'}
+                                        onChange={(v) => setCustomerProfile(p => ({ ...p, leadSource: v }))}
+                                    />
+                                </div>
                                 
                                 <div>
                                     <QuestionLabel>Main Concerns</QuestionLabel>
@@ -3983,12 +4495,16 @@ const CustomerInputPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* FOOTER (Action Bar) */}
-                {contacts.length > 0 && (
+                {/* FOOTER (Action Bar) — Always visible during intake */}
+                {(contacts.length > 0 || Boolean(draftContact.firstName || draftContact.phone || draftContact.email || propertyData.address)) && (
                     <div className="sticky bottom-4 z-20 flex items-center justify-between bg-black/90 p-4 rounded-2xl border border-gray-700/50 backdrop-blur-lg shadow-2xl mt-8">
                         <div>
                             <p className="text-xs text-gray-400 uppercase font-bold">{isEstimateRequest ? "Generating Estimate for:" : "Creating Project:"}</p>
-                            <p className="text-white font-bold truncate max-w-[200px]">{requiresOrganization ? (companyData.propertyName || propertyData.address) : (contacts[0]?.lastName + ' Residence')}</p>
+                            <p className="text-white font-bold truncate max-w-[240px]">
+                                {requiresOrganization
+                                    ? (companyData.propertyName || companyData.parentCompany || propertyData.address || 'Commercial Project')
+                                    : ((contacts[0]?.lastName || draftContact.lastName || contacts[0]?.firstName || draftContact.firstName || 'New') + ' Residence')}
+                            </p>
                         </div>
                         <div className="flex space-x-4 items-center">
                             <button
@@ -4007,8 +4523,8 @@ const CustomerInputPage: React.FC = () => {
                                 )}
                             </button>
                             <Button variant="secondary" onClick={() => setActivePageId('E-01')} type="button">Cancel</Button>
-                            <Button size="lg" type="submit">
-                                {isEstimateRequest ? "Send Estimate & Invite" : "Create & Open File"}
+                            <Button id="intake-submit-project-btn" size="lg" type="submit">
+                                {isEstimateRequest ? "Send" : "Create"}
                             </Button>
                         </div>
                     </div>

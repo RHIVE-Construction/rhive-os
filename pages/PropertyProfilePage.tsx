@@ -7,6 +7,7 @@ import { MapPinIcon, BriefcaseIcon, UserIcon, BuildingStorefrontIcon, PencilSqua
 import { useNavigation } from '../contexts/NavigationContext';
 import { propertyService, contactService, projectService, firestoreService, userLogService } from '../lib/firebaseService';
 import { cn, getStagePageId } from '../lib/utils';
+import { navigateToIntake } from '../lib/intakeRouting';
 import PropertyPage from './PropertyPage';
 import { getMapsApiKey } from '../lib/mapsConfig';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -497,9 +498,15 @@ const PropertyProfilePage: React.FC = () => {
                                 id="property-create-project-btn"
                                 type="button"
                                 onClick={() => {
-                                    sessionStorage.setItem('rhive_prefill_intake', JSON.stringify({
+                                    const primaryContact = contacts[0];
+                                    const primaryName = primaryContact
+                                        ? (primaryContact.name || [primaryContact.first_name, primaryContact.last_name].filter(Boolean).join(' ')).trim()
+                                        : '';
+                                    navigateToIntake({
+                                        category: pType.toLowerCase().includes('gov') ? 'Government' : pType.toLowerCase().includes('comm') ? 'Commercial' : 'Residential',
+                                        prefillPayload: {
                                         propertyId: property.id || property._id,
-                                        accountId: property.account_id || property.owner_id,
+                                        accountId: property.account_id || property.owner_id || '',
                                         parentCompany: property.account_name || '',
                                         propertyName: pName || addressTitle,
                                         projectCategory: pType.toLowerCase().includes('gov') ? 'Government' : pType.toLowerCase().includes('comm') ? 'Commercial' : 'Residential',
@@ -510,8 +517,20 @@ const PropertyProfilePage: React.FC = () => {
                                         latitude: Number(pLat || property.coordinates?.lat || 0),
                                         longitude: Number(pLng || property.coordinates?.lng || 0),
                                         buildings: property.buildings || [],
-                                    }));
-                                    setActivePageId('E-02a');
+                                        contactName: primaryName,
+                                        contactEmail: primaryContact?.email || '',
+                                        contactPhone: primaryContact?.phone ? String(primaryContact.phone) : '',
+                                        contacts: contacts.map((c: any, idx: number) => ({
+                                            id: c.id || ('c_' + idx),
+                                            name: (c.name || [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Contact').trim(),
+                                            email: c.email || '',
+                                            phone: c.phone ? String(c.phone) : '',
+                                            role: c.role || 'Owner',
+                                            isMain: idx === 0,
+                                            functions: Array.isArray(c.functions) && c.functions.length > 0 ? c.functions : ['Quote', 'Billing', 'Site Access'],
+                                        })),
+                                        },
+                                    });
                                 }}
                                 className="w-full mt-2 bg-black hover:bg-gray-900 border border-[#ec028b]/50 text-[#ec028b] hover:text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-all text-xs uppercase tracking-wider"
                             >

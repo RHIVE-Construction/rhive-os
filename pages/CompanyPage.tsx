@@ -115,25 +115,53 @@ const CompanyPage: React.FC = () => {
         setActivePageId(getStagePageId(p.current_stage));
     };
 
-    const handleCreateProject = () => {
+    const handleCreateProject = (targetProp?: any) => {
         const accName = account?.accountName || account?.name || '';
-        const firstProp = properties[0];
+        const chosenProp = targetProp || properties[0];
+        const category: 'Government' | 'Residential' | 'Commercial' = (account?.accountType || account?.type || '')
+            .toLowerCase()
+            .includes('gov')
+            ? 'Government'
+            : (account?.accountType || account?.type || '').toLowerCase().includes('res')
+            ? 'Residential'
+            : 'Commercial';
+
+        const mappedContacts = contacts.map((c: any) => {
+            const full = c.name || `${c.first_name || c.firstName || ''} ${c.last_name || c.lastName || ''}`.trim();
+            return {
+                firstName: c.first_name || c.firstName || full.split(' ')[0] || '',
+                lastName: c.last_name || c.lastName || full.split(' ').slice(1).join(' ') || '',
+                phone: c.phone || c.mobile || '',
+                email: c.email || '',
+                role: c.role || 'Property Owner',
+            };
+        });
+
         const prefillPayload = {
             accountId: selectedAccountId,
-            parentCompany: accName,
-            projectCategory: (account?.accountType || account?.type || '').toLowerCase().includes('gov')
-                ? 'Government'
-                : (account?.accountType || account?.type || '').toLowerCase().includes('res')
-                ? 'Residential'
-                : 'Commercial',
-            address: firstProp?.property_address || firstProp?.Property_Street || firstProp?.address_full || account?.address || '',
-            city: firstProp?.city || firstProp?.Property_City || account?.city || account?.billingCity || '',
-            state: firstProp?.state || firstProp?.Property_State || account?.state || account?.billingState || 'UT',
-            zip: firstProp?.zip || firstProp?.Property_Zip || account?.zip || '',
-            propertyName: firstProp?.name || firstProp?.Property_Name || '',
+            parentCompany: category !== 'Residential' ? accName : '',
+            projectCategory: category,
+            propertyId: chosenProp?.id || chosenProp?._id || '',
+            address: chosenProp?.property_address || chosenProp?.Property_Street || chosenProp?.address_full || account?.address || '',
+            city: chosenProp?.city || chosenProp?.Property_City || account?.city || account?.billingCity || '',
+            state: chosenProp?.state || chosenProp?.Property_State || account?.state || account?.billingState || 'UT',
+            zip: chosenProp?.zip || chosenProp?.Property_Zip || account?.zip || '',
+            latitude: Number(chosenProp?.latitude || chosenProp?.coordinates?.lat || 0),
+            longitude: Number(chosenProp?.longitude || chosenProp?.coordinates?.lng || 0),
+            propertyName: chosenProp?.name || chosenProp?.Property_Name || '',
+            buildings: Array.isArray(chosenProp?.buildings) ? chosenProp.buildings : [],
+            contacts: mappedContacts,
+            contactName: mappedContacts[0] ? `${mappedContacts[0].firstName} ${mappedContacts[0].lastName}`.trim() : account?.contactName || '',
+            contactEmail: mappedContacts[0]?.email || account?.email || '',
+            contactPhone: mappedContacts[0]?.phone || account?.phone || '',
         };
         sessionStorage.setItem('rhive_prefill_intake', JSON.stringify(prefillPayload));
-        if (accName) sessionStorage.setItem('intakeParentCompany', accName);
+        if (category !== 'Residential' && accName) {
+            sessionStorage.setItem('intakeParentCompany', accName);
+        } else {
+            sessionStorage.removeItem('intakeParentCompany');
+        }
+        window.dispatchEvent(new CustomEvent('rhive-apply-intake-prefill', { detail: { prefillPayload } }));
         setActivePageId('E-02a');
     };
 
@@ -300,9 +328,23 @@ const CompanyPage: React.FC = () => {
                                                     </p>
                                                     <p className="text-xs text-gray-500 font-mono truncate mt-0.5">{propAddr}</p>
                                                 </div>
-                                                <span className="px-2 py-0.5 rounded bg-[#ec028b]/10 border border-[#ec028b]/30 text-[#ec028b] text-[10px] font-mono font-bold shrink-0">
-                                                    {bldgs.length || 1} Bldg{bldgs.length === 1 ? '' : 's'}
-                                                </span>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <span className="px-2 py-0.5 rounded bg-[#ec028b]/10 border border-[#ec028b]/30 text-[#ec028b] text-[10px] font-mono font-bold">
+                                                        {bldgs.length || 1} Bldg{bldgs.length === 1 ? '' : 's'}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        id={`company-prop-create-btn-${prop.id}`}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleCreateProject(prop);
+                                                        }}
+                                                        className="px-2 py-0.5 rounded bg-[#ec028b] hover:bg-[#ec028b]/80 text-white text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                                                        title="Create New Project for Property"
+                                                    >
+                                                        + Create
+                                                    </button>
+                                                </div>
                                             </div>
                                             {bldgs.length > 0 && (
                                                 <div className="flex flex-wrap gap-1.5 mt-3 pt-2.5 border-t border-gray-800/70">

@@ -511,36 +511,191 @@ const LeadPage: React.FC = () => {
                 ) : (
                     <div className="space-y-6 max-w-5xl mx-auto">
                         <div className="flex flex-col md:flex-row gap-6">
-                            <Card className="flex-1" title="Lead Information">
-                                <div className="space-y-4">
-                                    <div>
-                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Project Name</p>
-                                        <h2 className="text-2xl font-bold text-white transition-colors">
-                                            {currentProject.name || 'Unnamed Project'}
-                                        </h2>
+                            <Card className="flex-1" title="First-Call Lead Dossier">
+                                <div className="space-y-5">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">
+                                                {currentProject.job_number ? `Job ${currentProject.job_number}` : 'Intake Dossier'}
+                                            </p>
+                                            <h2 className="text-2xl font-bold text-white transition-colors">
+                                                {currentProject.name || 'Unnamed Project'}
+                                            </h2>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {currentProject.details?.repairDetails?.activeLeak && (
+                                                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/20 border border-red-500 text-red-300">
+                                                    Active Leak Dispatch
+                                                </span>
+                                            )}
+                                            {currentProject.needs_measurement_order && (
+                                                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 border border-amber-500 text-amber-300">
+                                                    Order Roofr Report
+                                                </span>
+                                            )}
+                                            {currentProject.is_remote_bid && (
+                                                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#ec028b]/20 border border-[#ec028b] text-[#ec028b]">
+                                                    Remote Plan-Set Bid {currentProject.bid_due_date ? `(Due ${currentProject.bid_due_date})` : ''}
+                                                </span>
+                                            )}
+                                            <span className={cn(
+                                                'text-[10px] px-2.5 py-1 rounded-full border font-black uppercase tracking-wider',
+                                                stageBadgeColor(currentProject.current_stage)
+                                            )}>
+                                                {currentProject.current_stage || 'Lead'}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-800 md:col-span-2">
                                             <p className="text-[10px] text-gray-500 uppercase font-bold">Property Address</p>
-                                            <p className="text-sm text-gray-300 mt-1">
+                                            <p className="text-sm text-gray-200 mt-1">
                                                 {currentProject.property_address || currentProject.property?.address || 'Not Provided'}
                                             </p>
+                                            {Array.isArray(currentProject.buildings) && currentProject.buildings.length > 0 && (
+                                                <p className="text-[11px] text-[#ec028b] font-mono mt-1">
+                                                    {currentProject.buildings.length} Structure(s): {currentProject.buildings.map((b: any) => b.name).join(', ')}
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="bg-gray-900/50 p-3 rounded-lg border border-gray-800">
-                                            <p className="text-[10px] text-gray-500 uppercase font-bold">Project Type</p>
+                                            <p className="text-[10px] text-gray-500 uppercase font-bold">Archetype & Scope</p>
                                             <p className="text-sm text-white font-bold mt-1 uppercase tracking-wider">
-                                                {currentProject.project_type || 'Unknown'}
+                                                {currentProject.project_category || currentProject.project_type || 'Residential'} · {currentProject.scope_type || currentProject.details?.scopeType || 'Replacement'}
                                             </p>
+                                            {currentProject.disc_profile && (
+                                                <p className="text-[11px] text-gray-400 mt-1">{currentProject.disc_profile}</p>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="mt-4 border-t border-gray-800 pt-4">
-                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Stage Status</p>
-                                        <span className={cn(
-                                            'text-xs px-3 py-1.5 rounded-full border font-black uppercase tracking-wider',
-                                            stageBadgeColor(currentProject.current_stage)
-                                        )}>
-                                            {currentProject.current_stage || 'Unknown'}
-                                        </span>
+
+                                    {/* Contacts & Direct Dial / Email */}
+                                    <div className="bg-black/40 border border-gray-800 rounded-xl p-4 space-y-2">
+                                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Stakeholders & Contacts</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                            {(Array.isArray(currentProject.contacts) && currentProject.contacts.length > 0
+                                                ? currentProject.contacts
+                                                : [{
+                                                    name: currentProject.contact_name || currentProject.customer_name || 'Primary Contact',
+                                                    phone: currentProject.contact_phone || currentProject.phone || '',
+                                                    email: currentProject.contact_email || currentProject.email || '',
+                                                    role: 'Owner',
+                                                    functions: ['Quote', 'Billing'],
+                                                }]
+                                            ).map((c: any, idx: number) => (
+                                                <div key={idx} className="p-2.5 rounded-lg bg-gray-900/60 border border-gray-800 text-xs space-y-1">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <span className="font-bold text-white">{c.name || `${c.firstName || ''} ${c.lastName || ''}`.trim()}</span>
+                                                        <span className="text-[10px] text-gray-400 uppercase">{c.role || 'Contact'}</span>
+                                                    </div>
+                                                    {c.phone && <a href={`tel:${c.phone}`} className="block text-[#ec028b] font-mono hover:underline">{c.phone}</a>}
+                                                    {c.email && <a href={`mailto:${c.email}`} className="block text-gray-400 font-mono truncate hover:text-white">{c.email}</a>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Scheduled Inspection / Insurance / Gov Compliance / Notes */}
+                                    {(currentProject.scheduled_appointment || currentProject.insurance || currentProject.compliance || currentProject.notes) && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                            {currentProject.scheduled_appointment && (
+                                                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                                                    <p className="text-[10px] uppercase font-black tracking-wider text-emerald-400 mb-0.5">Scheduled Appointment</p>
+                                                    <p className="font-semibold">{currentProject.scheduled_appointment}</p>
+                                                </div>
+                                            )}
+                                            {currentProject.insurance && (
+                                                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-200">
+                                                    <p className="text-[10px] uppercase font-black tracking-wider text-blue-400 mb-0.5">Insurance Claim</p>
+                                                    <p>{currentProject.insurance.carrier || 'Carrier TBD'} · Claim #{currentProject.insurance.claimNumber || currentProject.insurance.claim_number || 'Pending'}</p>
+                                                    {currentProject.insurance.adjusterName && (
+                                                        <p className="text-[11px] text-blue-300 mt-0.5">Adjuster: {currentProject.insurance.adjusterName} {currentProject.insurance.adjusterPhone ? `(${currentProject.insurance.adjusterPhone})` : ''}</p>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {currentProject.compliance && (
+                                                <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-200">
+                                                    <p className="text-[10px] uppercase font-black tracking-wider text-indigo-400 mb-0.5">Government Procurement</p>
+                                                    <p>{currentProject.compliance.solicitation_num || 'DFCM'} · {currentProject.compliance.wage_determination}</p>
+                                                </div>
+                                            )}
+                                            {currentProject.notes && (
+                                                <div className="p-3 rounded-lg bg-gray-900/60 border border-gray-800 text-gray-300 md:col-span-2">
+                                                    <p className="text-[10px] uppercase font-black tracking-wider text-gray-500 mb-0.5">Intake & Field Notes</p>
+                                                    <p>{currentProject.notes}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Rep Assignment & Hold / Deferral Status Controls */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-gray-800">
+                                        <div>
+                                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Assigned Specialist</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {['Michael', 'Vern', 'Sheena', 'Unassigned'].map((rep) => {
+                                                    const active = (currentProject.assigned_name || 'Unassigned') === rep;
+                                                    return (
+                                                        <button
+                                                            key={rep}
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                await projectService.updateRecord(currentProject.id, {
+                                                                    assigned_name: rep,
+                                                                    updated_at: new Date().toISOString(),
+                                                                }, currentProject._source);
+                                                                await userLogService.logAction('EDIT_RECORD', `Assigned ${currentProject.name || 'Lead'} to ${rep}`, {
+                                                                    recordId: currentProject.id,
+                                                                    stage: 'Lead',
+                                                                });
+                                                            }}
+                                                            className={cn(
+                                                                'px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer',
+                                                                active
+                                                                    ? 'bg-[#ec028b] border-[#ec028b] text-white shadow-[0_0_10px_rgba(236,2,139,0.3)]'
+                                                                    : 'bg-gray-900/60 border-gray-700 text-gray-400 hover:text-white'
+                                                            )}
+                                                        >
+                                                            {rep}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Pipeline Readiness / Hold Status</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {['Active', 'Spring Deferral + Tarp', 'HOA / HLC Hold', 'Structural Hold'].map((holdOpt) => {
+                                                    const active = (currentProject.hold_reason || 'Active') === holdOpt;
+                                                    return (
+                                                        <button
+                                                            key={holdOpt}
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                await projectService.updateRecord(currentProject.id, {
+                                                                    hold_reason: holdOpt,
+                                                                    updated_at: new Date().toISOString(),
+                                                                }, currentProject._source);
+                                                                await userLogService.logAction('EDIT_RECORD', `Updated hold status on ${currentProject.name || 'Lead'} to ${holdOpt}`, {
+                                                                    recordId: currentProject.id,
+                                                                    stage: 'Lead',
+                                                                });
+                                                            }}
+                                                            className={cn(
+                                                                'px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer',
+                                                                active
+                                                                    ? 'bg-[#ec028b]/20 border-[#ec028b] text-white'
+                                                                    : 'bg-gray-900/60 border-gray-700 text-gray-400 hover:text-white'
+                                                            )}
+                                                        >
+                                                            {holdOpt}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </Card>
@@ -729,7 +884,7 @@ const LeadPage: React.FC = () => {
                                         )}
                                     </div>
                                     <p className="text-xs text-gray-500 font-mono mt-0.5">
-                                        {isUnassigned ? 'No rep assigned' : `ID: ${group.assigneeId}`}
+                                        {isUnassigned ? 'Awaiting specialist assignment' : 'Active Specialist Queue'}
                                         {' '}&bull;{' '}
                                         {group.projects.length} Lead{group.projects.length !== 1 ? 's' : ''}
                                     </p>

@@ -6,6 +6,14 @@ import { ClockIcon, DocumentCheckIcon, PlusIcon, TrashIcon, DocumentTextIcon, Ch
 import { projectService, userLogService } from '../lib/firebaseService';
 import { useNavigation } from '../contexts/NavigationContext';
 import { cn } from '../lib/utils';
+import {
+    QOS_RPSP_WINDOW_HOURS,
+    calculateRpspAndCredits,
+    calculateDualMathFromRetailOrItems,
+    resolvePaymentModel,
+    PAYMENT_MODEL_LABELS,
+    type QosPaymentModel,
+} from '../lib/qosRules';
 
 const MASTER_QUOTE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1gIpfoBPayONS8__CxIhFpDYbiK4HgwfBphuNSGZVxPY/edit?gid=1779763051#gid=1779763051';
 
@@ -15,7 +23,7 @@ const BoltIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-const RPSP_WINDOW_HOURS = 48;
+const RPSP_WINDOW_HOURS = QOS_RPSP_WINDOW_HOURS;
 
 function useRPSPTimer(project: any) {
     const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -87,6 +95,9 @@ const QuoteContent: React.FC<QuoteContentProps> = ({ project, onSignAndAccept, s
     const [newSheetLabel, setNewSheetLabel] = useState('');
     const [newSheetUrl, setNewSheetUrl] = useState('');
     const [cartPortalUrl, setCartPortalUrl] = useState<string>(project?.shopping_cart_url || '');
+    const [competitorQuoteCount, setCompetitorQuoteCount] = useState<number>(Number(project?.quote?.competitorQuoteCount || 0));
+    const [multiBuildingPromo, setMultiBuildingPromo] = useState<boolean>(Boolean(project?.quote?.multiBuildingPromo ?? ((project?.buildings?.length || 1) > 1)));
+    const [paymentModel, setPaymentModel] = useState<QosPaymentModel>(() => resolvePaymentModel(project));
     const [savingDraft, setSavingDraft] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
 
@@ -100,28 +111,48 @@ const QuoteContent: React.FC<QuoteContentProps> = ({ project, onSignAndAccept, s
         }
         if (Array.isArray(project?.quote_sheets)) setSheets(project.quote_sheets);
         if (project?.shopping_cart_url) setCartPortalUrl(project.shopping_cart_url);
+        setPaymentModel(resolvePaymentModel(project));
     }, [project?.id]);
 
     const isRPSPActive = rpspEnabled && timeRemaining > 0;
     const subtotal = items.reduce((acc, it) => acc + (Number(it.price) || 0), 0);
-    const discountAmount = isRPSPActive ? Math.round(subtotal * 0.1) : 0;
-    const finalTotal = subtotal - discountAmount;
-    const internalCost = Math.round(subtotal * 0.65);
+    const buildingCount = Array.isArray(project?.buildings) && project.buildings.length > 0 ? project.buildings.length : items.length;
+    const rpspCalc = calculateRpspAndCredits({
+        subtotal,
+        projectCategory: project?.project_category || project?.project_type || 'Residential',
+        rpspActive: isRPSPActive,
+        buildingCount: multiBuildingPromo ? buildingCount : 1,
+        competitorQuoteCount,
+    });
+    const discountAmount = rpspCalc.totalDiscount;
+    const finalTotal = rpspCalc.finalTotal;
+    const dualMath = calculateDualMathFromRetailOrItems(subtotal, project?.costs);
+    const internalCost = dualMath.costs.totalCost;
     const margin = finalTotal - internalCost;
 
-    const buildQuoteObject = (statusLabel: string) => ({
-        ...(project?.quote || {}),
-        subtotal,
-        total: finalTotal,
-        discountAmount,
-        rpspEnabled,
-        internalCost,
-        breakdown: items.map(i => ({ name: i.name, price: Number(i.price) || 0, cost: Number(i.price) || 0 })),
-        items: items.map(i => ({ name: i.name, price: Number(i.price) || 0, cost: Number(i.price) || 0 })),
-        status: statusLabel,
-        sent_at: project?.quote?.sent_at || new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-    });
+    const buildQuoteObject = (statusLabel: string) => {
+        const cleanPrev = { ...(project?.quote || {}) };
+        delete (cleanPrev as any).internalCost;
+        return {
+            ...cleanPrev,
+            subtotal,
+            total: finalTotal,
+            discountAmount,
+            rpspDiscount: rpspCalc.rpspDiscount,
+            multiBuildingDiscount: rpspCalc.multiBuildingDiscount,
+            competitorCredit: rpspCalc.competitorCredit,
+            competitorQuoteCount,
+            multiBuildingPromo,
+            rpspEnabled,
+            payment_model: paymentModel,
+            osbFreeAllowanceSqft: 100,
+            breakdown: items.map(i => ({ name: i.name, price: Number(i.price) || 0, cost: Number(i.price) || 0 })),
+            items: items.map(i => ({ name: i.name, price: Number(i.price) || 0, cost: Number(i.price) || 0 })),
+            status: statusLabel,
+            sent_at: project?.quote?.sent_at || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        };
+    };
 
     const handleSaveQuote = async () => {
         if (!project?.id || savingDraft) return;
@@ -131,6 +162,8 @@ const QuoteContent: React.FC<QuoteContentProps> = ({ project, onSignAndAccept, s
             const quoteObj = buildQuoteObject('Sent');
             await projectService.updateRecord(project.id, {
                 quote: quoteObj,
+                costs: dualMath.costs,
+                payment_model: paymentModel,
                 quote_sheets: sheets,
                 shopping_cart_url: cartPortalUrl.trim() || null,
                 updated_at: new Date().toISOString(),
@@ -206,14 +239,14 @@ const QuoteContent: React.FC<QuoteContentProps> = ({ project, onSignAndAccept, s
                                 : 'bg-black/50 border-gray-700 text-gray-500 hover:text-gray-300'
                         )}
                     >
-                        RPSP 10% Promo: {rpspEnabled ? 'Active' : 'Off'}
+                        72h RPSP Savings: {rpspEnabled ? 'Active' : 'Off'}
                     </button>
 
                     {isRPSPActive ? (
                         <div className="text-right">
                             <p className="text-[#ec028b] font-bold text-[10px] uppercase tracking-widest mb-1 flex items-center justify-end gap-1">
                                 <ClockIcon className="w-3.5 h-3.5" />
-                                48h Window
+                                72h Window
                             </p>
                             <div className="text-lg font-mono font-bold text-white bg-black/70 px-3 py-1.5 rounded-lg border border-[#ec028b]/50">
                                 {formatTime(timeRemaining)}
@@ -413,15 +446,78 @@ const QuoteContent: React.FC<QuoteContentProps> = ({ project, onSignAndAccept, s
                                 <span className="text-white font-mono">${subtotal.toLocaleString()}</span>
                             </div>
 
-                            {isRPSPActive && (
-                                <div className="flex justify-between text-sm text-[#ec028b] font-bold">
+                            {rpspCalc.rpspDiscount > 0 && (
+                                <div className="flex justify-between text-xs text-[#ec028b] font-bold">
                                     <span className="flex items-center gap-1">
                                         <BoltIcon className="w-3 h-3" />
-                                        RPSP Savings (10%)
+                                        {rpspCalc.rpspLabel}
                                     </span>
-                                    <span className="font-mono">-${discountAmount.toLocaleString()}</span>
+                                    <span className="font-mono">-${rpspCalc.rpspDiscount.toLocaleString()}</span>
                                 </div>
                             )}
+
+                            {buildingCount > 1 && (
+                                <div className="flex items-center justify-between text-xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMultiBuildingPromo(p => !p)}
+                                        className={cn(
+                                            'px-2 py-1 rounded border text-[10px] font-bold uppercase cursor-pointer',
+                                            multiBuildingPromo ? 'border-[#ec028b] bg-[#ec028b]/15 text-[#ec028b]' : 'border-gray-700 text-gray-500'
+                                        )}
+                                    >
+                                        Multi-Roof 0.5%/Bldg ({buildingCount})
+                                    </button>
+                                    <span className="font-mono text-emerald-400">
+                                        {rpspCalc.multiBuildingDiscount > 0 ? `-$${rpspCalc.multiBuildingDiscount.toLocaleString()}` : '$0'}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-400">Competitor Quotes ($50/ea)</span>
+                                <div className="flex gap-1">
+                                    {[0, 1, 2, 3].map(n => (
+                                        <button
+                                            key={n}
+                                            type="button"
+                                            onClick={() => setCompetitorQuoteCount(n)}
+                                            className={cn(
+                                                'w-6 h-6 rounded border text-[10px] font-bold cursor-pointer',
+                                                competitorQuoteCount === n ? 'bg-[#ec028b] border-[#ec028b] text-white' : 'bg-black/40 border-gray-700 text-gray-400'
+                                            )}
+                                        >
+                                            {n}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            {rpspCalc.competitorCredit > 0 && (
+                                <div className="flex justify-between text-xs text-emerald-400 font-mono">
+                                    <span>Competitor Quote Credit</span>
+                                    <span>-${rpspCalc.competitorCredit}</span>
+                                </div>
+                            )}
+
+                            <div className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-[11px] text-emerald-300">
+                                Includes 1st 100 sq ft (3 sheets) of 7/16&quot; OSB Decking Replacement Free ($72.50/sheet thereafter).
+                            </div>
+
+                            <div className="space-y-1.5 pt-2 border-t border-gray-800">
+                                <label className="block text-[10px] text-gray-400 uppercase font-bold tracking-widest">
+                                    Billing &amp; Payment Model
+                                </label>
+                                <select
+                                    id="quote-payment-model-select"
+                                    value={paymentModel}
+                                    onChange={(e) => setPaymentModel(e.target.value as QosPaymentModel)}
+                                    className="w-full bg-black/70 border border-gray-700 rounded-lg px-2.5 py-2 text-xs text-white focus:border-[#ec028b] outline-none"
+                                >
+                                    {(Object.keys(PAYMENT_MODEL_LABELS) as QosPaymentModel[]).map((m) => (
+                                        <option key={m} value={m}>{PAYMENT_MODEL_LABELS[m]}</option>
+                                    ))}
+                                </select>
+                            </div>
 
                             <div className="border-t border-gray-700 pt-4">
                                 <div className="flex justify-between items-end">
@@ -430,8 +526,8 @@ const QuoteContent: React.FC<QuoteContentProps> = ({ project, onSignAndAccept, s
                                         ${finalTotal.toLocaleString()}
                                     </span>
                                 </div>
-                                <p className="text-[10px] text-gray-500 text-right mt-2 font-mono">
-                                    50% Material Deposit • 40% Completion • 10% Warranty
+                                <p className="text-[10px] text-gray-400 text-right mt-2 font-mono">
+                                    {PAYMENT_MODEL_LABELS[paymentModel]}
                                 </p>
                             </div>
 
@@ -465,9 +561,12 @@ const QuotePage: React.FC = () => {
         if (!project || signing) return;
         setSigning(true);
         try {
+            const dualMath = calculateDualMathFromRetailOrItems(Number(finalQuoteData.subtotal || finalQuoteData.total || 0), project?.costs);
             await projectService.updateRecord(project.id, {
                 current_stage: 'Sign & Verify',
                 quote: finalQuoteData,
+                costs: dualMath.costs,
+                payment_model: finalQuoteData.payment_model || resolvePaymentModel(project),
                 pizza_tracker: {
                     stage: 'Sign & Verify',
                     stageIndex: 3,
