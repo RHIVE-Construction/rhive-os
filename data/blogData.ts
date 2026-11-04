@@ -1286,7 +1286,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         sectionHeading: '2. The RHIVE Project Savings Promotion (RPSP) "Efficiency Credit"',
-        directAnswer: 'RHIVE eliminates commissioned sales reps and physical warehouse overhead to provide an immediate 10% efficiency credit (up to $1,000 residential / $3,000 commercial) when approving your quote within the presentation window.',
+        directAnswer: 'RHIVE eliminates commissioned sales reps and physical warehouse overhead to provide an immediate 10% efficiency credit (up to $1,000) when approving your quote within the presentation window.',
         bodyParagraphs: [
           'Traditional contractors pad quotes with a 10–15% "chase cost"—the administrative overhead required for repeated sales visits, phone follow-ups, and long decision windows.',
           'At RHIVE Construction, we eliminate sales commissions and physical warehouse bloat to keep overhead under 10%:'
@@ -1316,7 +1316,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         question: 'How does the RHIVE Project Savings Promotion (RPSP) reduce roof replacement costs?',
-        answer: 'The RPSP eliminates the 10-15% overhead traditional contractors spend chasing sales leads. By making a timely decision within your quote presentation window, RHIVE credits that efficiency savings (up to $1,000 residential / $3,000 commercial) directly back to you.'
+        answer: 'The RPSP eliminates the 10-15% overhead traditional contractors spend chasing sales leads. By making a timely decision within your quote presentation window, RHIVE credits that efficiency savings (up to $1,000) directly back to you.'
       },
       {
         question: 'Is my deposit protected when financing a roof replacement with RHIVE?',

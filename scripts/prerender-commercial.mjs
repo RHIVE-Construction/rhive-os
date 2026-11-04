@@ -18,7 +18,7 @@ const baseHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
 // Commercial Metadata & Head Tags
 const canonicalUrl = 'https://www.rhiveconstruction.com/services/commercial-flat-roofing';
 const pageTitle = 'Utah Commercial Flat Roofing Contractors | TPO & PVC Systems | RHIVE Construction';
-const pageDescription = 'Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, modified bitumen, and transparent RPSP pricing.';
+const pageDescription = 'Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, modified bitumen, and transparent milestone funding.';
 
 // Replace Head Tags
 let commercialHtml = baseHtml;
@@ -78,7 +78,7 @@ const commercialJsonLd = `  <script type="application/ld+json">
         "priceRange": "$$$",
         "currenciesAccepted": "USD",
         "paymentAccepted": "Cash, Check, Wire Transfer, Progress Billing, Net 30",
-        "description": "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, modified bitumen, and transparent RPSP pricing.",
+        "description": "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, modified bitumen, and transparent milestone funding.",
         "address": {
           "@type": "PostalAddress",
           "streetAddress": "10437 Shady Plum Way",
@@ -109,7 +109,7 @@ const commercialJsonLd = `  <script type="application/ld+json">
         "provider": {
           "@id": "https://www.rhiveconstruction.com/services/commercial-flat-roofing#organization"
         },
-        "description": "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, and transparent RPSP pricing.",
+        "description": "Factory-certified commercial flat roofing contractors in Utah. Specializing in GAF EverGuard® TPO/PVC single-ply systems, 30-year NDL warranties, and transparent milestone funding.",
         "serviceType": "Commercial Roofing, Flat Roofing, TPO Roofing, PVC Roofing, Industrial Roofing, Modified Bitumen"
       },
       {

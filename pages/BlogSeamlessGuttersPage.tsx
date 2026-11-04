@@ -75,7 +75,7 @@ const BlogSeamlessGuttersPage: React.FC = () => {
           </p>
 
           <p>
-            At RHIVE Construction, we act as a complete <strong>roof and gutter company near me</strong>. We do not believe in pre-packaged, sectional retail gutters that leak at every seam. Instead, we custom-extrude continuous, heavy-gauge aluminum gutters on-site, specifically engineered to withstand punishing winter ice loads and heavy Wasatch Front storms.
+            At RHIVE Construction, we act as a complete <strong>Utah roof and seamless gutter contractor</strong>. We do not believe in pre-packaged, sectional retail gutters that leak at every seam. Instead, we custom-extrude continuous, heavy-gauge aluminum gutters on-site, specifically engineered to withstand punishing winter ice loads and heavy Wasatch Front storms.
           </p>
 
           <p>

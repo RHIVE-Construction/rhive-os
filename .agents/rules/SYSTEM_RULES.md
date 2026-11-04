@@ -6,6 +6,15 @@
 
 ## 0. CORE BEHAVIOUR RULES
 
+### 0.0 Website, Commercial & Blog Content Standards
+- **Follow `.agents/rules/WEBSITE_AND_CONTENT_STANDARDS.md` strictly across all public pages, commercial vertical pages, blogs, and intake flows.**
+- **No Commercial RPSP:** Never advertise or show RPSP for commercial/government projects (RPSP is strictly residential up to $1,000). Commercial financial terms are institutional 50/40/10 milestone schedules & Master Service Agreements.
+- **Engineering Re-Cover Standard:** Clearly differentiate full tear-off to structural decking (best practice/mandatory for 2+ layers or wet polyiso) vs. RHIVE's 1-layer re-cover (membrane stripped to polyiso, 100% substrate inspected, wet insulation replaced, new fanfold cover board installed, new membrane). Never use the word "cheap".
+- **Unified Intake Flow:** Route all CTAs into `pages/CustomerInputPage.tsx` with smart field pre-selection via `lib/intakeRouting.ts` (intent, scope, activeLeak, commercial category).
+- **Phone & Links:** Official number is `(435) 417-6637` (never area code `453`). No "Tech Office" button labels. No broken `/estimator` links.
+- **Clean Copy:** No "Qubit Turnkey" references, no internal database SKU codes in public text, no raw uninspected commercial sq-ft pricing, no "company near me" keyword stuffing, and no "$0 Deductible" claims.
+
+
 These rules govern agent and developer behaviour at the highest level. They override defaults.
 
 ### 0.1 No Subheadings Unless Explicitly Instructed
