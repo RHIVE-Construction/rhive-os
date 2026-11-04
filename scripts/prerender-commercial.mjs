@@ -73,7 +73,7 @@ const commercialJsonLd = `  <script type="application/ld+json">
         "url": "https://www.rhiveconstruction.com/services/commercial-flat-roofing",
         "logo": "https://i.imgur.com/t0VcSgJ.png",
         "image": "https://www.rhiveconstruction.com/images/commercial-tpo-membrane-re-roof-layover-salt-lake-city-utah.webp",
-        "telephone": "+1-801-449-1451",
+        "telephone": "+1-435-417-6637",
         "email": "office@rhiveconstruction.com",
         "priceRange": "$$$",
         "currenciesAccepted": "USD",
@@ -340,6 +340,7 @@ commercialHtml = commercialHtml.replace(
 // 3. dist/commercial-roofing/index.html
 // 4. dist/commercial-roofing.html
 const targetFiles = [
+  path.resolve(rootDir, 'public', 'services', 'commercial-flat-roofing', 'index.html'),
   path.resolve(distDir, 'services', 'commercial-flat-roofing', 'index.html'),
   path.resolve(distDir, 'services', 'commercial-flat-roofing.html'),
   path.resolve(distDir, 'commercial-roofing', 'index.html'),
