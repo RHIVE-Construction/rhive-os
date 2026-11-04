@@ -102,6 +102,7 @@ const PATH_ROUTES: Record<string, string> = {
     '/blog/hail-damage-insurance-claims-utah-inspection-guide': 'P-SEO-BLOG-28',
     '/blog/top-rated-roofing-contractor-bountiful-ut': 'P-SEO-BLOG-29',
     '/blog/rhive-fall-roof-maintenance-guide-utah': 'P-SEO-BLOG-30',
+    '/blog/utah-services-by-rhive': 'P-SEO-BLOG-31',
     '/privacy':                               'P-PRIVACY',
     '/terms':                                 'P-TERMS',
 };

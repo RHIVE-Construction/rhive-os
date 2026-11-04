@@ -29,6 +29,16 @@ const BLOGS_DATA: BlogMeta[] = [
     badge: 'Community Spotlight'
   },
 
+  // ── UTAH FULL ROOFING SERVICE DIRECTORY ────────────────────────────────────
+  {
+    title: 'UTAH Services by RHIVE: Comprehensive Residential, Commercial & Specialty Roofing Solutions',
+    slug: '/blog/utah-services-by-rhive',
+    description: 'Discover the full catalog of Utah roofing services offered by RHIVE Construction: 100% tear-off residential roofs, commercial GAF TPO/PVC flat roofs, gutters, and storm repairs.',
+    category: 'Residential',
+    readTime: '7 min read',
+    badge: 'Service Catalog'
+  },
+
   // ── AUTUMN & WINTER PREPAREDNESS STRATEGY ──────────────────────────────────
   {
     title: 'RHIVE Fall Roof Maintenance Guide: Preparing Utah Roofs for Winter Weather',

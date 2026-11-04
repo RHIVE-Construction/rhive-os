@@ -1682,6 +1682,165 @@ export const BLOG_POSTS: BlogPost[] = [
       }
     ]
   }
+,
+  // ==========================================
+  // ARTICLE 31 (UTAH Services by RHIVE - Comprehensive Solutions)
+  // ==========================================
+  {
+    slug: 'utah-services-by-rhive',
+    title: 'UTAH Services by RHIVE: Comprehensive Residential, Commercial & Specialty Roofing Solutions Across the Wasatch Front',
+    metaTitle: 'UTAH Services by RHIVE | Roofing, Flat Roofs & Gutters | RHIVE Construction',
+    bluf: 'RHIVE Construction is a female-owned and operated contractor providing a complete suite of residential, commercial, and specialty roofing services across Utah. Key services include 100% full tear-off residential replacements with Owens Corning Duration® Class 4 shingles (130 MPH rating), commercial GAF EverGuard® TPO/PVC single-ply systems with up to 30-Year NDL guarantees, $350 credited emergency leak tarping, custom seamless gutters, eave heat trace, and direct 50-Year Lifetime Installer No-Leak Guarantees.',
+    description: 'Discover the full catalog of Utah roofing services offered by RHIVE Construction. From 100% tear-off residential replacements and GAF commercial TPO/PVC flat roofs to gutters, heat trace, and storm repairs.',
+    category: 'Residential',
+    readTime: '7 min read',
+    publishedDate: '2026-11-05T08:00:00.000Z',
+    modifiedDate: '2026-11-05T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'President & Co-founder',
+    },
+    image: 'https://images.unsplash.com/photo-1541888946425-d0fbb18615f8?auto=format&fit=crop&w=1200&q=80',
+    tags: ['UTAH Services by RHIVE', 'RHIVE Construction Utah roofing services', 'Roof replacement services Utah', 'Commercial flat roofing Utah', 'Emergency roof repair Utah'],
+    content: [
+      {
+        sectionHeading: 'Redefining Utah Roofing Through Technology & Radical Transparency',
+        directAnswer: 'Headquartered in South Jordan, Utah, RHIVE Construction eliminates traditional sales commissions and warehouse overhead to operate under 10% operating overhead, passing savings directly to property owners via itemized mathematical quotes.',
+        bodyParagraphs: [
+          'Headquartered at 10437 Shady Plum Way in South Jordan, Utah, RHIVE Construction was co-founded by Kara Robinson (President) and Michael Robinson (CEO) to challenge contractor inefficiencies, hidden markups, and unbacked warranties.',
+          'By leveraging AI automation and eliminating expensive sales commissions and physical warehouse overhead, RHIVE maintains operating overhead under 10%. Every quote provided to Utah property owners includes a fully itemized mathematical breakdown showing exact costs for Materials, Labor, Operating Overhead, and Net Company Profit.'
+        ],
+        bulletPoints: [
+          'Itemized Transparency: Mathematical breakdown of Materials, Labor, Overhead (<10%), and Net Profit on every proposal.',
+          'No Sales Commission Markups: Direct founder leadership and digital diagnosis replace high-pressure sales reps.',
+          'Certified Digital Precision: Roofr high-definition aerial satellite diagnostic reports deliver exact measurements within 24–48 hours.'
+        ]
+      },
+      {
+        sectionHeading: '1. Residential Roofing Services in Utah',
+        directAnswer: 'RHIVE enforces a strict 100% full tear-off standard on all residential roofs down to bare wood decking, installs Owens Corning Duration® 130 MPH shingles, and includes up to 100 sq ft of OSB decking replacement.',
+        bodyParagraphs: [
+          'RHIVE Construction specializes in complete residential reroofing designed to withstand Utah’s harsh alpine weather, high canyon wind shears, and single-day temperature fluctuations exceeding 80°F.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│             RHIVE RESIDENTIAL ROOFING SYSTEM           │
+├────────────────────────────────────────────────────────┤
+│ ✓ 100% Full Tear-Off Down to Bare Decking              │
+│ ✓ Decking Inspection + Up to 100 sq ft OSB Included     │
+│ ✓ 100% Field Coverage: Owens Corning ProArmor®         │
+│ ✓ Eaves & Valleys: 6 Ft WeatherLock® Ice & Water Shield│
+│ ✓ SureNail® Fastening: 6-Nail Pattern (130 MPH Rating) │
+│ ✓ 28-Gauge Steel Perimeter Drip Metal Edge             │
+│ ✓ Owens Corning 50-Year Total Protection Warranty      │
+│ ✓ RHIVE Direct 50-Year Lifetime Installer No-Leak Guard│
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          '100% Full Tear-Off Policy: RHIVE never performs residential layovers. Covering old shingles traps heat, conceals underlying structural rot, adds excessive weight, and voids manufacturer warranties.',
+          'Decking Allowance Included: Every full residential reroof includes up to 100 sq ft of 7/16 OSB decking replacement at no extra charge if wood rot is discovered. Additional sheets are billed at pre-agreed contract rates ($72.50 per 7/16 OSB sheet) specified upfront.',
+          'Secondary Waterproofing: 100% of the bare roof deck is protected with Owens Corning ProArmor® synthetic underlayment.',
+          'Double-Layer Eave Protection: RHIVE installs a minimum of 6 continuous feet of self-adhering Owens Corning WeatherLock® Ice & Water Shield along eaves and valleys, extending far past the standard 24-inch IRC warm-wall code.',
+          'High-Wind SureNail® Shingles: We install Owens Corning Duration® Series architectural shingles and Duration FLEX® Class 4 SBS polymer-modified impact shingles fastened with electro-galvanized coil nails in a 6-nail pattern for a certified 130 MPH wind uplift rating.',
+          'Dual Warranty Security: Backed by Owens Corning 50-Year Non-Prorated Preferred Protection component coverage and RHIVE’s direct 50-Year Lifetime Installer No-Leak Guarantee.'
+        ]
+      },
+      {
+        sectionHeading: '2. Commercial & Industrial Flat Roofing Services in Utah',
+        directAnswer: 'As a certified commercial installer, RHIVE provides GAF EverGuard® TPO and PVC single-ply systems (60 & 80 mil), tapered Polyiso R-30+ drainage assemblies, and up to 30-Year No Dollar Limit (NDL) Guarantees.',
+        bodyParagraphs: [
+          'As a factory-certified GAF commercial installer, RHIVE Construction delivers low-slope and flat single-ply membrane roofing for office parks, retail plazas, industrial facilities, and municipal buildings across Utah and Idaho.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            COMMERCIAL SINGLE-PLY MEMBRANE HUBS         │
+├──────────────────────────┬─────────────────────────────┤
+│ GAF EVERGUARD® TPO       │ GAF EVERGUARD® PVC          │
+├──────────────────────────┼─────────────────────────────┤
+│ • 60 mil & 80 mil option │ • 60 mil & 80 mil option    │
+│ • White Energy Star UV   │ • Chemical, oil & grease    │
+│   solar reflectivity     │   resistant formulation     │
+│ • Polyiso R-30+ thermal  │ • Ideal for restaurants,    │
+│   insulation assembly    │   kitchens & industrial     │
+│ • 20 to 30-Year NDL      │ • 20 to 30-Year NDL         │
+│   Guarantee Coverage     │   Guarantee Coverage        │
+└──────────────────────────┴─────────────────────────────┘`,
+        bulletPoints: [
+          'GAF EverGuard® TPO Systems (60/80 mil): Reflective white thermoplastic single-ply membrane that lowers summer HVAC building cooling loads. Field seams and flashing details are fusion heat-welded using hot air to form a continuous, monolithic watertight bond.',
+          'GAF EverGuard® PVC Systems (60/80 mil): Formulated for high resistance to animal fats, oils, greases, and industrial chemicals—essential for commercial kitchens and manufacturing plants.',
+          'Substrate & Drainage Assembly: Mechanically attached Polyisocyanurate (Polyiso) thermal insulation boards (R-30+), custom pre-fabricated tapered Polyiso around drains and scuppers to eliminate ponding water, and high-density DensDeck® gypsum cover boards.',
+          'Full Tear-Off vs. 1-Layer Re-Cover Engineering Standard: Tearing all the way down to structural decking (steel, concrete, or wood) is always best practice and mandatory for 2+ layers or wet polyiso. For qualified single-layer roofs, RHIVE strips the existing top membrane down to the polyiso substrate, thoroughly inspects 100% of the substrate, replaces any damaged/wet polyiso, and installs new fanfold cover board and a brand-new membrane for a 100% manufacturer-warrantable system.',
+          'GAF No Dollar Limit (NDL) Guarantees: Commercial projects qualify for GAF NDL Commercial Guarantees for up to 30 years, covering 100% of material and labor defect costs without a payout cap.'
+        ]
+      },
+      {
+        sectionHeading: '3. Specialty & Auxiliary Trade Services in Utah',
+        directAnswer: 'RHIVE integrates full exterior water management—including on-site seamless gutter extrusion (fastened every 24"), 5W/lin ft self-regulating heat trace cables, masonry flashing, and solar detach/reset.',
+        bodyParagraphs: [
+          'RHIVE Construction provides integrated auxiliary trade services to ensure total exterior water management and roofline protection:'
+        ],
+        bulletPoints: [
+          'Seamless Aluminum Gutters: Custom-extruded on-site in 5-inch and 6-inch K-style, semi-circular round, or box profiles. Heavy-duty hidden screw-in hangers are anchored tightly at every 24 inches (exceeding standard 30-inch spacing) to support heavy winter snow and ice loads.',
+          'Self-Regulating Heat Trace Systems: Installation of commercial-grade self-regulating heat cable (5W/lin ft, 110V) along eaves and gutters, controlled by automatic thermostats to maintain open melt channels and prevent winter ice dams.',
+          'Chimney Masonry & Flashing Detail: Precision mortar joint repointing, custom 28-gauge steel step and L-metal flashing installation, and full 24-gauge Kynar-coated steel chimney chase pan or shroud replacements.',
+          'Solar Panel Detach & Reset: Certified disconnection, safe off-site or on-site storage, and professional re-installation of residential and commercial solar panel arrays during reroofing projects.'
+        ]
+      },
+      {
+        sectionHeading: '4. Emergency Leak Repair & Storm Response',
+        directAnswer: 'Under the Quantum Rapid-Response Protocol, RHIVE dispatches emergency containment crews with a flat $350 fee, with 100% credited back toward your permanent restoration.',
+        bodyParagraphs: [
+          'When severe weather strikes the Wasatch Front, RHIVE operates a Quantum Rapid-Response Protocol for emergency containment:'
+        ],
+        bulletPoints: [
+          'Emergency Tarping Dispatch: Rapid deployment of heavy-duty synthetic tarping or flat membrane heat-welded patches.',
+          'The $350 Credit Guarantee: Emergency containment carries a flat $350 fee, and 100% of this $350 fee is credited directly back toward your permanent repair or complete reroof with RHIVE.'
+        ]
+      },
+      {
+        sectionHeading: '5. Financial Terms & The Project Savings Promotion (RPSP)',
+        directAnswer: 'RHIVE protects homeowner security through a transparent 50/40/10 milestone schedule, a 10% residential RPSP efficiency credit (up to $1,000), 3-day statutory rescission rights, and 0% APR financing options.',
+        bodyParagraphs: [
+          'RHIVE protects customer financial security with transparent investment terms and promotional efficiency credits:'
+        ],
+        bulletPoints: [
+          'Transparent 50/40/10 Milestone Schedule: 50% initial investment at signing to lock scheduling, pull municipal building permits, and drop materials; 40% on substantial installation day once watertight; 10% final settlement retained until punch list sign-off and magnetic nail sweep.',
+          'RHIVE Project Savings Promotion (RPSP): Commit to your quote within the presentation window to unlock an immediate 10% Efficiency Credit (up to $1,000) by stripping out administrative sales chase costs.',
+          'Protected by Utah Law: Locked under Utah’s statutory 3-Day Right of Rescission, giving homeowners 3 full business days to verify their decision with zero financial risk.',
+          'Flexible Financing: Partnered with Enhancify to offer 0% APR for 18 months or low-APR long-term payment plans.',
+          'Our Hive Community Impact: A percentage of every completed roof project directly funds free roof replacements for local veterans, teachers, first responders, and families in need across every state where RHIVE operates.'
+        ]
+      },
+      {
+        sectionHeading: '6. RHIVE Construction Utah Service Area Directory',
+        directAnswer: 'RHIVE Construction services residential and commercial properties across Salt Lake County, Davis County, Utah County, Weber County, Summit County, and Tooele County.',
+        bodyParagraphs: [
+          'RHIVE Construction actively services residential and commercial properties across all primary Wasatch Front and surrounding Utah municipalities:'
+        ],
+        bulletPoints: [
+          'Salt Lake County: Salt Lake City, South Jordan (HQ), Sandy, Draper, West Jordan, West Valley City, Herriman, Taylorsville, Midvale, Millcreek, Holladay, Kearns, Magna, Sugar House.',
+          'Davis & Weber Counties: Bountiful, North Salt Lake, Centerville, Woods Cross, Farmington, Kaysville, Layton, Clearfield, Syracuse, Ogden, Roy.',
+          'Utah County: Lehi, American Fork, Pleasant Grove, Orem, Provo, Springville, Spanish Fork.',
+          'Summit, Wasatch & Tooele Counties: Park City, Heber City, Midway, Kamas, Tooele.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'How do I get an initial cost estimate for my roof in Utah?',
+        answer: 'You can get an instant 60-second ballpark estimate directly through the RHIVE website estimator tool. For an exact binding price, request a Certified Quote, which is generated within 24–48 hours using high-definition Roofr aerial satellite reports.'
+      },
+      {
+        question: 'Does RHIVE charge extra if extra wood decking rot is found during tear-off?',
+        answer: 'Every full residential reroof includes up to 100 sq ft of OSB decking replacement at no additional charge. Any additional wood required beyond 100 sq ft is billed at pre-agreed contract rates ($72.50 per 7/16 OSB sheet) specified upfront in your contract.'
+      },
+      {
+        question: 'What happens if I need emergency leak repairs during a snowstorm or windstorm?',
+        answer: 'RHIVE dispatches emergency crews under our Quantum Rapid-Response Protocol. Emergency synthetic tarping or flat roof membrane containment carries a flat $350 fee, and 100% of this $350 fee is credited back toward your permanent repair or replacement.'
+      },
+      {
+        question: 'How does the RHIVE Lifetime Installer No-Leak Guarantee protect me?',
+        answer: 'In addition to Owens Corning 50-Year material warranties, RHIVE Construction guarantees our workmanship for the lifetime of the roof system. If our installation methods cause a leak, we repair it 100% free of charge.'
+      }
+    ]
+  }
 ];
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
