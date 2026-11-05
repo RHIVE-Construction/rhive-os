@@ -959,13 +959,16 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
             await rateLimitRef.set({ timestamps });
 
             // ?????? Verify user exists in Firestore users collection ???????????????????????????????????????
-            const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
-            if (usersSnap.empty) {
-                // Also try without normalizing (stored formats may vary)
-                const usersSnap2 = await db.collection('users').where('phone', '==', phone.trim()).limit(1).get();
-                if (usersSnap2.empty) {
-                    return res.status(404).json({ error: 'No account found with this phone number.' });
+            const variations = getPhoneVariations(phone || normalizedPhone);
+            let userDoc = null;
+            if (variations.length > 0) {
+                const usersSnap = await db.collection('users').where('phone', 'in', variations).limit(1).get();
+                if (!usersSnap.empty) {
+                    userDoc = usersSnap.docs[0];
                 }
+            }
+            if (!userDoc) {
+                return res.status(404).json({ error: 'No account found with this phone number.' });
             }
 
             // ?????? Generate 6-digit OTP ???????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
@@ -1100,13 +1103,16 @@ exports.verifySmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCA
             await otpRef.delete();
 
             // Find user email by phone to pass to password reset service
-            const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
+            const variations = getPhoneVariations(phone || normalizedPhone);
             let userEmail = null;
             let userId = null;
-            if (!usersSnap.empty) {
-                const userData = usersSnap.docs[0].data();
-                userEmail = userData.email || null;
-                userId = usersSnap.docs[0].id;
+            if (variations.length > 0) {
+                const usersSnap = await db.collection('users').where('phone', 'in', variations).limit(1).get();
+                if (!usersSnap.empty) {
+                    const userData = usersSnap.docs[0].data();
+                    userEmail = userData.email || null;
+                    userId = usersSnap.docs[0].id;
+                }
             }
 
             // Issue a short-lived reset JWT (10 minutes)
@@ -1500,8 +1506,12 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
             }
 
             // 4. Update password in Firebase Auth
-            await admin.auth().updateUser(firebaseUid, { password: newPassword });
-            console.log(`[completePasswordReset] Password updated in Firebase Auth for UID: ${firebaseUid} (email: ${email})`);
+            try {
+                await admin.auth().updateUser(firebaseUid, { password: newPassword });
+                console.log(`[completePasswordReset] Password updated in Firebase Auth for UID: ${firebaseUid} (email: ${email})`);
+            } catch (authErr) {
+                console.warn(`[completePasswordReset] Firebase Auth updateUser warning: ${authErr.message}`);
+            }
 
             // 5. Also update password_hash in Firestore user doc
             //    (The app login checks Firestore password_hash via SHA-256, NOT Firebase Auth)
@@ -1526,7 +1536,10 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
                         userQuery = await db.collection('users').where('email', '==', email).limit(1).get();
                     }
                     if ((!userQuery || userQuery.empty) && phone) {
-                        userQuery = await db.collection('users').where('phone', '==', phone).limit(1).get();
+                        const variations = getPhoneVariations(phone);
+                        if (variations.length > 0) {
+                            userQuery = await db.collection('users').where('phone', 'in', variations).limit(1).get();
+                        }
                     }
                     if (userQuery && !userQuery.empty) {
                         await userQuery.docs[0].ref.update({
@@ -1869,7 +1882,7 @@ exports.processMailQueue = functions
 
         if (!SMTP_PASS) {
             console.error('[processMailQueue] RHIVE_SMTP_PASSWORD secret not available.');
-            await db.collection('mail').doc(docId).update({
+            await db.collection('mail_outbox').doc(docId).update({
                 delivery: {
                     state: 'ERROR',
                     error: 'SMTP password secret not configured.',
@@ -1944,7 +1957,9 @@ exports.processMailQueue = functions
  * Uses the Firestore 'mail' collection (Firebase Trigger Email extension) -
  * same mechanism as password-change notifications. Always queues if customerEmail provided.
  */
-exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
+exports.sendSignVerifyEmail = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'] })
+    .https.onRequest((req, res) => {
     return cors(req, res, async () => {
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
         const { projectId, customerEmail, customerName, projectName, link } = req.body || {};
@@ -2050,9 +2065,9 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
 
                 // Send directly via Nodemailer (Gmail SMTP + App Password)
                 const nodemailer = require('nodemailer');
-                const smtpPass = process.env.SMTP_PASSWORD;
+                const smtpPass = process.env.RHIVE_SMTP_PASSWORD || process.env.SMTP_PASSWORD;
                 if (!smtpPass) {
-                    console.error('[sendSignVerifyEmail] SMTP_PASSWORD env var not set');
+                    console.error('[sendSignVerifyEmail] RHIVE_SMTP_PASSWORD / SMTP_PASSWORD env var not set');
                     return res.status(500).json({ error: 'SMTP credentials not configured' });
                 }
 
@@ -2067,16 +2082,29 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
                     },
                 });
 
-                await transporter.sendMail({
-                    from: '"RHIVE Construction" <noreply@rhiveconstruction.com>',
-                    to: customerEmail,
-                    subject: `Action Required: Complete Your Sign & Verify - ${proj}`,
-                    text: plainText,
-                    html: htmlParts.join(''),
-                });
-
-                console.log(`[sendSignVerifyEmail] Email sent directly via SMTP to: ${customerEmail}`);
-                return res.status(200).json({ success: true, emailSent: true, link });
+                try {
+                    await transporter.sendMail({
+                        from: '"RHIVE Construction" <noreply@rhiveconstruction.com>',
+                        to: customerEmail,
+                        subject: `Action Required: Complete Your Sign & Verify - ${proj}`,
+                        text: plainText,
+                        html: htmlParts.join(''),
+                    });
+                    console.log(`[sendSignVerifyEmail] Email sent directly via SMTP to: ${customerEmail}`);
+                    return res.status(200).json({ success: true, emailSent: true, link });
+                } catch (smtpErr) {
+                    console.warn(`[sendSignVerifyEmail] Direct SMTP delivery failed (${smtpErr.message}). Queuing to mail collection fallback.`);
+                    await db.collection('mail').add({
+                        to: customerEmail,
+                        message: {
+                            subject: `Action Required: Complete Your Sign & Verify - ${proj}`,
+                            text: plainText,
+                            html: htmlParts.join(''),
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                    return res.status(200).json({ success: true, emailSent: false, queued: true, link, warning: smtpErr.message });
+                }
             }
 
             return res.status(200).json({ success: true, emailSent: false, link, message: 'No customer email provided. Link saved to Firestore.' });
@@ -2086,3 +2114,127 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
         }
     });
 });
+
+/**
+ * sendPasswordChangeNotification - sends security alert when a password is changed.
+ * Body: { email, userName }
+ */
+exports.sendPasswordChangeNotification = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'] })
+    .https.onRequest((req, res) => {
+        return cors(req, res, async () => {
+            if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+            const { email, userName } = req.body || {};
+            if (!email) return res.status(400).json({ error: 'Email is required' });
+
+            const smtpPass = process.env.RHIVE_SMTP_PASSWORD || process.env.SMTP_PASSWORD;
+            if (!smtpPass) {
+                console.error('[sendPasswordChangeNotification] SMTP password not configured.');
+                return res.status(500).json({ error: 'SMTP credentials not configured' });
+            }
+
+            try {
+                const nodemailer = require('nodemailer');
+                const transporter = nodemailer.createTransport({
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    secure: true,
+                    auth: {
+                        user: 'noreply@rhiveconstruction.com',
+                        pass: smtpPass,
+                    },
+                });
+
+                const greeting = userName || 'Valued User';
+                try {
+                    await transporter.sendMail({
+                        from: '"RHIVE Security" <noreply@rhiveconstruction.com>',
+                        to: email,
+                        subject: 'Security Alert: Password Changed for your RHIVE Account',
+                        text: `Hello ${greeting},\n\nYour RHIVE Construction account password was successfully updated.\n\nIf you did not perform this action, please contact support@rhiveconstruction.com immediately.\n\n- RHIVE Construction Security Team`,
+                        html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:24px;">
+                            <h2 style="color:#ec028b;margin:0 0 12px;">RHIVE Security Alert</h2>
+                            <p style="margin:0 0 12px;">Hello <strong>${greeting}</strong>,</p>
+                            <p style="margin:0 0 16px;color:#d1d5db;">Your RHIVE Construction account password was successfully updated.</p>
+                            <p style="margin:0 0 24px;color:#9ca3af;font-size:13px;">If you did not make this change, please reach out to <a href="mailto:support@rhiveconstruction.com" style="color:#ec028b;">support@rhiveconstruction.com</a> immediately.</p>
+                            <p style="margin:0;font-size:11px;color:#6b7280;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia</p>
+                        </div>`,
+                    });
+                    return res.status(200).json({ success: true });
+                } catch (smtpErr) {
+                    console.warn(`[sendPasswordChangeNotification] SMTP failed (${smtpErr.message}). Writing to mail collection.`);
+                    const db = admin.firestore();
+                    await db.collection('mail').add({
+                        to: email,
+                        message: {
+                            subject: 'Security Alert: Password Changed for your RHIVE Account',
+                            text: `Hello ${greeting},\n\nYour RHIVE Construction account password was successfully updated.`,
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                    return res.status(200).json({ success: true, queued: true, warning: smtpErr.message });
+                }
+            } catch (err) {
+                console.error('[sendPasswordChangeNotification]', err);
+                return res.status(500).json({ error: err.message });
+            }
+        });
+    });
+
+/**
+ * sendEmailChangeNotification - sends security alert when an account email is changed.
+ * Body: { oldEmail, newEmail, userName }
+ */
+exports.sendEmailChangeNotification = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'] })
+    .https.onRequest((req, res) => {
+        return cors(req, res, async () => {
+            if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+            const { oldEmail, newEmail, userName } = req.body || {};
+            const recipients = [oldEmail, newEmail].filter(Boolean);
+            if (recipients.length === 0) return res.status(400).json({ error: 'At least one recipient email required' });
+
+            const smtpPass = process.env.RHIVE_SMTP_PASSWORD || process.env.SMTP_PASSWORD;
+            if (!smtpPass) {
+                console.error('[sendEmailChangeNotification] SMTP password not configured.');
+                return res.status(500).json({ error: 'SMTP credentials not configured' });
+            }
+
+            try {
+                const nodemailer = require('nodemailer');
+                const transporter = nodemailer.createTransport({
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    secure: true,
+                    auth: {
+                        user: 'noreply@rhiveconstruction.com',
+                        pass: smtpPass,
+                    },
+                });
+
+                const greeting = userName || 'Valued User';
+                await transporter.sendMail({
+                    from: '"RHIVE Security" <noreply@rhiveconstruction.com>',
+                    to: recipients.join(', '),
+                    subject: 'Security Alert: Account Email Address Changed',
+                    text: `Hello ${greeting},\n\nYour RHIVE Construction account email was updated (Old: ${oldEmail || 'None'}, New: ${newEmail || 'None'}).\n\nIf you did not make this change, please contact support@rhiveconstruction.com immediately.\n\n- RHIVE Construction Security Team`,
+                    html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:24px;">
+                        <h2 style="color:#ec028b;margin:0 0 12px;">RHIVE Security Alert</h2>
+                        <p style="margin:0 0 12px;">Hello <strong>${greeting}</strong>,</p>
+                        <p style="margin:0 0 16px;color:#d1d5db;">Your RHIVE Construction account email address was updated.</p>
+                        <ul style="color:#9ca3af;font-size:13px;line-height:1.6;">
+                            <li><strong>Previous email:</strong> ${oldEmail || '—'}</li>
+                            <li><strong>New email:</strong> ${newEmail || '—'}</li>
+                        </ul>
+                        <p style="margin:0 0 24px;color:#9ca3af;font-size:13px;">If you did not authorize this change, contact <a href="mailto:support@rhiveconstruction.com" style="color:#ec028b;">support@rhiveconstruction.com</a> immediately.</p>
+                        <p style="margin:0;font-size:11px;color:#6b7280;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia</p>
+                    </div>`,
+                });
+
+                return res.status(200).json({ success: true });
+            } catch (err) {
+                console.error('[sendEmailChangeNotification]', err);
+                return res.status(500).json({ error: err.message });
+            }
+        });
+    });

@@ -26,14 +26,20 @@ const GoogleMapsPinIcon = (props: React.SVGProps<SVGSVGElement>) => (
 const isAddressLike = (q: string) => {
     const normalized = q.toLowerCase().trim();
     if (!normalized) return false;
-    // Phone number (only digits, spaces, dashes, parens)
-    if (/^[0-9\-\s\(\)\+\.]+$/.test(normalized)) return false;
-    
+
+    // Check if it is explicitly a formatted phone number or 7-11 unspaced digits
+    const digitsOnly = normalized.replace(/\D/g, '');
+    const isExplicitPhone = /^\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/.test(normalized) ||
+                           /^\d{3}[-.\s]\d{4}$/.test(normalized) ||
+                           (/^\d{7,11}$/.test(digitsOnly) && !/\s/.test(normalized));
+
+    if (isExplicitPhone) return false;
+
+    // Starts with digits (typical street number, e.g. "475", "1847", "475 S Main")
+    if (/^\d+/.test(normalized)) return true;
+
     // Contains comma (e.g. City, State)
     if (normalized.includes(',')) return true;
-    
-    // Starts with digits (typical street number)
-    if (/^\d+/.test(normalized)) return true;
     
     // Contains digits and letters
     if (/\d+/.test(normalized) && /[a-z]+/i.test(normalized)) return true;
@@ -58,13 +64,19 @@ const isAddressLike = (q: string) => {
 const decipherQueryType = (q: string): 'Phone Number' | 'Address' | 'Name' | 'Note' | null => {
     const trimmed = q.trim();
     if (!trimmed) return null;
-    
-    // 1. Phone number
-    if (/^[0-9\-\s\(\)\+\.]+$/.test(trimmed) && (trimmed.replace(/[^0-9]/g, '').length >= 3)) {
+
+    const digitsOnly = trimmed.replace(/\D/g, '');
+
+    // 1. Explicit phone number: 7-11 digits or standard phone formatting
+    const isPhone = /^\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/.test(trimmed) ||
+                    /^\d{3}[-.\s]\d{4}$/.test(trimmed) ||
+                    (/^\d{7,11}$/.test(digitsOnly) && !/\s/.test(trimmed));
+
+    if (isPhone) {
         return 'Phone Number';
     }
     
-    // 2. Address
+    // 2. Address: starts with street number (e.g. "475") or matches address keywords
     if (isAddressLike(trimmed)) {
         return 'Address';
     }
@@ -254,7 +266,7 @@ export const GlobalCustomerLookupModal: React.FC = () => {
                 autocompleteRef.current = null;
             }
         };
-    }, [isOpen, isApiReady]);
+    }, [isOpen, isApiReady, shouldRender]);
 
     // Suppress pac-container when query is not address-like.
     // IMPORTANT: Always clear this style when the modal is closed so it doesn't

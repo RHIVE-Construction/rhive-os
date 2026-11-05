@@ -262,9 +262,9 @@ const LogRow: React.FC<{ entry: UserLogEntry; isExpanded: boolean; onToggle: () 
                                     </div>
                                 </div>
                             )}
-                            <div className="text-[10px] text-gray-600 font-mono space-y-1 min-w-[180px]">
-                                <p><span className="text-gray-500">ID:</span> {entry.id}</p>
-                                <p><span className="text-gray-500">User ID:</span> {entry.userId}</p>
+                            <div className="text-[10px] text-gray-400 font-mono space-y-1 min-w-[180px]">
+                                <p><span className="text-gray-500">User:</span> {entry.userEmail || entry.userName || 'System'}</p>
+                                <p><span className="text-gray-500">Role:</span> {entry.userRole || 'User'}</p>
                                 <p><span className="text-gray-500">Timestamp:</span> {entry.timestamp}</p>
                             </div>
                         </div>

@@ -244,6 +244,18 @@ const PasswordResetPage: React.FC = () => {
         return `(***) ***-${digits.slice(-4)}`;
     };
 
+    // ── Check URL parameters for direct reset token / link ───────────────
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token') || params.get('oobCode');
+            if (token) {
+                setResetToken(token);
+                setStep('password');
+            }
+        }
+    }, []);
+
     // ── Auto-redirect countdown on success ────────────────────────────────
     useEffect(() => {
         if (step !== 'success') return;
@@ -252,7 +264,7 @@ const PasswordResetPage: React.FC = () => {
             setCountdown(c => {
                 if (c <= 1) {
                     clearInterval(interval);
-                    setActivePageId('login');
+                    setActivePageId('P-06');
                     return 0;
                 }
                 return c - 1;
@@ -363,7 +375,7 @@ const PasswordResetPage: React.FC = () => {
         }
     };
 
-    const goToLogin = () => setActivePageId('login');
+    const goToLogin = () => setActivePageId('P-06');
 
     // ── Step progress metadata ─────────────────────────────────────────────
     const stepOrder: Step[] = ['phone', 'otp', 'password', 'success'];

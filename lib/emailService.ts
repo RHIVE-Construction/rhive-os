@@ -40,7 +40,7 @@ const APP_URL = typeof window !== 'undefined'
  * Remove or set to undefined once the extension OAuth credentials are
  * fully verified and production email routing is confirmed.
  */
-const TEMP_TEST_RECIPIENT = 'james.g@rhiveconstruction.com';
+const TEMP_TEST_RECIPIENT: string | undefined = undefined;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
