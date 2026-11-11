@@ -23,6 +23,7 @@ import { DevNavigator } from './components/DevNavigator';
 import { FloatingBackButton } from './components/FloatingBackButton';
 import { GlobalCustomerLookupModal } from './components/GlobalCustomerLookupModal';
 import { GlobalWeatherModal } from './components/GlobalWeatherModal';
+import { navigateToIntake } from './lib/intakeRouting';
 import { cn } from './lib/utils';
 import { session } from './lib/session';
 
@@ -42,6 +43,7 @@ const PATH_ROUTES: Record<string, string> = {
     '/estimate-tool': 'estimate-tool',
     '/map':           'INTERNAL-BPM',
     '/services/residential-roof-replacement': 'P-SEO-RESIDENTIAL',
+    '/commercial-roofing':                   'P-SEO-COMMERCIAL',
     '/services/commercial-flat-roofing':     'P-SEO-COMMERCIAL',
     '/services/roofing-accessories':         'P-SEO-ACCESSORIES',
     '/zero-surprises-pricing':                'P-SEO-PRICING',
@@ -92,6 +94,20 @@ const PATH_ROUTES: Record<string, string> = {
     '/blog/asphalt-shingle-granule-loss-causes-remedies': 'P-SEO-BLOG-20',
     '/blog/commercial-tpo-vs-pvc-roofing-utah-guide': 'P-SEO-BLOG-21',
     '/blog/roofing-insurance-claims-utah-wind-hail-guide': 'P-SEO-BLOG-22',
+    '/blog/rhive-abundance-feature-local-utah-businesses': 'P-SEO-BLOG-23',
+    '/blog/rhive-abundance-network-community-referrals':   'P-SEO-BLOG-24',
+    '/blog/roof-insurance-claims-utah-step-by-step-guide': 'P-SEO-BLOG-25',
+    '/blog/roof-replacement-financing-utah-options': 'P-SEO-BLOG-26',
+    '/blog/ice-dam-prevention-mitigation-utah-guide': 'P-SEO-BLOG-27',
+    '/blog/hail-damage-insurance-claims-utah-inspection-guide': 'P-SEO-BLOG-28',
+    '/blog/top-rated-roofing-contractor-bountiful-ut': 'P-SEO-BLOG-29',
+    '/blog/rhive-fall-roof-maintenance-guide-utah': 'P-SEO-BLOG-30',
+    '/blog/utah-services-by-rhive': 'P-SEO-BLOG-31',
+    '/blog/owens-corning-duration-vs-duration-flex-utah': 'P-SEO-BLOG-32',
+    '/blog/commercial-tpo-vs-pvc-flat-roofing-utah': 'P-SEO-BLOG-33',
+    '/blog/seamless-aluminum-gutters-leaf-protection-utah': 'P-SEO-BLOG-34',
+    '/blog/solar-panel-detach-reset-roof-replacement-utah': 'P-SEO-BLOG-35',
+    '/blog/roofing-contractor-south-jordan-ut': 'P-SEO-BLOG-36',
     '/privacy':                               'P-PRIVACY',
     '/terms':                                 'P-TERMS',
 };
@@ -119,7 +135,10 @@ const SignVerifyRenderer: React.FC = () => {
 // ── Canonical URL Synchronizer ───────────────────────────────────────────────
 const updateCanonicalUrl = (pathname: string = window.location.pathname) => {
     try {
-        const cleanPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '');
+        let cleanPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '');
+        if (cleanPath === '/commercial-roofing') {
+            cleanPath = '/services/commercial-flat-roofing';
+        }
         const canonicalUrl = `https://www.rhiveconstruction.com${cleanPath}`;
         let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
         if (!link) {
@@ -271,9 +290,12 @@ const AppContentAuthenticated: React.FC = () => {
         };
         window.addEventListener('nav-page', handleCustomNav);
         window.addEventListener('open-roof-configurator', handleRoofConfigurator);
+        const handleOpenIntake = () => setActivePageId('E-02a');
+        window.addEventListener('open-intake', handleOpenIntake);
         return () => {
             window.removeEventListener('nav-page', handleCustomNav);
             window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
+            window.removeEventListener('open-intake', handleOpenIntake);
         };
     }, [setActivePageId]);
 
@@ -343,7 +365,7 @@ const LoginBridge: React.FC = () => {
     const mainRef = React.useRef<HTMLElement>(null);
 
     // Derive the public page target — computed unconditionally so useMemo is always at top level
-    const isPagePublic = !!(activePageId && activePageId.startsWith('P-'));
+    const isPagePublic = !!(activePageId && (activePageId.startsWith('P-') || activePageId === 'E-02a'));
     const targetPageId = isPagePublic ? activePageId : 'P-00';
 
     // Stable component reference — only recreated when the target page actually changes
@@ -359,27 +381,48 @@ const LoginBridge: React.FC = () => {
             if (e.detail) setActivePageId(e.detail);
         };
         const handleRoofConfigurator = (e: any) => {
-            const concern = e.detail?.mode === 'quote' ? 'Certified Quote' : 'Instant Estimate';
-            window.dispatchEvent(new CustomEvent('open-estimator', { 
-                detail: { 
-                    concern, 
-                    address: e.detail?.address 
-                } 
-            }));
+            const isQuote = e.detail?.mode === 'quote';
+            navigateToIntake({
+                intent: isQuote ? 'Certified Quote' : 'Instant Estimate',
+                address: e.detail?.address
+            });
+        };
+        const handleOpenEstimatorEvent = (e: any) => {
+            const concern = e.detail?.concern || e.detail?.protocol;
+            if (!concern) return;
+
+            if (concern === 'Emergency Leak') {
+                navigateToIntake({ scope: 'Repair', activeLeak: true });
+            } else if (concern === 'Certified Quote' || concern === 'CERTIFIED QUOTE') {
+                navigateToIntake({ intent: 'Certified Quote', address: e.detail?.address });
+            } else if (concern === 'Instant Estimate' || concern === 'INSTANT ESTIMATE') {
+                navigateToIntake({ intent: 'Instant Estimate', address: e.detail?.address });
+            } else if (concern === 'Commercial / Industrial') {
+                navigateToIntake({ category: 'Commercial', intent: 'Certified Quote' });
+            } else if (concern === 'Portfolio Management') {
+                navigateToIntake({ category: 'Commercial', intent: 'Inspection' });
+            } else if (concern === 'Inspection' || concern === 'Schedule Inspection') {
+                navigateToIntake({ intent: 'Inspection' });
+            }
         };
         window.addEventListener('nav-page', handleCustomNav);
         window.addEventListener('open-roof-configurator', handleRoofConfigurator);
+        const handleOpenIntake = () => setActivePageId('E-02a');
+        window.addEventListener('open-intake', handleOpenIntake);
+        window.addEventListener('open-estimator', handleOpenEstimatorEvent);
 
         return () => {
             window.removeEventListener('nav-page', handleCustomNav);
             window.removeEventListener('open-roof-configurator', handleRoofConfigurator);
+            window.removeEventListener('open-intake', handleOpenIntake);
+            window.removeEventListener('open-estimator', handleOpenEstimatorEvent);
         };
     }, [setActivePageId]);
 
     // Force non-public pages back to home if logged out
     useEffect(() => {
         if (!currentUser) {
-            if (activePageId && !activePageId.startsWith('P-')) {
+            if (activePageId && !activePageId.startsWith('P-') && activePageId !== 'E-02a') {
                 setActivePageId('P-00-V3');
             }
         }

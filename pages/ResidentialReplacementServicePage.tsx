@@ -4,14 +4,14 @@ import { cn } from '../lib/utils';
 
 export default function ResidentialReplacementServicePage() {
     useEffect(() => {
-        document.title = "Residential Roof Replacement Utah | RHIVE Construction";
+        document.title = "Utah Residential Roof Replacement | 100% Tear-Off Shingle Roofing | RHIVE";
         let metaDesc = document.querySelector('meta[name="description"]');
         if (!metaDesc) {
             metaDesc = document.createElement('meta');
             metaDesc.setAttribute('name', 'description');
             document.head.appendChild(metaDesc);
         }
-        metaDesc.setAttribute('content', "Experience Utah's most transparent residential roof replacement. Lifetime No-Leak Guarantees, transparent itemized cost breakdowns, and certified installs.");
+        metaDesc.setAttribute('content', "Utah's trusted residential roof replacement contractor. 100% full tear-off to OSB decking, Owens Corning Duration architectural shingles & lifetime no-leak guarantees.");
     }, []);
 
     const handleEstimateClick = () => {
@@ -48,11 +48,11 @@ export default function ResidentialReplacementServicePage() {
                         Configure Your Estimate
                     </button>
                     <a
-                        href="tel:4534176637"
+                        href="tel:4354176637"
                         className="flex items-center gap-2 border border-white/20 hover:border-rhive-pink/50 text-white font-bold text-base uppercase tracking-widest px-8 py-4 rounded-full bg-white/5 transition-all duration-300 hover:scale-105"
                     >
                         <Phone size={16} className="text-rhive-pink" />
-                        Call 453-41-ROOFS
+                        Call 435-41-ROOFS
                     </a>
                 </div>
             </section>

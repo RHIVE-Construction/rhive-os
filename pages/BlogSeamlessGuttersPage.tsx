@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect } from 'react';
 
 const BlogSeamlessGuttersPage: React.FC = () => {
@@ -74,7 +75,7 @@ const BlogSeamlessGuttersPage: React.FC = () => {
           </p>
 
           <p>
-            At RHIVE Construction, we act as a complete <strong>roof and gutter company near me</strong>. We do not believe in pre-packaged, sectional retail gutters that leak at every seam. Instead, we custom-extrude continuous, heavy-gauge aluminum gutters on-site, specifically engineered to withstand punishing winter ice loads and heavy Wasatch Front storms.
+            At RHIVE Construction, we act as a complete <strong>Utah roof and seamless gutter contractor</strong>. We do not believe in pre-packaged, sectional retail gutters that leak at every seam. Instead, we custom-extrude continuous, heavy-gauge aluminum gutters on-site, specifically engineered to withstand punishing winter ice loads and heavy Wasatch Front storms.
           </p>
 
           <p>
@@ -174,17 +175,17 @@ const BlogSeamlessGuttersPage: React.FC = () => {
               Stop letting uncontrolled roof water erode your landscaping and foundations. Custom-form the perfect drainage shield.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <a
-                href="/estimator"
+              <button
+                onClick={() => navigateToIntake({ intent: 'Inspection' })}
                 className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
               >
                 Configure Your Gutter System
-              </a>
+              </button>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
-                📞 Click to Call Tech Office
+                📞 Call (435) 417-6637
               </a>
             </div>
           </div>

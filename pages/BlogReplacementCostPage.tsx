@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect } from 'react';
 
 const BlogReplacementCostPage: React.FC = () => {
@@ -84,7 +85,7 @@ const BlogReplacementCostPage: React.FC = () => {
             <div className="p-5 bg-zinc-950 border border-white/10 rounded-md">
               <h3 className="text-lg font-bold text-[#ec028b] mb-2">4. Zero-Waste Overhead</h3>
               <p className="text-sm text-slate-400 leading-relaxed">
-                Partnered with Qubit Turnkey, we operate remote-first. No expensive warehouses, no commissioned sales reps. Drone-backed estimates keep overhead under 10%.
+                We operate remote-first. No expensive warehouses, no commissioned sales reps. Drone-backed estimates keep overhead under 10%.
               </p>
             </div>
           </div>
@@ -139,17 +140,17 @@ const BlogReplacementCostPage: React.FC = () => {
               Secure a zero-pressure, highly accurate digital estimate for your property.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <a
-                href="/estimator"
+              <button
+                onClick={() => navigateToIntake({ intent: 'Instant Estimate' })}
                 className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
               >
                 Configure Your Instant Estimate
-              </a>
+              </button>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
-                📞 Click to Call Tech Office
+                📞 Call (435) 417-6637
               </a>
             </div>
           </div>

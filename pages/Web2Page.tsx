@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -87,6 +88,21 @@ export default function Web2Page() {
                 setTimeout(() => {
                     setIsRouting(false);
                     setTerminalText("");
+                    if (actionName === 'EMERGENCY_OVERRIDE') {
+                        navigateToIntake({ scope: 'Repair', activeLeak: true });
+                    } else if (actionName === 'UNGATED_ESTIMATE') {
+                        navigateToIntake({ intent: 'Instant Estimate' });
+                    } else if (actionName === 'CERTIFIED_QUOTE') {
+                        navigateToIntake({ intent: 'Certified Quote' });
+                    } else if (actionName === 'HEALTH_VALIDATION_SCAN') {
+                        navigateToIntake({ intent: 'Inspection' });
+                    } else if (actionName === 'COMPONENT_RESTORATION') {
+                        navigateToIntake({ scope: 'Repair' });
+                    } else if (actionName === 'ECOSYSTEM_OVERHAUL') {
+                        navigateToIntake({ intent: 'Certified Quote', scope: 'Replacement' });
+                    } else if (actionName === 'FORENSIC_STORM_DATA') {
+                        window.location.href = '/insurance';
+                    }
                 }, 600);
             }
         }, 15);

@@ -11,6 +11,128 @@ interface BlogMeta {
 }
 
 const BLOGS_DATA: BlogMeta[] = [
+  // ── COMMUNITY & ABUNDANCE INITIATIVES ──────────────────────────────────────────
+  {
+    title: 'RHIVE Abundance Feature: Uplifting Local Utah Businesses & Building Stronger Communities',
+    slug: '/blog/rhive-abundance-feature-local-utah-businesses',
+    description: 'A dedicated monthly initiative spotlighting and promoting locally owned Utah small businesses 100% free of charge to foster community connection and growth.',
+    category: 'Company Culture',
+    readTime: '4 min read',
+    badge: 'Community Spotlight'
+  },
+  {
+    title: 'The RHIVE Abundance Network: How RHIVE Construction Rewards Community Referrals & Empowers Utah Homeowners',
+    slug: '/blog/rhive-abundance-network-community-referrals',
+    description: 'Transforming clients into active partners with tiered referral rewards up to $2,000, free lifetime gutter cleaning, and funded local roof donations.',
+    category: 'Company Culture',
+    readTime: '5 min read',
+    badge: 'Community Spotlight'
+  },
+
+  // ── 5 NEW HIGH-CONVERTING AEO/SEO/GEO STRATEGY ARTICLES ─────────────────
+  {
+    title: 'Owens Corning Duration® vs. Duration FLEX®: Which Shingle Is Best for Your Utah Home?',
+    slug: '/blog/owens-corning-duration-vs-duration-flex-utah',
+    description: 'Compare Owens Corning Duration® and Class 4 Impact Rated Duration FLEX® shingles for Utah homes. Learn how SureNail® Technology and 130 MPH ratings protect your roof.',
+    category: 'Residential',
+    readTime: '6 min read',
+    badge: 'Shingle Comparison'
+  },
+  {
+    title: 'Commercial TPO vs. PVC Flat Roofing in Utah: Performance, Engineering & Code Compliance',
+    slug: '/blog/commercial-tpo-vs-pvc-flat-roofing-utah',
+    description: 'Compare commercial GAF EverGuard® TPO and PVC flat roofing membranes for Utah warehouses, retail centers, and facilities. Learn about 30-year NDL warranties and substrate engineering.',
+    category: 'Commercial',
+    readTime: '7 min read',
+    badge: 'Commercial Flat'
+  },
+  {
+    title: 'The Complete Guide to Seamless Aluminum Gutters & Leaf Protection in Utah',
+    slug: '/blog/seamless-aluminum-gutters-leaf-protection-utah',
+    description: 'Everything Utah homeowners need to know about seamless aluminum gutters, heavy-duty 24-inch hanger spacing for snow loads, 5" vs 6" profiles, and custom leaf protection.',
+    category: 'Residential',
+    readTime: '6 min read',
+    badge: 'Seamless Gutters'
+  },
+  {
+    title: 'Solar Panel Detach & Reset During Roof Replacements in Utah: What Homeowners Need to Know',
+    slug: '/blog/solar-panel-detach-reset-roof-replacement-utah',
+    description: 'Planning a roof replacement with solar panels in Utah? Learn how RHIVE handles certified electrical disconnects, panel storage, upgraded stanchion flashings, and array reset.',
+    category: 'Residential',
+    readTime: '7 min read',
+    badge: 'Solar Reroof'
+  },
+  {
+    title: 'Top-Rated Roofing Contractor in South Jordan, UT: Local Reroofing & City Compliance',
+    slug: '/blog/roofing-contractor-south-jordan-ut',
+    description: 'Looking for a top-rated roofing contractor in South Jordan, UT? Headquartered at 10437 Shady Plum Way, RHIVE provides 100% full tear-offs and lifetime no-leak guarantees.',
+    category: 'Residential',
+    readTime: '6 min read',
+    badge: 'South Jordan HQ'
+  },
+
+  // ── UTAH FULL ROOFING SERVICE DIRECTORY ────────────────────────────────────
+  {
+    title: 'UTAH Services by RHIVE: Comprehensive Residential, Commercial & Specialty Roofing Solutions',
+    slug: '/blog/utah-services-by-rhive',
+    description: 'Discover the full catalog of Utah roofing services offered by RHIVE Construction: 100% tear-off residential roofs, commercial GAF TPO/PVC flat roofs, gutters, and storm repairs.',
+    category: 'Residential',
+    readTime: '7 min read',
+    badge: 'Service Catalog'
+  },
+
+  // ── AUTUMN & WINTER PREPAREDNESS STRATEGY ──────────────────────────────────
+  {
+    title: 'RHIVE Fall Roof Maintenance Guide: Preparing Utah Roofs for Winter Weather',
+    slug: '/blog/rhive-fall-roof-maintenance-guide-utah',
+    description: 'Essential autumn roof maintenance guide for Utah homeowners. Learn how to clean gutters, prevent winter ice dams, check shingle health, and schedule a professional fall inspection with RHIVE Construction.',
+    category: 'Maintenance',
+    readTime: '6 min read',
+    badge: 'Fall Maintenance'
+  },
+
+  // ── 5 AEO, SEO & GEO STRATEGY ARTICLES (INSURANCE, FINANCING, ICE DAMS, HAIL, BOUNTIFUL) ─
+  {
+    title: 'Navigating Roof Insurance Claims in Utah: A Step-by-Step Homeowner Guide',
+    slug: '/blog/roof-insurance-claims-utah-step-by-step-guide',
+    description: 'Learn how to navigate roof insurance claims in Utah. Discover covered storm damage, ACV vs. RCV payouts, building code mandates, and RHIVE\'s adjuster advocacy.',
+    category: 'Insurance',
+    readTime: '6 min read',
+    badge: 'Insurance Guide'
+  },
+  {
+    title: 'Roof Replacement Financing in Utah: Low APRs, 0% Interest & Flexible Options',
+    slug: '/blog/roof-replacement-financing-utah-options',
+    description: 'Explore roof financing options in Utah. Learn how 0% promotional APR, fixed low monthly payment terms, and RHIVE\'s 50/40/10 structure make replacement accessible.',
+    category: 'Residential',
+    readTime: '5 min read',
+    badge: 'Financing Guide'
+  },
+  {
+    title: 'Ice Dam Prevention & Mitigation in Utah: Stopping Destructive Winter Roof Leaks',
+    slug: '/blog/ice-dam-prevention-mitigation-utah-guide',
+    description: 'Prevent severe ice dam leaks in Utah. Learn why ice dams form along the Wasatch Front, R-60 attic insulation codes, self-regulating heat trace cables, and safe steaming.',
+    category: 'Maintenance',
+    readTime: '6 min read',
+    badge: 'Winter Guide'
+  },
+  {
+    title: 'Hail Damage Insurance Claims in Utah: How to Spot Bruises & Secure Approval',
+    slug: '/blog/hail-damage-insurance-claims-utah-inspection-guide',
+    description: 'Identify hidden hail damage on Utah asphalt roofs. Learn how hail bruises shingles, fractures fiberglass mats, and how RHIVE secures full insurance claim approvals.',
+    category: 'Insurance',
+    readTime: '6 min read',
+    badge: 'Hail Damage'
+  },
+  {
+    title: 'Top-Rated Roofing Contractor in Bountiful, UT: Local Reroofing & Storm Repair',
+    slug: '/blog/top-rated-roofing-contractor-bountiful-ut',
+    description: 'Looking for the best roofing contractor in Bountiful, UT? Discover RHIVE Construction\'s high-wind SureNail shingles, Davis County permit compliance, and zero salesman markup.',
+    category: 'Residential',
+    readTime: '5 min read',
+    badge: 'Local Spotlight'
+  },
+
   // ── 9 AEO & SEO NEW BLOG ARTICLES ───────────────────────────────────────────────
   {
     title: 'How Do I Know My Roof Only Needs a Repair or a Full Replacement?',

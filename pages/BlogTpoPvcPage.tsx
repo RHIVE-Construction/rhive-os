@@ -1,3 +1,4 @@
+import { navigateToIntake } from '../lib/intakeRouting';
 import React, { useEffect } from 'react';
 
 const BlogTpoPvcPage: React.FC = () => {
@@ -183,20 +184,7 @@ const BlogTpoPvcPage: React.FC = () => {
             <li>It is backed directly by GAF, meaning your asset remains fully protected even if a contractor eventually goes out of business.</li>
           </ul>
 
-          <hr className="border-white/10" />
-
-          <h2 className="text-2xl font-bold text-white tracking-tight">Slash CapEx with the RHIVE Project Savings Promotion (RPSP)</h2>
-
-          <p>
-            Because RHIVE runs its entire administrative flow on advanced automation, we have stripped away high sales overhead to pass direct savings back to commercial property portfolios.
-          </p>
-          <p>
-            Through our <strong>Commercial RPSP</strong>, we reward prompt decision-making that allows us to schedule our factory-certified crews efficiently:
-          </p>
-          <ul className="list-disc pl-6 space-y-2 text-slate-400 text-base">
-            <li>If you approve and sign your commercial estimate within <strong>7 days of receipt</strong>, we apply an immediate <strong>10% "Efficiency Credit" (up to $3,000)</strong> directly to your commercial flat roofing project.</li>
-            <li>Your project is secured under our strict <strong>50/40/10 milestone schedule</strong>, meaning you hold back the final 10% until all municipal building inspections pass, GAF engineering certifications are activated, and your site is left completely clean.</li>
-          </ul>
+          
 
           {/* CTA Area */}
           <div className="mt-12 p-8 bg-zinc-950 border border-white/10 rounded-md text-center">
@@ -206,13 +194,12 @@ const BlogTpoPvcPage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <a
-                href="/estimator"
-                className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
+                onClick={() => navigateToIntake({ category: 'Commercial', intent: 'Inspection' })} className="px-6 py-3 bg-[#ec028b] hover:bg-opacity-90 text-white font-bold text-base rounded shadow-pink-glow transition-all cursor-pointer"
               >
                 Schedule Flat Roof Consultation
               </a>
               <a
-                href="tel:4534176637"
+                href="tel:4354176637"
                 className="px-6 py-3 bg-transparent border border-white/20 hover:border-white text-white font-bold text-base rounded transition-all cursor-pointer"
               >
                 📞 Call South Jordan Office

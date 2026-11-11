@@ -52,3 +52,4 @@ serviceAccountKey.json
 *.bak
 justcall_test_results.json
 scratch/
+test_screenshots/

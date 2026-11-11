@@ -6,9 +6,10 @@ export interface FAQItem {
 export interface BlogPost {
   slug: string;
   title: string;
+  metaTitle?: string;
   bluf: string; // Bottom Line Up Front - direct 2-3 sentence answer for AEO / AI overviews
   description: string;
-  category: 'Residential' | 'Commercial' | 'Insurance & Storm Damage' | 'Maintenance';
+  category: 'Residential' | 'Commercial' | 'Insurance & Storm Damage' | 'Maintenance' | 'Company Culture';
   readTime: string;
   publishedDate: string;
   modifiedDate: string;
@@ -24,6 +25,7 @@ export interface BlogPost {
     directAnswer?: string; // Concise answer immediately following heading for AEO
     bodyParagraphs: string[];
     bulletPoints?: string[];
+    asciiBox?: string;
   }[];
   faqs: FAQItem[];
 }
@@ -497,13 +499,13 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         sectionHeading: 'The RHIVE Project Savings Promotion (RPSP) "Efficiency Credit"',
-        directAnswer: 'Executing your quote within the presentation window eliminates contractor "chase costs," crediting an immediate 10% (up to $1,000 for residential / $3,000 for commercial) back to you with Utah 3-day right of rescission protection.',
+        directAnswer: 'Executing your quote within the presentation window eliminates contractor "chase costs," crediting an immediate 10% (up to $1,000) back to you with Utah 3-day right of rescission protection.',
         bodyParagraphs: [
           'In the traditional construction industry, contractors pad quotes with a 10–15% "chase cost"—the administrative overhead required to make repeated sales calls, send mailers, and manage long decision windows.',
           'At RHIVE Construction, we eliminate that waste:'
         ],
         bulletPoints: [
-          'Immediate 10% Credit (Up to $1,000 for Residential / $3,000 for Commercial): By executing your quote within the presentation window, we strip the "chase cost" out of your bid and credit it directly back to you.',
+          'Immediate 10% Credit (Up to $1,000): By executing your quote within the presentation window, we strip the "chase cost" out of your bid and credit it directly back to you.',
           'Protected by Utah\'s 3-Day Right of Rescission: You lock in the lowest efficiency price immediately while retaining a full 3-business-day statutory window to verify your decision with zero financial risk.'
         ]
       },
@@ -547,7 +549,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         question: 'What is the RHIVE Project Savings Promotion (RPSP)?',
-        answer: 'The RPSP is an immediate 10% credit (up to $1,000 for residential / $3,000 for commercial) awarded when you approve your quote within the presentation window, passing our administrative sales savings directly back to you.'
+        answer: 'The RPSP is an immediate 10% credit (up to $1,000) awarded when you approve your quote within the presentation window, passing our administrative sales savings directly back to you.'
       },
       {
         question: 'How do I apply for the "Our Hive" community roof donation program?',
@@ -879,7 +881,7 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'commercial-tpo-vs-pvc-roofing-utah-guide',
     title: 'Commercial TPO vs. PVC Roofing in Utah: Cost, Durability & Energy Performance',
-    bluf: 'TPO (Thermoplastic Polyolefin) offers the best cost-to-performance ratio for commercial flat roofs ($5.50–$9.50/sq ft installed), while PVC (Polyvinyl Chloride) provides superior chemical and grease resistance for restaurants and industrial buildings ($7.00–$12.00/sq ft installed). Both feature heat-welded seams with 20–30 year lifespans in Utah climates.',
+    bluf: 'TPO (Thermoplastic Polyolefin) offers the best cost-to-performance ratio for commercial flat roofs, while PVC (Polyvinyl Chloride) provides superior chemical and grease resistance for restaurants and industrial buildings. Both feature heat-welded seams with 20–30 year lifespans in Utah climates.',
     description: 'Compare commercial TPO vs PVC flat roofing membrane systems in Utah. Discover cost breakdowns, chemical resistance, seam strength, and energy efficiency ratings.',
     category: 'Commercial',
     readTime: '6 min read',
@@ -902,7 +904,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         sectionHeading: 'TPO vs. PVC Cost Comparison in Utah',
-        directAnswer: 'TPO roofing typically costs between $5.50 and $9.50 per square foot installed in Utah, while PVC roofing ranges from $7.00 to $12.00 per square foot installed due to higher raw material and manufacturing costs.',
+        directAnswer: 'Commercial flat roofing costs depend on decking condition, insulation thickness, and required membrane mil thickness determined via an on-site core inspection. TPO provides the most cost-efficient upfront capital expenditure, while PVC commands a modest premium due to specialized chemical-resistant polymers.',
         bodyParagraphs: [
           'For warehouses, distribution hubs, office complexes, and retail stores without commercial grease vents, TPO provides the highest return on investment and energy savings.',
           'For food service facilities, restaurants with rooftop grease exhausts, and manufacturing plants with chemical emissions, PVC is the required standard to prevent animal fat and chemical membrane degradation.'
@@ -953,6 +955,1467 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         question: 'How does RHIVE assist with insurance claims?',
         answer: 'RHIVE provides itemized Xactimate-compatible estimates, high-resolution photo proof, drone footage, and meets directly with your insurance adjuster on-site.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // COMMUNITY & ABUNDANCE INITIATIVES
+  // ==========================================
+  {
+    slug: 'rhive-abundance-feature-local-utah-businesses',
+    title: 'RHIVE Abundance Feature: Uplifting Local Utah Businesses & Building Stronger Communities',
+    bluf: 'The RHIVE Abundance Feature is a dedicated monthly initiative by RHIVE Construction designed to spotlight and promote locally owned Utah small businesses 100% free of charge across our digital channels. Through custom social showcases, founder stories, and community outreach, we build lasting local connections and empower Utah entrepreneurs.',
+    description: 'Discover the RHIVE Abundance Feature: RHIVE Construction\'s monthly program spotlighting local Utah small businesses 100% free of charge to foster community connection and economic growth.',
+    category: 'Company Culture',
+    readTime: '4 min read',
+    publishedDate: '2026-10-15T08:00:00.000Z',
+    modifiedDate: '2026-10-15T08:00:00.000Z',
+    author: {
+      name: 'RHIVE Community Leadership Team',
+      role: 'Community Engagement & Abundance Directors',
+    },
+    image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Utah Small Business', 'Community Outreach', 'RHIVE Abundance', 'Female Leadership', 'Local Utah Economy'],
+    content: [
+      {
+        sectionHeading: 'Why We Launched the RHIVE Abundance Feature',
+        directAnswer: 'We launched the RHIVE Abundance Feature to give Utah small business entrepreneurs a free platform to tell their story, build local partnerships, and strengthen our community economy without marketing costs.',
+        bodyParagraphs: [
+          'At RHIVE Construction, we believe that true leadership in the construction industry goes beyond installing high-quality roofs. Our core mission is anchored in transparency, integrity, and genuine community support.',
+          'Giving back is woven into everything we do, which is why we created the RHIVE Abundance Feature—a dedicated monthly initiative designed to highlight and support local businesses across Utah 100% free of charge.',
+          'Strong small businesses are the backbone of vibrant local communities. Through the RHIVE Abundance Feature, we select a different local business each month to feature on our social media platforms based on four guiding principles:'
+        ],
+        bulletPoints: [
+          'Building Strong Local Connections: Establishing meaningful partnerships with Utah business owners who share our commitment to service and integrity.',
+          'Assisting Small Businesses to Thrive: Giving local entrepreneurs a free platform to showcase their products, tell their stories, and reach new customers.',
+          'Creating a Positive Ripple Effect: When we support and uplift local businesses, we strengthen the local economy and foster a more connected community.',
+          'Honoring Our Core Mission: Living out RHIVE’s core values of transparency, community engagement, and mutual growth.'
+        ]
+      },
+      {
+        sectionHeading: 'What Type of Businesses Are Featured?',
+        directAnswer: 'The program features locally owned and operated Utah businesses of all sizes outside of the construction trades that provide valuable products or services and share our commitment to transparency and community.',
+        bodyParagraphs: [
+          'We love connecting with businesses of all shapes and sizes—whether you operate a brick-and-mortar storefront, an online shop, or a service-based business.',
+          'To ensure the program remains fair and focused on community growth, featured businesses must meet a few simple criteria:'
+        ],
+        bulletPoints: [
+          '1. Locally Owned & Operated: Must be based in Utah (or our active service state).',
+          '2. Community Value: Provides valuable products or services to local residents.',
+          '3. Shared Core Values: Operates with a commitment to transparency, integrity, and community support.',
+          '4. Non-Construction Trades: To avoid any conflicts of interest, the program focuses exclusively on businesses outside of the construction trades.'
+        ]
+      },
+      {
+        sectionHeading: 'What Featured Businesses Receive',
+        directAnswer: 'Selected businesses receive customized social media spotlights across RHIVE’s active channels, founder story showcases, direct website and handle links, and high-quality photo/video presentation—100% free of charge.',
+        bodyParagraphs: [
+          'When your business is selected for the RHIVE Monthly Spotlight, RHIVE Construction handles the promotion at zero cost to you. The feature includes:'
+        ],
+        bulletPoints: [
+          'Dedicated Social Media Post: A customized feature across RHIVE’s active social channels introducing your business to our audience.',
+          'Showcasing Your Unique Story: Highlighting what your business offers, what makes it special, and any upcoming promotions, events, or causes you support.',
+          'Direct Tagging & Promotion: Direct links to your website and social media handles so customers can follow, tag, and order from you directly.',
+          'Engaging Visual Media: Incorporating high-quality photos and short video clips to represent your brand professionally.'
+        ]
+      },
+      {
+        sectionHeading: 'The Long-Term Vision for Our Community',
+        directAnswer: 'The RHIVE Abundance Feature serves as the foundation for an expanding local support network, including joint cross-promotions, local small business networking events, and collaborative charitable giveaways.',
+        bodyParagraphs: [
+          'The RHIVE Abundance Feature is more than just a social media spotlight—it is the foundation for an expanding local support network. As the initiative grows, RHIVE plans to expand the program into:'
+        ],
+        bulletPoints: [
+          'Cross-Promotional Partnerships: Collaborating with featured businesses for joint community outreach.',
+          'Local Networking Events: Bringing small business owners together to share resources and ideas.',
+          'Expanded Giving-Back Initiatives: Hosting community giveaways, local event sponsorships, and charitable partnerships.'
+        ]
+      },
+      {
+        sectionHeading: 'How to Get Featured or Nominate a Business',
+        directAnswer: 'To get featured or nominate a deserving Utah small business, submit your business basics, unique story, and high-resolution media directly via DM to RHIVE Construction on Instagram or Facebook.',
+        bodyParagraphs: [
+          'Getting involved in the RHIVE Abundance Feature is simple! If you own a local Utah business or know an amazing business owner who deserves recognition, here is what you need to provide:'
+        ],
+        bulletPoints: [
+          '1. Business Basics: Business name, location, website, contact info, and social handles.',
+          '2. Your Unique Story: A brief description of what you do, what sets your business apart, and any special offers or community causes you wish to highlight.',
+          '3. Visual Content: High-resolution photos and an optional short video introducing your business.',
+          'Ready to join the movement? Send a direct message to RHIVE Construction on Instagram (@rhive_construction) or Facebook, or comment on our monthly spotlight announcement post to secure your spot for an upcoming feature!'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Is there any charge for a business to be featured in the RHIVE Abundance Spotlight?',
+        answer: 'No. The RHIVE Abundance Feature is 100% free of charge. RHIVE Construction provides the photography, write-ups, and social distribution at zero cost as part of our core mission of community reinvestment.'
+      },
+      {
+        question: 'What types of Utah businesses qualify for the feature?',
+        answer: 'Any locally owned and operated Utah business providing valuable products or services outside of the construction trades qualifies—including retail shops, bakeries, cafes, health and wellness practices, and professional service providers.'
+      },
+      {
+        question: 'How do I nominate a Utah business for the monthly feature?',
+        answer: 'Send a direct message with the business name, owner details, contact info, and website/social links to RHIVE Construction on Instagram (@rhive_construction) or Facebook.'
+      }
+    ]
+  },
+  {
+    slug: 'rhive-abundance-network-community-referrals',
+    title: 'The RHIVE Abundance Network: How RHIVE Construction Rewards Community Referrals & Empowers Utah Homeowners',
+    bluf: 'The RHIVE Abundance Network is RHIVE Construction’s community referral ecosystem that eliminates wasteful sales commissions and redirects marketing capital directly into homeowner rewards—offering up to $2,000 cash bonuses, free lifetime gutter cleaning, and funded roof donations for local veterans, educators, and families in need.',
+    description: 'Learn how the RHIVE Abundance Network rewards community referrals with $500 to $2,000 cash payouts, free lifetime gutter cleaning, and digital Home Asset Management in Utah.',
+    category: 'Company Culture',
+    readTime: '5 min read',
+    publishedDate: '2026-10-15T08:00:00.000Z',
+    modifiedDate: '2026-10-15T08:00:00.000Z',
+    author: {
+      name: 'RHIVE Client Advocacy & Abundance Division',
+      role: 'Community Referral & Asset Directors',
+    },
+    image: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Referral Program', 'RHIVE Abundance Network', 'Utah Roofing Rewards', 'Community Reinvestment', 'Home Asset Vault'],
+    content: [
+      {
+        sectionHeading: '1. The Core Purpose: Shared Value Over Excessive Marketing',
+        directAnswer: 'Instead of spending thousands on sales commissions and marketing campaigns, RHIVE’s Abundance Engine redirects those funds back to clients and community members as direct referral bonuses and charitable roof donations.',
+        bodyParagraphs: [
+          'At RHIVE Construction, roofing is more than just a transaction—it is about building long-term, high-trust relationships with our clients and communities. Built on our core values of transparency, integrity, and genuine value, RHIVE operates as a female-owned and operated contractor delivering certified residential and commercial roofing backed by our direct Lifetime Installer No-Leak Guarantee.',
+          'To go beyond the single roof installation and create a lasting, mutually beneficial ecosystem, we created the RHIVE Abundance Network. This program transforms past clients, property managers, and community advocates into active partners who share in RHIVE\'s success through transparent referral rewards, long-term asset management, and community reinvestment.',
+          'In traditional contracting, companies spend thousands of dollars on heavy advertising, sales commissions, and long follow-up campaigns. At RHIVE, our Abundance Engine redirects those marketing dollars back into the hands of our clients and local community members.',
+          'By participating in the Abundance Network, you help us eliminate unnecessary administrative overhead, allowing RHIVE to pass direct financial rewards back to you while continuing to fund roof donations for local veterans, teachers, first responders, and families in need across every state where we operate.'
+        ]
+      },
+      {
+        sectionHeading: '2. The 3-Tier Abundance Referral Protocol',
+        directAnswer: 'The Abundance Referral Protocol features three escalating tiers: Tier 1 Scout ($500 cash payout), Tier 2 Partner ($2,000 cash bonus + Free Gutter Cleaning for Life), and Tier 3 RHIVE Legend (Lifetime Inspection Priority + Direct Founder Line).',
+        bodyParagraphs: [
+          'The RHIVE Abundance Network uses a gamified, tiered payout structure managed directly through the RHIVE Client Portal. As your referred friends, family, or neighbors choose RHIVE for their full roof replacements, your tier status and rewards grow exponentially:'
+        ],
+        bulletPoints: [
+          'Tier 1: Scout (1 Signed Referral): $500 Cash Payout. Once your first referred client approves their quote and signs their agreement, a $500 referral credit is issued directly to your wallet.',
+          'Tier 2: Partner (3 Signed Referrals): $2,000 Cash Bonus + Free Gutter Cleaning for Life. At 3 completed referrals, you receive a $2,000 cash bonus and unlock complimentary annual gutter maintenance for your home for as long as you own it.',
+          'Tier 3: RHIVE Legend (10 Signed Referrals): Lifetime Inspection Priority + Direct Founder Line. Achieve top-tier ambassador status with VIP priority scheduling for storm evaluations and direct access to founders Kara Robinson (President) and Michael Robinson (CEO).',
+          'Promotional Campaigns: Additional promotional referral rewards, such as $350 lead bonuses or $250 mutual discount vouchers, are also integrated across specific seasonal campaigns.'
+        ]
+      },
+      {
+        sectionHeading: '3. The Digital "Home Asset Manager" & Credit Wallet',
+        directAnswer: 'Members track rewards and manage their roofing asset through the RHIVE Client Portal, featuring real-time payout tracking, warranty archives, and one-click referral sharing.',
+        bodyParagraphs: [
+          'Members of the Abundance Network access their rewards seamlessly through the RHIVE Client Portal:'
+        ],
+        bulletPoints: [
+          'Real-Time Tracking: View active referral links, pending quote statuses, and cleared payouts in a transparent digital dashboard.',
+          'Digital Asset Vault: Store your roof age, shingle dye lot numbers, warranty certificates, and complete photo inspection archives.',
+          'One-Click Share Tools: Easily share custom, auto-filled SMS and email invite links ("Give $500, Get $500") with neighbors or on local community channels.',
+          'Transferable Warranty Export: If you ever sell your property, you can export a complete Transferable Warranty Package directly from your vault, adding tangible resale value to your home.'
+        ]
+      },
+      {
+        sectionHeading: '4. Portfolio & Commercial Scaling for Property Managers',
+        directAnswer: 'The Abundance Network extends to HOAs, commercial property managers, and real estate developers, allowing multi-property owners to streamline volume efficiencies while earning referral credits.',
+        bodyParagraphs: [
+          'The Abundance Network extends beyond single-family homes. For HOAs, commercial property managers, and real estate developers, our framework delivers multi-property volume efficiencies:'
+        ],
+        bulletPoints: [
+          'Multi-Property Savings: Commercial clients managing multiple structures can apply tiered volume efficiencies across their CapEx portfolios while earning community referral credits for introducing other asset managers to RHIVE.',
+          'Full Cost Breakdown: Every commercial quote features a clear, itemized breakdown of materials, labor, overhead, and profit to simplify board approvals and audit reporting.'
+        ]
+      },
+      {
+        sectionHeading: '5. How to Get Started with the RHIVE Abundance Network',
+        directAnswer: 'Joining the Abundance Network is simple and free for all past customers and community partners—contact RHIVE Construction today to activate your referral portal and custom link.',
+        bodyParagraphs: [
+          'Joining the Abundance Network is simple and free for all past customers and community partners.',
+          'Contact RHIVE Construction today at (801) 449-1451 or connect through the client portal to activate your custom referral link, start earning cash rewards, and empower Utah communities.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'How and when are referral rewards paid out in the RHIVE Abundance Network?',
+        answer: 'Referral rewards are issued directly through your digital wallet or direct payment as soon as your referred contact approves their certified quote and executes their project agreement.'
+      },
+      {
+        question: 'What does "Free Gutter Cleaning for Life" include for Tier 2 Partners?',
+        answer: 'Tier 2 Partners unlock complimentary annual gutter cleanings and water flow inspections for their residential home for as long as they own the property, conducted by certified RHIVE technicians.'
+      },
+      {
+        question: 'Can real estate agents and commercial property managers join the Abundance Network?',
+        answer: 'Yes. Realtors, property managers, and HOA board members can join the Abundance Network to provide verified clients with guaranteed discounts while tracking referral compensation in real time.'
+      }
+    ]
+  },
+  // ==========================================
+  // ARTICLE 25 (AEO/SEO/GEO Series - Insurance Step-by-Step)
+  // ==========================================
+  {
+    slug: 'roof-insurance-claims-utah-step-by-step-guide',
+    title: 'Navigating Roof Insurance Claims in Utah: A Step-by-Step Homeowner Guide',
+    metaTitle: 'Roof Insurance Claims Utah | Homeowner Guide | RHIVE Construction',
+    bluf: 'Homeowners insurance in Utah covers full roof replacements or repairs if the damage is caused by sudden, accidental storm events—such as 60+ MPH canyon winds, hail impact bruising, or fallen tree debris. Insurance does not cover routine aging, lack of maintenance, or normal wear and tear. To qualify for a full replacement, roofs typically require evidence of widespread storm damage across multiple slopes or unmatchable shingles under active Utah building codes.',
+    description: 'Learn how to navigate roof insurance claims in Utah. Discover covered storm damage, ACV vs. RCV payouts, building code mandates, and RHIVE\'s adjuster advocacy.',
+    category: 'Insurance & Storm Damage',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Michael Robinson',
+      role: 'CEO & Lead Insurance Adjuster Advocate',
+    },
+    image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Roof Insurance Claims Utah', 'Roof Insurance Claim Process Utah', 'Will Insurance Cover Roof Replacement Utah', 'Storm Damage Roof Repair', 'Salt Lake County Roofing'],
+    content: [
+      {
+        sectionHeading: 'Understanding Utah Storm Damage Coverage',
+        directAnswer: 'Utah homeowners insurance policies cover sudden peril-based damage from canyon winds, hail strikes, and storm debris, but strictly exclude natural aging, granule depletion, and deferred home maintenance.',
+        bodyParagraphs: [
+          'Utah’s extreme climate—featuring 80°F+ single-day temperature fluctuations, intense canyon wind shears, and severe hail events—subjects asphalt shingle roofs to intense environmental stress. When severe weather strikes, knowing your rights under your homeowners insurance policy is essential to securing a fair payout.',
+          'Insurance coverage splits sharply between sudden catastrophic storm events and gradual deterioration:'
+        ],
+        bulletPoints: [
+          'Wind Damage Coverage: Lifted, creased, or missing shingles caused by high wind gusts exceeding 60+ MPH.',
+          'Hail Impact Coverage: Bruised shingle asphalt, fractured fiberglass mats, and crushed vent caps.',
+          'Collateral Damage Coverage: Dented metal drip edge, cracked pipe boot collars, and damaged gutters.',
+          'Age-Related Wear Exclusions: Shingles exceeding 20–30 years of natural lifespan exhibiting normal granule wear.',
+          'Deferred Maintenance Exclusions: Leaks caused by uncleaned gutters, moss accumulation, or unaddressed pipe boot decay.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE Insurance Claim Process: From Storm to Settlement',
+        directAnswer: 'At RHIVE Construction, co-founded by Kara Robinson (President) and Michael Robinson (CEO), we eliminate contractor confusion by offering radical transparency throughout the insurance claim journey.',
+        bodyParagraphs: [
+          'Navigating an insurance claim without professional advocacy often leads to carrier underpayment or wrongful denial. RHIVE Construction provides structured guidance throughout the entire process:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            RHIVE INSURANCE CLAIM TIMELINE               │
+├────────────────────────────────────────────────────────┤
+│ 1. Free Remote Satellite & Aerial Storm Inspection     │
+│ 2. Hands-On Damage Audit & Photo Documentation          │
+│ 3. On-Site Adjuster Meeting with CEO Michael Robinson  │
+│ 4. ACV Check + Deductible Deposit to Commence Permits  │
+│ 5. 100% Full Tear-Off & Lifetime Certified Reroof      │
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          '1. Pre-Claim Storm Assessment: Before filing a claim, RHIVE conducts a free remote satellite analysis using Roofr aerial imagery and historical NOAA weather swaths to verify if your neighborhood was impacted by a confirmed storm.',
+          '2. On-Site Adjuster Advocacy: RHIVE CEO Michael Robinson personally meets your insurance adjuster on-site at your property. We walk the roof together, marking hail strike circles, wind creases, and code-required items—such as 28-gauge steel drip edge and continuous 6-foot Owens Corning WeatherLock® Ice & Water Shield.',
+          '3. Transparent Financial Terms: Under Utah contract terms, the initial investment required to begin municipal permitting consists of your insurance Actual Cash Value (ACV) check plus your policy Deductible.',
+          '4. 100% Full Tear-Off Standard: Once approved, we strip old shingles down to bare OSB decking (including up to 100 sq ft of OSB replacement at no extra charge), install Owens Corning ProArmor® synthetic underlayment, and lay 6-nail SureNail® Duration® shingles.'
+        ]
+      },
+      {
+        sectionHeading: 'RHIVE Service Area Coverage & Local Representation',
+        directAnswer: 'RHIVE Construction provides expert insurance claim representation and reroofing services across all primary Utah service hubs in Salt Lake, Davis, Weber, Summit, and Tooele counties.',
+        bodyParagraphs: [
+          'From foothill wind corridors in Bountiful to hailstorm swaths in West Jordan and snow load demands in Park City, our team represents homeowners across every major Utah metro:'
+        ],
+        bulletPoints: [
+          'Salt Lake County: Salt Lake City, South Jordan (HQ), Sandy, Draper, West Jordan, West Valley City, Herriman, Taylorsville, Midvale, Millcreek, Holladay, Kearns, Magna, Sugar House.',
+          'Davis & Weber Counties: Bountiful, Layton, Clearfield, North Salt Lake, Ogden.',
+          'Summit & Tooele Counties: Park City, Tooele.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Will homeowners insurance cover a full roof replacement in Utah?',
+        answer: 'Yes. Homeowners insurance in Utah covers full roof replacements or repairs if the damage is caused by sudden, accidental storm events—such as 60+ MPH canyon winds, hail impact bruising, or fallen tree debris. Insurance does not cover routine aging, lack of maintenance, or normal wear and tear.'
+      },
+      {
+        question: 'What is the difference between ACV and RCV payouts in Utah?',
+        answer: 'Actual Cash Value (ACV) represents the depreciated value of your roof at the time of damage, which the insurer pays initially minus your deductible. Replacement Cost Value (RCV) represents the total cost to replace the roof with new materials. Once RHIVE completes the installation, your insurer releases the withheld depreciation (RCV balance).'
+      },
+      {
+        question: 'Why should I have RHIVE on-site during the insurance adjuster inspection?',
+        answer: 'Insurance adjusters often oversee hundreds of regional claims and may overlook subtle hail bruising, cracked pipe boots, or local Utah building code mandates. RHIVE CEO Michael Robinson personally walks the roof with your adjuster to ensure all legitimate storm damage and required code upgrades (like 6-foot ice and water barrier) are approved.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 26 (AEO/SEO/GEO Series - Roof Financing)
+  // ==========================================
+  {
+    slug: 'roof-replacement-financing-utah-options',
+    title: 'Roof Replacement Financing in Utah: Low APRs, 0% Interest & Flexible Options',
+    metaTitle: 'Roof Replacement Financing Utah | 0% APR Options | RHIVE Construction',
+    bluf: 'Homeowners in Utah can finance a full roof replacement through RHIVE Construction\'s financing partnership with Enhancify. Key financing terms include 0% APR for 18 months for same-as-cash payoffs, low-APR plans from 4.99% to 7.99% spread across 5 to 20 years, and instant soft-credit prequalification in 60 seconds with zero upfront equity requirements.',
+    description: 'Explore roof replacement financing options in Utah. Learn about 0% APR for 18 months, low monthly rate plans with Enhancify, and RHIVE\'s RPSP efficiency credits.',
+    category: 'Residential',
+    readTime: '5 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'Co-Founder & President',
+    },
+    image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Roof Replacement Financing Utah', 'Roof Financing Low Monthly Payment', 'How to Finance a New Roof Utah', '0% APR Roof Financing', 'Enhancify Roofing Loan'],
+    content: [
+      {
+        sectionHeading: 'Managing the Cost of a New Roof in Utah',
+        directAnswer: 'A leaking or aging roof cannot wait for liquid cash reserves. Modern financing bridges emergency capital needs with fixed low monthly payments, promotional decision-speed credits, and structured payment milestones.',
+        bodyParagraphs: [
+          'A leaking or aging roof cannot wait for liquid cash reserves. Left unaddressed, roof leaks damage attic insulation, rot wood decking, and create costly interior drywall repairs.',
+          'Through modern, tech-enabled contractors like RHIVE Construction, Utah homeowners can secure fast capital bridges, decision-speed promotional credits, and structured payment milestones.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            RHIVE CAPITAL & SAVINGS MATRIX              │
+├──────────────────────────┬─────────────────────────────┤
+│ FINANCING PLAN           │ KEY BENEFIT                 │
+├──────────────────────────┼─────────────────────────────┤
+│ 0% APR for 18 Months     │ Same-as-cash payoff window  │
+│ 4.99% - 7.99% APR Plans  │ Low monthly installments    │
+│ RPSP Efficiency Credit   │ Immediate 10% credit        │
+│                          │ (Up to $1,000 off)         │
+└──────────────────────────┴─────────────────────────────┘`
+      },
+      {
+        sectionHeading: '1. Enhancify Partnership: Flexible Monthly Payment Plans',
+        directAnswer: 'RHIVE partners directly with Enhancify to offer 0% APR same-as-cash terms for 18 months and extended 20-year low monthly payment plans with instant 60-second soft prequalification.',
+        bodyParagraphs: [
+          'RHIVE Construction partners directly with Enhancify to provide seamless, accessible loan programs for residential reroofing:'
+        ],
+        bulletPoints: [
+          '0% APR Same-As-Cash: Pay off your new roof within 18 months with zero interest accumulation.',
+          '20-Year Low-Monthly Options: Spread investments over extended terms to fit tight monthly budgets.',
+          'Instant Prequalification: Check active rates directly through the RHIVE Client Portal in under 1 minute with no impact on your credit score.'
+        ]
+      },
+      {
+        sectionHeading: '2. The RHIVE Project Savings Promotion (RPSP) "Efficiency Credit"',
+        directAnswer: 'RHIVE eliminates commissioned sales reps and physical warehouse overhead to provide an immediate 10% efficiency credit (up to $1,000) when approving your quote within the presentation window.',
+        bodyParagraphs: [
+          'Traditional contractors pad quotes with a 10–15% "chase cost"—the administrative overhead required for repeated sales visits, phone follow-ups, and long decision windows.',
+          'At RHIVE Construction, we eliminate sales commissions and physical warehouse bloat to keep overhead under 10%:'
+        ],
+        bulletPoints: [
+          'Immediate 10% Efficiency Credit: By approving your certified quote within the presentation window, we strip out administrative chase costs and credit 10% (up to $1,000) directly back to your project ledger.',
+          'Protected by Utah’s 3-Day Right of Rescission: Lock in your efficiency discount immediately while retaining a full 3-business-day statutory window to verify your decision with zero financial risk.'
+        ]
+      },
+      {
+        sectionHeading: '3. The Transparent 50/40/10 Milestone Investment Schedule',
+        directAnswer: 'Beware of contractors demanding 100% upfront payment. RHIVE protects your money with a transparent 50/40/10 payment milestone schedule.',
+        bodyParagraphs: [
+          'RHIVE Construction never asks for total project funding upfront. We align contractor accountability with construction progress:'
+        ],
+        bulletPoints: [
+          '50% Initial Investment: Due at contract signing to lock your schedule, file municipal permits, and order manufacturer-certified materials.',
+          '40% Second Milestone: Due on final installation day once the roof is fully installed and watertight.',
+          '10% Final Settlement: Retained by you until 100% project completion, including final detail checks and magnetic lawn cleanup.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'What financing options are available for a roof replacement in Utah?',
+        answer: 'Homeowners in Utah can finance a full roof replacement through RHIVE Construction\'s partnership with Enhancify, including 0% APR for 18 months, low-APR plans from 4.99% to 7.99% over 5 to 20 years, and instant soft-credit checks.'
+      },
+      {
+        question: 'How does the RHIVE Project Savings Promotion (RPSP) reduce roof replacement costs?',
+        answer: 'The RPSP eliminates the 10-15% overhead traditional contractors spend chasing sales leads. By making a timely decision within your quote presentation window, RHIVE credits that efficiency savings (up to $1,000) directly back to you.'
+      },
+      {
+        question: 'Is my deposit protected when financing a roof replacement with RHIVE?',
+        answer: 'Yes. All contracts are safeguarded by Utah\'s statutory 3-day right of rescission, and funds are disbursed according to our strict 50/40/10 milestone schedule—with the final 10% held until you confirm 100% satisfactory completion.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 27 (AEO/SEO/GEO Series - Ice Dam Prevention)
+  // ==========================================
+  {
+    slug: 'ice-dam-prevention-mitigation-utah-guide',
+    title: 'Ice Dam Prevention & Mitigation in Utah: Stopping Destructive Winter Roof Leaks',
+    metaTitle: 'Ice Dam Prevention Utah | Eave Protection | RHIVE Construction',
+    bluf: 'Ice dams form when heat escapes from an under-insulated or poorly ventilated attic, melting snow on the upper roof deck. Meltwater runs down to the cold, unheated eave line, refreezes, and forms an ice ridge that traps backing water beneath shingles. The 3 best ways to prevent ice dams in Utah are installing a minimum of 6 feet of continuous Owens Corning WeatherLock® Ice & Water Shield along eaves, mounting commercial self-regulating heat trace cables, and balancing attic ventilation with VentSure® continuous ridge vents.',
+    description: 'Prevent destructive winter ice dams in Utah. Discover continuous WeatherLock Ice & Water Shield, self-regulating heat trace cable systems, and attic ventilation fixes.',
+    category: 'Maintenance',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Michael Robinson',
+      role: 'CEO & Master Roofing Specialist',
+    },
+    image: 'https://images.unsplash.com/photo-1548777123-e216912df7d8?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Ice Dam Prevention Utah', 'How to Stop Ice Dams Utah', 'Heat Cable Installation Salt Lake City', 'Winter Roof Leaks', 'WeatherLock Ice and Water Shield'],
+    content: [
+      {
+        sectionHeading: 'The Mechanics of Winter Ice Dam Damage in Utah',
+        directAnswer: 'During Utah winters, attic heat loss melts upper roof snowpack, which runs down to freezing eaves and forms ice dams that force water upward under shingle courses.',
+        bodyParagraphs: [
+          'During Utah winters, snowpack accumulates heavily on rooflines. When indoor attic heat rises due to inadequate insulation or blocked airflow, the temperature of the upper roof deck exceeds 32°F. Snow melts, trickles down the roof plane, and hits the cold overhang above the eaves, refreezing into a solid ice dam.',
+          'As meltwater backs up behind this ice ridge, it penetrates standard shingle overlaps, rotting wood sheathing, soaking attic insulation, and ruining ceiling drywall.'
+        ],
+        asciiBox: `       [HEAT ESCAPES FROM ATTIC] ──> Snow Melts on Upper Deck
+                                           │
+                                           ▼
+[COLD UNHEATED EAVE] ───────────────> Meltwater Refreezes
+                                           │
+                                           ▼
+ [ICE DAM FORMS] ───────────────────> Water Backs Up Under Shingles!`
+      },
+      {
+        sectionHeading: 'RHIVE’s 3-Layer Ice Defense System',
+        directAnswer: 'RHIVE engineers every residential reroof with 6 feet of continuous Owens Corning WeatherLock® membrane, self-regulating heat trace cables, and balanced VentSure® ridge ventilation.',
+        bodyParagraphs: [
+          'At RHIVE Construction, we engineer every residential roof replacement to withstand extreme Utah winter freeze-thaw cycles:'
+        ],
+        bulletPoints: [
+          '1. Double-Layer Eave Waterproofing (WeatherLock®): Under standard building codes, ice barrier underlayment is required only 24 inches past the interior warm wall. RHIVE goes further: we enforce a strict minimum of 6 feet of self-adhering Owens Corning WeatherLock® Ice & Water Shield continuously along all eaves and valleys. This self-sealing rubberized membrane grips around coil nails to prevent backing water from touching wood decking.',
+          '2. Self-Regulating Commercial Heat Trace Cable Systems: For high-elevation homes in Park City, foothill bench properties in Sandy, or shaded rooflines in Bountiful, we install heavy-duty self-regulating heat trace cables that automatically adjust wattage (5W per linear foot, 110V) based on outdoor temperatures.',
+          '3. Thermostat Automation: Built-in thermostats activate cables only when freezing precipitation is present (35°F–45°F window), creating continuous zig-zag melt channels along eaves and downspouts.',
+          '4. Balanced Attic Airflow (Owens Corning VentSure®): Preventing ice dams starts with keeping the roof deck cold. We install Owens Corning VentSure® continuous ridge vents combined with soffit intake vents to maintain constant airflow, flushing trapped heat out of the attic.'
+        ]
+      },
+      {
+        sectionHeading: 'RHIVE Winter Service Area Coverage',
+        directAnswer: 'RHIVE Construction provides ice dam mitigation, heat cable installation, and winter emergency roof repairs across Salt Lake, Davis, Weber, Summit, and Tooele counties.',
+        bodyParagraphs: [
+          'Whether your property is located along high-snow mountain benches or valley neighborhoods, RHIVE provides complete winter roof protection:'
+        ],
+        bulletPoints: [
+          'Salt Lake County: Salt Lake City, South Jordan, Sandy, Draper, West Jordan, West Valley City, Herriman, Taylorsville, Midvale, Millcreek, Holladay, Kearns, Magna, Sugar House.',
+          'Davis & Weber Counties: Bountiful, Layton, Clearfield, North Salt Lake, Ogden.',
+          'Summit & Tooele Counties: Park City, Tooele.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'What causes ice dams in Utah and how do you prevent them?',
+        answer: 'Ice dams form when heat escaping from an under-insulated or poorly ventilated attic melts snow on the upper roof deck. The meltwater refreezes at the cold eave overhang. Prevent them by installing 6 feet of continuous Owens Corning WeatherLock® Ice & Water Shield, commercial self-regulating heat trace cables, and balanced VentSure® ridge ventilation.'
+      },
+      {
+        question: 'How do self-regulating heat trace cables prevent gutter and eave ice damage?',
+        answer: 'Self-regulating heat trace cables automatically increase thermal output as temperatures drop (5 watts per linear foot), melting open channels through snowpack and gutters so meltwater drains freely off the roof before refreezing.'
+      },
+      {
+        question: 'Will chipping away an ice dam damage my shingles?',
+        answer: 'Yes. Never hack at ice dams with shovels, axes, or ice picks. In freezing weather, asphalt shingles are brittle, and impacts tear the fiberglass matting and void your warranty. RHIVE uses low-pressure steam and heated containment to safely melt ice dams without roof damage.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 28 (AEO/SEO/GEO Series - Hail Damage)
+  // ==========================================
+  {
+    slug: 'hail-damage-insurance-claims-utah-inspection-guide',
+    title: 'Hail Damage Insurance Claims in Utah: How to Spot Bruises & Secure Approval',
+    metaTitle: 'Hail Damage Insurance Claim Utah | Inspection Guide | RHIVE',
+    bluf: 'Roof hail damage in Utah appears as dark, soft circular bruises where severe impacts dislodge protective mineral granules and expose the underlying asphalt black tar layer. Key indicators include spongy shingle depressions, heavy granule accumulation in downspouts, and round pockmarks on aluminum gutters, downspouts, metal vents, and AC fins.',
+    description: 'How to identify roof hail damage in Utah and secure insurance claim approval. Learn about shingle bruising, soft-metal pockmarks, and RHIVE\'s adjuster advocacy.',
+    category: 'Insurance & Storm Damage',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Michael Robinson',
+      role: 'CEO & Lead Insurance Adjuster Advocate',
+    },
+    image: 'https://images.unsplash.com/photo-1516912481808-3406841bd33c?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Hail Damage Insurance Claim Utah', 'How to Spot Roof Hail Damage Utah', 'Hail Damage Roof Repair Salt Lake City', 'Duration FLEX Impact Shingles', 'Roof Hail Inspection'],
+    content: [
+      {
+        sectionHeading: 'The Hidden Danger of Hail Damage on Utah Roofs',
+        directAnswer: 'Severe summer hail storms dislodge mineral granules and fracture underlying fiberglass mats, leaving exposed asphalt vulnerable to rapid UV cracking and leaks within 12 to 24 months.',
+        bodyParagraphs: [
+          'Severe summer hail storms frequently sweep across Salt Lake County, Davis County, and the Wasatch Front. Hailstones falling at high velocity bruise shingle asphalt, fracture underlying fiberglass matting, and strip away protective granules.',
+          'Unaddressed hail damage exposes raw asphalt to intense solar UV radiation, causing rapid cracking, premature shingle failure, and roof leaks within 12 to 24 months.'
+        ],
+        asciiBox: `  [HIGH-VELOCITY HAIL IMPACT] ──> Dislodges Mineral Granules
+                                           │
+                                           ▼
+   [EXPOSED ASPHALT TAR] ───────────> Direct Solar UV Baking
+                                           │
+                                           ▼
+[BRITTLE CRACKING & LEAKS] ────────> Systemic Roof Failure!`
+      },
+      {
+        sectionHeading: 'How RHIVE Proves Hail Claims to Insurance Adjusters',
+        directAnswer: 'RHIVE deploys a 3-step proof methodology—combining NOAA satellite storm swaths, physical 10\'x10\' test squares, and on-site adjuster advocacy led by CEO Michael Robinson.',
+        bodyParagraphs: [
+          'Filing an insurance claim without clear proof can harm your record. If an adjuster determines roof breakdown is due to age or wear rather than storm impact, the claim is denied.',
+          'At RHIVE Construction, we deploy a rigorous 3-step proof methodology:'
+        ],
+        bulletPoints: [
+          '1. NOAA & Satellite Storm Swath Verification: We cross-reference your exact address against NOAA radar data and historical hail event maps (e.g., September 18, 2026 quarter-inch hail events in Salt Lake/Davis counties).',
+          '2. Physical Test Square Diagnostics: We inspect your roof slopes, establishing 10\' x 10\' test squares to count verified hail strike bruises, fractured mats, and damaged metal penetrations.',
+          '3. On-Site Adjuster Meeting with Michael Robinson: RHIVE CEO Michael Robinson attends your insurance inspection in person. We mark hail impact circles, document soft-metal collateral, and ensure local building code requirements—like 28-gauge steel drip edge and continuous WeatherLock® Ice & Water Shield—are included in the carrier\'s approved estimate.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE Replacement Guarantee',
+        directAnswer: 'Approved hail reroofs receive 100% tear-offs down to bare OSB decking, 100 sq ft free deck replacement, WeatherLock® membranes, and Class 4 impact-rated Owens Corning Duration FLEX® shingles.',
+        bodyParagraphs: [
+          'Once your hail claim is approved, our crews install an institutional-grade roofing system engineered to resist future storms:'
+        ],
+        bulletPoints: [
+          '100% Full Tear-Off: We strip the damaged roof down to bare OSB decking (including up to 100 sq ft of OSB replacement at no extra charge).',
+          'High-Performance Underlayment: We install Owens Corning ProArmor® synthetic underlayment and 6-foot eave barriers of WeatherLock® Ice & Water Shield.',
+          'Class 4 Impact Resistance: We fasten Class 4 Impact Rated Owens Corning Duration FLEX® (SBS polymer-modified) or standard Duration® shingles using 6-nail SureNail® patterns.',
+          'Lifetime Warranties: Backed by Owens Corning 50-year Preferred Protection and RHIVE\'s direct Lifetime Installer No-Leak Guarantee.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'How do you know if your roof has hail damage in Utah?',
+        answer: 'Roof hail damage appears as dark, soft circular bruises where severe impacts dislodge protective mineral granules and expose the underlying asphalt black tar layer. Key indicators include circular spongy depressions, heavy granule accumulation in downspouts, and round pockmarks on gutters, downspouts, and AC fins.'
+      },
+      {
+        question: 'Can hail damage cause my roof to leak immediately?',
+        answer: 'Rarely. Hail usually creates micro-fractures in the fiberglass mat and dislodges UV-protecting granules. The roof begins leaking 12 to 24 months later after intense sun exposure degrades the raw asphalt.'
+      },
+      {
+        question: 'Will installing Class 4 Impact Rated shingles lower my insurance premiums?',
+        answer: 'Yes. Installing Class 4 Impact Rated shingles like Owens Corning Duration FLEX® often qualifies Utah homeowners for annual homeowners insurance premium discounts of up to 15% to 25%.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 29 (AEO/SEO/GEO Series - Bountiful Contractor)
+  // ==========================================
+  {
+    slug: 'top-rated-roofing-contractor-bountiful-ut',
+    title: 'Top-Rated Roofing Contractor in Bountiful, UT: Local Reroofing & Storm Repair',
+    metaTitle: 'Roofing Contractor Bountiful UT | Local Roofers | RHIVE Construction',
+    bluf: 'RHIVE Construction is a top-rated, female-owned roofing contractor serving Bountiful, Utah, and Davis County. RHIVE operates with radical cost transparency—providing itemized cost breakdowns showing exact costs for Materials, Labor, Operating Overhead (<10%), and Net Profit on every quote. Every residential reroof includes a 100% full tear-off policy, Owens Corning Duration® 130 MPH high-wind shingles, and RHIVE’s direct Lifetime Installer No-Leak Guarantee.',
+    description: 'Looking for a top-rated roofing contractor in Bountiful, UT? RHIVE Construction offers 100% full tear-offs, high-wind SureNail shingles, and 50-year no-leak guarantees.',
+    category: 'Residential',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'Co-Founder & President',
+    },
+    image: 'https://images.unsplash.com/photo-1541888946425-d0fbb186156f?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Roofing Contractor Bountiful', 'Roof Repair Bountiful UT', 'Best Roofer in Bountiful Utah', 'Davis County Roofing', 'Bountiful Bench Roofing'],
+    content: [
+      {
+        sectionHeading: 'Solving Bountiful\'s Foothill Canyon Wind & Heavy Snowpack Challenges',
+        directAnswer: 'Bountiful homes experience 70+ MPH canyon wind gusts and shaded winter snowpack retention, requiring SureNail® 130 MPH shingles, 28-gauge steel drip edges, and 6 feet of continuous WeatherLock® eave protection.',
+        bodyParagraphs: [
+          'Nestled along the Wasatch Bench in southern Davis County, properties in Bountiful experience demanding environmental conditions. Severe downslope canyon wind gusts blowing through Weber and Sessions canyons frequently exceed 60–70 MPH, testing shingle edge adhesion and tearing unreinforced roofs.',
+          'Simultaneously, heavy foothill snowpack retention and shade along mountain slopes cause severe winter ice damming. Protecting Bountiful homes requires high-wind SureNail® fastening bands, 28-gauge steel drip metal, and continuous eave waterproofing.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│             RHIVE BOUNTIFUL ROOFING STANDARD           │
+├────────────────────────────────────────────────────────┤
+│ ✓ 100% Full Tear-Off Down to Bare Wood Decking         │
+│ ✓ Owens Corning ProArmor® Synthetic Underlayment       │
+│ ✓ 6 Feet Minimum WeatherLock® Ice & Water Shield       │
+│ ✓ SureNail® 6-Nail Fastening Pattern (130 MPH Wind)    │
+│ ✓ 28-Gauge Perimeter Steel Drip Edge Metal             │
+│ ✓ 50-Year Non-Prorated Installer No-Leak Guarantee     │
+└────────────────────────────────────────────────────────┘`
+      },
+      {
+        sectionHeading: 'Municipal Compliance & Local Bountiful Service Area',
+        directAnswer: 'RHIVE manages 100% of municipal permitting through the Bountiful City Community Development Department, ensuring code-compliant eave ice barrier extensions across all bench and valley neighborhoods.',
+        bodyParagraphs: [
+          'Full roof replacements in Bountiful require municipal building permits issued through the Bountiful City Community Development Department. RHIVE Construction manages 100% of the permitting process, ensuring full compliance with local building codes and eave ice barrier extensions.'
+        ],
+        bulletPoints: [
+          'Bountiful Bench & Val Verda: High-elevation properties requiring reinforced eave ice defense and canyon wind fastening.',
+          'Summerhays & Orchard Drive Corridors: Established residential neighborhoods benefiting from full tear-offs and rotted deck replacements.',
+          'Mueller Park & Eggett Park Foothills: Shaded canyon-mouth homes needing self-regulating heat trace cables and Class A fire-rated shingles.',
+          'Bountiful Main Street & Downtown Commercial District: Retail flat roofs receiving GAF EverGuard® TPO/PVC single-ply membrane systems.',
+          'Adjoining Davis Communities: Seamless service extending into North Salt Lake, Centerville, Woods Cross, and West Bountiful.'
+        ]
+      },
+      {
+        sectionHeading: 'Why Bountiful Homeowners Choose RHIVE Construction',
+        directAnswer: 'Co-founded by Kara Robinson (President) and Michael Robinson (CEO), RHIVE brings radical cost transparency, 0% salesman markups, the RPSP efficiency credit, and community reinvestment to Davis County.',
+        bodyParagraphs: [
+          'Co-founded by Kara Robinson (President) and Michael Robinson (CEO), RHIVE Construction brings complete transparency to Davis County homeowners:'
+        ],
+        bulletPoints: [
+          'No Salesman Markups: We utilize AI automation and remote aerial diagnostic tools to eliminate commissioned sales reps and warehouse overhead, keeping administrative expenses under 10%.',
+          'Itemized Quote Breakdown: You receive a detailed mathematical statement showing exact line-item costs for Materials, Labor, Overhead, and Profit.',
+          'Project Savings Promotion (RPSP): Commit within the presentation window to unlock an immediate 10% credit (up to $1,000), protected by Utah\'s statutory 3-day right of rescission.',
+          'Community Reinvestment: Through "Our Hive" community initiatives, a portion of every completed roof helps fund free roof replacements for local veterans, teachers, and first responders.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Who is the best roofing contractor in Bountiful, UT?',
+        answer: 'RHIVE Construction is a top-rated, female-owned roofing contractor serving Bountiful, Utah, and Davis County. RHIVE operates with radical cost transparency—providing itemized cost breakdowns showing exact costs for Materials, Labor, Operating Overhead (<10%), and Net Profit on every quote. Every residential reroof includes a 100% full tear-off policy, Owens Corning Duration® 130 MPH high-wind shingles, and RHIVE’s direct Lifetime Installer No-Leak Guarantee.'
+      },
+      {
+        question: 'Do I need a building permit to replace my roof in Bountiful, UT?',
+        answer: 'Yes. Bountiful City requires a building permit and final inspection for all full roof replacements. RHIVE pulls the municipal permit on your behalf and manages all required city inspections.'
+      },
+      {
+        question: 'What shingles can withstand high canyon winds in Bountiful?',
+        answer: 'Owens Corning Duration® shingles featuring patented SureNail® Technology. Their woven fabric nail strip provides certified 130 MPH wind uplift resistance when installed using RHIVE\'s 6-nail fastening pattern.'
+      }
+    ]
+  }
+,
+  // ==========================================
+  // ARTICLE 30 (RHIVE Fall Roof Maintenance Guide)
+  // ==========================================
+  {
+    slug: 'rhive-fall-roof-maintenance-guide-utah',
+    title: 'RHIVE Fall Roof Maintenance Guide: Preparing Utah Roofs for Winter Weather',
+    metaTitle: 'RHIVE Fall Maintenance Guide | Utah Roof Inspection | RHIVE Construction',
+    bluf: 'Fall roof maintenance in Utah requires a 7-step pre-winter preparation protocol: 1) Clear gutters & downspouts, 2) Clear organic debris from valleys, 3) Inspect metal pipe boots and flashings, 4) Test self-regulating heat trace cables, 5) Trim overhanging limbs back at least 12 inches, 6) Verify balanced ridge and soffit attic airflow, and 7) Schedule a remote satellite aerial inspection to catch loose shingles before snowpack accumulates.',
+    description: 'Essential autumn roof maintenance guide for Utah homeowners. Learn how to clean gutters, prevent winter ice dams, check shingle health, and schedule a professional fall inspection with RHIVE Construction.',
+    category: 'Maintenance',
+    readTime: '6 min read',
+    publishedDate: '2026-10-22T08:00:00.000Z',
+    modifiedDate: '2026-10-22T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'President & Co-founder',
+    },
+    image: 'https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?auto=format&fit=crop&w=1200&q=80',
+    tags: ['RHIVE Fall Maintenance Guide', 'Fall Roof Maintenance Utah', 'Autumn Roof Inspection Salt Lake City', 'Preparing Roof For Winter Utah', 'Winter Roof Care Utah'],
+    content: [
+      {
+        sectionHeading: 'Why Autumn Roof Care Matters in Utah',
+        directAnswer: 'Utah’s autumn is the final weather window to prepare rooflines against 80°F single-day thermal swings, heavy alpine snow accumulation, and destructive Wasatch freeze-thaw cycles.',
+        bodyParagraphs: [
+          'Utah’s autumn brings pleasant daytime weather, but it also marks the final window to prepare rooflines for extreme winter weather along the Wasatch Front. Properties across Salt Lake County, Davis County, and high-altitude mountain benches face severe winter conditions:',
+          'Conducting a thorough fall inspection prevents minor issues—such as a cracked pipe boot collar or clogged gutter miter—from expanding into catastrophic winter roof leaks.'
+        ],
+        bulletPoints: [
+          'Single-Day Thermal Swings Exceeding 80°F: Rapid expansion and contraction stress shingle seals, flashings, and decking.',
+          'Heavy Alpine Snowpack: Accumulated snow adds intense weight to roof decks and creates standing water in valleys.',
+          'Severe Freeze-Thaw Cycles & Ice Damming: Trapped attic heat melts snowpack, which runs down to cold eave lines, refreezes, and forces backing water under shingles unless protected by continuous waterproofing barriers.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE 7-Step Fall Roof Maintenance Checklist',
+        directAnswer: 'Co-founded by Kara Robinson (President) and Michael Robinson (CEO), RHIVE Construction provides a master-craftsman 7-step checklist to systematically evaluate gutters, valleys, flashings, heat cables, and attic ventilation.',
+        bodyParagraphs: [
+          'Co-founded by Kara Robinson (President) and Michael Robinson (CEO), RHIVE Construction is a female-owned and operated contractor committed to radical cost transparency and master-craftsman execution.',
+          'Use this step-by-step checklist to evaluate your home before winter arrives:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│             RHIVE FALL MAINTENANCE CHECKLIST           │
+├────────────────────────────────────────────────────────┤
+│ • 1. Clean & Flush Gutters / Downspouts                │
+│ • 2. Clear Organic Debris from Roof Valleys            │
+│ • 3. Inspect Pipe Boots & Flashing Sealants            │
+│ • 4. Test Self-Regulating Eave Heat Trace Cables       │
+│ • 5. Trim Overhanging Tree Limbs (12" Clearance)       │
+│ • 6. Verify Balanced Attic Airflow (Ridge & Soffit)    │
+│ • 7. Request Remote Aerial Satellite Audit             │
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          '1. Clean & Flush Gutters and Downspouts: Manually remove organic waste from 5-inch and 6-inch K-Style, Round, or Box aluminum gutters. Flush downspouts to verify 100% flow capacity, and check that heavy-duty screw-in hangers are securely fastened every 24 inches to support heavy snow loads.',
+          '2. Clear Organic Debris from Valleys & Low-Slope Areas: Leaves and pine needles act like sponges, holding moisture against shingle granules and blocking natural drainage channels. Clear perimeters and curbs with soft-bristle tools or air blowers. On commercial TPO/PVC flat roofs, clear scuppers and internal drains.',
+          '3. Inspect Flashing, Pipe Boots & Penetrations: Inspect neoprene collars around pipe jacks for UV dry rot. RHIVE replaces failing collars with Full Metal Pipe Jacks, sealed with clear UV-rated sealant and painted to prevent oxidation. Check 28-gauge steel L-metal and chimney flashings.',
+          '4. Test Eave Heat Trace Cable Systems: Check self-regulating heat trace cables (5W/lin ft, 110V) anchored in valleys and gutters. Test automatic thermostats (activating in the 35°F–45°F range) to guarantee open melt channels during snowstorms.',
+          '5. Trim Overhanging Tree Branches: Trim limbs back at least 12 inches to 3 feet from shingle edges. This prevents branches from scraping granules during high canyon wind events and eliminates snow-weighted limb collapse hazards.',
+          '6. Verify Balanced Attic Airflow & Insulation: Ensure Owens Corning VentSure® continuous ridge vents and open soffits continuously exhaust heat, keeping the roof deck cold to prevent ice dam formation.',
+          '7. Schedule a Remote Aerial Satellite Audit: Avoid climbing steep roofs. RHIVE conducts remote satellite audits using Roofr aerial imagery and Google Maps data to inspect every facet and shingle line safely.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE Standard: Built for Utah Winters',
+        directAnswer: 'If your roof has reached the end of its lifespan, RHIVE installs complete certified systems engineered for Wasatch winters—including 100% full tear-offs, 6 feet of continuous ice & water shield, and 130 MPH wind ratings.',
+        bodyParagraphs: [
+          'If your fall inspection reveals that your roof has reached the end of its 20- to 30-year service life, RHIVE Construction installs complete, manufacturer-certified replacement systems engineered specifically for Utah winter weather:'
+        ],
+        bulletPoints: [
+          '100% Residential Full Tear-Off Policy: We strip old shingles down to bare OSB decking (never performing layovers that trap moisture or conceal rotted sheathing).',
+          'Decking Replacement Included: Up to 100 sq ft of 7/16 OSB decking replacement is included at no extra charge if wood rot is discovered.',
+          'Synthetic Field Barrier: 100% field coverage with Owens Corning ProArmor® synthetic underlayment.',
+          'Double-Layer Eave Protection: A minimum of 6 feet of continuous Owens Corning WeatherLock® Ice & Water Shield self-adhering membrane along eaves and valleys (extending well past the 24-inch IRC code requirement).',
+          'High-Wind SureNail® Fastening: Electro-galvanized coil nails driven in a strict 6-nail pattern per shingle through the SureNail woven fabric strip, delivering a certified 130 MPH wind uplift rating.',
+          '28-Gauge Steel Drip Edge: Installed along all perimeter eaves and rakes for clean water diversion.',
+          'Dual Warranty Protection: Owens Corning Preferred Protection 50-Year Non-Prorated Material Coverage paired with RHIVE\'s direct Lifetime Installer No-Leak Guarantee.'
+        ]
+      },
+      {
+        sectionHeading: 'Transparent Financial Options & RPSP Savings',
+        directAnswer: 'RHIVE eliminates salesman markups and offers a transparent 50/40/10 milestone payment structure, a 10% RPSP efficiency credit (up to $1,000), and 3-day statutory rescission rights.',
+        bodyParagraphs: [
+          'RHIVE Construction protects your financial security with transparent investment terms and accessible financing partnerships:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            RHIVE MILESTONE INVESTMENT SCHEDULE         │
+├────────────────────────────────────────────────────────┤
+│ • 50% Initial Investment: Secured at signing to order   │
+│   permits & drop materials.                            │
+│ • 40% Second Milestone: Due on final build day once    │
+│   primary system is watertight.                        │
+│ • 10% Final Settlement: Retained until 100% project    │
+│   completion & quality audit.                          │
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          'RHIVE Project Savings Promotion (RPSP): Approve your certified quote within the presentation window to unlock an immediate 10% Efficiency Credit (up to $1,000) by stripping out administrative chase costs.',
+          'Protected by Law: Locked under Utah’s statutory 3-Day Right of Rescission, giving you 3 full business days to verify your decision with zero financial risk.',
+          'Flexible Financing: Partnered with Enhancify to offer 0% APR for 18 months or low-APR long-term payment plans.',
+          'Community Impact: Every project supports "Our Hive" community initiatives, funding complete roof replacements for local veterans, teachers, and first responders.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'When is the best time in the fall to inspect my roof in Utah?',
+        answer: 'Early to mid-autumn (September through late October) provides ideal weather conditions to inspect shingles, clean gutters, and make necessary repairs before freezing snowstorms begin.'
+      },
+      {
+        question: 'Can RHIVE inspect my roof without coming inside or climbing on it?',
+        answer: 'Yes. Using high-definition Roofr satellite measurements, aerial imagery, and Google Maps data, we assess your roof deck remotely and deliver a Certified Quote within 24–48 hours.'
+      },
+      {
+        question: 'What happens if unexpected wood rot is discovered during a reroof?',
+        answer: 'Every full residential replacement includes up to 100 sq ft of 7/16 OSB decking replacement at no additional charge. Any additional sheets needed are billed at pre-agreed contract rates ($72.50 per 7/16 OSB sheet) specified upfront in your agreement.'
+      },
+      {
+        question: 'What is the fee for emergency leak containment or tarping?',
+        answer: 'RHIVE dispatches emergency crews under our Quantum Rapid-Response Protocol. Emergency synthetic tarping carries a flat $350 fee, and 100% of this $350 fee is credited back directly toward your permanent repair or full replacement.'
+      }
+    ]
+  }
+,
+  // ==========================================
+  // ARTICLE 31 (UTAH Services by RHIVE - Comprehensive Solutions)
+  // ==========================================
+  {
+    slug: 'utah-services-by-rhive',
+    title: 'UTAH Services by RHIVE: Comprehensive Residential, Commercial & Specialty Roofing Solutions Across the Wasatch Front',
+    metaTitle: 'UTAH Services by RHIVE | Roofing, Flat Roofs & Gutters | RHIVE Construction',
+    bluf: 'RHIVE Construction is a female-owned and operated contractor providing a complete suite of residential, commercial, and specialty roofing services across Utah. Key services include 100% full tear-off residential replacements with Owens Corning Duration® Class 4 shingles (130 MPH rating), commercial GAF EverGuard® TPO/PVC single-ply systems with up to 30-Year NDL guarantees, $350 credited emergency leak tarping, custom seamless gutters, eave heat trace, and direct 50-Year Lifetime Installer No-Leak Guarantees.',
+    description: 'Discover the full catalog of Utah roofing services offered by RHIVE Construction. From 100% tear-off residential replacements and GAF commercial TPO/PVC flat roofs to gutters, heat trace, and storm repairs.',
+    category: 'Residential',
+    readTime: '7 min read',
+    publishedDate: '2026-11-05T08:00:00.000Z',
+    modifiedDate: '2026-11-05T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'President & Co-founder',
+    },
+    image: 'https://images.unsplash.com/photo-1541888946425-d0fbb18615f8?auto=format&fit=crop&w=1200&q=80',
+    tags: ['UTAH Services by RHIVE', 'RHIVE Construction Utah roofing services', 'Roof replacement services Utah', 'Commercial flat roofing Utah', 'Emergency roof repair Utah'],
+    content: [
+      {
+        sectionHeading: 'Redefining Utah Roofing Through Technology & Radical Transparency',
+        directAnswer: 'Headquartered in South Jordan, Utah, RHIVE Construction eliminates traditional sales commissions and warehouse overhead to operate under 10% operating overhead, passing savings directly to property owners via itemized mathematical quotes.',
+        bodyParagraphs: [
+          'Headquartered at 10437 Shady Plum Way in South Jordan, Utah, RHIVE Construction was co-founded by Kara Robinson (President) and Michael Robinson (CEO) to challenge contractor inefficiencies, hidden markups, and unbacked warranties.',
+          'By leveraging AI automation and eliminating expensive sales commissions and physical warehouse overhead, RHIVE maintains operating overhead under 10%. Every quote provided to Utah property owners includes a fully itemized mathematical breakdown showing exact costs for Materials, Labor, Operating Overhead, and Net Company Profit.'
+        ],
+        bulletPoints: [
+          'Itemized Transparency: Mathematical breakdown of Materials, Labor, Overhead (<10%), and Net Profit on every proposal.',
+          'No Sales Commission Markups: Direct founder leadership and digital diagnosis replace high-pressure sales reps.',
+          'Certified Digital Precision: Roofr high-definition aerial satellite diagnostic reports deliver exact measurements within 24–48 hours.'
+        ]
+      },
+      {
+        sectionHeading: '1. Residential Roofing Services in Utah',
+        directAnswer: 'RHIVE enforces a strict 100% full tear-off standard on all residential roofs down to bare wood decking, installs Owens Corning Duration® 130 MPH shingles, and includes up to 100 sq ft of OSB decking replacement.',
+        bodyParagraphs: [
+          'RHIVE Construction specializes in complete residential reroofing designed to withstand Utah’s harsh alpine weather, high canyon wind shears, and single-day temperature fluctuations exceeding 80°F.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│             RHIVE RESIDENTIAL ROOFING SYSTEM           │
+├────────────────────────────────────────────────────────┤
+│ ✓ 100% Full Tear-Off Down to Bare Decking              │
+│ ✓ Decking Inspection + Up to 100 sq ft OSB Included     │
+│ ✓ 100% Field Coverage: Owens Corning ProArmor®         │
+│ ✓ Eaves & Valleys: 6 Ft WeatherLock® Ice & Water Shield│
+│ ✓ SureNail® Fastening: 6-Nail Pattern (130 MPH Rating) │
+│ ✓ 28-Gauge Steel Perimeter Drip Metal Edge             │
+│ ✓ Owens Corning 50-Year Total Protection Warranty      │
+│ ✓ RHIVE Direct 50-Year Lifetime Installer No-Leak Guard│
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          '100% Full Tear-Off Policy: RHIVE never performs residential layovers. Covering old shingles traps heat, conceals underlying structural rot, adds excessive weight, and voids manufacturer warranties.',
+          'Decking Allowance Included: Every full residential reroof includes up to 100 sq ft of 7/16 OSB decking replacement at no extra charge if wood rot is discovered. Additional sheets are billed at pre-agreed contract rates ($72.50 per 7/16 OSB sheet) specified upfront.',
+          'Secondary Waterproofing: 100% of the bare roof deck is protected with Owens Corning ProArmor® synthetic underlayment.',
+          'Double-Layer Eave Protection: RHIVE installs a minimum of 6 continuous feet of self-adhering Owens Corning WeatherLock® Ice & Water Shield along eaves and valleys, extending far past the standard 24-inch IRC warm-wall code.',
+          'High-Wind SureNail® Shingles: We install Owens Corning Duration® Series architectural shingles and Duration FLEX® Class 4 SBS polymer-modified impact shingles fastened with electro-galvanized coil nails in a 6-nail pattern for a certified 130 MPH wind uplift rating.',
+          'Dual Warranty Security: Backed by Owens Corning 50-Year Non-Prorated Preferred Protection component coverage and RHIVE’s direct 50-Year Lifetime Installer No-Leak Guarantee.'
+        ]
+      },
+      {
+        sectionHeading: '2. Commercial & Industrial Flat Roofing Services in Utah',
+        directAnswer: 'As a certified commercial installer, RHIVE provides GAF EverGuard® TPO and PVC single-ply systems (60 & 80 mil), tapered Polyiso R-30+ drainage assemblies, and up to 30-Year No Dollar Limit (NDL) Guarantees.',
+        bodyParagraphs: [
+          'As a factory-certified GAF commercial installer, RHIVE Construction delivers low-slope and flat single-ply membrane roofing for office parks, retail plazas, industrial facilities, and municipal buildings across Utah and Idaho.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            COMMERCIAL SINGLE-PLY MEMBRANE HUBS         │
+├──────────────────────────┬─────────────────────────────┤
+│ GAF EVERGUARD® TPO       │ GAF EVERGUARD® PVC          │
+├──────────────────────────┼─────────────────────────────┤
+│ • 60 mil & 80 mil option │ • 60 mil & 80 mil option    │
+│ • White Energy Star UV   │ • Chemical, oil & grease    │
+│   solar reflectivity     │   resistant formulation     │
+│ • Polyiso R-30+ thermal  │ • Ideal for restaurants,    │
+│   insulation assembly    │   kitchens & industrial     │
+│ • 20 to 30-Year NDL      │ • 20 to 30-Year NDL         │
+│   Guarantee Coverage     │   Guarantee Coverage        │
+└──────────────────────────┴─────────────────────────────┘`,
+        bulletPoints: [
+          'GAF EverGuard® TPO Systems (60/80 mil): Reflective white thermoplastic single-ply membrane that lowers summer HVAC building cooling loads. Field seams and flashing details are fusion heat-welded using hot air to form a continuous, monolithic watertight bond.',
+          'GAF EverGuard® PVC Systems (60/80 mil): Formulated for high resistance to animal fats, oils, greases, and industrial chemicals—essential for commercial kitchens and manufacturing plants.',
+          'Substrate & Drainage Assembly: Mechanically attached Polyisocyanurate (Polyiso) thermal insulation boards (R-30+), custom pre-fabricated tapered Polyiso around drains and scuppers to eliminate ponding water, and high-density DensDeck® gypsum cover boards.',
+          'Full Tear-Off vs. 1-Layer Re-Cover Engineering Standard: Tearing all the way down to structural decking (steel, concrete, or wood) is always best practice and mandatory for 2+ layers or wet polyiso. For qualified single-layer roofs, RHIVE strips the existing top membrane down to the polyiso substrate, thoroughly inspects 100% of the substrate, replaces any damaged/wet polyiso, and installs new fanfold cover board and a brand-new membrane for a 100% manufacturer-warrantable system.',
+          'GAF No Dollar Limit (NDL) Guarantees: Commercial projects qualify for GAF NDL Commercial Guarantees for up to 30 years, covering 100% of material and labor defect costs without a payout cap.'
+        ]
+      },
+      {
+        sectionHeading: '3. Specialty & Auxiliary Trade Services in Utah',
+        directAnswer: 'RHIVE integrates full exterior water management—including on-site seamless gutter extrusion (fastened every 24"), 5W/lin ft self-regulating heat trace cables, masonry flashing, and solar detach/reset.',
+        bodyParagraphs: [
+          'RHIVE Construction provides integrated auxiliary trade services to ensure total exterior water management and roofline protection:'
+        ],
+        bulletPoints: [
+          'Seamless Aluminum Gutters: Custom-extruded on-site in 5-inch and 6-inch K-style, semi-circular round, or box profiles. Heavy-duty hidden screw-in hangers are anchored tightly at every 24 inches (exceeding standard 30-inch spacing) to support heavy winter snow and ice loads.',
+          'Self-Regulating Heat Trace Systems: Installation of commercial-grade self-regulating heat cable (5W/lin ft, 110V) along eaves and gutters, controlled by automatic thermostats to maintain open melt channels and prevent winter ice dams.',
+          'Chimney Masonry & Flashing Detail: Precision mortar joint repointing, custom 28-gauge steel step and L-metal flashing installation, and full 24-gauge Kynar-coated steel chimney chase pan or shroud replacements.',
+          'Solar Panel Detach & Reset: Certified disconnection, safe off-site or on-site storage, and professional re-installation of residential and commercial solar panel arrays during reroofing projects.'
+        ]
+      },
+      {
+        sectionHeading: '4. Emergency Leak Repair & Storm Response',
+        directAnswer: 'Under the Quantum Rapid-Response Protocol, RHIVE dispatches emergency containment crews with a flat $350 fee, with 100% credited back toward your permanent restoration.',
+        bodyParagraphs: [
+          'When severe weather strikes the Wasatch Front, RHIVE operates a Quantum Rapid-Response Protocol for emergency containment:'
+        ],
+        bulletPoints: [
+          'Emergency Tarping Dispatch: Rapid deployment of heavy-duty synthetic tarping or flat membrane heat-welded patches.',
+          'The $350 Credit Guarantee: Emergency containment carries a flat $350 fee, and 100% of this $350 fee is credited directly back toward your permanent repair or complete reroof with RHIVE.'
+        ]
+      },
+      {
+        sectionHeading: '5. Financial Terms & The Project Savings Promotion (RPSP)',
+        directAnswer: 'RHIVE protects homeowner security through a transparent 50/40/10 milestone schedule, a 10% residential RPSP efficiency credit (up to $1,000), 3-day statutory rescission rights, and 0% APR financing options.',
+        bodyParagraphs: [
+          'RHIVE protects customer financial security with transparent investment terms and promotional efficiency credits:'
+        ],
+        bulletPoints: [
+          'Transparent 50/40/10 Milestone Schedule: 50% initial investment at signing to lock scheduling, pull municipal building permits, and drop materials; 40% on substantial installation day once watertight; 10% final settlement retained until punch list sign-off and magnetic nail sweep.',
+          'RHIVE Project Savings Promotion (RPSP): Commit to your quote within the presentation window to unlock an immediate 10% Efficiency Credit (up to $1,000) by stripping out administrative sales chase costs.',
+          'Protected by Utah Law: Locked under Utah’s statutory 3-Day Right of Rescission, giving homeowners 3 full business days to verify their decision with zero financial risk.',
+          'Flexible Financing: Partnered with Enhancify to offer 0% APR for 18 months or low-APR long-term payment plans.',
+          'Our Hive Community Impact: A percentage of every completed roof project directly funds free roof replacements for local veterans, teachers, first responders, and families in need across every state where RHIVE operates.'
+        ]
+      },
+      {
+        sectionHeading: '6. RHIVE Construction Utah Service Area Directory',
+        directAnswer: 'RHIVE Construction services residential and commercial properties across Salt Lake County, Davis County, Utah County, Weber County, Summit County, and Tooele County.',
+        bodyParagraphs: [
+          'RHIVE Construction actively services residential and commercial properties across all primary Wasatch Front and surrounding Utah municipalities:'
+        ],
+        bulletPoints: [
+          'Salt Lake County: Salt Lake City, South Jordan (HQ), Sandy, Draper, West Jordan, West Valley City, Herriman, Taylorsville, Midvale, Millcreek, Holladay, Kearns, Magna, Sugar House.',
+          'Davis & Weber Counties: Bountiful, North Salt Lake, Centerville, Woods Cross, Farmington, Kaysville, Layton, Clearfield, Syracuse, Ogden, Roy.',
+          'Utah County: Lehi, American Fork, Pleasant Grove, Orem, Provo, Springville, Spanish Fork.',
+          'Summit, Wasatch & Tooele Counties: Park City, Heber City, Midway, Kamas, Tooele.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'How do I get an initial cost estimate for my roof in Utah?',
+        answer: 'You can get an instant 60-second ballpark estimate directly through the RHIVE website estimator tool. For an exact binding price, request a Certified Quote, which is generated within 24–48 hours using high-definition Roofr aerial satellite reports.'
+      },
+      {
+        question: 'Does RHIVE charge extra if extra wood decking rot is found during tear-off?',
+        answer: 'Every full residential reroof includes up to 100 sq ft of OSB decking replacement at no additional charge. Any additional wood required beyond 100 sq ft is billed at pre-agreed contract rates ($72.50 per 7/16 OSB sheet) specified upfront in your contract.'
+      },
+      {
+        question: 'What happens if I need emergency leak repairs during a snowstorm or windstorm?',
+        answer: 'RHIVE dispatches emergency crews under our Quantum Rapid-Response Protocol. Emergency synthetic tarping or flat roof membrane containment carries a flat $350 fee, and 100% of this $350 fee is credited back toward your permanent repair or replacement.'
+      },
+      {
+        question: 'How does the RHIVE Lifetime Installer No-Leak Guarantee protect me?',
+        answer: 'In addition to Owens Corning 50-Year material warranties, RHIVE Construction guarantees our workmanship for the lifetime of the roof system. If our installation methods cause a leak, we repair it 100% free of charge.'
+      }
+    ]
+  }
+,
+// ==========================================
+  // ARTICLE 32 (Owens Corning Duration vs Duration FLEX)
+  // ==========================================
+  {
+    slug: 'owens-corning-duration-vs-duration-flex-utah',
+    title: 'Owens Corning Duration® vs. Duration FLEX®: Which Shingle Is Best for Your Utah Home?',
+    metaTitle: 'Owens Corning Duration vs Duration FLEX Utah | Shingle Comparison | RHIVE',
+    bluf: 'Owens Corning Duration® is an architectural shingle featuring patented SureNail® Technology—an engineered woven fabric strip in the fastening line providing certified 130 MPH wind uplift resistance and 25-year StreakGuard™ Algae Protection. Owens Corning Duration FLEX® integrates SBS polymer-modified asphalt, giving the shingle rubberized flexibility to achieve a UL 2218 Class 4 Impact Resistance Rating (the highest rating against hail and debris). Duration FLEX® withstands Utah temperature swings exceeding 80°F without cracking and often qualifies homeowners for 15–30% insurance premium discounts.',
+    description: 'Compare Owens Corning Duration® and Class 4 Impact Rated Duration FLEX® shingles for Utah homes. Learn how SureNail® Technology, hail resistance, and 130 MPH wind ratings protect your roof.',
+    category: 'Residential',
+    readTime: '6 min read',
+    publishedDate: '2026-11-05T08:00:00.000Z',
+    modifiedDate: '2026-11-05T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'President & Co-founder',
+    },
+    image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80',
+    tags: ['Owens Corning Duration vs Duration FLEX Utah', 'Class 4 impact shingles Utah', 'best shingles for Utah weather', 'high wind roofing shingles Salt Lake City', 'SureNail Technology'],
+    content: [
+      {
+        sectionHeading: 'Understanding Shingle Performance in Utah’s Extreme Alpine Climate',
+        directAnswer: 'Utah rooflines endure high-velocity canyon wind shears exceeding 70 MPH, violent freeze-thaw cycles swinging over 80°F in single days, and severe summer hail strikes requiring heavy-duty asphalt matting.',
+        bodyParagraphs: [
+          'Rooflines along the Wasatch Front—from Bountiful and Salt Lake City down through Sandy, Draper, and Utah County—are subjected to some of the most demanding environmental conditions in North America.',
+          'Downslope canyon winds consistently test wind uplift resistance, while winter temperatures swinging from sub-freezing nights to warm sunny afternoons place massive expansion and contraction stress on underlying roof sheathing. When summer arrives, severe convective hail storms can pulverize standard asphalt shingles in minutes.'
+        ],
+        bulletPoints: [
+          'Downslope Canyon Winds: Wind shears funneling through Wasatch canyons frequently gust at 60–70+ MPH, tearing unreinforced shingles away from their fastener heads.',
+          'Extreme Freeze-Thaw Thermal Swings: Single-day temperature differentials of 80°F+ cause standard rigid asphalt to expand, contract, and form micro-fissures.',
+          'High-Velocity Hailstorms: Summer hail impacts crack underlying fiberglass mats, bruise asphalt layers, and dislodge mineral UV-protective granules.'
+        ]
+      },
+      {
+        sectionHeading: 'Feature Comparison: Owens Corning Duration® vs. Duration FLEX®',
+        directAnswer: 'While both shingles share the 130 MPH SureNail® fastening strip and 50-year non-prorated warranties, Duration FLEX® adds SBS polymer-modified asphalt for Class 4 impact resistance and 80°F+ thermal flexibility.',
+        bodyParagraphs: [
+          'To help Utah property owners make an informed investment, we compare the structural, physical, and financial attributes of both flagship Owens Corning shingle systems:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│         FEATURE / SPECIFICATION COMPARISON             │
+├──────────────────────┬─────────────────┬───────────────┤
+│ Specification        │ Duration®       │ Duration FLEX®│
+├──────────────────────┼─────────────────┼───────────────┤
+│ Asphalt Formulation  │ Standard Arch.  │ SBS Polymer   │
+│ Wind Uplift Rating   │ 130 MPH         │ 130 MPH       │
+│ SureNail® Technology │ Patented Strip  │ Patented Strip│
+│ Hail Impact Rating   │ Standard Arch.  │ UL 2218 Class4│
+│ Thermal Flexibility  │ Standard Flex   │ 80°F+ Swings  │
+│ Insurance Discount   │ Standard Rate   │ 15%–30% Off   │
+│ Material Warranty    │ 50-Yr Preferred │ 50-Yr Preferred│
+│ Workmanship Warranty │ RHIVE 50-Yr     │ RHIVE 50-Yr   │
+└──────────────────────┴─────────────────┴───────────────┘`,
+        bulletPoints: [
+          'Owens Corning Duration®: The premier standard architectural shingle for Wasatch Front homes. Features patented SureNail® woven fabric reinforcing strips across the nailing line for verified 130 MPH wind resistance.',
+          'Owens Corning Duration FLEX®: Infused with SBS (Styrene-Butadiene-Styrene) polymer-modified asphalt, giving shingles rubber-like elastomeric flexibility. Certified UL 2218 Class 4 Impact Resistance, meaning steel balls dropped from 20 feet cannot fracture the shingle mat.',
+          'Insurance Policyholder Savings: Major Utah homeowners insurance carriers offer 15% to 30% annual premium discounts for roofs protected with Class 4 impact shingles.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE Residential Standard: 100% Full Tear-Off to OSB Decking',
+        directAnswer: 'RHIVE Construction strictly enforces a 100% full tear-off policy down to bare OSB sheathing on every residential roof replacement, including up to 100 sq ft of rotted decking replacement at no additional charge.',
+        bodyParagraphs: [
+          'We never perform layovers or nail new shingles over old roofs. Installing over existing shingles traps heat, conceals underlying plywood rot, adds unnecessary dead load weight, and voids manufacturer warranties.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            RHIVE RESIDENTIAL ROOFING SYSTEM            │
+├────────────────────────────────────────────────────────┤
+│ ✓ 100% Full Tear-Off Down to Bare OSB Decking          │
+│ ✓ Up to 100 sq ft OSB Decking Replacement Included     │
+│ ✓ 100% Field Coverage: Owens Corning ProArmor®         │
+│ ✓ Eaves & Valleys: 6 Ft WeatherLock® Ice & Water Shield│
+│ ✓ SureNail® Fastening: 6-Nail Pattern (130 MPH Rating) │
+│ ✓ 28-Gauge Steel Perimeter Drip Metal Edge             │
+│ ✓ Owens Corning 50-Year Preferred Protection           │
+│ ✓ RHIVE Direct 50-Year Lifetime Installer No-Leak Guard│
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          '100 Sq Ft Decking Included: If rotted sheathing is found after tearing off old shingles, RHIVE replaces up to 100 sq ft of 7/16 OSB at no extra charge. Additional sheets are pre-agreed at $72.50/sheet.',
+          'Synthetic Field Underlayment: 100% of the exposed roof deck is sealed with Owens Corning ProArmor® high-traction synthetic underlayment.',
+          'Double-Layer Eave Protection: We install a minimum of 6 continuous feet of self-adhering WeatherLock® Ice & Water Shield along eaves and valleys to stop ice dam backup.',
+          'Dual 50-Year Guarantees: Owens Corning 50-Year Non-Prorated Preferred Protection paired with RHIVE’s direct 50-Year Lifetime Installer No-Leak Guarantee.'
+        ]
+      },
+      {
+        sectionHeading: 'Transparent Investment Terms & Residential RPSP',
+        directAnswer: 'Every RHIVE quote provides an itemized cost statement of Materials, Labor, Overhead (<10%), and Net Profit. Homeowners who approve within the presentation window receive a 10% residential RPSP efficiency credit (up to $1,000 off).',
+        bodyParagraphs: [
+          'RHIVE Construction operates with complete financial transparency. We eliminate sales commission markups and warehouse overhead by using digital aerial diagnostics, maintaining operating overhead under 10%.'
+        ],
+        bulletPoints: [
+          'Itemized Mathematical Statements: See exact costs for materials, certified labor, permits, and net profit before signing.',
+          'Residential Project Savings Promotion (RPSP): Approve your proposal within the presentation window to claim an immediate 10% efficiency credit (up to $1,000 off residential projects) by eliminating sales chase costs.',
+          'Utah 3-Day Right of Rescission: Lock in your efficiency discount while retaining a full 3 business days to review your decision with zero financial risk.',
+          '50/40/10 Milestone Schedule: 50% initial deposit, 40% on substantial installation day, and 10% final balance held until punch list completion.'
+        ]
+      },
+      {
+        sectionHeading: 'Utah Service Areas & Expert Shingle Guidance',
+        directAnswer: 'RHIVE Construction provides certified Owens Corning roof replacements across Salt Lake, Davis, Weber, Utah, Summit, and Tooele counties.',
+        bodyParagraphs: [
+          'Whether you are replacing an aging roof in Salt Lake City, Sandy, Draper, Bountiful, or South Jordan, our team provides free 24–48hr remote aerial satellite diagnostics.',
+          'Call RHIVE Construction today at (435) 417-6637 or visit rhiveconstruction.com to request your certified quote.'
+        ],
+        bulletPoints: [
+          'Salt Lake County: South Jordan (HQ), Salt Lake City, Sandy, Draper, West Jordan, Herriman, Riverton, Murray.',
+          'Utah & Davis Counties: Lehi, American Fork, Orem, Provo, Bountiful, Layton, Clearfield, Kaysville.',
+          'Summit & Tooele Counties: Park City, Tooele, Stansbury Park, Heber City.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Does Duration FLEX qualify for homeowners insurance discounts in Utah?',
+        answer: 'Yes. Because Duration FLEX has a UL 2218 Class 4 Impact Resistance rating, most major Utah homeowners insurance providers offer discounts between 15% and 30% on annual property casualty premiums.'
+      },
+      {
+        question: 'What makes Owens Corning SureNail® Technology superior in high winds?',
+        answer: 'SureNail® Technology embeds a tough, engineered woven fabric reinforcing strip directly in the nailing area. This prevents nail heads from tearing through the asphalt mat during extreme Wasatch canyon wind shears up to 130 MPH.'
+      },
+      {
+        question: 'Does RHIVE ever nail new shingles over an existing roof layer?',
+        answer: 'Never. RHIVE strictly enforces a 100% full tear-off policy down to bare decking. Layovers trap moisture, hide structural wood rot, add illegal dead weight, and void manufacturer warranties.'
+      },
+      {
+        question: 'How does the residential RPSP credit work?',
+        answer: 'When you approve your quote within the initial presentation window, you receive an immediate 10% efficiency credit (up to $1,000 off residential replacements) because it eliminates administrative follow-up and sales chase costs.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 33 (Commercial TPO vs. PVC Flat Roofing)
+  // ==========================================
+  {
+    slug: 'commercial-tpo-vs-pvc-flat-roofing-utah',
+    title: 'Commercial TPO vs. PVC Flat Roofing in Utah: Performance, Engineering & Code Compliance',
+    metaTitle: 'Commercial TPO vs PVC Flat Roofing Utah | GAF Single-Ply Systems | RHIVE',
+    bluf: 'GAF EverGuard® TPO (60 mil or 80 mil) is the preferred choice for commercial warehouses, office parks, retail centers, and schools prioritizing thermal reflection, high puncture resistance, and lower summer HVAC cooling loads. GAF EverGuard® PVC (60 mil or 80 mil) is formulated with specialized plasticizers that resist animal fats, greases, oils, and chemical exhaust, making PVC essential for restaurants, commercial kitchens, food processing plants, and industrial manufacturing facilities across Utah.',
+    description: 'Compare commercial GAF EverGuard® TPO and PVC flat roofing membranes for Utah warehouses, retail centers, and industrial facilities. Learn about 30-year NDL warranties and substrate engineering.',
+    category: 'Commercial',
+    readTime: '7 min read',
+    publishedDate: '2026-11-05T08:00:00.000Z',
+    modifiedDate: '2026-11-05T08:00:00.000Z',
+    author: {
+      name: 'Michael Robinson',
+      role: 'CEO & Co-founder',
+    },
+    image: 'https://images.unsplash.com/photo-1541888946425-d0fbb18615f8?auto=format&fit=crop&w=1200&q=80',
+    tags: ['commercial TPO vs PVC roofing Utah', 'GAF TPO flat roof replacement Salt Lake City', 'commercial flat roofer Utah', 'GAF NDL warranty contractor Utah', 'commercial single-ply membrane'],
+    content: [
+      {
+        sectionHeading: 'Choosing Between TPO and PVC Membranes in Utah’s Commercial Environment',
+        directAnswer: 'Select TPO for maximum solar reflectivity and puncture resistance in retail, office, and warehouse facilities. Select PVC for chemical, oil, and grease resistance in restaurants, food preparation, and manufacturing plants.',
+        bodyParagraphs: [
+          'Utah’s commercial building owners face heavy snowpack loads, high solar UV radiation at elevated altitudes, and severe freeze-thaw cycles. Choosing the appropriate single-ply membrane is critical to avoiding premature roof failure.',
+          'As a factory-certified GAF Commercial Installer, RHIVE Construction engineers single-ply flat membrane systems tailored to specific building uses, building codes, and drainage requirements.'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│            COMMERCIAL SINGLE-PLY MEMBRANE HUBS         │
+├──────────────────────────┬─────────────────────────────┤
+│ GAF EVERGUARD® TPO       │ GAF EVERGUARD® PVC          │
+├──────────────────────────┼─────────────────────────────┤
+│ • 60 mil & 80 mil option │ • 60 mil & 80 mil option    │
+│ • White Energy Star UV   │ • Chemical, oil & grease    │
+│   solar reflectivity     │   resistant formulation     │
+│ • Polyiso R-30+ thermal  │ • Ideal for restaurants,    │
+│   insulation assembly    │   kitchens & industrial     │
+│ • 20 to 30-Year NDL      │ • 20 to 30-Year NDL         │
+│   Guarantee Coverage     │   Guarantee Coverage        │
+└──────────────────────────┴─────────────────────────────┘`,
+        bulletPoints: [
+          'GAF EverGuard® TPO (Thermoplastic Polyolefin): High UV reflectivity lowers surface roof temperatures by up to 50°F during hot Utah summers, drastically reducing peak cooling loads. Excellent ozone and puncture resistance.',
+          'GAF EverGuard® PVC (Polyvinyl Chloride): Formulated with elastomeric plasticizers that provide impervious resistance to animal fats, cooking oils, greases, and caustic chemical emissions.',
+          'Hot-Air Welded Monolithic Seams: Both systems utilize robotic hot-air fusion welding that permanently fuses membrane sheets together, creating a physical seam bond stronger than the membrane itself.'
+        ]
+      },
+      {
+        sectionHeading: 'Engineering Standards: Full Tear-Off vs. 1-Layer Re-Cover Protocol',
+        directAnswer: 'Tearing all the way down to structural decking is mandatory under IBC Chapter 15 for roofs with 2+ layers or wet insulation. For qualified single-layer roofs, RHIVE strips the top membrane, inspects 100% of the polyiso substrate, replaces wet/damaged boards, and installs new fanfold cover board + membrane.',
+        bodyParagraphs: [
+          'Facility managers often ask whether a full tear-off or a re-cover is acceptable under Utah building codes and manufacturer warranty standards.',
+          'RHIVE Construction strictly avoids shortcuts. We never lay a new membrane directly over an uninspected roof.'
+        ],
+        bulletPoints: [
+          'Best Practice (Full Tear-Off to Structural Decking): Mandatory under International Building Code (IBC Chapter 15) whenever a roof has two or more existing roof coverings, or when thermal imaging reveals widespread wet insulation. Tears down to steel, concrete, or wood structural decking.',
+          'RHIVE’s 1-Layer Re-Cover Engineering Standard: When an existing flat roof has strictly one layer and passes core moisture diagnostics, RHIVE removes the top membrane down to the polyiso substrate. We inspect 100% of the substrate, remove and replace all damaged/wet polyiso, and install a new fanfold cover board and a brand-new heat-welded membrane. This delivers a 100% manufacturer-warrantable assembly over a verified substrate.',
+          'Core Diagnostic Testing: Commercial roof assemblies require on-site core sampling and non-destructive thermal scanning to accurately evaluate substrate integrity and deliver precise milestone-funded pricing.'
+        ]
+      },
+      {
+        sectionHeading: 'Substrate Assembly, Thermal Insulation & Drainage',
+        directAnswer: 'A commercial flat roof is only as durable as its underlying substrate: code-compliant R-30+ polyiso insulation, custom tapered crickets for positive drainage, and high-density DensDeck® gypsum cover boards.',
+        bodyParagraphs: [
+          'Standing water ponding for more than 48 hours accelerates membrane degradation and introduces structural load risks during heavy Utah snowfalls.'
+        ],
+        bulletPoints: [
+          'Code-Compliant Polyisocyanurate (Polyiso): Mechanically fastened or adhered insulation boards delivering code-mandated R-30+ thermal insulation values for commercial buildings.',
+          'Custom Tapered Polyiso Assemblies: Precision-engineered slope crickets installed around roof drains, parapet walls, and scuppers to direct water toward drainage points and eliminate ponding.',
+          'High-Density Cover Boards: DensDeck® gypsum or HD Polyiso cover boards installed over insulation to protect against heavy rooftop foot traffic, maintenance impacts, and severe hail strikes.'
+        ]
+      },
+      {
+        sectionHeading: 'GAF No Dollar Limit (NDL) Guarantees',
+        directAnswer: 'Qualifying commercial projects installed by RHIVE qualify for GAF No Dollar Limit (NDL) Guarantees for up to 30 years, covering 100% of material and certified labor repair costs with zero financial payout ceilings.',
+        bodyParagraphs: [
+          'Commercial roofing requires institutional-grade protection. A manufacturer NDL guarantee provides property managers and asset owners with total peace of mind.'
+        ],
+        bulletPoints: [
+          'Zero Financial Ceiling: If a manufacturing defect or certified installation leak occurs, GAF covers 100% of repair labor and material costs with no monetary cap.',
+          'Third-Party Factory Inspection: A GAF commercial technical field manager visits the job site to conduct a rigorous quality audit before the NDL certificate is officially registered.',
+          'Transferable Asset Value: GAF commercial warranties can be transferred to new building owners, enhancing commercial real estate asset valuations.'
+        ]
+      },
+      {
+        sectionHeading: 'Commercial Property Coverage Across Utah & Regional Idaho',
+        directAnswer: 'RHIVE Construction delivers certified commercial flat reroofing, moisture diagnostics, and preventative maintenance across Salt Lake City, South Jordan, Sandy, West Valley City, Ogden, Provo, Park City, and regional Idaho hubs.',
+        bodyParagraphs: [
+          'We work closely with property management firms, HOAs, general contractors, and corporate facility directors. Every commercial project is backed by our Institutional 50/40/10 Milestone Terms and dedicated project management.',
+          'To schedule an on-site commercial core diagnostic consultation, contact RHIVE Construction today at (435) 417-6637 or visit rhiveconstruction.com.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'What is the main difference between TPO and PVC flat roofs?',
+        answer: 'TPO is ideal for warehouses, office buildings, and retail plazas due to its superior solar reflectivity and puncture resistance. PVC contains specialized plasticizers that resist animal fats, oils, and chemicals, making it the industry standard for restaurants, commercial kitchens, and manufacturing facilities.'
+      },
+      {
+        question: 'Does Utah building code allow roofing over an existing commercial flat roof?',
+        answer: 'Under International Building Code (IBC Chapter 15), a re-cover is permitted only if the building has strictly one existing roof layer and the underlying insulation is dry and structurally sound. If there are already two roof layers or wet insulation, a 100% full tear-off to structural decking is legally mandatory.'
+      },
+      {
+        question: 'How does RHIVE handle 1-layer re-covers compared to standard contractors?',
+        answer: 'RHIVE never lays a new membrane directly over an old, uninspected membrane. We tear off the existing top membrane down to the polyiso substrate, inspect 100% of the substrate, replace all wet/damaged insulation, and install a new fanfold cover board before heat-welding a brand-new membrane for a 100% manufacturer-warrantable installation.'
+      },
+      {
+        question: 'What does a GAF No Dollar Limit (NDL) guarantee cover?',
+        answer: 'An NDL guarantee covers 100% of material and certified labor costs to repair any manufacturing or installation defect for up to 30 years with no financial payout limit.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 34 (Seamless Aluminum Gutters & Leaf Protection)
+  // ==========================================
+  {
+    slug: 'seamless-aluminum-gutters-leaf-protection-utah',
+    title: 'The Complete Guide to Seamless Aluminum Gutters & Leaf Protection in Utah',
+    metaTitle: 'Seamless Aluminum Gutters Utah | 5" & 6" K-Style | RHIVE Construction',
+    bluf: 'Seamless aluminum gutters protect home foundations, fascia boards, and landscaping from concentrated roof water runoff and winter snowmelt. Unlike sectional gutters with leak-prone seams, RHIVE custom-extrudes continuous seamless gutters on-site from heavy-gauge aluminum and anchors heavy-duty hidden screw-in hangers tightly at every 24 inches (exceeding the standard 30-inch industry spacing) to withstand extreme Wasatch Front snow and ice loads.',
+    description: 'Everything Utah homeowners need to know about seamless aluminum gutters, heavy-duty hanger spacing for snow loads, 5" vs 6" profiles, and custom leaf protection.',
+    category: 'Residential',
+    readTime: '6 min read',
+    publishedDate: '2026-11-05T08:00:00.000Z',
+    modifiedDate: '2026-11-05T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'President & Co-founder',
+    },
+    image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80',
+    tags: ['seamless gutters Utah', '5 inch vs 6 inch gutters Salt Lake City', 'gutter installation South Jordan', 'leaf protection gutter guards Utah', 'snow load gutter hangers'],
+    content: [
+      {
+        sectionHeading: 'Why Seamless Aluminum Gutters Are Essential for Utah Homes',
+        directAnswer: 'Utah homes require seamless water management to prevent soil erosion around foundations, prevent basement flooding, and resist heavy winter ice dams pulling troughs away from fascia boards.',
+        bodyParagraphs: [
+          'Concentrated water runoff cascading off a Utah roofline can saturate soils adjacent to concrete foundations, causing slab settling, basement leaks, and expensive structural foundation damage.',
+          'Sectional gutters sold in big-box home improvement stores are joined by caulked seams every 10 feet. Under Utah’s severe freeze-thaw cycles, caulked joints inevitably fail and leak. RHIVE extrudes custom seamless troughs in single continuous runs on-site.'
+        ],
+        bulletPoints: [
+          'Foundation Protection: Channels thousands of gallons of roof water away from foundation footings and basement window wells.',
+          'Fascia & Soffit Preservation: Prevents water from overflowing gutters and rotting exterior wood fascia boards.',
+          'Zero Leak Seams: Seamless extrusion eliminates middle joints, eliminating leaks along the entire length of the gutter run.'
+        ]
+      },
+      {
+        sectionHeading: 'Choosing the Right Gutter Profile & Size',
+        directAnswer: 'Select 5-inch K-Style for standard residential roofs, 6-inch high-capacity K-Style for steep slopes and metal/tile roofs, Half-Round for historic/modern aesthetics, and Box-style for contemporary architecture.',
+        bodyParagraphs: [
+          'Choosing the appropriate gutter profile and capacity ensures proper drainage during torrential spring thunderstorms and rapid snowmelt:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│             RHIVE SEAMLESS GUTTER PROFILES             │
+├──────────────────────────┬─────────────────────────────┤
+│ PROFILE STYLE            │ RECOMMENDED USAGE           │
+├──────────────────────────┼─────────────────────────────┤
+│ 5" K-Style               │ Standard residential roofs  │
+│ 6" K-Style High-Capacity │ Large slopes & tile/metal   │
+│ 5" & 6" Round (Half-Round│ Modern & historic aesthetics│
+│ 5" & 6" Box / Square     │ Contemporary architectural  │
+└──────────────────────────┴─────────────────────────────┘`,
+        bulletPoints: [
+          '5-Inch K-Style: The classic residential standard. Carries substantial water volume and pairs with standard 2" x 3" downspouts for typical single-family homes.',
+          '6-Inch High-Capacity K-Style: Holds approximately 40% more water volume than 5-inch troughs. Paired with 3" x 4" downspouts to handle steep roof pitches, large catchment areas, and smooth tile or metal roofs where water moves at high velocity.',
+          '5-Inch & 6-Inch Half-Round: European semi-circular profile that promotes self-cleaning water flow with an elegant, timeless appearance for luxury and historic homes.',
+          '5-Inch & 6-Inch Box/Square Profile: Clean, sharp lines engineered for modern mountain and contemporary architectural home elevations.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE Installation Standard: Engineered for Wasatch Snow Loads',
+        directAnswer: 'RHIVE anchors heavy-duty hidden screw-in hangers at 24-inch intervals directly into rafter tails or solid fascia, preventing gutters from sagging or tearing off under heavy winter ice loads.',
+        bodyParagraphs: [
+          'In Utah, gutter systems fail primarily because winter ice and heavy wet snow overload weak mounting spikes.'
+        ],
+        bulletPoints: [
+          '24-Inch Hanger Spacing: Standard contractors place hangers every 30 to 36 inches. RHIVE anchors hidden screw hangers every 24 inches directly into rafter tails for maximum structural shear strength.',
+          'Heavy-Gauge Aluminum: Fabricated from premium 0.032-gauge aluminum that resists denting from falling branches or heavy snow slides.',
+          'Baked-On Enamel Finish: Resists chipping, cracking, and UV fading, backed by a 20-year manufacturer material finish warranty.',
+          'RHIVE Workmanship Guarantee: Guaranteed watertight corners, miters, and downspout connections backed by RHIVE Construction.'
+        ]
+      },
+      {
+        sectionHeading: 'Integrated Leaf Protection & Ice Dam Mitigation',
+        directAnswer: 'Installing heavy-gauge aluminum mesh leaf guards keeps gutters free of leaves, pine needles, and shingle granules, preventing clogs that cause winter ice dams.',
+        bodyParagraphs: [
+          'Clogged gutters trap water against roofline eaves, causing rot and accelerating ice dam formation when temperatures freeze.'
+        ],
+        bulletPoints: [
+          'Micro-Mesh Leaf Protection: Stainless steel or heavy-gauge aluminum mesh blocks debris while permitting maximum water intake even during flash downpours.',
+          'Self-Regulating Heat Trace Compatibility: Seamless gutters can be integrated with 5W/lin ft self-regulating heat trace cables to maintain open drainage channels throughout freezing winter months.'
+        ]
+      },
+      {
+        sectionHeading: 'Utah Service Areas & Contact Information',
+        directAnswer: 'RHIVE Construction fabricates and installs seamless gutters across Salt Lake County, Davis County, Weber County, Utah County, Summit County, and Tooele County.',
+        bodyParagraphs: [
+          'Contact RHIVE Construction today at (435) 417-6637 or visit rhiveconstruction.com to schedule your on-site gutter evaluation and get an upfront itemized quote.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Why are seamless gutters better than sectional gutters?',
+        answer: 'Sectional gutters have joints every 10 feet that inevitably leak due to expansion, contraction, and degraded caulk. Seamless gutters are custom-extruded in continuous pieces with no seams along straight runs, eliminating leak points.'
+      },
+      {
+        question: 'How close should gutter hangers be spaced in Utah?',
+        answer: 'In Utah, hidden screw hangers should be spaced at a maximum of 24 inches apart and anchored into rafter tails. Standard 30-to-36-inch spacing often fails under heavy winter snowpack and ice loads.'
+      },
+      {
+        question: 'Should I choose 5-inch or 6-inch gutters?',
+        answer: '5-inch gutters work well for average-sized roofs. 6-inch high-capacity gutters are recommended for steep roof pitches, large roof planes, metal roofs, or homes with history of water overflowing gutters during heavy rain.'
+      },
+      {
+        question: 'Do gutter guards prevent ice dams?',
+        answer: 'Gutter guards prevent leaves and debris from blocking water flow. However, to prevent ice dams caused by attic heat loss and snow refreezing, leaf guards should be paired with proper attic ventilation and self-regulating eave heat trace cables.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 35 (Solar Panel Detach & Reset)
+  // ==========================================
+  {
+    slug: 'solar-panel-detach-reset-roof-replacement-utah',
+    title: 'Solar Panel Detach & Reset During Roof Replacements in Utah: What Homeowners Need to Know',
+    metaTitle: 'Solar Panel Detach and Reset Utah | Roof Replacement | RHIVE',
+    bluf: 'Replacing a roof with existing solar panels requires a specialized 4-step coordination process: certified electrical disconnection, safe module and racking detachment, a 100% full tear-off roof replacement down to bare decking with upgraded penetration flashings, and precision array re-mounting with electrical recertification. Handling solar detachment through RHIVE Construction ensures unified project management, eliminates finger-pointing between separate contractors, and keeps both your roof and solar warranties fully protected.',
+    description: 'Planning a roof replacement with solar panels in Utah? Learn how RHIVE Construction handles certified electrical disconnects, panel storage, and seamless array reset.',
+    category: 'Residential',
+    readTime: '7 min read',
+    publishedDate: '2026-11-05T08:00:00.000Z',
+    modifiedDate: '2026-11-05T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'President & Co-founder',
+    },
+    image: 'https://images.unsplash.com/photo-1632759145351-1d592919f522?auto=format&fit=crop&w=1200&q=80',
+    tags: ['solar panel detach and reset Utah', 'roof replacement with solar panels Salt Lake City', 'solar disconnect re-roof South Jordan', 'roofing contractor with solar service Utah'],
+    content: [
+      {
+        sectionHeading: 'Why Solar Array Coordination Matters During a Roof Replacement',
+        directAnswer: 'Replacing a roof with solar panels requires certified electrical disconnects and precision handling to avoid shattered panels, damaged microinverters, roof leaks, or voided solar warranties.',
+        bodyParagraphs: [
+          'Thousands of Wasatch Front homeowners installed residential solar arrays over the past decade. When underlying shingles reach the end of their lifespan or suffer severe hail and wind damage, the entire solar system must be temporarily removed to execute a proper reroof.',
+          'Attempting to work around mounted solar panels or having untrained roofers detach high-voltage electrical equipment creates serious electrocution hazards, panel micro-fractures, and warranty invalidation.'
+        ],
+        bulletPoints: [
+          'Unified Project Management: Single-source accountability—RHIVE manages both the roofing installation and the solar detach/reset.',
+          'Warranty Integrity: Prevents manufacturer warranty disputes between separate solar installers and roofing contractors.',
+          'Electrical Safety: Certified technicians handle DC/AC isolations at the inverter and breaker panels.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE 4-Step Solar Detach & Reset Protocol',
+        directAnswer: 'RHIVE follows a strict 4-step workflow: 1) Electrical Disconnect, 2) Panel & Racking Detach, 3) 100% Full Roof Replacement down to bare decking, and 4) Array Reset & System Recertification.',
+        bodyParagraphs: [
+          'Our integrated protocol ensures zero downtime confusion and total protection for your roof and solar investment:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│             RHIVE SOLAR DETACH & RESET WORKFLOW        │
+├────────────────────────────────────────────────────────┤
+│ [1. LICENSED ELECTRICAL DISCONNECT]                    │
+│    De-energize array, lock out inverters, test circuits│
+│                           ▼                            │
+│ [2. PANEL & RACKING DETACH]                            │
+│    Catalog module mapping, safe on-site/off-site storage│
+│                           ▼                            │
+│ [3. 100% FULL TEAR-OFF REROOF]                         │
+│    Bare OSB decking, ProArmor®, new stanchion flashings│
+│                           ▼                            │
+│ [4. RESET & ELECTRICAL RECERTIFICATION]                │
+│    Torque racking, reconnect microinverters, verify kWh │
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          'Step 1: Licensed Electrical Disconnect: Technicians safely de-energize the solar array at the rapid shutdown switch, inverters, and main distribution panel, tagging each string.',
+          'Step 2: Module Unbolting & Safe Storage: Solar panels and mounting rails are unbolted, inspected for pre-existing microcracks, cataloged, and stored safely in protective on-site staging areas or off-site warehouse storage.',
+          'Step 3: 100% Full Tear-Off & Flashing Upgrades: Old shingles are stripped to bare decking. Up to 100 sq ft of rotted OSB is replaced at no extra charge. We install new commercial-grade flashing stanchions sealed with clear UV-rated sealants.',
+          'Step 4: Precision Reset & System Testing: Racking is anchored, grounding bonds verified, modules re-installed, and electrical generation verified against inverter monitoring apps.'
+        ]
+      },
+      {
+        sectionHeading: 'Upgraded Roof Penetration Flashing Standards',
+        directAnswer: 'Solar mounting stanchions are primary leak hazards if sealed improperly. RHIVE installs all-metal flashing bases integrated directly into the shingle course and sealed with UV-stable adhesives.',
+        bodyParagraphs: [
+          'Standard roofers often apply cheap exterior caulk around existing solar lag bolts. Over time, UV exposure cracks the caulk, allowing water to penetrate structural rafters.'
+        ],
+        bulletPoints: [
+          'Metal Flashing Stanchions: Heavy-gauge aluminum or steel flashing plates woven directly beneath overlapping shingles.',
+          'EPDM Waterproofing Gaskets: Engineered rubber compression washers that maintain a permanent seal even under extreme temperature swings.',
+          '50-Year Workmanship Coverage: Our 50-Year Lifetime Installer No-Leak Guarantee fully covers roof penetrations around solar hardware.'
+        ]
+      },
+      {
+        sectionHeading: 'Transparent Pricing, Milestone Terms & Residential RPSP',
+        directAnswer: 'Solar detach and reset costs are clearly itemized on your proposal without hidden fees. Homeowners qualify for a 10% residential RPSP efficiency credit (up to $1,000 off) and a 50/40/10 milestone payment schedule.',
+        bodyParagraphs: [
+          'We outline all equipment handling, storage, and electrical testing line items upfront on your certified quote.'
+        ],
+        bulletPoints: [
+          'Transparent Milestone Terms: 50% initial investment at signing, 40% on substantial installation day, and 10% held until final solar re-energizing verification.',
+          'Residential RPSP Efficiency Credit: Receive a 10% credit (up to $1,000 off residential replacements) when approving your quote within the presentation window.',
+          'Utah 3-Day Right of Rescission: All contracts include 3 full business days to review with zero financial risk.'
+        ]
+      },
+      {
+        sectionHeading: 'Wasatch Front Solar Reroof Service Areas',
+        directAnswer: 'RHIVE coordinates solar detach and reroofing across Salt Lake City, South Jordan, Sandy, Draper, Herriman, West Jordan, Lehi, Orem, and Bountiful.',
+        bodyParagraphs: [
+          'Ready to replace your roof without sacrificing your solar investment? Call RHIVE Construction today at (435) 417-6637 or visit rhiveconstruction.com to request an integrated solar reroof estimate.'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Can standard roofers remove and reinstall solar panels?',
+        answer: 'It is strongly recommended to use certified technicians and licensed electricians. Uncertified laborers risk cracking photovoltaic glass, damaging microinverters, causing electrical fires, or voiding your manufacturer and solar installer warranties.'
+      },
+      {
+        question: 'How long does a roof replacement take when you have solar panels?',
+        answer: 'A typical residential solar reroof takes 3 to 5 business days: Day 1 for electrical disconnect and panel detach; Days 2–3 for the 100% full tear-off and new shingle installation; Days 4–5 for array reset, rewiring, and system re-energizing.'
+      },
+      {
+        question: 'Will replacing my roof void my solar panel warranty?',
+        answer: 'Not when handled by RHIVE. We follow certified manufacturer protocols, record before-and-after string voltages, and ensure all mounting flashings meet strict building code standards.'
+      },
+      {
+        question: 'Does homeowners insurance cover solar panel detach and reset for storm damage?',
+        answer: 'Yes. If your roof replacement is covered by insurance due to wind or hail damage, the cost to detach, store, and reset your solar panels is typically an approved line item in the insurance scope of loss.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // ARTICLE 36 (Top-Rated Roofing Contractor in South Jordan, UT)
+  // ==========================================
+  {
+    slug: 'roofing-contractor-south-jordan-ut',
+    title: 'Top-Rated Roofing Contractor in South Jordan, UT: Local Reroofing & City Compliance',
+    metaTitle: 'Roofing Contractor South Jordan UT | Local Roofers | RHIVE Construction',
+    bluf: 'RHIVE Construction is a top-rated, female-owned roofing contractor headquartered in South Jordan, Utah at 10437 Shady Plum Way (84009). Co-founded by Kara Robinson (President) and Michael Robinson (CEO), RHIVE operates with complete mathematical transparency—providing itemized quotes with operating overhead under 10%. Every residential reroof includes a 100% full tear-off policy, up to 100 sq ft OSB decking replacement included, and RHIVE’s direct 50-Year Lifetime Installer No-Leak Guarantee.',
+    description: 'Looking for a top-rated roofing contractor in South Jordan, UT? Headquartered at 10437 Shady Plum Way, RHIVE Construction provides 100% full tear-offs and lifetime no-leak guarantees.',
+    category: 'Residential',
+    readTime: '6 min read',
+    publishedDate: '2026-11-05T08:00:00.000Z',
+    modifiedDate: '2026-11-05T08:00:00.000Z',
+    author: {
+      name: 'Kara Robinson',
+      role: 'President & Co-founder',
+    },
+    image: 'https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=1200&q=80',
+    tags: ['roofing contractor South Jordan UT', 'roof replacement South Jordan Utah', 'best roofer in South Jordan', 'Daybreak Utah roof replacement', 'South Jordan building permits'],
+    content: [
+      {
+        sectionHeading: 'South Jordan Hometown Roofing Leadership: Headquartered at 10437 Shady Plum Way',
+        directAnswer: 'As a South Jordan-based contractor led by founders Kara and Michael Robinson, RHIVE eliminates high-pressure sales reps and excessive overhead to provide mathematically transparent roofing.',
+        bodyParagraphs: [
+          'Headquartered at 10437 Shady Plum Way in South Jordan, Utah (84009), RHIVE Construction is proud to serve our hometown community with unmatched integrity and craftsmanship.',
+          'By replacing commissioned sales reps and bloated commercial warehouses with high-definition aerial satellite diagnostic tools, we operate with overhead under 10%, passing real savings directly to South Jordan homeowners.'
+        ],
+        bulletPoints: [
+          'Female-Owned Leadership: Co-founded by Kara Robinson (President) and Michael Robinson (CEO).',
+          'South Jordan Headquarters: Direct local oversight from our Shady Plum Way offices.',
+          'Radical Pricing Transparency: Line-by-line itemized breakdowns of Materials, Labor, Overhead (<10%), and Profit.'
+        ]
+      },
+      {
+        sectionHeading: 'Solving South Jordan’s Oquirrh Foothill Wind & Thermal Stressors',
+        directAnswer: 'South Jordan homes experience severe downslope winds from the Oquirrh Mountains, 80°F+ single-day temperature fluctuations, and heavy winter ice damming requiring Class 4 impact shingles and 6-foot ice barriers.',
+        bodyParagraphs: [
+          'Properties spanning from the Jordan River basin westward into Daybreak and foothill developments along Mountain View Corridor face intense environmental challenges:'
+        ],
+        asciiBox: `┌────────────────────────────────────────────────────────┐
+│          RHIVE SOUTH JORDAN ROOFING STANDARD           │
+├────────────────────────────────────────────────────────┤
+│ ✓ 100% Full Tear-Off Down to Bare Wood Decking         │
+│ ✓ Decking Inspection + Up to 100 sq ft OSB Included    │
+│ ✓ Owens Corning ProArmor® Synthetic Underlayment       │
+│ ✓ 6 Feet Minimum WeatherLock® Ice & Water Shield       │
+│ ✓ SureNail® 6-Nail Fastening Pattern (130 MPH Wind)    │
+│ ✓ 28-Gauge Perimeter Steel Drip Edge Metal             │
+│ ✓ 50-Year Non-Prorated Lifetime Installer No-Leak Guard│
+└────────────────────────────────────────────────────────┘`,
+        bulletPoints: [
+          'High-Velocity Foothill Wind Gusts: Canyon winds rushing off the Oquirrh Mountains put extreme uplift pressure on shingles. We install Owens Corning Duration® shingles with SureNail® Technology rated to 130 MPH.',
+          '80°F+ Temperature Swings: Single-day thermal shock creates intense expansion stress across roof decking. We specify Duration FLEX® SBS polymer-modified shingles for maximum elastomeric elasticity.',
+          'Winter Freeze-Thaw & Ice Dams: Snow on foothill rooflines melts and refreezes at eaves. We install a minimum of 6 continuous feet of WeatherLock® Ice & Water Shield, well past city code requirements.'
+        ]
+      },
+      {
+        sectionHeading: 'South Jordan Municipal Permitting & Neighborhood Footprint',
+        directAnswer: 'RHIVE manages 100% of municipal roofing permits with City of South Jordan Development Services, servicing Daybreak, Glenmoor, Riverfront, and all surrounding neighborhoods.',
+        bodyParagraphs: [
+          'Full roof replacements in South Jordan require municipal building permits to verify code compliance. RHIVE handles all permit applications, site inspections, and city approvals.'
+        ],
+        bulletPoints: [
+          'Daybreak Communities: Eastlake, North Shore, Garden Park, Heights Park, and Upper Bench village developments.',
+          'Glenmoor & Country Club: Historic and custom golf course estate homes.',
+          'Redwood Road & 11400 South Corridor: Established single-family and multi-family residential neighborhoods.',
+          'Riverfront & Jordan River: Riverfront parkway developments requiring enhanced moisture barriers.',
+          'Adjoining Municipalities: Herriman, Riverton, West Jordan, and Draper.'
+        ]
+      },
+      {
+        sectionHeading: 'The RHIVE Advantage: Zero Salesman Markups & RPSP Savings',
+        directAnswer: 'South Jordan homeowners receive direct founder oversight, a 10% residential RPSP efficiency credit (up to $1,000 off), and support for local community causes through Our Hive.',
+        bodyParagraphs: [
+          'We believe our neighbors in South Jordan deserve an honest, pressure-free roofing experience without hidden surprises.'
+        ],
+        bulletPoints: [
+          'Residential RPSP Efficiency Credit: Approve your proposal within the presentation window to claim an immediate 10% credit (up to $1,000 off residential) by eliminating follow-up chase costs.',
+          '3-Day Right of Rescission: Complete peace of mind with 3 business days to review your agreement under Utah statutory law.',
+          'Our Hive Community Giving: A portion of every completed South Jordan roof funds free roof replacements for local Utah veterans, teachers, first responders, and families in need.'
+        ]
+      },
+      {
+        sectionHeading: 'Contact South Jordan’s Hometown Roofing Team',
+        directAnswer: 'Visit us at 10437 Shady Plum Way in South Jordan, call (435) 417-6637, or visit rhiveconstruction.com to request your free 24–48hr aerial satellite estimate.',
+        bodyParagraphs: [
+          'RHIVE Construction Corporate Headquarters',
+          '📍 Address: 10437 Shady Plum Way, South Jordan, UT 84009',
+          '📞 Phone: (435) 417-6637 / 435-41-ROOFS',
+          '✉️ Email: office@rhiveconstruction.com',
+          '💻 Website: https://www.rhiveconstruction.com'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Do I need a building permit to replace a roof in South Jordan, Utah?',
+        answer: 'Yes. The City of South Jordan Development Services requires a building permit for full residential roof replacements. RHIVE Construction handles the entire municipal permitting and inspection process on your behalf.'
+      },
+      {
+        question: 'Where is RHIVE Construction headquartered?',
+        answer: 'RHIVE Construction is proudly headquartered in South Jordan, Utah at 10437 Shady Plum Way, South Jordan, UT 84009.'
+      },
+      {
+        question: 'What makes RHIVE different from other South Jordan roofing companies?',
+        answer: 'We operate with complete mathematical transparency—providing itemized cost breakdowns showing exact Materials, Labor, Overhead (<10%), and Profit. We have a strict 100% full tear-off policy, include up to 100 sq ft of OSB decking replacement, and back every project with a 50-Year Lifetime Installer No-Leak Guarantee.'
+      },
+      {
+        question: 'How does the residential Project Savings Promotion (RPSP) work in South Jordan?',
+        answer: 'When South Jordan homeowners approve their quote within the initial presentation window, they receive an immediate 10% efficiency credit (up to $1,000 off residential replacements) by stripping out sales follow-up and administrative chase costs.'
       }
     ]
   }

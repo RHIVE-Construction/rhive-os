@@ -50,6 +50,7 @@ import ContactsVendorsPage from './pages/ContactsVendorsPage'; // E-24 (legacy p
 import ContactsListPage from './pages/ContactsListPage';
 import AccountsListPage from './pages/AccountsListPage';
 import ContactVendorProfilePage from './pages/ContactVendorProfilePage'; // E-25
+import CustomersPortalPage from './pages/CustomersPortalPage'; // E-CUSTOMERS
 import CompanyPage from './pages/CompanyPage';
 import PropertyProfilePage from './pages/PropertyProfilePage'; // E-12 Property Profile
 import PropertyPage from './pages/PropertyPage'; // E-12 Fallback List
@@ -237,7 +238,20 @@ export const pageComponentMap: Record<string, React.FC> = {
   'P-SEO-BLOG-20':     () => <DynamicBlogPostPage slug="asphalt-shingle-granule-loss-causes-remedies" />,
   'P-SEO-BLOG-21':     () => <DynamicBlogPostPage slug="commercial-tpo-vs-pvc-roofing-utah-guide" />,
   'P-SEO-BLOG-22':     () => <DynamicBlogPostPage slug="roofing-insurance-claims-utah-wind-hail-guide" />,
-
+  'P-SEO-BLOG-23':     () => <DynamicBlogPostPage slug="rhive-abundance-feature-local-utah-businesses" />,
+  'P-SEO-BLOG-24':     () => <DynamicBlogPostPage slug="rhive-abundance-network-community-referrals" />,
+  'P-SEO-BLOG-25':     () => <DynamicBlogPostPage slug="roof-insurance-claims-utah-step-by-step-guide" />,
+  'P-SEO-BLOG-26':     () => <DynamicBlogPostPage slug="roof-replacement-financing-utah-options" />,
+  'P-SEO-BLOG-27':     () => <DynamicBlogPostPage slug="ice-dam-prevention-mitigation-utah-guide" />,
+  'P-SEO-BLOG-28':     () => <DynamicBlogPostPage slug="hail-damage-insurance-claims-utah-inspection-guide" />,
+  'P-SEO-BLOG-29':     () => <DynamicBlogPostPage slug="top-rated-roofing-contractor-bountiful-ut" />,
+  'P-SEO-BLOG-30':     () => <DynamicBlogPostPage slug="rhive-fall-roof-maintenance-guide-utah" />,
+    'P-SEO-BLOG-31':     () => <DynamicBlogPostPage slug="utah-services-by-rhive" />,
+  'P-SEO-BLOG-32':     () => <DynamicBlogPostPage slug="owens-corning-duration-vs-duration-flex-utah" />,
+  'P-SEO-BLOG-33':     () => <DynamicBlogPostPage slug="commercial-tpo-vs-pvc-flat-roofing-utah" />,
+  'P-SEO-BLOG-34':     () => <DynamicBlogPostPage slug="seamless-aluminum-gutters-leaf-protection-utah" />,
+  'P-SEO-BLOG-35':     () => <DynamicBlogPostPage slug="solar-panel-detach-reset-roof-replacement-utah" />,
+  'P-SEO-BLOG-36':     () => <DynamicBlogPostPage slug="roofing-contractor-south-jordan-ut" />,
   // Admin (Employee World Section 1)
   'A-01': AdminDashboardPage,
   'A-02': UserManagementPage,
@@ -251,6 +265,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   // Employee (Employee World Section 2)
   'E-01': EmployeeHomepage,
   'E-02a': CustomerInputPage,
+  'E-CUSTOMERS': CustomersPortalPage,
   'E-TEMP': PreConversionRecordPage,
   'E-03': () => <Placeholder name="AI ASSISTANT (GLOBAL)" />,
   'E-04': EmployeeTimeoffPage,
