@@ -18,6 +18,7 @@ import {
     CurrencyDollarIcon, 
     ClockIcon, 
     ArrowRightIcon, 
+    ArrowLeftIcon,
     XIcon, 
     ShieldCheckIcon,
     Check,
@@ -650,6 +651,29 @@ export const CustomersPortalPage: React.FC = () => {
     const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
     const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
     const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+
+    // Hierarchical Navigation Handlers
+    const handleBack = () => {
+        if (selectedJobId) {
+            setSelectedJobId(null);
+        } else if (selectedBuildingId) {
+            setSelectedBuildingId(null);
+        } else if (selectedPhaseId) {
+            setSelectedPhaseId(null);
+        } else if (selectedCampusId) {
+            setSelectedCampusId(null);
+        } else {
+            setSelectedClientId(null);
+        }
+    };
+
+    const handleBackToAllCustomers = () => {
+        setSelectedClientId(null);
+        setSelectedCampusId(null);
+        setSelectedPhaseId(null);
+        setSelectedBuildingId(null);
+        setSelectedJobId(null);
+    };
 
     // Modal State
     const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
@@ -1302,40 +1326,44 @@ export const CustomersPortalPage: React.FC = () => {
 
                 {/* ── BREADCRUMB NAVIGATION BAR ─────────────────────────────────── */}
                 {selectedClientId && (
-                    <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-900/40 border border-gray-800/80 rounded-lg text-xs font-mono">
+                    <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-900/60 border border-gray-800 rounded-lg text-xs font-mono">
+                        <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            onClick={handleBack}
+                            className="flex items-center gap-1.5 font-bold text-xs py-1.5 px-3 border-gray-700 hover:border-rhive-pink text-white shadow-sm"
+                        >
+                            <ArrowLeftIcon className="w-3.5 h-3.5 text-rhive-pink" />
+                            Back
+                        </Button>
+
                         <button 
-                            onClick={() => {
-                                setSelectedClientId(null);
-                                setSelectedCampusId(null);
-                                setSelectedPhaseId(null);
-                                setSelectedBuildingId(null);
-                                setSelectedJobId(null);
-                            }}
-                            className="text-gray-400 hover:text-white hover:underline flex items-center gap-1 font-bold"
+                            onClick={handleBackToAllCustomers}
+                            className="text-gray-300 hover:text-white hover:underline flex items-center gap-1.5 font-bold ml-1 px-2.5 py-1 rounded hover:bg-gray-800 transition-colors"
                         >
                             <UsersIcon className="w-3.5 h-3.5 text-rhive-pink" />
-                            All Clients
+                            All Customers
                         </button>
 
-                        {activeClient && (
-                            <>
-                                <ChevronRightIcon className="w-3 h-3 text-gray-600" />
-                                <button 
-                                    onClick={() => {
-                                        setSelectedCampusId(null);
-                                        setSelectedPhaseId(null);
-                                        setSelectedBuildingId(null);
-                                        setSelectedJobId(null);
-                                    }}
-                                    className={cn(
-                                        "font-bold transition-colors",
-                                        !selectedCampusId ? "text-rhive-pink" : "text-gray-400 hover:text-white"
-                                    )}
-                                >
-                                    Tier 1: {activeClient.name}
-                                </button>
-                            </>
-                        )}
+                            {activeClient && (
+                                <>
+                                    <ChevronRightIcon className="w-3 h-3 text-gray-600" />
+                                    <button 
+                                        onClick={() => {
+                                            setSelectedCampusId(null);
+                                            setSelectedPhaseId(null);
+                                            setSelectedBuildingId(null);
+                                            setSelectedJobId(null);
+                                        }}
+                                        className={cn(
+                                            "font-bold transition-colors truncate max-w-[200px] md:max-w-[300px]",
+                                            !selectedCampusId ? "text-rhive-pink" : "text-gray-400 hover:text-white"
+                                        )}
+                                    >
+                                        Tier 1: {activeClient.name}
+                                    </button>
+                                </>
+                            )}
 
                         {activeCampus && (
                             <>
@@ -1664,6 +1692,15 @@ export const CustomersPortalPage: React.FC = () => {
 
                                     {/* Action buttons */}
                                     <div className="flex flex-wrap items-center gap-2">
+                                        <Button 
+                                            variant="secondary" 
+                                            size="sm"
+                                            onClick={handleBackToAllCustomers}
+                                            className="font-mono text-xs border-gray-700 hover:border-rhive-pink text-gray-300 hover:text-white"
+                                        >
+                                            <ArrowLeftIcon className="w-4 h-4 mr-1.5 text-rhive-pink" />
+                                            Back
+                                        </Button>
                                         <Button 
                                             variant="secondary" 
                                             size="sm"
