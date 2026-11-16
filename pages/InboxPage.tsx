@@ -461,39 +461,87 @@ export const InboxPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Customer Quick Filter Shortcut */}
+                        {/* Channel Breakdown Filter Shortcuts */}
                         <div className="pt-3 border-t border-gray-800">
-                            <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-gray-500 font-black">
-                                Channel Breakdown
+                            <div className="flex items-center justify-between px-3 py-1">
+                                <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500 font-black">
+                                    Channel Breakdown
+                                </span>
+                                {channelFilter !== 'all' && (
+                                    <button 
+                                        onClick={() => setChannelFilter('all')}
+                                        className="text-[10px] font-mono text-rhive-pink hover:underline"
+                                    >
+                                        Clear Filter
+                                    </button>
+                                )}
                             </div>
                             <div className="mt-2 space-y-1 text-xs font-mono">
-                                <div className="flex items-center justify-between px-3 py-1.5 text-gray-400">
+                                <button
+                                    type="button"
+                                    onClick={() => setChannelFilter(prev => prev === 'email' ? 'all' : 'email')}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-left",
+                                        channelFilter === 'email' 
+                                            ? "bg-blue-500/15 border border-blue-500/40 text-blue-300 font-bold shadow-[0_0_8px_rgba(59,130,246,0.2)]" 
+                                            : "text-gray-400 hover:bg-gray-900/60 hover:text-white"
+                                    )}
+                                >
                                     <span className="flex items-center gap-2">
-                                        <MailIcon className="w-3.5 h-3.5 text-blue-400" />
+                                        <MailIcon className={cn("w-4 h-4", channelFilter === 'email' ? "text-blue-400" : "text-blue-400/80")} />
                                         Emails
                                     </span>
-                                    <span className="text-white font-bold">
+                                    <span className={cn(
+                                        "px-1.5 py-0.5 rounded text-[10px] font-bold",
+                                        channelFilter === 'email' ? "bg-blue-500 text-white" : "bg-gray-900 text-gray-300"
+                                    )}>
                                         {messages.filter(m => m.channel === 'email').length}
                                     </span>
-                                </div>
-                                <div className="flex items-center justify-between px-3 py-1.5 text-gray-400">
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setChannelFilter(prev => prev === 'text' ? 'all' : 'text')}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-left",
+                                        channelFilter === 'text' 
+                                            ? "bg-green-500/15 border border-green-500/40 text-green-300 font-bold shadow-[0_0_8px_rgba(34,197,94,0.2)]" 
+                                            : "text-gray-400 hover:bg-gray-900/60 hover:text-white"
+                                    )}
+                                >
                                     <span className="flex items-center gap-2">
-                                        <ChatBubbleLeftRightIcon className="w-3.5 h-3.5 text-green-400" />
+                                        <ChatBubbleLeftRightIcon className={cn("w-4 h-4", channelFilter === 'text' ? "text-green-400" : "text-green-400/80")} />
                                         Texts (SMS)
                                     </span>
-                                    <span className="text-white font-bold">
+                                    <span className={cn(
+                                        "px-1.5 py-0.5 rounded text-[10px] font-bold",
+                                        channelFilter === 'text' ? "bg-green-500 text-white" : "bg-gray-900 text-gray-300"
+                                    )}>
                                         {messages.filter(m => m.channel === 'text').length}
                                     </span>
-                                </div>
-                                <div className="flex items-center justify-between px-3 py-1.5 text-gray-400">
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setChannelFilter(prev => prev === 'call' ? 'all' : 'call')}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all text-left",
+                                        channelFilter === 'call' 
+                                            ? "bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold shadow-[0_0_8px_rgba(245,158,11,0.2)]" 
+                                            : "text-gray-400 hover:bg-gray-900/60 hover:text-white"
+                                    )}
+                                >
                                     <span className="flex items-center gap-2">
-                                        <PhoneIcon className="w-3.5 h-3.5 text-amber-400" />
+                                        <PhoneIcon className={cn("w-4 h-4", channelFilter === 'call' ? "text-amber-400" : "text-amber-400/80")} />
                                         Calls
                                     </span>
-                                    <span className="text-white font-bold">
+                                    <span className={cn(
+                                        "px-1.5 py-0.5 rounded text-[10px] font-bold",
+                                        channelFilter === 'call' ? "bg-amber-500 text-white" : "bg-gray-900 text-gray-300"
+                                    )}>
                                         {messages.filter(m => m.channel === 'call').length}
                                     </span>
-                                </div>
+                                </button>
                             </div>
                         </div>
                     </div>
