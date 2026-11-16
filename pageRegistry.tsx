@@ -51,6 +51,9 @@ import ContactsListPage from './pages/ContactsListPage';
 import AccountsListPage from './pages/AccountsListPage';
 import ContactVendorProfilePage from './pages/ContactVendorProfilePage'; // E-25
 import CustomersPortalPage from './pages/CustomersPortalPage'; // E-CUSTOMERS
+import InboxPage from './pages/InboxPage'; // E-INBOX
+import TasksPage from './pages/TasksPage'; // E-TASKS
+import CalendarPage from './pages/CalendarPage'; // E-04
 import CompanyPage from './pages/CompanyPage';
 import PropertyProfilePage from './pages/PropertyProfilePage'; // E-12 Property Profile
 import PropertyPage from './pages/PropertyPage'; // E-12 Fallback List
@@ -266,9 +269,11 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-01': EmployeeHomepage,
   'E-02a': CustomerInputPage,
   'E-CUSTOMERS': CustomersPortalPage,
+  'E-INBOX': InboxPage,
+  'E-TASKS': TasksPage,
   'E-TEMP': PreConversionRecordPage,
   'E-03': () => <Placeholder name="AI ASSISTANT (GLOBAL)" />,
-  'E-04': EmployeeTimeoffPage,
+  'E-04': CalendarPage,
   'E-05': EmployeePipelinePage,
   'E-06': CustomerProjectMapPage,
   'E-07': AccountsListPage,
