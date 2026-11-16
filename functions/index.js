@@ -2426,6 +2426,32 @@ exports.sendCrmMessage = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUST
                 }
             }
 
+            // Queue email delivery via Google Workspace SMTP (mail_outbox)
+            if (channel === 'email' && recipientEmail) {
+                try {
+                    await db.collection('mail_outbox').add({
+                        to: recipientEmail,
+                        from: `RHIVE Support <noreply@rhiveconstruction.com>`,
+                        replyTo: 'support@rhiveconstruction.com',
+                        message: {
+                            subject: subject || 'Project Update from RHIVE Construction',
+                            text: messageBody,
+                            html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:24px;border-radius:8px;">
+                                <h2 style="color:#ec028b;margin:0 0 16px;">RHIVE Construction</h2>
+                                <p style="margin:0 0 16px;line-height:1.6;font-size:14px;color:#d1d5db;">${messageBody.replace(/\n/g, '<br/>')}</p>
+                                <hr style="border:none;border-top:1px solid #374151;margin:24px 0 16px;"/>
+                                <p style="margin:0;font-size:12px;color:#9ca3af;">RHIVE Construction • (435) 417-6637 • Salt Lake City, Utah</p>
+                            </div>`
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                    deliveryStatus = 'queued_smtp';
+                    console.log(`[sendCrmMessage] Queued email to mail_outbox for ${recipientEmail}`);
+                } catch (emailErr) {
+                    console.error('[sendCrmMessage] Error queueing email to mail_outbox:', emailErr);
+                }
+            }
+
             // Save message to inbox_messages
             const msgDoc = {
                 channel,

@@ -1689,6 +1689,31 @@ export const crmInboxService = {
             };
 
             const ref = await addDoc(collection(db, 'inbox_messages'), fallbackDoc);
+
+            // Also queue to mail_outbox if email channel
+            if (payload.channel === 'email' && payload.recipientEmail) {
+                try {
+                    await addDoc(collection(db, 'mail_outbox'), {
+                        to: payload.recipientEmail,
+                        from: 'RHIVE Support <noreply@rhiveconstruction.com>',
+                        replyTo: 'support@rhiveconstruction.com',
+                        message: {
+                            subject: payload.subject || 'Project Update from RHIVE Construction',
+                            text: payload.messageBody,
+                            html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:24px;border-radius:8px;">
+                                <h2 style="color:#ec028b;margin:0 0 16px;">RHIVE Construction</h2>
+                                <p style="margin:0 0 16px;line-height:1.6;font-size:14px;color:#d1d5db;">${payload.messageBody.replace(/\n/g, '<br/>')}</p>
+                                <hr style="border:none;border-top:1px solid #374151;margin:24px 0 16px;"/>
+                                <p style="margin:0;font-size:12px;color:#9ca3af;">RHIVE Construction • (435) 417-6637 • Salt Lake City, Utah</p>
+                            </div>`
+                        },
+                        createdAt: new Date().toISOString()
+                    });
+                } catch (emailErr) {
+                    console.warn('[crmInboxService] Failed to queue to mail_outbox:', emailErr);
+                }
+            }
+
             return { success: true, data: { id: ref.id, ...fallbackDoc } };
         } catch (fbErr: any) {
             console.error('[crmInboxService.sendMessage] Fallback error:', fbErr);
