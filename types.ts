@@ -457,6 +457,8 @@ export interface CustomerClient {
     customer_type: CustomerType;
     account_code?: string;
     billing_address?: string;
+    stage?: ProjectStage | string;
+    current_stage?: ProjectStage | string;
     primary_contact?: {
         name: string;
         email: string;

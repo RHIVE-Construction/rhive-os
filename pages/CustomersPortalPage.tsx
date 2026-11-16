@@ -4,7 +4,7 @@ import Button from '../components/Button';
 import CircuitryCard from '../components/CircuitryCard';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useMockDB } from '../contexts/MockDatabaseContext';
-import { accountService, propertyService, projectService, userLogService } from '../lib/firebaseService';
+import { accountService, propertyService, projectService, firestoreService, userLogService } from '../lib/firebaseService';
 import { 
     UserIcon, 
     UsersIcon, 
@@ -33,8 +33,10 @@ import type {
     SubPropertyPhase, 
     BuildingAsset, 
     ProjectJob, 
-    CustomerType 
+    CustomerType,
+    ProjectStage
 } from '../types';
+import { PROJECT_STAGES_ORDER } from '../types';
 
 // ── Initial Relational Demonstration Records ────────────────────────────────────
 // Seed data showcasing the exact 5-tier architecture:
@@ -638,9 +640,264 @@ export const CustomerTypeBadgeSwitcher: React.FC<{
     );
 };
 
+
+export const normalizeProjectStage = (rawStage?: string): ProjectStage => {
+    if (!rawStage) return 'Stage 1: LEAD (Intake)';
+    const s = rawStage.toLowerCase().trim();
+    if (s.includes('lead')) return 'Stage 1: LEAD (Intake)';
+    if (s.includes('estimate') || s.includes('prop')) return 'Stage 2: ESTIMATE (Property Data)';
+    if (s.includes('quote') || s.includes('pricing')) return 'Stage 3: QUOTE (Pricing Options)';
+    if (s.includes('sign') || s.includes('verify') || s.includes('agreement')) return 'Stage 4: SIGN & VERIFY (Agreement)';
+    if (s.includes('schedule') || s.includes('queue')) return 'Stage 5: SCHEDULE (Queue)';
+    if (s.includes('pre-install') || s.includes('prep')) return 'Stage 6: PRE-INSTALLATION (Prep)';
+    if (s.includes('install') || s.includes('in prog')) return 'Stage 7: INSTALL (In Progress)';
+    if (s.includes('punch') || s.includes('quality') || s.includes('qc')) return 'Stage 8: PUNCH LIST (Quality Control)';
+    if (s.includes('invoic') || s.includes('balance') || s.includes('bill')) return 'Stage 9: INVOICING (Balance Due)';
+    if (s.includes('complet') || s.includes('paid')) return 'Stage 10: COMPLETED (Paid)';
+    if (s.includes('past') || s.includes('referral')) return 'Stage 11: PAST CUSTOMER (Referral System)';
+    return 'Stage 1: LEAD (Intake)';
+};
+
+export const getStageShortLabel = (stage: string): string => {
+    const s = stage.toLowerCase();
+    if (s.includes('lead')) return 'Stage 1: LEAD';
+    if (s.includes('estimate')) return 'Stage 2: ESTIMATE';
+    if (s.includes('quote')) return 'Stage 3: QUOTE';
+    if (s.includes('sign')) return 'Stage 4: SIGN';
+    if (s.includes('schedule')) return 'Stage 5: SCHEDULE';
+    if (s.includes('pre-install')) return 'Stage 6: PRE-INSTALL';
+    if (s.includes('install')) return 'Stage 7: INSTALL';
+    if (s.includes('punch')) return 'Stage 8: PUNCH LIST';
+    if (s.includes('invoic')) return 'Stage 9: INVOICING';
+    if (s.includes('complet')) return 'Stage 10: COMPLETED';
+    if (s.includes('past')) return 'Stage 11: PAST CUSTOMER';
+    return stage;
+};
+
+export const getStageBadgeColors = (stage: string) => {
+    const s = stage.toLowerCase();
+    if (s.includes('lead')) {
+        return {
+            bg: 'bg-yellow-500/10',
+            text: 'text-yellow-400',
+            border: 'border-yellow-500/30 hover:border-yellow-400',
+            dot: 'bg-yellow-400',
+            glow: 'shadow-[0_0_8px_rgba(234,179,8,0.2)]'
+        };
+    }
+    if (s.includes('estimate')) {
+        return {
+            bg: 'bg-blue-500/10',
+            text: 'text-blue-400',
+            border: 'border-blue-500/30 hover:border-blue-400',
+            dot: 'bg-blue-400',
+            glow: 'shadow-[0_0_8px_rgba(59,130,246,0.2)]'
+        };
+    }
+    if (s.includes('quote')) {
+        return {
+            bg: 'bg-indigo-500/10',
+            text: 'text-indigo-400',
+            border: 'border-indigo-500/30 hover:border-indigo-400',
+            dot: 'bg-indigo-400',
+            glow: 'shadow-[0_0_8px_rgba(99,102,241,0.2)]'
+        };
+    }
+    if (s.includes('sign')) {
+        return {
+            bg: 'bg-purple-500/10',
+            text: 'text-purple-400',
+            border: 'border-purple-500/30 hover:border-purple-400',
+            dot: 'bg-purple-400',
+            glow: 'shadow-[0_0_8px_rgba(168,85,247,0.2)]'
+        };
+    }
+    if (s.includes('schedule')) {
+        return {
+            bg: 'bg-cyan-500/10',
+            text: 'text-cyan-400',
+            border: 'border-cyan-500/30 hover:border-cyan-400',
+            dot: 'bg-cyan-400',
+            glow: 'shadow-[0_0_8px_rgba(6,182,212,0.2)]'
+        };
+    }
+    if (s.includes('pre-install')) {
+        return {
+            bg: 'bg-sky-500/10',
+            text: 'text-sky-400',
+            border: 'border-sky-500/30 hover:border-sky-400',
+            dot: 'bg-sky-400',
+            glow: 'shadow-[0_0_8px_rgba(14,165,233,0.2)]'
+        };
+    }
+    if (s.includes('install')) {
+        return {
+            bg: 'bg-orange-500/10',
+            text: 'text-orange-400',
+            border: 'border-orange-500/30 hover:border-orange-400',
+            dot: 'bg-orange-400',
+            glow: 'shadow-[0_0_8px_rgba(249,115,22,0.2)]'
+        };
+    }
+    if (s.includes('punch')) {
+        return {
+            bg: 'bg-amber-500/10',
+            text: 'text-amber-400',
+            border: 'border-amber-500/30 hover:border-amber-400',
+            dot: 'bg-amber-400',
+            glow: 'shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+        };
+    }
+    if (s.includes('invoic')) {
+        return {
+            bg: 'bg-emerald-500/10',
+            text: 'text-emerald-400',
+            border: 'border-emerald-500/30 hover:border-emerald-400',
+            dot: 'bg-emerald-400',
+            glow: 'shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+        };
+    }
+    if (s.includes('complet')) {
+        return {
+            bg: 'bg-green-500/10',
+            text: 'text-green-400',
+            border: 'border-green-500/30 hover:border-green-400',
+            dot: 'bg-green-400',
+            glow: 'shadow-[0_0_8px_rgba(34,197,94,0.2)]'
+        };
+    }
+    if (s.includes('past')) {
+        return {
+            bg: 'bg-teal-500/10',
+            text: 'text-teal-400',
+            border: 'border-teal-500/30 hover:border-teal-400',
+            dot: 'bg-teal-400',
+            glow: 'shadow-[0_0_8px_rgba(20,184,166,0.2)]'
+        };
+    }
+    return {
+        bg: 'bg-gray-800/80',
+        text: 'text-gray-300',
+        border: 'border-gray-700 hover:border-gray-600',
+        dot: 'bg-gray-400',
+        glow: ''
+    };
+};
+
+export const CustomerStageBadgeSwitcher: React.FC<{
+    clientId: string;
+    currentStage: string;
+    onUpdateStage: (clientId: string, newStage: ProjectStage) => void;
+    onNavigateToStage?: (stage: string) => void;
+    compact?: boolean;
+    className?: string;
+}> = ({ clientId, currentStage, onUpdateStage, onNavigateToStage, compact = false, className = '' }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    const colors = getStageBadgeColors(currentStage);
+    const shortLabel = getStageShortLabel(currentStage);
+
+    return (
+        <div className="relative inline-block" ref={dropdownRef} onClick={e => e.stopPropagation()}>
+            <button
+                type="button"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(!isOpen);
+                }}
+                title={`Pipeline Stage: ${currentStage}. Click to change stage or jump to pipeline.`}
+                className={cn(
+                    "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border flex items-center gap-1.5 transition-all group/stage cursor-pointer",
+                    colors.bg,
+                    colors.text,
+                    colors.border,
+                    colors.glow,
+                    className
+                )}
+            >
+                <span className={cn("w-1.5 h-1.5 rounded-full", colors.dot)} />
+                <span className="truncate max-w-[140px]">{shortLabel}</span>
+                <ChevronDownIcon className={cn("w-3 h-3 transition-transform opacity-70 group-hover/stage:opacity-100", isOpen && "rotate-180")} />
+            </button>
+
+            {isOpen && (
+                <div 
+                    data-testid="stage-dropdown-menu"
+                    className="absolute left-0 mt-1 w-64 bg-gray-950/95 border border-gray-700 rounded-lg shadow-2xl z-50 p-1.5 backdrop-blur-xl animate-fade-in text-left max-h-80 overflow-y-auto"
+                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                >
+                    <div className="px-2 py-1 text-[9px] font-mono uppercase tracking-wider text-gray-400 border-b border-gray-800 mb-1 flex items-center justify-between">
+                        <span>Pipeline Stage</span>
+                        <span className="text-[8px] text-rhive-pink font-bold">11 Stages</span>
+                    </div>
+
+                    {onNavigateToStage && (
+                        <button
+                            type="button"
+                            data-testid="stage-navigate-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsOpen(false);
+                                onNavigateToStage(currentStage);
+                            }}
+                            className="w-full mb-1 flex items-center justify-between px-2 py-1 bg-rhive-pink/10 hover:bg-rhive-pink/20 text-rhive-pink border border-rhive-pink/30 rounded text-[10px] font-mono font-bold transition-colors cursor-pointer"
+                        >
+                            <span>Open Stage Page</span>
+                            <span className="text-[10px]">↗</span>
+                        </button>
+                    )}
+
+                    <div className="space-y-0.5">
+                        {PROJECT_STAGES_ORDER.map(st => {
+                            const isSelected = normalizeProjectStage(currentStage) === st;
+                            const stageColors = getStageBadgeColors(st);
+                            return (
+                                <button
+                                    key={st}
+                                    type="button"
+                                    data-testid="stage-option"
+                                    data-stage={st}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onUpdateStage(clientId, st);
+                                        setIsOpen(false);
+                                    }}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-2 py-1.5 rounded text-[11px] font-mono transition-colors text-left cursor-pointer",
+                                        isSelected ? "bg-gray-800 text-white font-bold" : "text-gray-300 hover:bg-gray-900 hover:text-white"
+                                    )}
+                                >
+                                    <span className="flex items-center gap-2 truncate">
+                                        <span className={cn("w-2 h-2 rounded-full shrink-0", stageColors.dot)} />
+                                        <span className="truncate">{st}</span>
+                                    </span>
+                                    {isSelected && <Check className="w-3.5 h-3.5 text-rhive-pink shrink-0" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const CustomersPortalPage: React.FC = () => {
     const { setActivePageId, setSelectedAccountId, setSelectedProjectId } = useNavigation();
-    const { currentUser, projects = [], properties = [], users = [] } = useMockDB();
+    const { currentUser, projects = [], properties = [], users = [], updateProjectStage } = useMockDB();
 
     // Clients state: loaded from localStorage with SEED_CLIENTS fallback and canonical consolidation
     const [clients, setClients] = useState<CustomerClient[]>(() => {
@@ -894,7 +1151,107 @@ export const CustomersPortalPage: React.FC = () => {
     }, []);
 
     // Filter and Search States
+        // Active Pipeline Stage Resolver for Customer Clients
+    const getClientActiveStage = (client: CustomerClient): ProjectStage => {
+        if (client.current_stage || client.stage) {
+            return normalizeProjectStage(client.current_stage || client.stage);
+        }
+        const clientNameLower = client.name.toLowerCase().trim();
+        const matchedProj = projects.find(p => {
+            const pComp = ((p as any).parent_company || (p as any).company || '').toLowerCase().trim();
+            const pAccId = p.account_id || '';
+            return pAccId === client.id || pComp === clientNameLower || (p.name && p.name.toLowerCase().includes(clientNameLower));
+        });
+        if (matchedProj?.current_stage) {
+            return normalizeProjectStage(matchedProj.current_stage);
+        }
+        for (const camp of client.campuses || []) {
+            for (const ph of camp.phases || []) {
+                for (const b of ph.buildings || []) {
+                    for (const j of b.jobs || []) {
+                        if (j.current_stage) {
+                            return normalizeProjectStage(j.current_stage);
+                        }
+                    }
+                }
+            }
+        }
+        return 'Stage 1: LEAD (Intake)';
+    };
+
+    // Stage update handler: updates customer, child jobs, mockDB projects, and Firestore
+    const handleUpdateCustomerStage = (clientId: string, newStage: ProjectStage) => {
+        setClients(prev => prev.map(c => {
+            if (c.id !== clientId) return c;
+            const updatedCampuses = c.campuses.map(cp => ({
+                ...cp,
+                phases: cp.phases.map(ph => ({
+                    ...ph,
+                    buildings: ph.buildings.map(b => ({
+                        ...b,
+                        jobs: b.jobs.map(j => ({
+                            ...j,
+                            current_stage: newStage,
+                            updated_at: new Date().toISOString()
+                        }))
+                    }))
+                }))
+            }));
+            return {
+                ...c,
+                current_stage: newStage,
+                stage: newStage,
+                updated_at: new Date().toISOString(),
+                campuses: updatedCampuses
+            };
+        }));
+
+        const targetClient = clients.find(c => c.id === clientId);
+        if (targetClient) {
+            const clientNameLower = targetClient.name.toLowerCase().trim();
+            const matchedProjects = projects.filter(p => {
+                const pComp = ((p as any).parent_company || (p as any).company || '').toLowerCase().trim();
+                const pAccId = p.account_id || '';
+                return pAccId === clientId || pComp === clientNameLower || (p.name && p.name.toLowerCase().includes(clientNameLower));
+            });
+
+            matchedProjects.forEach(p => {
+                try {
+                    if (updateProjectStage) {
+                        updateProjectStage(p._id, newStage);
+                    }
+                } catch (err) {
+                    console.warn('[CustomersPortal] Error updating project stage in mockDB:', err);
+                }
+                try {
+                    firestoreService.updateDocument('projects', p._id, {
+                        current_stage: newStage,
+                        last_updated: new Date().toISOString()
+                    });
+                } catch (err) {
+                    console.warn('[CustomersPortal] Error updating Firestore project stage:', err);
+                }
+            });
+
+            accountService.update(clientId, {
+                current_stage: newStage,
+                stage: newStage,
+                updated_at: new Date().toISOString()
+            }).catch(err => {
+                console.warn('[CustomersPortal] accountService.update note:', err?.message);
+            });
+
+            userLogService.logAction(
+                'UPDATE_CUSTOMER_STAGE',
+                `Changed pipeline stage of customer "${targetClient.name}" (ID: ${clientId}) to ${newStage}`,
+                { clientId, clientName: targetClient.name, newStage, timestamp: new Date().toISOString() }
+            );
+        }
+    };
+
+    // Filter and Search States
     const [selectedTypeFilter, setSelectedTypeFilter] = useState<'All' | CustomerType>('All');
+    const [selectedStageFilter, setSelectedStageFilter] = useState<'All' | ProjectStage>('All');
     const [searchQuery, setSearchQuery] = useState('');
 
     // Display & Sort states (persisted in localStorage)
@@ -1072,6 +1429,12 @@ export const CustomersPortalPage: React.FC = () => {
             if (selectedTypeFilter !== 'All' && c.customer_type !== selectedTypeFilter) {
                 return false;
             }
+            if (selectedStageFilter !== 'All') {
+                const activeStage = getClientActiveStage(c);
+                if (normalizeProjectStage(activeStage) !== selectedStageFilter) {
+                    return false;
+                }
+            }
             if (!searchQuery) return true;
             const q = searchQuery.toLowerCase();
             const matchesName = c.name.toLowerCase().includes(q);
@@ -1091,7 +1454,7 @@ export const CustomersPortalPage: React.FC = () => {
             );
             return matchesName || matchesContact || matchesCampus;
         });
-    }, [clients, selectedTypeFilter, searchQuery]);
+    }, [clients, selectedTypeFilter, selectedStageFilter, searchQuery, projects]);
 
     // Sorted and Filtered clients based on user sort preference (recent, az, za)
     const sortedAndFilteredClients = useMemo(() => {
@@ -1516,20 +1879,48 @@ export const CustomersPortalPage: React.FC = () => {
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         {/* Filter Pills */}
                         <div className="flex flex-wrap items-center gap-2">
-                            {(['All', 'Commercial', 'Government', 'Residential'] as const).map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setSelectedTypeFilter(tab)}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
-                                        selectedTypeFilter === tab
-                                            ? "bg-rhive-pink text-white shadow-[0_0_10px_rgba(236,2,139,0.4)]"
-                                            : "bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800"
-                                    )}
+                            <div className="flex items-center gap-1.5 bg-black/60 border border-gray-800 p-0.5 rounded-full">
+                                {(['All', 'Commercial', 'Government', 'Residential'] as const).map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setSelectedTypeFilter(tab)}
+                                        className={cn(
+                                            "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+                                            selectedTypeFilter === tab
+                                                ? "bg-rhive-pink text-white shadow-[0_0_8px_rgba(236,2,139,0.4)]"
+                                                : "text-gray-400 hover:text-white"
+                                        )}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Stage Filter Dropdown */}
+                            <div className="flex items-center gap-1.5 bg-black/60 border border-gray-800 px-3 py-1 rounded-full text-xs font-mono">
+                                <ClockIcon className="w-3.5 h-3.5 text-rhive-pink shrink-0" />
+                                <span className="text-gray-400 font-bold uppercase text-[10px]">Stage:</span>
+                                <select
+                                    value={selectedStageFilter}
+                                    onChange={e => setSelectedStageFilter(e.target.value as any)}
+                                    className="bg-transparent text-xs font-mono font-bold text-white focus:outline-none cursor-pointer max-w-[170px] truncate"
                                 >
-                                    {tab}
-                                </button>
-                            ))}
+                                    <option value="All" className="bg-gray-950 text-white">All Stages (11)</option>
+                                    {PROJECT_STAGES_ORDER.map(st => (
+                                        <option key={st} value={st} className="bg-gray-950 text-white">{st}</option>
+                                    ))}
+                                </select>
+                                {selectedStageFilter !== 'All' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedStageFilter('All')}
+                                        className="text-gray-500 hover:text-white text-xs ml-1"
+                                        title="Clear stage filter"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         {/* Search & Add Action */}
@@ -1751,6 +2142,7 @@ export const CustomersPortalPage: React.FC = () => {
                                         <tr className="border-b border-gray-800 bg-gray-900/60 text-[10px] font-mono font-black uppercase tracking-wider text-gray-400">
                                             <th className="py-3.5 px-4">Client / Company</th>
                                             <th className="py-3.5 px-4">Type</th>
+                                            <th className="py-3.5 px-4">Pipeline Stage</th>
                                             <th className="py-3.5 px-4">Primary Contact</th>
                                             <th className="py-3.5 px-4 text-center">Campuses</th>
                                             <th className="py-3.5 px-4 text-center">Buildings</th>
@@ -1784,6 +2176,19 @@ export const CustomersPortalPage: React.FC = () => {
                                                             currentType={client.customer_type}
                                                             onUpdateType={handleUpdateCustomerType}
                                                             showTierPrefix={false}
+                                                        />
+                                                    </td>
+                                                    <td className="py-3.5 px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                                                        <CustomerStageBadgeSwitcher
+                                                            clientId={client.id}
+                                                            currentStage={getClientActiveStage(client)}
+                                                            onUpdateStage={handleUpdateCustomerStage}
+                                                            onNavigateToStage={(stage) => {
+                                                                const matchedProj = projects.find(p => p.account_id === client.id || (p as any).parent_company?.toLowerCase() === client.name.toLowerCase());
+                                                                if (matchedProj) setSelectedProjectId(matchedProj._id);
+                                                                setSelectedAccountId(client.id);
+                                                                setActivePageId(getStagePageId(stage));
+                                                            }}
                                                         />
                                                     </td>
                                                     <td className="py-3.5 px-4">
@@ -1886,16 +2291,29 @@ export const CustomersPortalPage: React.FC = () => {
                                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                                         >
                                             <div>
-                                                {/* Type Badge & Code */}
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <CustomerTypeBadgeSwitcher
-                                                        clientId={client.id}
-                                                        currentType={client.customer_type}
-                                                        onUpdateType={handleUpdateCustomerType}
-                                                        showTierPrefix={true}
-                                                    />
+                                                {/* Type Badge, Stage Badge & Code */}
+                                                <div className="flex items-center justify-between gap-2 mb-3">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <CustomerTypeBadgeSwitcher
+                                                            clientId={client.id}
+                                                            currentType={client.customer_type}
+                                                            onUpdateType={handleUpdateCustomerType}
+                                                            showTierPrefix={true}
+                                                        />
+                                                        <CustomerStageBadgeSwitcher
+                                                            clientId={client.id}
+                                                            currentStage={getClientActiveStage(client)}
+                                                            onUpdateStage={handleUpdateCustomerStage}
+                                                            onNavigateToStage={(stage) => {
+                                                                const matchedProj = projects.find(p => p.account_id === client.id || (p as any).parent_company?.toLowerCase() === client.name.toLowerCase());
+                                                                if (matchedProj) setSelectedProjectId(matchedProj._id);
+                                                                setSelectedAccountId(client.id);
+                                                                setActivePageId(getStagePageId(stage));
+                                                            }}
+                                                        />
+                                                    </div>
 
-                                                    <span className="text-[10px] font-mono text-gray-500">
+                                                    <span className="text-[10px] font-mono text-gray-500 shrink-0">
                                                         {client.account_code || 'Account'}
                                                     </span>
                                                 </div>
@@ -1968,12 +2386,23 @@ export const CustomersPortalPage: React.FC = () => {
                             <div className="p-6 bg-black/70 border border-gray-800 rounded-lg relative overflow-hidden">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div>
-                                        <div className="flex items-center gap-2 mb-1.5">
+                                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                                             <CustomerTypeBadgeSwitcher
                                                 clientId={activeClient.id}
                                                 currentType={activeClient.customer_type}
                                                 onUpdateType={handleUpdateCustomerType}
                                                 showTierPrefix={true}
+                                            />
+                                            <CustomerStageBadgeSwitcher
+                                                clientId={activeClient.id}
+                                                currentStage={getClientActiveStage(activeClient)}
+                                                onUpdateStage={handleUpdateCustomerStage}
+                                                onNavigateToStage={(stage) => {
+                                                    const matchedProj = projects.find(p => p.account_id === activeClient.id || (p as any).parent_company?.toLowerCase() === activeClient.name.toLowerCase());
+                                                    if (matchedProj) setSelectedProjectId(matchedProj._id);
+                                                    setSelectedAccountId(activeClient.id);
+                                                    setActivePageId(getStagePageId(stage));
+                                                }}
                                             />
                                             {activeClient.account_code && (
                                                 <span className="text-xs text-gray-500 font-mono">
