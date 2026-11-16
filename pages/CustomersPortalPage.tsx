@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import PageContainer from '../components/PageContainer';
 import Button from '../components/Button';
 import CircuitryCard from '../components/CircuitryCard';
@@ -552,6 +552,92 @@ export const consolidateClients = (rawClients: CustomerClient[]): CustomerClient
     return Array.from(canonicalMap.values());
 };
 
+export const CustomerTypeBadgeSwitcher: React.FC<{
+    clientId: string;
+    currentType: CustomerType;
+    onUpdateType: (clientId: string, newType: CustomerType) => void;
+    showTierPrefix?: boolean;
+    className?: string;
+}> = ({ clientId, currentType, onUpdateType, showTierPrefix = true, className = '' }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    const types: CustomerType[] = ['Commercial', 'Government', 'Residential'];
+
+    return (
+        <div className="relative inline-block" ref={dropdownRef} onClick={e => e.stopPropagation()}>
+            <button
+                type="button"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(!isOpen);
+                }}
+                title="Click to edit customer type (Commercial, Government, Residential)"
+                className={cn(
+                    "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border flex items-center gap-1 transition-all group/badge cursor-pointer",
+                    currentType === 'Commercial' && "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/20 shadow-[0_0_8px_rgba(59,130,246,0.15)]",
+                    currentType === 'Government' && "bg-amber-500/10 text-amber-400 border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.15)]",
+                    currentType === 'Residential' && "bg-green-500/10 text-green-400 border-green-500/30 hover:border-green-400 hover:bg-green-500/20 shadow-[0_0_8px_rgba(34,197,94,0.15)]",
+                    className
+                )}
+            >
+                <span>{showTierPrefix ? `Tier 1 • ${currentType}` : currentType}</span>
+                <ChevronDownIcon className={cn("w-3 h-3 transition-transform opacity-70 group-hover/badge:opacity-100", isOpen && "rotate-180")} />
+            </button>
+
+            {isOpen && (
+                <div 
+                    className="absolute left-0 mt-1 w-44 bg-gray-950/95 border border-gray-700 rounded-lg shadow-2xl z-50 p-1.5 backdrop-blur-xl animate-fade-in text-left"
+                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                >
+                    <div className="px-2 py-1 text-[9px] font-mono uppercase tracking-wider text-gray-500 border-b border-gray-800 mb-1 flex items-center justify-between">
+                        <span>Edit Customer Type</span>
+                        <span className="text-[8px] text-rhive-pink font-bold">Tier 1</span>
+                    </div>
+                    {types.map(t => (
+                        <button
+                            key={t}
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onUpdateType(clientId, t);
+                                setIsOpen(false);
+                            }}
+                            className={cn(
+                                "w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono transition-colors text-left",
+                                currentType === t ? "bg-gray-800/90 text-white font-bold" : "text-gray-300 hover:bg-gray-900 hover:text-white"
+                            )}
+                        >
+                            <span className="flex items-center gap-2">
+                                <span className={cn(
+                                    "w-2 h-2 rounded-full",
+                                    t === 'Commercial' && "bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.8)]",
+                                    t === 'Government' && "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]",
+                                    t === 'Residential' && "bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]"
+                                )} />
+                                {t}
+                            </span>
+                            {currentType === t && <Check className="w-3.5 h-3.5 text-rhive-pink" />}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const CustomersPortalPage: React.FC = () => {
     const { setActivePageId, setSelectedAccountId, setSelectedProjectId } = useNavigation();
     const { currentUser, projects = [], properties = [], users = [] } = useMockDB();
@@ -869,6 +955,36 @@ export const CustomersPortalPage: React.FC = () => {
         setSelectedPhaseId(null);
         setSelectedBuildingId(null);
         setSelectedJobId(null);
+    };
+
+    // Customer Type Switcher (Commercial, Government, Residential)
+    const handleUpdateCustomerType = (clientId: string, newType: CustomerType) => {
+        setClients(prev => prev.map(c => {
+            if (c.id === clientId) {
+                return {
+                    ...c,
+                    customer_type: newType,
+                    updated_at: new Date().toISOString()
+                };
+            }
+            return c;
+        }));
+
+        // Persist to Firestore accounts
+        accountService.update(clientId, {
+            customer_type: newType,
+            accountType: newType,
+            type: newType,
+            updated_at: new Date().toISOString()
+        }).catch(err => {
+            console.warn('[CustomersPortal] accountService.update note:', err?.message);
+        });
+
+        userLogService.logAction(
+            'UPDATE_CUSTOMER_TYPE',
+            `Changed customer type of account (ID: ${clientId}) to ${newType}`,
+            { clientId, newType, timestamp: new Date().toISOString() }
+        );
     };
 
     // Modal State
@@ -1663,14 +1779,12 @@ export const CustomersPortalPage: React.FC = () => {
                                                         )}
                                                     </td>
                                                     <td className="py-3.5 px-4 whitespace-nowrap">
-                                                        <span className={cn(
-                                                            "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                                                            client.customer_type === 'Commercial' && "bg-blue-500/10 text-blue-400 border-blue-500/30",
-                                                            client.customer_type === 'Government' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
-                                                            client.customer_type === 'Residential' && "bg-green-500/10 text-green-400 border-green-500/30"
-                                                        )}>
-                                                            {client.customer_type}
-                                                        </span>
+                                                        <CustomerTypeBadgeSwitcher
+                                                            clientId={client.id}
+                                                            currentType={client.customer_type}
+                                                            onUpdateType={handleUpdateCustomerType}
+                                                            showTierPrefix={false}
+                                                        />
                                                     </td>
                                                     <td className="py-3.5 px-4">
                                                         {client.primary_contact ? (
@@ -1774,14 +1888,12 @@ export const CustomersPortalPage: React.FC = () => {
                                             <div>
                                                 {/* Type Badge & Code */}
                                                 <div className="flex items-center justify-between mb-3">
-                                                    <span className={cn(
-                                                        "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                                                        client.customer_type === 'Commercial' && "bg-blue-500/10 text-blue-400 border-blue-500/30",
-                                                        client.customer_type === 'Government' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
-                                                        client.customer_type === 'Residential' && "bg-green-500/10 text-green-400 border-green-500/30"
-                                                    )}>
-                                                        Tier 1 • {client.customer_type}
-                                                    </span>
+                                                    <CustomerTypeBadgeSwitcher
+                                                        clientId={client.id}
+                                                        currentType={client.customer_type}
+                                                        onUpdateType={handleUpdateCustomerType}
+                                                        showTierPrefix={true}
+                                                    />
 
                                                     <span className="text-[10px] font-mono text-gray-500">
                                                         {client.account_code || 'Account'}
@@ -1857,14 +1969,12 @@ export const CustomersPortalPage: React.FC = () => {
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <span className={cn(
-                                                "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                                                activeClient.customer_type === 'Commercial' && "bg-blue-500/10 text-blue-400 border-blue-500/30",
-                                                activeClient.customer_type === 'Government' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
-                                                activeClient.customer_type === 'Residential' && "bg-green-500/10 text-green-400 border-green-500/30"
-                                            )}>
-                                                Tier 1 Client • {activeClient.customer_type}
-                                            </span>
+                                            <CustomerTypeBadgeSwitcher
+                                                clientId={activeClient.id}
+                                                currentType={activeClient.customer_type}
+                                                onUpdateType={handleUpdateCustomerType}
+                                                showTierPrefix={true}
+                                            />
                                             {activeClient.account_code && (
                                                 <span className="text-xs text-gray-500 font-mono">
                                                     [{activeClient.account_code}]
