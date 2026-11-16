@@ -42,7 +42,7 @@ import type {
 const SEED_CLIENTS: CustomerClient[] = [
     {
         id: 'CLI-UNPHC',
-        name: 'UNPHC (United Property Management)',
+        name: 'UNPHC (Utah Non-Profit Housing Corp)',
         customer_type: 'Commercial',
         account_code: 'UNPHC-CORP',
         billing_address: '123 Corporate Blvd, Salt Lake City, UT 84101',
@@ -399,17 +399,173 @@ export const computeClientRollup = (client: CustomerClient) => {
     };
 };
 
+// Canonical Parent Company resolver to consolidate imported account aliases, emails, and typos
+export const getCanonicalParentCompany = (rawName: string, rawEmail?: string): { canonicalName: string, isConsolidated: boolean, siteName?: string } => {
+    const trimmed = (rawName || '').trim();
+    const email = (rawEmail || '').trim().toLowerCase();
+
+    // 1. Check for email used as account name (e.g. smithapts@unphc.org)
+    const emailCandidate = trimmed.includes('@') ? trimmed : email;
+    if (emailCandidate && emailCandidate.includes('@')) {
+        const [userPart, domainPart] = emailCandidate.toLowerCase().split('@');
+        if (domainPart && (domainPart.includes('unphc') || domainPart.includes('unitedproperty'))) {
+            let formattedSite = userPart ? userPart.replace(/apts?|apartments?/i, ' Apartments').trim() : 'Smith Apartments';
+            formattedSite = formattedSite.charAt(0).toUpperCase() + formattedSite.slice(1);
+            if (!formattedSite.toLowerCase().includes('apartment') && !formattedSite.toLowerCase().includes('site')) {
+                formattedSite = `${formattedSite} Apartments`;
+            }
+            return {
+                canonicalName: 'UNPHC (Utah Non-Profit Housing Corp)',
+                isConsolidated: true,
+                siteName: formattedSite
+            };
+        }
+    }
+
+    // 2. Clean test / temporary prefixes
+    const cleanName = trimmed.replace(/^\[TEST\]\s*/i, '').trim();
+
+    // 3. UNPHC variations
+    if (
+        /^unphc\b/i.test(cleanName) || 
+        /utah non-profit housing/i.test(cleanName) || 
+        /united property management/i.test(cleanName)
+    ) {
+        let siteName: string | undefined = undefined;
+        if (/multifamily/i.test(cleanName)) {
+            siteName = 'Multifamily Portfolio Site';
+        } else if (/smith/i.test(cleanName)) {
+            siteName = 'Smith Apartments';
+        } else if (/willow/i.test(cleanName)) {
+            siteName = 'Willow Park Site';
+        }
+        return {
+            canonicalName: 'UNPHC (Utah Non-Profit Housing Corp)',
+            isConsolidated: true,
+            siteName
+        };
+    }
+
+    // 4. Larry H Miller variations
+    if (/^larry h\.?\s*miller/i.test(cleanName) || /^lhm\b/i.test(cleanName)) {
+        return {
+            canonicalName: 'Larry H Miller Group',
+            isConsolidated: true
+        };
+    }
+
+    // 5. Greystar variations
+    if (/^greystar/i.test(cleanName)) {
+        return {
+            canonicalName: 'Greystar Real Estate',
+            isConsolidated: true
+        };
+    }
+
+    // 6. Willow Park variations
+    if (/^willow park/i.test(cleanName)) {
+        return {
+            canonicalName: 'Willow Park HOA',
+            isConsolidated: true
+        };
+    }
+
+    // 7. IHC variations
+    if (/^ihc\b/i.test(cleanName) || /intermountain health/i.test(cleanName)) {
+        return {
+            canonicalName: 'Intermountain Health (IHC)',
+            isConsolidated: true
+        };
+    }
+
+    return {
+        canonicalName: cleanName,
+        isConsolidated: false
+    };
+};
+
+export const consolidateClients = (rawClients: CustomerClient[]): CustomerClient[] => {
+    const canonicalMap = new Map<string, CustomerClient>();
+
+    rawClients.forEach(client => {
+        const canonical = getCanonicalParentCompany(client.name, client.primary_contact?.email);
+        const key = canonical.canonicalName.toLowerCase().trim();
+
+        if (canonicalMap.has(key)) {
+            const existing = canonicalMap.get(key)!;
+            const existingCampusNames = new Set(existing.campuses.map(cp => cp.name.toLowerCase().trim()));
+
+            client.campuses.forEach(campus => {
+                const cName = campus.name.toLowerCase().trim();
+                if (!existingCampusNames.has(cName)) {
+                    existing.campuses.push({
+                        ...campus,
+                        client_id: existing.id
+                    });
+                    existingCampusNames.add(cName);
+                }
+            });
+
+            if (canonical.siteName && !existingCampusNames.has(canonical.siteName.toLowerCase().trim())) {
+                existing.campuses.push({
+                    id: `CAMP-SITE-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                    client_id: existing.id,
+                    name: canonical.siteName,
+                    address: client.billing_address || 'Address pending verification',
+                    city: 'Salt Lake City',
+                    state: 'UT',
+                    zip: '',
+                    phases: []
+                });
+                existingCampusNames.add(canonical.siteName.toLowerCase().trim());
+            }
+
+            // Enrich primary contact if existing was blank or placeholder
+            if (client.primary_contact?.phone && (!existing.primary_contact?.phone || existing.primary_contact?.name === 'Primary Contact')) {
+                existing.primary_contact = client.primary_contact;
+            }
+        } else {
+            const newClient: CustomerClient = {
+                ...client,
+                name: canonical.canonicalName,
+                campuses: [...client.campuses]
+            };
+            if (canonical.siteName) {
+                const hasSite = newClient.campuses.some(cp => cp.name.toLowerCase().trim() === canonical.siteName!.toLowerCase().trim());
+                if (!hasSite) {
+                    newClient.campuses.push({
+                        id: `CAMP-SITE-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                        client_id: newClient.id,
+                        name: canonical.siteName,
+                        address: client.billing_address || 'Address pending verification',
+                        city: 'Salt Lake City',
+                        state: 'UT',
+                        zip: '',
+                        phases: []
+                    });
+                }
+            }
+            canonicalMap.set(key, newClient);
+        }
+    });
+
+    return Array.from(canonicalMap.values());
+};
+
 export const CustomersPortalPage: React.FC = () => {
     const { setActivePageId, setSelectedAccountId, setSelectedProjectId } = useNavigation();
     const { currentUser, projects = [], properties = [], users = [] } = useMockDB();
 
-    // Clients state: loaded from localStorage with SEED_CLIENTS fallback
+    // Clients state: loaded from localStorage with SEED_CLIENTS fallback and canonical consolidation
     const [clients, setClients] = useState<CustomerClient[]>(() => {
         try {
             const saved = localStorage.getItem('rhive_customer_clients');
-            if (saved) return JSON.parse(saved);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return consolidateClients(parsed);
+            }
         } catch { /* ignore */ }
-        return SEED_CLIENTS;
+        return consolidateClients(SEED_CLIENTS);
     });
 
     // Save to localStorage whenever clients change
@@ -553,58 +709,98 @@ export const CustomersPortalPage: React.FC = () => {
             if (!firestoreAccounts || firestoreAccounts.length === 0) return;
 
             setClients(prevClients => {
-                const existingNames = new Set(prevClients.map(c => c.name.toLowerCase().trim()));
-                const newClientsToAdd: CustomerClient[] = [];
+                const workingClients = [...prevClients];
+                let hasChanges = false;
 
                 firestoreAccounts.forEach(fa => {
                     const accName = (fa.accountName || fa.name || fa.company || '').trim();
-                    if (!accName || existingNames.has(accName.toLowerCase())) return;
+                    if (!accName) return;
 
-                    // Determine customer_type
-                    let cType: CustomerType = 'Commercial';
-                    const rawType = (fa.accountType || fa.type || fa.customer_type || '').toLowerCase();
-                    if (rawType.includes('gov') || rawType.includes('city') || rawType.includes('state')) {
-                        cType = 'Government';
-                    } else if (rawType.includes('res') || rawType.includes('home') || rawType.includes('individual')) {
-                        cType = 'Residential';
-                    }
+                    const canonical = getCanonicalParentCompany(accName, fa.email || fa.email_1);
+                    const canonKey = canonical.canonicalName.toLowerCase().trim();
 
-                    const newClient: CustomerClient = {
-                        id: fa.id || `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                        name: accName,
-                        customer_type: cType,
-                        account_code: fa.accountId || undefined,
-                        billing_address: fa.billingAddress || fa.address || fa.projectAddress || undefined,
-                        primary_contact: {
-                            name: fa.contactName || `${fa.firstName || ''} ${fa.lastName || ''}`.trim() || 'Primary Contact',
-                            email: fa.email || fa.email_1 || '',
-                            phone: fa.phone || fa.phone_1 || '',
-                            role: fa.role || 'Account Representative'
-                        },
-                        notes: fa.notes || 'Synced from RHIVE account repository.',
-                        created_at: fa.created_at || new Date().toISOString(),
-                        updated_at: fa.updated_at || new Date().toISOString(),
-                        campuses: [
-                            {
-                                id: `CAMP-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                                client_id: fa.id || '',
-                                name: fa.propertyName || `${accName} Site`,
-                                address: fa.projectAddress || fa.address || 'Address pending verification',
+                    // Check if we already have this canonical client
+                    const existingIndex = workingClients.findIndex(c => 
+                        c.name.toLowerCase().trim() === canonKey || 
+                        getCanonicalParentCompany(c.name).canonicalName.toLowerCase().trim() === canonKey
+                    );
+
+                    const campusName = canonical.siteName || fa.propertyName || (canonical.isConsolidated ? `${canonical.canonicalName} Site` : `${accName} Site`);
+                    const campusAddress = fa.projectAddress || fa.address || fa.billingAddress || 'Address pending verification';
+
+                    if (existingIndex >= 0) {
+                        const existingClient = workingClients[existingIndex];
+                        const existingCampusNames = new Set(existingClient.campuses.map(cp => cp.name.toLowerCase().trim()));
+
+                        if (!existingCampusNames.has(campusName.toLowerCase().trim())) {
+                            existingClient.campuses.push({
+                                id: `CAMP-ACC-${fa.id || Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                                client_id: existingClient.id,
+                                name: campusName,
+                                address: campusAddress,
                                 city: fa.city || 'Salt Lake City',
                                 state: fa.state || 'UT',
                                 zip: fa.zipCode || fa.zip || '',
                                 phases: []
-                            }
-                        ]
-                    };
-                    newClientsToAdd.push(newClient);
-                    existingNames.add(accName.toLowerCase());
+                            });
+                            hasChanges = true;
+                        }
+
+                        // Also enrich primary contact if existing was blank/placeholder
+                        if ((fa.phone || fa.email) && (!existingClient.primary_contact?.phone || existingClient.primary_contact?.name === 'Primary Contact')) {
+                            existingClient.primary_contact = {
+                                name: fa.contactName || `${fa.firstName || ''} ${fa.lastName || ''}`.trim() || existingClient.primary_contact?.name || 'Primary Contact',
+                                email: fa.email || fa.email_1 || existingClient.primary_contact?.email || '',
+                                phone: fa.phone || fa.phone_1 || existingClient.primary_contact?.phone || '',
+                                role: fa.role || existingClient.primary_contact?.role || 'Account Representative'
+                            };
+                            hasChanges = true;
+                        }
+                    } else {
+                        // Create brand new canonical client
+                        let cType: CustomerType = 'Commercial';
+                        const rawType = (fa.accountType || fa.type || fa.customer_type || '').toLowerCase();
+                        if (rawType.includes('gov') || rawType.includes('city') || rawType.includes('state')) {
+                            cType = 'Government';
+                        } else if (rawType.includes('res') || rawType.includes('home') || rawType.includes('individual')) {
+                            cType = 'Residential';
+                        }
+
+                        const newClient: CustomerClient = {
+                            id: fa.id || `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                            name: canonical.canonicalName,
+                            customer_type: cType,
+                            account_code: fa.accountId || undefined,
+                            billing_address: fa.billingAddress || fa.address || fa.projectAddress || undefined,
+                            primary_contact: {
+                                name: fa.contactName || `${fa.firstName || ''} ${fa.lastName || ''}`.trim() || 'Primary Contact',
+                                email: fa.email || fa.email_1 || '',
+                                phone: fa.phone || fa.phone_1 || '',
+                                role: fa.role || 'Account Representative'
+                            },
+                            notes: fa.notes || 'Synced from RHIVE account repository.',
+                            created_at: fa.created_at || new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                            campuses: [
+                                {
+                                    id: `CAMP-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                                    client_id: '',
+                                    name: campusName,
+                                    address: campusAddress,
+                                    city: fa.city || 'Salt Lake City',
+                                    state: fa.state || 'UT',
+                                    zip: fa.zipCode || fa.zip || '',
+                                    phases: []
+                                }
+                            ]
+                        };
+                        newClient.campuses[0].client_id = newClient.id;
+                        workingClients.push(newClient);
+                        hasChanges = true;
+                    }
                 });
 
-                if (newClientsToAdd.length > 0) {
-                    return [...prevClients, ...newClientsToAdd];
-                }
-                return prevClients;
+                return hasChanges ? consolidateClients(workingClients) : prevClients;
             });
         });
 
