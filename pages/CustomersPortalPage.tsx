@@ -400,7 +400,7 @@ export const computeClientRollup = (client: CustomerClient) => {
 
 export const CustomersPortalPage: React.FC = () => {
     const { setActivePageId, setSelectedAccountId, setSelectedProjectId } = useNavigation();
-    const { currentUser } = useMockDB();
+    const { currentUser, projects = [], properties = [], users = [] } = useMockDB();
 
     // Clients state: loaded from localStorage with SEED_CLIENTS fallback
     const [clients, setClients] = useState<CustomerClient[]>(() => {
@@ -417,6 +417,134 @@ export const CustomersPortalPage: React.FC = () => {
             localStorage.setItem('rhive_customer_clients', JSON.stringify(clients));
         } catch { /* ignore */ }
     }, [clients]);
+
+    // Consolidate live projects into Tier 1 Parent Company clients
+    useEffect(() => {
+        if (!projects || projects.length === 0) return;
+
+        setClients(prevClients => {
+            let updated = false;
+
+            // 1. Gather all existing client names
+            const clientNameMap = new Map<string, CustomerClient>();
+            prevClients.forEach(c => clientNameMap.set(c.name.toLowerCase().trim(), c));
+
+            const workingClients = [...prevClients];
+
+            // 2. Discover any projects that have a parent company that is NOT yet in workingClients
+            projects.forEach(p => {
+                const pComp = ((p as any).parent_company || (p as any).company || (p as any).parentCompany || '').trim();
+                let resolvedCompName = pComp;
+                if (!resolvedCompName && p.account_id) {
+                    const matchedUser = users.find(u => u.id === p.account_id);
+                    if (matchedUser && matchedUser.name) {
+                        resolvedCompName = matchedUser.name.trim();
+                    }
+                }
+
+                if (!resolvedCompName) return;
+
+                const compKey = resolvedCompName.toLowerCase().trim();
+                if (!clientNameMap.has(compKey)) {
+                    // Create new Tier 1 client
+                    const newTier1: CustomerClient = {
+                        id: `CLI-CORP-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                        name: resolvedCompName,
+                        customer_type: (p.project_type as any) || 'Commercial',
+                        notes: 'Consolidated corporate client account automatically grouped from projects.',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        campuses: []
+                    };
+                    workingClients.push(newTier1);
+                    clientNameMap.set(compKey, newTier1);
+                    updated = true;
+                }
+            });
+
+            // 3. Consolidate matching projects into the corresponding Tier 1 client's campuses
+            const consolidatedClients = workingClients.map(client => {
+                const clientNameLower = client.name.toLowerCase().trim();
+
+                // Find all projects that belong to this client
+                const matchedProjects = projects.filter(p => {
+                    const pComp = ((p as any).parent_company || (p as any).company || (p as any).parentCompany || '').toLowerCase().trim();
+                    const pAccId = p.account_id || (p as any).accountId || '';
+                    const matchedUser = users.find(u => u.id === pAccId);
+                    const uName = matchedUser ? matchedUser.name.toLowerCase().trim() : '';
+
+                    return pComp === clientNameLower || pAccId === client.id || (uName && uName === clientNameLower);
+                });
+
+                if (matchedProjects.length === 0) return client;
+
+                const existingCampusNames = new Set(client.campuses.map(cp => cp.name.toLowerCase().trim()));
+                const newCampuses = [...client.campuses];
+
+                matchedProjects.forEach(proj => {
+                    const campusName = (proj as any).property_name || (proj as any).propertyName || proj.name;
+                    if (existingCampusNames.has(campusName.toLowerCase().trim())) return;
+
+                    const matchedProp = properties.find(prop => prop._id === proj.property_id);
+                    const newCampus: PropertyCampus = {
+                        id: `CAMP-PROJ-${proj._id}`,
+                        client_id: client.id,
+                        name: campusName,
+                        address: matchedProp?.address_full || (proj as any).address || 'Address verified on project record',
+                        city: 'Salt Lake City',
+                        state: 'UT',
+                        zip: '',
+                        phases: [
+                            {
+                                id: `PHASE-${proj._id}`,
+                                campus_id: `CAMP-PROJ-${proj._id}`,
+                                name: `Phase 1`,
+                                buildings: [
+                                    {
+                                        id: `BLDG-${proj._id}`,
+                                        phase_id: `PHASE-${proj._id}`,
+                                        name: 'Main Structure',
+                                        roof_type: 'Commercial Grade Membrane / Shingle',
+                                        roof_sqft: 8500,
+                                        stories: 1,
+                                        pitch: 'Low Slope',
+                                        condition: 'Under Replacement',
+                                        jobs: [
+                                            {
+                                                id: `JOB-${proj._id}`,
+                                                building_id: `BLDG-${proj._id}`,
+                                                title: proj.name,
+                                                job_number: `RC-${proj._id.slice(-6).toUpperCase()}`,
+                                                scope_type: proj.project_type || 'Commercial Roofing',
+                                                current_stage: proj.current_stage || (proj as any).stage || 'Stage 1: LEAD (Intake)',
+                                                contract_value: proj.quote?.total || 35000,
+                                                status: 'Active',
+                                                assigned_contractor: 'Apex Commercial Roofing',
+                                                target_completion: '2026-12-01',
+                                                created_at: proj.last_updated || new Date().toISOString(),
+                                                updated_at: new Date().toISOString()
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    };
+
+                    newCampuses.push(newCampus);
+                    existingCampusNames.add(campusName.toLowerCase().trim());
+                    updated = true;
+                });
+
+                if (newCampuses.length !== client.campuses.length) {
+                    return { ...client, campuses: newCampuses };
+                }
+                return client;
+            });
+
+            return updated ? consolidatedClients : prevClients;
+        });
+    }, [projects, properties, users]);
 
     // Integrate with Firestore accounts in real-time
     useEffect(() => {
@@ -702,6 +830,20 @@ export const CustomersPortalPage: React.FC = () => {
         setClients(prev => [newClient, ...prev]);
         setSelectedClientId(newClient.id);
         setIsAddClientModalOpen(false);
+
+        // Also persist to Firestore accounts
+        accountService.create({
+            id: newClient.id,
+            name: newClient.name,
+            accountName: newClient.name,
+            company: newClient.name,
+            customer_type: newClient.customer_type,
+            billingAddress: newClient.billing_address,
+            contactName: newClient.primary_contact?.name,
+            email: newClient.primary_contact?.email,
+            phone: newClient.primary_contact?.phone,
+            created_at: newClient.created_at
+        }).catch(err => console.warn('[CustomersPortal] accountService.create error:', err?.message));
         setNewClientForm({
             name: '',
             customer_type: 'Commercial',

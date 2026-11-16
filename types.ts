@@ -222,6 +222,11 @@ export interface Project {
   status: string;
   last_updated?: string;
   assigned_contractor_id?: string;
+  parent_company?: string;
+  company?: string;
+  property_name?: string;
+  propertyName?: string;
+  address?: string;
   quote?: {
     total: number;
     status: 'Draft' | 'Sent' | 'Approved' | 'Rejected';
@@ -232,6 +237,7 @@ export interface Project {
     wage_determination: string;
     certified_payroll_status: boolean;
   };
+  [key: string]: any;
 }
 
 export interface Property {
