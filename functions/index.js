@@ -366,7 +366,7 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
 
                 const apiKey = process.env.JUSTCALL_API_KEY || '';
                 const apiSecret = process.env.JUSTCALL_API_SECRET || '';
-                const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '';
+                const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '+14354176637';
 
                 let smsSent = false;
                 let smsError = '';
@@ -376,11 +376,12 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
                     if (!formattedFrom.startsWith('+')) {
                         if (formattedFrom.length === 11 && formattedFrom.startsWith('1')) formattedFrom = `+${formattedFrom}`;
                         else if (formattedFrom.length === 10) formattedFrom = `+1${formattedFrom}`;
+                        else formattedFrom = '+14354176637';
                     }
 
                     const payload = {
                         justcall_number: formattedFrom,
-                        contact_number: '+17438876637',
+                        contact_number: '+14354176637',
                         body: smsMessage
                     };
 
@@ -401,7 +402,7 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
                     }
                 } else {
                     console.log(`\n==================================================`);
-                    console.log(`[SMS SIMULATION] To: +17438876637`);
+                    console.log(`[SMS SIMULATION] To: +14354176637`);
                     console.log(`[SMS SIMULATION] Message:\n${smsMessage}`);
                     console.log(`==================================================\n`);
                     smsSent = true;
@@ -471,6 +472,50 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
                     callData.timestamp = admin.firestore.FieldValue.serverTimestamp();
                     await db.collection('call_logs').add(callData);
                 }
+
+                // Sync to RHIVE Unified Inbox (inbox_messages)
+                try {
+                    const phoneVars = getPhoneVariations(callData.contact_number);
+                    let matchedName = callData.contact_name;
+                    let matchedClientId = null;
+                    let matchedClientName = null;
+                    let matchedCampusName = null;
+                    if (phoneVars.length > 0) {
+                        const cSnap = await db.collection('contacts').where('phone', 'in', phoneVars).limit(1).get();
+                        if (!cSnap.empty) {
+                            const cData = cSnap.docs[0].data();
+                            matchedName = cData.name || matchedName;
+                            matchedClientId = cData.client_id || cData.company_id || null;
+                            matchedClientName = cData.company_name || cData.company || null;
+                            matchedCampusName = cData.campus_name || null;
+                        }
+                    }
+
+                    await db.collection('inbox_messages').doc(`CALL-${d.id || Date.now()}`).set({
+                        channel: 'call',
+                        direction: callData.direction === 'outbound' ? 'outbound' : 'inbound',
+                        folder: 'inbox',
+                        senderName: matchedName || callData.contact_number || 'Caller',
+                        senderPhone: callData.contact_number || '',
+                        recipientName: callData.agent_name || 'Kara',
+                        recipientPhone: callData.justcall_number || '+14354176637',
+                        subject: `${callData.direction === 'outbound' ? 'Outbound Call' : 'Inbound Call'} - ${callData.call_type || 'VoIP'}`,
+                        body: callData.transcript ? `Call Transcript: ${callData.transcript}` : `Call recorded with duration ${callData.duration || '0s'}. Outcome: ${callData.call_type || 'Completed'}.`,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        created_at: new Date().toISOString(),
+                        unread: true,
+                        client_id: matchedClientId,
+                        client_name: matchedClientName || matchedName,
+                        campus_name: matchedCampusName,
+                        assigned_to: callData.agent_name || 'Kara',
+                        call_duration: callData.duration ? `${callData.duration}s` : undefined,
+                        call_outcome: callData.call_type || 'Completed',
+                        recording_url: callData.recording_url || undefined
+                    }, { merge: true });
+                } catch (inboxErr) {
+                    console.error('Error mirroring call to inbox_messages:', inboxErr.message);
+                }
+
                 console.log(`Call event '${eventType}' logged/updated to Firestore.`);
                 return res.status(200).json({ success: true, message: 'Call logged/updated.' });
             }
@@ -500,6 +545,47 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
                     smsData.timestamp = admin.firestore.FieldValue.serverTimestamp();
                     await db.collection('sms_logs').add(smsData);
                 }
+
+                // Sync to RHIVE Unified Inbox (inbox_messages)
+                try {
+                    const phoneVars = getPhoneVariations(smsData.contact_number);
+                    let matchedName = smsData.contact_name;
+                    let matchedClientId = null;
+                    let matchedClientName = null;
+                    let matchedCampusName = null;
+                    if (phoneVars.length > 0) {
+                        const cSnap = await db.collection('contacts').where('phone', 'in', phoneVars).limit(1).get();
+                        if (!cSnap.empty) {
+                            const cData = cSnap.docs[0].data();
+                            matchedName = cData.name || matchedName;
+                            matchedClientId = cData.client_id || cData.company_id || null;
+                            matchedClientName = cData.company_name || cData.company || null;
+                            matchedCampusName = cData.campus_name || null;
+                        }
+                    }
+
+                    const isOutbound = d.direction === 'outbound';
+                    await db.collection('inbox_messages').doc(`SMS-${docId || Date.now()}`).set({
+                        channel: 'text',
+                        direction: isOutbound ? 'outbound' : 'inbound',
+                        folder: isOutbound ? 'sent' : 'inbox',
+                        senderName: isOutbound ? (smsData.agent_name || 'Kara') : (matchedName || smsData.contact_number || 'Customer'),
+                        senderPhone: isOutbound ? (smsData.justcall_number || '+14354176637') : smsData.contact_number,
+                        recipientName: isOutbound ? (matchedName || smsData.contact_number || 'Customer') : (smsData.agent_name || 'Kara'),
+                        recipientPhone: isOutbound ? smsData.contact_number : (smsData.justcall_number || '+14354176637'),
+                        body: smsData.message,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        created_at: new Date().toISOString(),
+                        unread: !isOutbound,
+                        client_id: matchedClientId,
+                        client_name: matchedClientName || matchedName,
+                        campus_name: matchedCampusName,
+                        assigned_to: smsData.agent_name || 'Kara'
+                    }, { merge: true });
+                } catch (inboxErr) {
+                    console.error('Error mirroring sms to inbox_messages:', inboxErr.message);
+                }
+
                 console.log(`SMS event '${eventType}' logged/updated to Firestore.`);
                 return res.status(200).json({ success: true, message: 'SMS logged/updated.' });
             }
@@ -989,7 +1075,7 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
             // Read inline at call time so runtime env vars are picked up
             const apiKey = process.env.JUSTCALL_API_KEY || '';
             const apiSecret = process.env.JUSTCALL_API_SECRET || '';
-            const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '';
+            const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '+14354176637';
             let smsSent = false;
             let smsError = '';
 
@@ -2238,3 +2324,147 @@ exports.sendEmailChangeNotification = functions
             }
         });
     });
+
+/**
+ * Standalone RHIVE CRM Message Dispatcher
+ * Sends outbound SMS via JustCall v2.1 API using RHIVE's official line (435) 417-6637,
+ * and saves the message directly to our 'inbox_messages' Firestore collection.
+ */
+exports.sendCrmMessage = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method === 'OPTIONS') {
+            res.set('Access-Control-Allow-Origin', '*');
+            res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            return res.status(204).send('');
+        }
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method Not Allowed' });
+        }
+
+        try {
+            const { 
+                channel = 'text', 
+                recipientPhone, 
+                recipientEmail, 
+                recipientName, 
+                messageBody, 
+                subject, 
+                senderName,
+                clientId, 
+                clientName, 
+                campusName, 
+                assignedTo,
+                callDuration,
+                callOutcome
+            } = req.body;
+
+            if (!messageBody && channel !== 'call') {
+                return res.status(400).json({ error: 'Message body is required' });
+            }
+
+            const db = admin.firestore();
+            const apiKey = process.env.JUSTCALL_API_KEY || '';
+            const apiSecret = process.env.JUSTCALL_API_SECRET || '';
+            const rawFromNumber = process.env.JUSTCALL_FROM_NUMBER || '+14354176637';
+
+            let formattedFrom = rawFromNumber.trim();
+            if (!formattedFrom.startsWith('+')) {
+                if (formattedFrom.length === 11 && formattedFrom.startsWith('1')) formattedFrom = `+${formattedFrom}`;
+                else if (formattedFrom.length === 10) formattedFrom = `+1${formattedFrom}`;
+                else formattedFrom = '+14354176637';
+            }
+
+            let deliveryStatus = 'sent';
+            let externalId = null;
+            let deliveryError = null;
+
+            if (channel === 'text') {
+                if (!recipientPhone) {
+                    return res.status(400).json({ error: 'Recipient phone number is required for SMS' });
+                }
+
+                // Format destination phone
+                let cleanDigits = String(recipientPhone).trim().replace(/\D/g, '');
+                let targetPhone = cleanDigits;
+                if (cleanDigits.length === 10) targetPhone = `+1${cleanDigits}`;
+                else if (cleanDigits.length === 11 && cleanDigits.startsWith('1')) targetPhone = `+${cleanDigits}`;
+                else if (!cleanDigits.startsWith('+')) targetPhone = `+${cleanDigits}`;
+
+                if (apiKey && apiSecret) {
+                    try {
+                        const payload = {
+                            justcall_number: formattedFrom,
+                            contact_number: targetPhone,
+                            body: String(messageBody).trim()
+                        };
+
+                        const response = await axios.post('https://api.justcall.io/v2.1/texts/new', payload, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `${apiKey}:${apiSecret}`
+                            },
+                            timeout: 10000
+                        });
+
+                        if (response.status >= 200 && response.status < 300) {
+                            externalId = response.data?.id || response.data?.data?.id || null;
+                            deliveryStatus = 'delivered';
+                            console.log(`[sendCrmMessage] JustCall SMS successfully delivered to ${targetPhone} from ${formattedFrom}`);
+                        } else {
+                            deliveryError = response.data?.message || JSON.stringify(response.data);
+                            deliveryStatus = 'failed';
+                        }
+                    } catch (err) {
+                        console.error('[sendCrmMessage] JustCall SMS error:', err.response?.data || err.message);
+                        deliveryError = err.response?.data?.message || err.message;
+                        deliveryStatus = 'failed';
+                    }
+                } else {
+                    console.log(`[sendCrmMessage Simulation] From ${formattedFrom} To ${targetPhone}: ${messageBody}`);
+                    deliveryStatus = 'simulated';
+                }
+            }
+
+            // Save message to inbox_messages
+            const msgDoc = {
+                channel,
+                direction: channel === 'call' ? 'inbound' : 'outbound',
+                folder: channel === 'call' ? 'inbox' : 'sent',
+                senderName: channel === 'call' ? (recipientName || 'Customer') : (senderName || 'Kara'),
+                senderPhone: channel === 'call' ? (recipientPhone || '') : formattedFrom,
+                senderEmail: channel === 'call' ? recipientEmail : 'kara@rhiveconstruction.com',
+                recipientName: channel === 'call' ? (senderName || 'Kara') : (recipientName || 'Customer'),
+                recipientPhone: channel === 'call' ? formattedFrom : (recipientPhone || null),
+                recipientEmail: channel === 'call' ? 'kara@rhiveconstruction.com' : (recipientEmail || null),
+                subject: subject || null,
+                body: messageBody || `Logged call: ${callOutcome || 'Completed'} (${callDuration || '0s'})`,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                created_at: new Date().toISOString(),
+                unread: channel === 'call',
+                client_id: clientId || null,
+                client_name: clientName || null,
+                campus_name: campusName || null,
+                assigned_to: assignedTo || senderName || 'Kara',
+                delivery_status: deliveryStatus,
+                delivery_error: deliveryError,
+                external_id: externalId ? String(externalId) : null,
+                call_duration: callDuration || undefined,
+                call_outcome: callOutcome || undefined
+            };
+
+            const docRef = await db.collection('inbox_messages').add(msgDoc);
+
+            return res.status(200).json({
+                success: deliveryStatus !== 'failed',
+                id: docRef.id,
+                message: { id: docRef.id, ...msgDoc },
+                error: deliveryError
+            });
+        } catch (error) {
+            console.error('[sendCrmMessage] Error:', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+

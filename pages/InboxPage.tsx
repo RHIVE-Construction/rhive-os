@@ -21,6 +21,7 @@ import {
     ArrowLeftIcon
 } from '../components/icons';
 import { cn } from '../lib/utils';
+import { crmInboxService } from '../lib/firebaseService';
 import type { CrmMessage, MessageChannel, InboxFolder } from '../types';
 
 // Seed messages showcasing Email, SMS (Text), and Call logs linked to customers
@@ -129,7 +130,7 @@ export const InboxPage: React.FC = () => {
     const { setActivePageId, setSelectedAccountId } = useNavigation();
     const { currentUser } = useMockDB();
 
-    // Messages state backed by localStorage
+    // Messages state backed by Firestore + localStorage
     const [messages, setMessages] = useState<CrmMessage[]>(() => {
         try {
             const saved = localStorage.getItem('rhive_crm_inbox');
@@ -137,6 +138,24 @@ export const InboxPage: React.FC = () => {
         } catch { /* ignore */ }
         return SEED_MESSAGES;
     });
+
+    const [isSending, setIsSending] = useState(false);
+
+    // Real-time Firestore sync
+    useEffect(() => {
+        const unsubscribe = crmInboxService.subscribeToMessages((firestoreMsgs) => {
+            if (firestoreMsgs && firestoreMsgs.length > 0) {
+                setMessages(prev => {
+                    const firestoreIds = new Set(firestoreMsgs.map(m => m.id));
+                    const remainingPrev = prev.filter(m => !firestoreIds.has(m.id));
+                    return [...firestoreMsgs, ...remainingPrev];
+                });
+            }
+        });
+        return () => {
+            if (typeof unsubscribe === 'function') unsubscribe();
+        };
+    }, []);
 
     useEffect(() => {
         try {
@@ -175,6 +194,8 @@ export const InboxPage: React.FC = () => {
     // New Message Modal
     const [isComposeOpen, setIsComposeOpen] = useState(false);
     const [newMessageRecipient, setNewMessageRecipient] = useState('');
+    const [newMessagePhone, setNewMessagePhone] = useState('');
+    const [newMessageEmail, setNewMessageEmail] = useState('');
     const [newMessageChannel, setNewMessageChannel] = useState<MessageChannel>('text');
     const [newMessageSubject, setNewMessageSubject] = useState('');
     const [newMessageBody, setNewMessageBody] = useState('');
@@ -220,72 +241,96 @@ export const InboxPage: React.FC = () => {
     useEffect(() => {
         if (activeMessage && activeMessage.unread) {
             setMessages(prev => prev.map(m => m.id === activeMessage.id ? { ...m, unread: false } : m));
+            crmInboxService.toggleReadStatus(activeMessage.id, false);
         }
     }, [activeMessage?.id]);
 
-    // Handle Send Reply
-    const handleSendReply = (e: React.FormEvent) => {
+    // Handle Send Reply (Using RHIVE line (435) 417-6637 via JustCall API)
+    const handleSendReply = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!replyText.trim() && replyTab !== 'call') return;
+        setIsSending(true);
 
-        const newMsg: CrmMessage = {
-            id: `MSG-${Date.now()}`,
-            channel: replyTab,
-            folder: replyTab === 'call' ? 'inbox' : 'sent',
-            senderName: currentUser?.name || 'Kara',
-            senderEmail: currentUser?.email || 'kara@rhiveconstruction.com',
-            recipientName: activeMessage?.senderName || 'Customer',
-            subject: replyTab === 'email' ? (emailSubject || `Re: ${activeMessage?.subject || 'Update'}`) : undefined,
-            body: replyText,
-            timestamp: 'Just now',
-            unread: false,
-            client_id: activeMessage?.client_id,
-            client_name: activeMessage?.client_name,
-            campus_name: activeMessage?.campus_name,
-            assigned_to: currentUser?.name || 'Kara',
-            call_duration: replyTab === 'call' ? callDuration : undefined,
-            call_outcome: replyTab === 'call' ? callOutcome : undefined
-        };
+        const recipientPhone = activeMessage?.senderPhone || activeMessage?.recipientPhone || '';
+        const recipientEmail = activeMessage?.senderEmail || activeMessage?.recipientEmail || '';
 
-        setMessages(prev => [newMsg, ...prev]);
-        setReplyText('');
-        setEmailSubject('');
+        try {
+            const result = await crmInboxService.sendMessage({
+                channel: replyTab,
+                recipientPhone,
+                recipientEmail,
+                recipientName: activeMessage?.senderName || 'Customer',
+                messageBody: replyText,
+                subject: replyTab === 'email' ? (emailSubject || `Re: ${activeMessage?.subject || 'Update'}`) : undefined,
+                senderName: currentUser?.name || 'Kara',
+                clientId: activeMessage?.client_id,
+                clientName: activeMessage?.client_name,
+                campusName: activeMessage?.campus_name,
+                assignedTo: currentUser?.name || 'Kara',
+                callDuration: replyTab === 'call' ? callDuration : undefined,
+                callOutcome: replyTab === 'call' ? callOutcome : undefined
+            });
+
+            if (result.success && result.data) {
+                setMessages(prev => [result.data, ...prev]);
+            }
+        } catch (err) {
+            console.error('Failed to send reply:', err);
+        } finally {
+            setIsSending(false);
+            setReplyText('');
+            setEmailSubject('');
+        }
     };
 
     // Handle Quick Actions
     const handleToggleReadStatus = (id: string) => {
-        setMessages(prev => prev.map(m => m.id === id ? { ...m, unread: !m.unread } : m));
+        const msg = messages.find(m => m.id === id);
+        if (!msg) return;
+        const newStatus = !msg.unread;
+        setMessages(prev => prev.map(m => m.id === id ? { ...m, unread: newStatus } : m));
+        crmInboxService.toggleReadStatus(id, newStatus);
     };
 
     const handleMoveFolder = (id: string, folder: InboxFolder) => {
         setMessages(prev => prev.map(m => m.id === id ? { ...m, folder } : m));
+        crmInboxService.moveToFolder(id, folder);
     };
 
-    // Handle Compose New
-    const handleSendNewMessage = (e: React.FormEvent) => {
+    // Handle Compose New (Dispatches via (435) 417-6637)
+    const handleSendNewMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessageBody.trim()) return;
+        if (!newMessageBody.trim() && newMessageChannel !== 'call') return;
+        setIsSending(true);
 
-        const newMsg: CrmMessage = {
-            id: `MSG-${Date.now()}`,
-            channel: newMessageChannel,
-            folder: 'sent',
-            senderName: currentUser?.name || 'Kara',
-            recipientName: newMessageRecipient || 'Customer',
-            subject: newMessageSubject || undefined,
-            body: newMessageBody,
-            timestamp: 'Just now',
-            unread: false,
-            client_name: newMessageCustomer,
-            assigned_to: currentUser?.name || 'Kara'
-        };
+        try {
+            const result = await crmInboxService.sendMessage({
+                channel: newMessageChannel,
+                recipientPhone: newMessagePhone,
+                recipientEmail: newMessageEmail,
+                recipientName: newMessageRecipient || 'Customer',
+                messageBody: newMessageBody,
+                subject: newMessageSubject || undefined,
+                senderName: currentUser?.name || 'Kara',
+                clientName: newMessageCustomer,
+                assignedTo: currentUser?.name || 'Kara'
+            });
 
-        setMessages(prev => [newMsg, ...prev]);
-        setIsComposeOpen(false);
-        setNewMessageRecipient('');
-        setNewMessageSubject('');
-        setNewMessageBody('');
-        setSelectedMessageId(newMsg.id);
+            if (result.success && result.data) {
+                setMessages(prev => [result.data, ...prev]);
+                setSelectedMessageId(result.data.id);
+            }
+        } catch (err) {
+            console.error('Failed to send new message:', err);
+        } finally {
+            setIsSending(false);
+            setIsComposeOpen(false);
+            setNewMessageRecipient('');
+            setNewMessagePhone('');
+            setNewMessageEmail('');
+            setNewMessageSubject('');
+            setNewMessageBody('');
+        }
     };
 
     return (
@@ -301,17 +346,25 @@ export const InboxPage: React.FC = () => {
                             <InboxIcon className="w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-black text-white flex items-center gap-2">
-                                Communications Inbox
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg font-black text-white">
+                                    Communications Inbox
+                                </h2>
                                 {unreadCount > 0 && (
                                     <span className="px-2 py-0.5 text-xs font-mono font-bold bg-rhive-pink text-white rounded-full">
                                         {unreadCount} unread
                                     </span>
                                 )}
-                            </h2>
-                            <p className="text-xs text-gray-400 font-mono">
-                                Integrated with JustCall SMS, VoIP Phone, and Email sync
-                            </p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                <span className="text-xs text-gray-400 font-mono">
+                                    Standalone RHIVE Messaging
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-green-500/10 text-green-400 border border-green-500/30">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                    Live Line: (435) 417-6637
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -750,6 +803,20 @@ export const InboxPage: React.FC = () => {
                                     </div>
 
                                     <form onSubmit={handleSendReply} className="space-y-2">
+                                        {replyTab === 'text' && (
+                                            <div className="flex items-center justify-between text-[11px] font-mono px-1 py-1 bg-black/40 rounded border border-gray-800/60 text-gray-400">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-gray-500">From:</span>
+                                                    <span className="text-white font-bold">(435) 417-6637</span>
+                                                    <span className="text-[10px] text-green-400 bg-green-500/10 px-1.5 py-0.2 rounded border border-green-500/30">Official RHIVE Line</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-gray-500">To:</span>
+                                                    <span className="text-white font-bold">{activeMessage.senderPhone || activeMessage.senderName}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {replyTab === 'email' && (
                                             <input 
                                                 type="text"
@@ -808,11 +875,14 @@ export const InboxPage: React.FC = () => {
                                                 type="submit"
                                                 variant="primary" 
                                                 size="sm"
+                                                disabled={isSending}
                                                 className="px-4 py-1.5 text-xs font-mono"
                                             >
-                                                {replyTab === 'email' && 'Send Email'}
-                                                {replyTab === 'text' && 'Send SMS'}
-                                                {replyTab === 'call' && 'Log Call'}
+                                                {isSending ? 'Sending...' : (
+                                                    replyTab === 'email' ? 'Send Email' :
+                                                    replyTab === 'text' ? 'Send SMS via (435) 417-6637' :
+                                                    'Log Call'
+                                                )}
                                             </Button>
                                         </div>
                                     </form>
@@ -867,16 +937,49 @@ export const InboxPage: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-mono text-gray-400 mb-1">Recipient Name or Phone / Email</label>
+                                <label className="block text-xs font-mono text-gray-400 mb-1">Recipient Name</label>
                                 <input 
                                     type="text"
                                     required
-                                    placeholder="e.g. Dan Corkill (801-555-0192)"
+                                    placeholder="e.g. Dan Corkill"
                                     value={newMessageRecipient}
                                     onChange={e => setNewMessageRecipient(e.target.value)}
                                     className="w-full bg-black/60 border border-gray-800 px-3 py-2 text-xs font-mono text-white rounded focus:outline-none focus:border-rhive-pink"
                                 />
                             </div>
+
+                            {newMessageChannel === 'text' && (
+                                <div>
+                                    <label className="block text-xs font-mono text-gray-400 mb-1">Recipient Mobile Phone (SMS)</label>
+                                    <input 
+                                        type="tel"
+                                        required
+                                        placeholder="e.g. (801) 633-6901"
+                                        value={newMessagePhone}
+                                        onChange={e => setNewMessagePhone(e.target.value)}
+                                        className="w-full bg-black/60 border border-gray-800 px-3 py-2 text-xs font-mono text-white rounded focus:outline-none focus:border-rhive-pink"
+                                    />
+                                    <div className="flex items-center gap-1.5 mt-1 text-[11px] font-mono text-gray-400">
+                                        <span className="text-gray-500">Sender Line:</span>
+                                        <span className="text-white font-bold">(435) 417-6637</span>
+                                        <span className="text-[10px] text-green-400 bg-green-500/10 px-1.5 py-0.2 rounded border border-green-500/30">Live SMS Gateway</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {newMessageChannel === 'email' && (
+                                <div>
+                                    <label className="block text-xs font-mono text-gray-400 mb-1">Recipient Email</label>
+                                    <input 
+                                        type="email"
+                                        required
+                                        placeholder="e.g. client@example.com"
+                                        value={newMessageEmail}
+                                        onChange={e => setNewMessageEmail(e.target.value)}
+                                        className="w-full bg-black/60 border border-gray-800 px-3 py-2 text-xs font-mono text-white rounded focus:outline-none focus:border-rhive-pink"
+                                    />
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-xs font-mono text-gray-400 mb-1">Customer Client (Tier 1)</label>
@@ -918,8 +1021,8 @@ export const InboxPage: React.FC = () => {
                                 <Button type="button" variant="secondary" size="sm" onClick={() => setIsComposeOpen(false)}>
                                     Cancel
                                 </Button>
-                                <Button type="submit" variant="primary" size="sm">
-                                    Send
+                                <Button type="submit" variant="primary" size="sm" disabled={isSending}>
+                                    {isSending ? 'Sending...' : (newMessageChannel === 'text' ? 'Send SMS via (435) 417-6637' : 'Send')}
                                 </Button>
                             </div>
                         </form>

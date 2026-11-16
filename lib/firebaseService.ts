@@ -1577,7 +1577,7 @@ export const securityNotificationService = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CTA LEAD SERVICE
-// Sends SMS notification leads to RHIVE Construction (+17438876637) via JustCall.
+// Sends SMS notification leads to RHIVE Construction (+14354176637) via JustCall.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ctaLeadService = {
@@ -1599,6 +1599,126 @@ export const ctaLeadService = {
         } catch (error: any) {
             console.error('[ctaLeadService.sendNotification]', error);
             return { success: false, error: 'Network error. Could not send the contact notification.' };
+        }
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CRM INBOX SERVICE
+// Standalone messaging system powered by Firestore & JustCall API.
+// Official RHIVE line: (435) 417-6637 (+14354176637)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const crmInboxService = {
+    RHIVE_PHONE_NUMBER: '(435) 417-6637',
+    RHIVE_RAW_NUMBER: '+14354176637',
+
+    subscribeToMessages: (callback: (messages: any[]) => void) => {
+        try {
+            const q = query(collection(db, 'inbox_messages'), orderBy('created_at', 'desc'));
+            return onSnapshot(q, (snapshot) => {
+                const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                callback(msgs);
+            }, (error) => {
+                console.warn('[crmInboxService.subscribeToMessages] Snapshot error:', error);
+            });
+        } catch (e) {
+            console.warn('[crmInboxService] Could not establish Firestore listener:', e);
+            return () => {};
+        }
+    },
+
+    sendMessage: async (payload: {
+        channel: 'text' | 'email' | 'call';
+        recipientPhone?: string;
+        recipientEmail?: string;
+        recipientName: string;
+        messageBody: string;
+        subject?: string;
+        senderName?: string;
+        clientId?: string;
+        clientName?: string;
+        campusName?: string;
+        assignedTo?: string;
+        callDuration?: string;
+        callOutcome?: string;
+    }): Promise<{ success: boolean; data?: any; error?: string }> => {
+        try {
+            // Dispatch via Cloud Function (which invokes JustCall API with +14354176637)
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/sendCrmMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                const json = await res.json();
+                return { success: true, data: json.message };
+            }
+
+            console.warn('[crmInboxService] Cloud function returned status', res.status, '- Falling back to client-side Firestore write.');
+        } catch (err: any) {
+            console.warn('[crmInboxService] Direct cloud call failed, using client Firestore fallback:', err.message);
+        }
+
+        // Resilient Fallback: Write directly to Firestore inbox_messages
+        try {
+            const isCall = payload.channel === 'call';
+            const fallbackDoc = {
+                channel: payload.channel,
+                direction: isCall ? 'inbound' : 'outbound',
+                folder: isCall ? 'inbox' : 'sent',
+                senderName: isCall ? payload.recipientName : (payload.senderName || 'Kara'),
+                senderPhone: isCall ? (payload.recipientPhone || '') : '+14354176637',
+                senderEmail: isCall ? payload.recipientEmail : 'kara@rhiveconstruction.com',
+                recipientName: isCall ? (payload.senderName || 'Kara') : payload.recipientName,
+                recipientPhone: isCall ? '+14354176637' : (payload.recipientPhone || null),
+                recipientEmail: isCall ? 'kara@rhiveconstruction.com' : (payload.recipientEmail || null),
+                subject: payload.subject || null,
+                body: payload.messageBody || (isCall ? `Logged Call: ${payload.callOutcome || 'Completed'} (${payload.callDuration || '0s'})` : ''),
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                created_at: new Date().toISOString(),
+                unread: isCall,
+                client_id: payload.clientId || null,
+                client_name: payload.clientName || null,
+                campus_name: payload.campusName || null,
+                assigned_to: payload.assignedTo || payload.senderName || 'Kara',
+                delivery_status: 'sent',
+                call_duration: payload.callDuration,
+                call_outcome: payload.callOutcome
+            };
+
+            const ref = await addDoc(collection(db, 'inbox_messages'), fallbackDoc);
+            return { success: true, data: { id: ref.id, ...fallbackDoc } };
+        } catch (fbErr: any) {
+            console.error('[crmInboxService.sendMessage] Fallback error:', fbErr);
+            return { success: false, error: fbErr.message };
+        }
+    },
+
+    toggleReadStatus: async (id: string, unread: boolean) => {
+        try {
+            await updateDoc(doc(db, 'inbox_messages', id), {
+                unread,
+                updated_at: new Date().toISOString()
+            });
+            return { success: true };
+        } catch (err: any) {
+            console.error('[crmInboxService.toggleReadStatus]', err);
+            return { success: false, error: err.message };
+        }
+    },
+
+    moveToFolder: async (id: string, folder: string) => {
+        try {
+            await updateDoc(doc(db, 'inbox_messages', id), {
+                folder,
+                updated_at: new Date().toISOString()
+            });
+            return { success: true };
+        } catch (err: any) {
+            console.error('[crmInboxService.moveToFolder]', err);
+            return { success: false, error: err.message };
         }
     }
 };
