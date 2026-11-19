@@ -1745,5 +1745,142 @@ export const crmInboxService = {
             console.error('[crmInboxService.moveToFolder]', err);
             return { success: false, error: err.message };
         }
+    },
+
+    sendBatchCampaign: async (opts: {
+        campaignName: string;
+        subject: string;
+        body: string;
+        recipients: Array<{
+            name: string;
+            email: string;
+            client_id?: string;
+            client_name?: string;
+            campus_name?: string;
+            stage?: string;
+        }>;
+        senderName?: string;
+        senderEmail?: string;
+    }): Promise<{ success: boolean; count: number; error?: string }> => {
+        try {
+            const campaignId = `CAMP-${Date.now()}`;
+            const sName = opts.senderName || 'Kara';
+            const sEmail = opts.senderEmail || 'kara@rhiveconstruction.com';
+
+            for (const r of opts.recipients) {
+                if (!r.email) continue;
+                const firstName = (r.name || 'Valued Client').split(' ')[0];
+                const clientName = r.client_name || r.name || 'Valued Client';
+                const campusName = r.campus_name || 'Your Property';
+
+                // Replace tokens
+                const personalizedSubject = opts.subject
+                    .replace(/\{\{first_name\}\}/gi, firstName)
+                    .replace(/\{\{client_name\}\}/gi, clientName)
+                    .replace(/\{\{campus_name\}\}/gi, campusName);
+
+                const personalizedBody = opts.body
+                    .replace(/\{\{first_name\}\}/gi, firstName)
+                    .replace(/\{\{client_name\}\}/gi, clientName)
+                    .replace(/\{\{campus_name\}\}/gi, campusName);
+
+                // 1. Queue to mail_outbox
+                try {
+                    await addDoc(collection(db, 'mail_outbox'), {
+                        to: r.email,
+                        from: `RHIVE Support <noreply@rhiveconstruction.com>`,
+                        replyTo: 'support@rhiveconstruction.com',
+                        message: {
+                            subject: personalizedSubject,
+                            text: personalizedBody,
+                            html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:28px;border-radius:8px;max-width:600px;margin:0 auto;border:1px solid #1f2937;">
+                                <div style="display:flex;align-items:center;margin-bottom:20px;">
+                                    <h2 style="color:#ec028b;margin:0;font-size:20px;letter-spacing:1px;font-weight:900;">RHIVE CONSTRUCTION</h2>
+                                </div>
+                                <h3 style="color:#ffffff;margin:0 0 16px;font-size:16px;">${personalizedSubject}</h3>
+                                <p style="margin:0 0 20px;line-height:1.7;font-size:14px;color:#d1d5db;white-space:pre-wrap;">${personalizedBody.replace(/\n/g, '<br/>')}</p>
+                                <div style="margin:24px 0;text-align:center;">
+                                    <a href="https://app.rhiveconstruction.com" style="background:#ec028b;color:#ffffff;padding:12px 24px;border-radius:4px;font-weight:bold;text-decoration:none;display:inline-block;font-size:13px;letter-spacing:1px;">
+                                        VIEW PROJECT PORTAL →
+                                    </a>
+                                </div>
+                                <hr style="border:none;border-top:1px solid #27272a;margin:28px 0 16px;"/>
+                                <p style="margin:0;font-size:12px;color:#71717a;line-height:1.5;">
+                                    RHIVE Construction • Official Communications • Salt Lake City, Utah<br/>
+                                    Phone: (435) 417-6637 • Email: support@rhiveconstruction.com
+                                </p>
+                            </div>`
+                        },
+                        campaign_id: campaignId,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch (queueErr) {
+                    console.warn('[crmInboxService.sendBatchCampaign] queue error:', queueErr);
+                }
+
+                // 2. Mirror into inbox_messages under sent
+                try {
+                    await addDoc(collection(db, 'inbox_messages'), {
+                        channel: 'email',
+                        direction: 'outbound',
+                        folder: 'sent',
+                        senderName: sName,
+                        senderEmail: sEmail,
+                        recipientName: r.name,
+                        recipientEmail: r.email,
+                        subject: personalizedSubject,
+                        body: personalizedBody,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        created_at: new Date().toISOString(),
+                        unread: false,
+                        client_id: r.client_id || null,
+                        client_name: r.client_name || r.name,
+                        campus_name: r.campus_name || null,
+                        assigned_to: sName,
+                        delivery_status: 'queued_campaign',
+                        campaign_id: campaignId
+                    });
+                } catch (msgErr) {
+                    console.warn('[crmInboxService.sendBatchCampaign] message error:', msgErr);
+                }
+            }
+
+            // 3. Log campaign record
+            try {
+                await addDoc(collection(db, 'campaign_logs'), {
+                    id: campaignId,
+                    title: opts.campaignName,
+                    subject: opts.subject,
+                    body: opts.body,
+                    recipient_count: opts.recipients.length,
+                    sender_name: sName,
+                    status: 'completed',
+                    created_at: new Date().toISOString(),
+                    sent_at: new Date().toISOString()
+                });
+            } catch (campErr) {
+                console.warn('[crmInboxService.sendBatchCampaign] camp error:', campErr);
+            }
+
+            return { success: true, count: opts.recipients.length };
+        } catch (error: any) {
+            console.error('[crmInboxService.sendBatchCampaign] Error:', error);
+            return { success: false, count: 0, error: error.message };
+        }
+    },
+
+    subscribeToCampaigns: (callback: (campaigns: any[]) => void) => {
+        try {
+            const q = query(collection(db, 'campaign_logs'), orderBy('created_at', 'desc'));
+            return onSnapshot(q, (snapshot) => {
+                const camps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                callback(camps);
+            }, (error) => {
+                console.warn('[crmInboxService.subscribeToCampaigns] Snapshot error:', error);
+            });
+        } catch (e) {
+            console.warn('[crmInboxService] Could not establish campaigns listener:', e);
+            return () => {};
+        }
     }
 };

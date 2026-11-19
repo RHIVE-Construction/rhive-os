@@ -474,7 +474,28 @@ export interface CustomerClient {
 // ─── CRM MODULES (Inbox, Tasks, Unified Calendar) ────────────────────────────
 
 export type MessageChannel = 'email' | 'text' | 'call';
-export type InboxFolder = 'inbox' | 'assigned' | 'drafts' | 'sent' | 'closed';
+export type InboxFolder = 'inbox' | 'assigned' | 'drafts' | 'sent' | 'closed' | 'campaigns';
+
+export interface EmailCampaign {
+    id: string;
+    title: string;
+    subject: string;
+    body: string;
+    senderName: string;
+    senderEmail: string;
+    targetStages: string[];
+    targetTiers: string[];
+    recipientCount: number;
+    recipients: Array<{
+        name: string;
+        email: string;
+        client_name?: string;
+        stage?: string;
+    }>;
+    status: 'draft' | 'sending' | 'completed';
+    created_at: string;
+    sent_at?: string;
+}
 
 export interface CrmMessage {
     id: string;

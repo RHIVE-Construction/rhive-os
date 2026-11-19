@@ -18,11 +18,15 @@ import {
     BuildingStorefrontIcon, 
     ArrowRightIcon,
     XIcon,
-    ArrowLeftIcon
+    ArrowLeftIcon,
+    MegaphoneIcon,
+    SparklesIcon,
+    PaperAirplaneIcon,
+    UsersIcon
 } from '../components/icons';
 import { cn } from '../lib/utils';
-import { crmInboxService } from '../lib/firebaseService';
-import type { CrmMessage, MessageChannel, InboxFolder } from '../types';
+import { crmInboxService, contactService } from '../lib/firebaseService';
+import type { CrmMessage, MessageChannel, InboxFolder, EmailCampaign } from '../types';
 
 // Seed messages showcasing Email, SMS (Text), and Call logs linked to customers
 const SEED_MESSAGES: CrmMessage[] = [
@@ -126,6 +130,246 @@ const SEED_MESSAGES: CrmMessage[] = [
     }
 ];
 
+// ── Batch Campaign Templates & Audience Models ──────────────────────────────
+export interface CampaignRecipient {
+    id: string;
+    name: string;
+    email: string;
+    client_id?: string;
+    client_name: string;
+    campus_name?: string;
+    stage: string;
+    tier: 'Commercial' | 'Government' | 'Residential';
+}
+
+export interface CampaignTemplate {
+    id: string;
+    title: string;
+    description: string;
+    recommendedStage: string;
+    recommendedTier: string;
+    subject: string;
+    body: string;
+}
+
+const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
+    {
+        id: 'tpl-capex-commercial',
+        title: 'Commercial CapEx 2026 Roof Assessment',
+        description: 'Target commercial facility managers with proactive moisture scans and budgeting reviews.',
+        recommendedStage: 'Estimate',
+        recommendedTier: 'Commercial',
+        subject: '{{client_name}} — Complimentary 2026 Commercial CapEx Roof Assessment',
+        body: `Hi {{first_name}},
+
+With Utah's winter freeze-thaw cycles underway, proactive commercial roof health assessments are critical to prevent catastrophic membrane failure and unbudgeted capital expenses.
+
+Our certified engineering team is currently scheduling complimentary 2026 CapEx moisture scans and thermal drone inspections across {{campus_name}}.
+
+Key Assessment Highlights:
+• Core membrane integrity evaluation (.060mil TPO / EPDM)
+• Parapet coping and flashing wind-uplift verification
+• Comprehensive photographic documentation for capital reserve planning
+
+Would next Tuesday or Thursday work for a quick 20-minute on-site assessment with our senior estimator?
+
+Best regards,
+Kara | RHIVE Commercial Operations
+Direct Line: (435) 417-6637`
+    },
+    {
+        id: 'tpl-storm-drone',
+        title: 'Post-Storm Thermal Drone Inspection',
+        description: 'Deploy rapid high-resolution aerial scans after recent wind and hail activity.',
+        recommendedStage: 'Lead',
+        recommendedTier: 'All',
+        subject: 'High-Resolution Drone Roof Inspection Available for {{client_name}}',
+        body: `Hi {{first_name}},
+
+Following recent wind and hail activity across the Wasatch Front, RHIVE is deploying thermal sensor-equipped drone inspections at zero out-of-pocket cost for {{campus_name}}.
+
+We provide a full high-resolution digital twin, wind-shear impact scoring, and shingle granule loss analysis within 24 hours.
+
+Reply directly to this email or call our team at (435) 417-6637 to reserve your drone flight window this week.
+
+Warmly,
+Chad Evenhuis | Field Operations Director
+RHIVE Construction • Official Line: (435) 417-6637`
+    },
+    {
+        id: 'tpl-quote-followup',
+        title: 'Proposal Follow-up & Material Specs',
+        description: 'Re-engage active quotes and estimates with manufacturer rebate deadlines.',
+        recommendedStage: 'Quote',
+        recommendedTier: 'All',
+        subject: 'Update on your Roofing Proposal for {{client_name}}',
+        body: `Hi {{first_name}},
+
+I hope your week is off to a great start. I wanted to follow up on the custom roof specifications we prepared for {{campus_name}}.
+
+Our team has reserved manufacturer rebate allocations for your Owens Corning Duration architectural shingles and enhanced ice-and-water underlayment. We can lock in this pricing before next month's material price adjustment.
+
+You can review your full itemized breakdown and interactive options right in your RHIVE Project Portal.
+
+Let me know if you would like to hop on a quick 5-minute call or if you have any questions on the warranty coverage.
+
+Best,
+Kara | Client Services
+RHIVE Construction • (435) 417-6637`
+    },
+    {
+        id: 'tpl-past-customer-referral',
+        title: 'Past Customer Referral ($250 Reward) + Annual Check',
+        description: 'Reward past clients and offer free annual gutter & flashing warranty sweeps.',
+        recommendedStage: 'Past Customer',
+        recommendedTier: 'Residential',
+        subject: '{{first_name}}, claim your $250 RHIVE Referral Reward + Free Annual Health Check',
+        body: `Hi {{first_name}},
+
+It's been a privilege protecting your roof at {{campus_name}}. As part of the RHIVE Lifetime Craftsmanship pledge, your installation qualifies for a complimentary annual gutter and flashing inspection before the snow season.
+
+Plus, our 2026 Community Referral Program is now live: every neighbor or colleague you refer who books a qualifying roof replacement earns you a $250 direct cash card, and saves them $500 on their project!
+
+Simply share this note or have them mention your name when calling (435) 417-6637.
+
+Thank you for being a valued part of the RHIVE family!
+
+Best regards,
+Victor & The RHIVE Team
+RHIVE Construction • (435) 417-6637`
+    },
+    {
+        id: 'tpl-custom',
+        title: 'Custom Blank Campaign',
+        description: 'Draft your own personalized email campaign from scratch.',
+        recommendedStage: 'All',
+        recommendedTier: 'All',
+        subject: 'Notice regarding {{client_name}} — RHIVE Operations',
+        body: `Hi {{first_name}},
+
+We are writing with an update regarding {{campus_name}}.
+
+Please let us know if you have any questions or if our project team can assist.
+
+Sincerely,
+The RHIVE Construction Team
+(435) 417-6637`
+    }
+];
+
+const SEED_CAMPAIGN_RECIPIENTS: CampaignRecipient[] = [
+    {
+        id: 'rec-1',
+        name: 'Dan Corkill',
+        email: 'dcorkill@unphc.org',
+        client_id: 'CLI-UNPHC',
+        client_name: 'UNPHC (Utah Non-Profit Housing Corp)',
+        campus_name: 'Smith Apartments Campus',
+        stage: 'Estimate',
+        tier: 'Commercial'
+    },
+    {
+        id: 'rec-2',
+        name: 'Sarah Jenkins',
+        email: 'sjenkins@unphc.com',
+        client_id: 'CLI-UNPHC',
+        client_name: 'UNPHC (Utah Non-Profit Housing Corp)',
+        campus_name: 'Escalante Park Campus',
+        stage: 'Lead',
+        tier: 'Commercial'
+    },
+    {
+        id: 'rec-3',
+        name: 'Marcus Vance',
+        email: 'mvance@unphc-escalante.com',
+        client_id: 'CLI-UNPHC',
+        client_name: 'UNPHC (Utah Non-Profit Housing Corp)',
+        campus_name: 'Escalante Park Campus',
+        stage: 'In Progress',
+        tier: 'Commercial'
+    },
+    {
+        id: 'rec-4',
+        name: 'David Reynolds',
+        email: 'david.reynolds@slcgov.com',
+        client_id: 'CLI-SLC-GOV',
+        client_name: 'City of Salt Lake City',
+        campus_name: 'Municipal Fleet Maintenance Campus',
+        stage: 'Lead',
+        tier: 'Government'
+    },
+    {
+        id: 'rec-5',
+        name: 'Elena Rostova',
+        email: 'elena.rostova@slcgov.com',
+        client_id: 'CLI-SLC-GOV',
+        client_name: 'City of Salt Lake City',
+        campus_name: 'Public Works Complex',
+        stage: 'Estimate',
+        tier: 'Government'
+    },
+    {
+        id: 'rec-6',
+        name: 'Brad Baird',
+        email: 'bbaird@gmail.com',
+        client_id: 'CLI-BAIRD',
+        client_name: 'Brad Baird',
+        campus_name: 'Baird Residence',
+        stage: 'Quote',
+        tier: 'Residential'
+    },
+    {
+        id: 'rec-7',
+        name: 'Anthony Cox',
+        email: 'anthony.cox@gmail.com',
+        client_id: 'CLI-COX',
+        client_name: 'Anthony & Chelsea Cox',
+        campus_name: 'Cox Estate',
+        stage: 'Lead',
+        tier: 'Residential'
+    },
+    {
+        id: 'rec-8',
+        name: 'Blair Nelson',
+        email: 'bnelson@slc-law.com',
+        client_id: 'CLI-NELSON',
+        client_name: 'Blair & Linda Nelson',
+        campus_name: 'Nelson Family Property',
+        stage: 'Sign & Verify',
+        tier: 'Residential'
+    },
+    {
+        id: 'rec-9',
+        name: 'Willow Park HOA Board',
+        email: 'board@willowpark.com',
+        client_id: 'CLI-WILLOW',
+        client_name: 'Willow Park HOA',
+        campus_name: 'Willow Park Commons',
+        stage: 'Past Customer',
+        tier: 'Commercial'
+    },
+    {
+        id: 'rec-10',
+        name: 'Megaplex Facilities Team',
+        email: 'facilities@megaplextheatres.com',
+        client_id: 'CLI-MEGA',
+        client_name: 'Megaplex Theatres',
+        campus_name: 'South Jordan Megaplex',
+        stage: 'Past Customer',
+        tier: 'Commercial'
+    },
+    {
+        id: 'rec-11',
+        name: 'James Test Customer',
+        email: 'james@rhiveconstruction.com',
+        client_id: 'CLI-JAMES',
+        client_name: 'Gimena Residence',
+        campus_name: 'Bleecker St Property',
+        stage: 'Lead',
+        tier: 'Residential'
+    }
+];
+
 export const InboxPage: React.FC = () => {
     const { setActivePageId, setSelectedAccountId } = useNavigation();
     const { currentUser } = useMockDB();
@@ -205,6 +449,209 @@ export const InboxPage: React.FC = () => {
     const unreadCount = useMemo(() => {
         return messages.filter(m => m.unread && m.folder === 'inbox').length;
     }, [messages]);
+
+    // ── Email Campaign Hub State ──────────────────────────────────────────────
+    const [campaignSubView, setCampaignSubView] = useState<'compose' | 'history'>('compose');
+    const [selectedTemplateId, setSelectedTemplateId] = useState<string>('tpl-capex-commercial');
+    const [campaignName, setCampaignName] = useState<string>('Q1 2026 Commercial CapEx Outreach');
+    const [campaignSubject, setCampaignSubject] = useState<string>(CAMPAIGN_TEMPLATES[0].subject);
+    const [campaignBody, setCampaignBody] = useState<string>(CAMPAIGN_TEMPLATES[0].body);
+    const [targetStageFilter, setTargetStageFilter] = useState<string>('all');
+    const [targetTierFilter, setTargetTierFilter] = useState<string>('all');
+    const [audienceSearch, setAudienceSearch] = useState<string>('');
+    const [recipients, setRecipients] = useState<CampaignRecipient[]>(SEED_CAMPAIGN_RECIPIENTS);
+    const [selectedRecipientEmails, setSelectedRecipientEmails] = useState<Set<string>>(() => {
+        return new Set(SEED_CAMPAIGN_RECIPIENTS.map(r => r.email));
+    });
+    const [pastCampaigns, setPastCampaigns] = useState<any[]>([]);
+    const [isDispatching, setIsDispatching] = useState<boolean>(false);
+    const [dispatchFeedback, setDispatchFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    // Sync campaigns and live contacts from Firestore
+    useEffect(() => {
+        const unsubCampaigns = crmInboxService.subscribeToCampaigns((camps) => {
+            if (camps) setPastCampaigns(camps);
+        });
+
+        // Pull any additional contacts from contacts collection
+        contactService.getAll().then((res: any) => {
+            if (res.success && res.data && res.data.length > 0) {
+                const liveRecipients: CampaignRecipient[] = res.data
+                    .filter((c: any) => c.email && c.email.includes('@'))
+                    .map((c: any, idx: number) => ({
+                        id: c.id || `live-${idx}`,
+                        name: c.name || c.full_name || 'Contact',
+                        email: c.email.toLowerCase().trim(),
+                        client_id: c.client_id || c.account_id,
+                        client_name: c.company || c.client_name || c.name || 'Valued Client',
+                        campus_name: c.property_address || c.address || 'Property Location',
+                        stage: c.stage || 'Lead',
+                        tier: (c.type === 'Commercial' || c.tier === 'Commercial') ? 'Commercial' : (c.tier === 'Government' ? 'Government' : 'Residential')
+                    }));
+
+                if (liveRecipients.length > 0) {
+                    setRecipients(prev => {
+                        const existingEmails = new Set(prev.map(p => p.email.toLowerCase()));
+                        const uniqueLive = liveRecipients.filter(r => !existingEmails.has(r.email.toLowerCase()));
+                        return [...prev, ...uniqueLive];
+                    });
+                }
+            }
+        }).catch(() => { /* best-effort */ });
+
+        return () => {
+            if (typeof unsubCampaigns === 'function') unsubCampaigns();
+        };
+    }, []);
+
+    // When template changes, update subject & body
+    const handleSelectTemplate = (tplId: string) => {
+        setSelectedTemplateId(tplId);
+        const tpl = CAMPAIGN_TEMPLATES.find(t => t.id === tplId);
+        if (tpl) {
+            setCampaignSubject(tpl.subject);
+            setCampaignBody(tpl.body);
+            setCampaignName(`${tpl.title} - ${new Date().toLocaleDateString()}`);
+            setTargetStageFilter(tpl.recommendedStage.toLowerCase() === 'all' ? 'all' : tpl.recommendedStage);
+            setTargetTierFilter(tpl.recommendedTier.toLowerCase() === 'all' ? 'all' : (tpl.recommendedTier as any));
+        }
+    };
+
+    // Filtered recipients according to selected filters
+    const filteredRecipients = useMemo(() => {
+        return recipients.filter(r => {
+            if (targetStageFilter !== 'all' && !r.stage.toLowerCase().includes(targetStageFilter.toLowerCase())) return false;
+            if (targetTierFilter !== 'all' && r.tier.toLowerCase() !== targetTierFilter.toLowerCase()) return false;
+            if (audienceSearch) {
+                const q = audienceSearch.toLowerCase();
+                const matchName = r.name.toLowerCase().includes(q);
+                const matchEmail = r.email.toLowerCase().includes(q);
+                const matchCompany = r.client_name.toLowerCase().includes(q);
+                return matchName || matchEmail || matchCompany;
+            }
+            return true;
+        });
+    }, [recipients, targetStageFilter, targetTierFilter, audienceSearch]);
+
+    // Recipient selection toggles (STRICT NO CHECKBOXES RULE: uses custom switch / pill)
+    const toggleRecipient = (email: string) => {
+        setSelectedRecipientEmails(prev => {
+            const next = new Set(prev);
+            if (next.has(email)) {
+                next.delete(email);
+            } else {
+                next.add(email);
+            }
+            return next;
+        });
+    };
+
+    const handleSelectAllFiltered = () => {
+        setSelectedRecipientEmails(prev => {
+            const next = new Set(prev);
+            filteredRecipients.forEach(r => next.add(r.email));
+            return next;
+        });
+    };
+
+    const handleDeselectAllFiltered = () => {
+        setSelectedRecipientEmails(prev => {
+            const next = new Set(prev);
+            filteredRecipients.forEach(r => next.delete(r.email));
+            return next;
+        });
+    };
+
+    // Selected recipients list for sending (filtered audience that are toggled on)
+    const activeSelectedRecipients = useMemo(() => {
+        return filteredRecipients.filter(r => selectedRecipientEmails.has(r.email));
+    }, [filteredRecipients, selectedRecipientEmails]);
+
+    // Live preview recipient (first selected recipient, or fallback)
+    const previewRecipient = useMemo(() => {
+        return activeSelectedRecipients[0] || recipients[0] || {
+            name: 'Dan Corkill',
+            email: 'dcorkill@unphc.org',
+            client_name: 'UNPHC (Utah Non-Profit Housing Corp)',
+            campus_name: 'Smith Apartments Campus'
+        };
+    }, [activeSelectedRecipients, recipients]);
+
+    // Personalized preview calculation
+    const previewSubject = useMemo(() => {
+        const firstName = (previewRecipient.name || 'Valued Client').split(' ')[0];
+        return campaignSubject
+            .replace(/\{\{first_name\}\}/gi, firstName)
+            .replace(/\{\{client_name\}\}/gi, previewRecipient.client_name || 'Valued Client')
+            .replace(/\{\{campus_name\}\}/gi, previewRecipient.campus_name || 'Your Property');
+    }, [campaignSubject, previewRecipient]);
+
+    const previewBody = useMemo(() => {
+        const firstName = (previewRecipient.name || 'Valued Client').split(' ')[0];
+        return campaignBody
+            .replace(/\{\{first_name\}\}/gi, firstName)
+            .replace(/\{\{client_name\}\}/gi, previewRecipient.client_name || 'Valued Client')
+            .replace(/\{\{campus_name\}\}/gi, previewRecipient.campus_name || 'Your Property');
+    }, [campaignBody, previewRecipient]);
+
+    // Token insertion helper
+    const handleInsertToken = (token: string, target: 'subject' | 'body') => {
+        if (target === 'subject') {
+            setCampaignSubject(prev => `${prev} ${token}`);
+        } else {
+            setCampaignBody(prev => `${prev} ${token}`);
+        }
+    };
+
+    // Dispatch Batch Campaign
+    const handleDispatchCampaign = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (activeSelectedRecipients.length === 0) {
+            setDispatchFeedback({ type: 'error', message: 'Please select at least one recipient to launch this batch campaign.' });
+            return;
+        }
+        if (!campaignSubject.trim() || !campaignBody.trim()) {
+            setDispatchFeedback({ type: 'error', message: 'Subject and message body cannot be empty.' });
+            return;
+        }
+
+        setIsDispatching(true);
+        setDispatchFeedback(null);
+
+        try {
+            const res = await crmInboxService.sendBatchCampaign({
+                campaignName,
+                subject: campaignSubject,
+                body: campaignBody,
+                recipients: activeSelectedRecipients.map(r => ({
+                    name: r.name,
+                    email: r.email,
+                    client_id: r.client_id,
+                    client_name: r.client_name,
+                    campus_name: r.campus_name,
+                    stage: r.stage
+                })),
+                senderName: currentUser?.name || 'Kara',
+                senderEmail: currentUser?.email || 'kara@rhiveconstruction.com'
+            });
+
+            if (res.success) {
+                setDispatchFeedback({
+                    type: 'success',
+                    message: `Successfully launched "${campaignName}"! Queued ${res.count} personalized messages into mail_outbox and synced to Sent folder.`
+                });
+            } else {
+                setDispatchFeedback({
+                    type: 'error',
+                    message: `Campaign dispatch error: ${res.error || 'Failed to queue campaign.'}`
+                });
+            }
+        } catch (err: any) {
+            setDispatchFeedback({ type: 'error', message: err.message || 'Error executing batch send.' });
+        } finally {
+            setIsDispatching(false);
+        }
+    };
 
     // Filtered Messages
     const filteredMessages = useMemo(() => {
@@ -370,6 +817,18 @@ export const InboxPage: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                         <Button 
+                            variant={activeFolder === 'campaigns' ? 'primary' : 'secondary'} 
+                            size="sm"
+                            onClick={() => {
+                                setActiveFolder('campaigns');
+                                setCampaignSubView('compose');
+                            }}
+                            className="flex items-center gap-1.5 text-xs font-mono"
+                        >
+                            <MegaphoneIcon className="w-4 h-4 text-rhive-pink" />
+                            Batch Campaign
+                        </Button>
+                        <Button 
                             variant="primary" 
                             size="sm"
                             onClick={() => setIsComposeOpen(true)}
@@ -458,6 +917,35 @@ export const InboxPage: React.FC = () => {
                                         Closed
                                     </span>
                                 </button>
+
+                                <div className="pt-2 mt-2 border-t border-gray-800/80">
+                                    <div className="px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-gray-500 font-black">
+                                        Marketing & Outreach
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setActiveFolder('campaigns');
+                                            setCampaignSubView('compose');
+                                        }}
+                                        className={cn(
+                                            "w-full flex items-center justify-between px-3 py-2 rounded-lg font-bold transition-all text-left mt-1",
+                                            activeFolder === 'campaigns' 
+                                                ? "bg-rhive-pink text-white shadow-[0_0_8px_rgba(236,2,139,0.3)]" 
+                                                : "text-gray-300 hover:bg-gray-900 hover:text-white"
+                                        )}
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <MegaphoneIcon className="w-4 h-4" />
+                                            Email Campaigns
+                                        </span>
+                                        <span className={cn(
+                                            "px-1.5 py-0.5 rounded text-[10px] font-mono font-bold",
+                                            activeFolder === 'campaigns' ? "bg-white text-rhive-pink" : "bg-rhive-pink/20 text-rhive-pink border border-rhive-pink/30"
+                                        )}>
+                                            Batch
+                                        </span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -546,6 +1034,553 @@ export const InboxPage: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* 2. MIDDLE & RIGHT COLUMNS OR BATCH CAMPAIGNS HUB ───────────────── */}
+                    {activeFolder === 'campaigns' ? (
+                        <div className="lg:col-span-9 bg-black/70 border border-gray-800 rounded-lg p-5 flex flex-col space-y-6">
+                            {/* Hub Header & Sub-Navigation */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-800">
+                                <div>
+                                    <div className="flex items-center gap-2.5">
+                                        <span className="p-2 bg-rhive-pink/15 border border-rhive-pink/30 rounded-lg text-rhive-pink">
+                                            <MegaphoneIcon className="w-5 h-5" />
+                                        </span>
+                                        <div>
+                                            <h3 className="text-lg font-black text-white tracking-wide">
+                                                RHIVE Email Campaigns & Batch Dispatch
+                                            </h3>
+                                            <p className="text-xs text-gray-400 font-mono">
+                                                Direct SMTP delivery via Google Workspace (noreply@rhiveconstruction.com) • Real-time CRM Sync
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Sub-view switcher */}
+                                <div className="flex items-center bg-gray-950 border border-gray-800 rounded-lg p-0.5 font-mono text-xs">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCampaignSubView('compose')}
+                                        className={cn(
+                                            "px-3.5 py-1.5 rounded-md font-bold transition-all flex items-center gap-1.5",
+                                            campaignSubView === 'compose' ? "bg-rhive-pink text-white shadow-sm" : "text-gray-400 hover:text-white"
+                                        )}
+                                    >
+                                        <SparklesIcon className="w-3.5 h-3.5" />
+                                        New Campaign
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCampaignSubView('history')}
+                                        className={cn(
+                                            "px-3.5 py-1.5 rounded-md font-bold transition-all flex items-center gap-1.5",
+                                            campaignSubView === 'history' ? "bg-rhive-pink text-white shadow-sm" : "text-gray-400 hover:text-white"
+                                        )}
+                                    >
+                                        <ClockIcon className="w-3.5 h-3.5" />
+                                        Campaign History ({pastCampaigns.length})
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Feedback Alert Banner */}
+                            {dispatchFeedback && (
+                                <div className={cn(
+                                    "p-3.5 rounded-lg border text-xs font-mono flex items-center justify-between transition-all",
+                                    dispatchFeedback.type === 'success' 
+                                        ? "bg-green-500/10 border-green-500/30 text-green-300"
+                                        : "bg-red-500/10 border-red-500/30 text-red-300"
+                                )}>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold">{dispatchFeedback.type === 'success' ? '✅' : '⚠️'}</span>
+                                        <span>{dispatchFeedback.message}</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => setDispatchFeedback(null)}
+                                        className="text-gray-400 hover:text-white text-sm"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            )}
+
+                            {campaignSubView === 'compose' ? (
+                                <div className="space-y-6">
+                                    {/* 1. TEMPLATE SELECTOR */}
+                                    <div className="bg-gray-950/80 border border-gray-800/80 rounded-lg p-4 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                                                <SparklesIcon className="w-4 h-4 text-rhive-pink" />
+                                                1. Select Roofing Campaign Strategy
+                                            </label>
+                                            <span className="text-[11px] font-mono text-gray-500">
+                                                Auto-loads tested commercial & residential copy
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                                            {CAMPAIGN_TEMPLATES.map(tpl => {
+                                                const isSelected = selectedTemplateId === tpl.id;
+                                                return (
+                                                    <button
+                                                        key={tpl.id}
+                                                        type="button"
+                                                        onClick={() => handleSelectTemplate(tpl.id)}
+                                                        className={cn(
+                                                            "p-3 rounded-lg border text-left transition-all relative flex flex-col justify-between",
+                                                            isSelected 
+                                                                ? "bg-rhive-pink/10 border-rhive-pink text-white shadow-[0_0_12px_rgba(236,2,139,0.25)]" 
+                                                                : "bg-black/40 border-gray-800/90 text-gray-300 hover:border-gray-700 hover:bg-gray-900/40"
+                                                        )}
+                                                    >
+                                                        <div>
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <span className="font-bold text-xs truncate text-white">{tpl.title}</span>
+                                                                {isSelected && <span className="w-2 h-2 rounded-full bg-rhive-pink animate-pulse" />}
+                                                            </div>
+                                                            <p className="text-[11px] text-gray-400 font-mono line-clamp-2 leading-relaxed">
+                                                                {tpl.description}
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-gray-800/60 text-[10px] font-mono text-gray-500">
+                                                            <span>Target:</span>
+                                                            <span className="text-rhive-gold font-bold">{tpl.recommendedStage}</span>
+                                                            <span>•</span>
+                                                            <span className="text-gray-400">{tpl.recommendedTier}</span>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* 2. AUDIENCE TARGETING & RECIPIENT SWITCHES */}
+                                    <div className="bg-gray-950/80 border border-gray-800/80 rounded-lg p-4 space-y-4">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
+                                            <div>
+                                                <label className="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                                                    <UsersIcon className="w-4 h-4 text-rhive-pink" />
+                                                    2. Audience Segmentation & Selection
+                                                </label>
+                                                <span className="text-[11px] font-mono text-gray-500">
+                                                    Filter by pipeline stage and customer tier. Switch toggles to include/exclude recipients.
+                                                </span>
+                                            </div>
+
+                                            {/* Recipient count and quick toggles */}
+                                            <div className="flex items-center gap-2 font-mono text-xs">
+                                                <span className="px-2.5 py-1 rounded bg-rhive-pink/15 border border-rhive-pink/30 text-rhive-pink font-bold">
+                                                    {activeSelectedRecipients.length} / {recipients.length} Selected
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSelectAllFiltered}
+                                                    className="px-2.5 py-1 rounded bg-gray-900 border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white text-[11px] font-bold transition-all"
+                                                >
+                                                    Select All Filtered
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleDeselectAllFiltered}
+                                                    className="px-2.5 py-1 rounded bg-gray-900 border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white text-[11px] font-bold transition-all"
+                                                >
+                                                    Clear
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Filter Pills: Stage & Tier */}
+                                        <div className="flex flex-col md:flex-row gap-3">
+                                            {/* Stage Pills */}
+                                            <div className="flex-1 space-y-1.5">
+                                                <span className="text-[10px] font-mono uppercase text-gray-500 font-bold block">
+                                                    Pipeline Stage
+                                                </span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {[
+                                                        { id: 'all', label: 'All Stages' },
+                                                        { id: 'Lead', label: 'Stage 1: Lead' },
+                                                        { id: 'Estimate', label: 'Stage 2: Estimate' },
+                                                        { id: 'Quote', label: 'Stage 3: Quote' },
+                                                        { id: 'Sign & Verify', label: 'Stage 4: Sign & Verify' },
+                                                        { id: 'In Progress', label: 'Stage 7: In Progress' },
+                                                        { id: 'Past Customer', label: 'Stage 11: Past Customer' },
+                                                    ].map(stg => (
+                                                        <button
+                                                            key={stg.id}
+                                                            type="button"
+                                                            data-stage-pill={stg.id}
+                                                            onClick={() => setTargetStageFilter(stg.id)}
+                                                            className={cn(
+                                                                "px-2.5 py-1 rounded text-[11px] font-mono font-bold transition-all border",
+                                                                targetStageFilter === stg.id 
+                                                                    ? "bg-rhive-pink text-white border-rhive-pink shadow-sm" 
+                                                                    : "bg-black/40 border-gray-800 text-gray-400 hover:text-white hover:border-gray-700"
+                                                            )}
+                                                        >
+                                                            {stg.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Customer Tier Pills */}
+                                            <div className="md:w-64 space-y-1.5">
+                                                <span className="text-[10px] font-mono uppercase text-gray-500 font-bold block">
+                                                    Customer Tier
+                                                </span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {[
+                                                        { id: 'all', label: 'All Tiers' },
+                                                        { id: 'Commercial', label: 'Commercial' },
+                                                        { id: 'Government', label: 'Government' },
+                                                        { id: 'Residential', label: 'Residential' },
+                                                    ].map(tier => (
+                                                        <button
+                                                            key={tier.id}
+                                                            type="button"
+                                                            data-tier-pill={tier.id}
+                                                            onClick={() => setTargetTierFilter(tier.id)}
+                                                            className={cn(
+                                                                "px-2.5 py-1 rounded text-[11px] font-mono font-bold transition-all border",
+                                                                targetTierFilter === tier.id 
+                                                                    ? "bg-rhive-gold text-black border-rhive-gold shadow-sm" 
+                                                                    : "bg-black/40 border-gray-800 text-gray-400 hover:text-white hover:border-gray-700"
+                                                            )}
+                                                        >
+                                                            {tier.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Search inside audience */}
+                                        <div className="relative">
+                                            <SearchIcon className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search recipients by contact name, company or email..."
+                                                value={audienceSearch}
+                                                onChange={e => setAudienceSearch(e.target.value)}
+                                                className="w-full bg-black/60 border border-gray-800 pl-9 pr-3 py-1.5 text-xs font-mono text-white placeholder-gray-600 rounded-lg focus:outline-none focus:border-rhive-pink"
+                                            />
+                                        </div>
+
+                                        {/* Recipient Rows List (NO CHECKBOXES - Uses custom Switch Toggles) */}
+                                        <div className="border border-gray-800/80 rounded-lg max-h-56 overflow-y-auto divide-y divide-gray-800/50 bg-black/30">
+                                            {filteredRecipients.length === 0 ? (
+                                                <div className="p-6 text-center text-gray-500 font-mono text-xs">
+                                                    No recipients match the selected stage and tier filters.
+                                                </div>
+                                            ) : (
+                                                filteredRecipients.map(r => {
+                                                    const isSelected = selectedRecipientEmails.has(r.email);
+                                                    return (
+                                                        <div 
+                                                            key={r.email}
+                                                            className={cn(
+                                                                "p-2.5 flex items-center justify-between gap-3 text-xs font-mono transition-colors",
+                                                                isSelected ? "bg-rhive-pink/5" : "hover:bg-gray-900/30"
+                                                            )}
+                                                        >
+                                                            <div className="flex items-center gap-3 truncate">
+                                                                {/* Quantum Switch Component (NO HTML CHECKBOX) */}
+                                                                <button
+                                                                    type="button"
+                                                                    role="switch"
+                                                                    aria-checked={isSelected}
+                                                                    onClick={() => toggleRecipient(r.email)}
+                                                                    className={cn(
+                                                                        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                                                                        isSelected ? "bg-rhive-pink shadow-[0_0_8px_rgba(236,2,139,0.5)]" : "bg-gray-800"
+                                                                    )}
+                                                                >
+                                                                    <span
+                                                                        className={cn(
+                                                                            "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                                                                            isSelected ? "translate-x-4" : "translate-x-0"
+                                                                        )}
+                                                                    />
+                                                                </button>
+
+                                                                <div className="truncate">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-bold text-white truncate font-sans text-sm">
+                                                                            {r.name}
+                                                                        </span>
+                                                                        <span className="text-gray-400 font-mono text-[11px] truncate">
+                                                                            &lt;{r.email}&gt;
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="text-[11px] text-gray-400 truncate flex items-center gap-2 mt-0.5">
+                                                                        <span className="text-gray-300">🏢 {r.client_name}</span>
+                                                                        {r.campus_name && <span className="text-gray-500">• {r.campus_name}</span>}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2 shrink-0">
+                                                                <span className={cn(
+                                                                    "px-2 py-0.5 rounded text-[10px] font-bold border",
+                                                                    r.tier === 'Commercial' ? "bg-blue-500/10 text-blue-400 border-blue-500/30" :
+                                                                    r.tier === 'Government' ? "bg-purple-500/10 text-purple-400 border-purple-500/30" :
+                                                                    "bg-green-500/10 text-green-400 border-green-500/30"
+                                                                )}>
+                                                                    {r.tier}
+                                                                </span>
+                                                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-900 border border-gray-700 text-gray-300">
+                                                                    {r.stage}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 3. CAMPAIGN EDITOR & LIVE BRANDED PREVIEW (2 COLUMNS) */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                                        {/* Left 6 cols: Inputs */}
+                                        <div className="lg:col-span-6 bg-gray-950/80 border border-gray-800/80 rounded-lg p-4 space-y-4">
+                                            <div className="flex items-center justify-between border-b border-gray-800 pb-2">
+                                                <label className="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider">
+                                                    3. Campaign Message & Personalization
+                                                </label>
+                                                <span className="text-[11px] font-mono text-gray-500">
+                                                    Dynamic Merge Tags
+                                                </span>
+                                            </div>
+
+                                            {/* Internal Campaign Name */}
+                                            <div>
+                                                <label className="block text-[11px] font-mono text-gray-400 mb-1">
+                                                    Internal Campaign Name
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={campaignName}
+                                                    onChange={e => setCampaignName(e.target.value)}
+                                                    placeholder="e.g. Q1 2026 Commercial CapEx Outreach"
+                                                    className="w-full bg-black/60 border border-gray-800 px-3 py-1.5 text-xs font-mono text-white rounded-lg focus:outline-none focus:border-rhive-pink"
+                                                />
+                                            </div>
+
+                                            {/* Subject Line & Quick Tag Helpers */}
+                                            <div>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <label className="text-[11px] font-mono text-gray-400">
+                                                        Email Subject Line
+                                                    </label>
+                                                    <div className="flex items-center gap-1">
+                                                        {['{{first_name}}', '{{client_name}}'].map(tok => (
+                                                            <button
+                                                                key={tok}
+                                                                type="button"
+                                                                onClick={() => handleInsertToken(tok, 'subject')}
+                                                                className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-gray-900 text-rhive-pink hover:bg-gray-800 border border-gray-800 transition-colors"
+                                                            >
+                                                                + {tok}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={campaignSubject}
+                                                    onChange={e => setCampaignSubject(e.target.value)}
+                                                    placeholder="Email Subject with merge tags..."
+                                                    className="w-full bg-black/60 border border-gray-800 px-3 py-1.5 text-xs font-mono text-white rounded-lg focus:outline-none focus:border-rhive-pink"
+                                                />
+                                            </div>
+
+                                            {/* Email Body & Merge Tags */}
+                                            <div>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <label className="text-[11px] font-mono text-gray-400">
+                                                        Email Body (Plain Text + Markdown)
+                                                    </label>
+                                                    <div className="flex items-center gap-1">
+                                                        {['{{first_name}}', '{{client_name}}', '{{campus_name}}'].map(tok => (
+                                                            <button
+                                                                key={tok}
+                                                                type="button"
+                                                                onClick={() => handleInsertToken(tok, 'body')}
+                                                                className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-gray-900 text-rhive-gold hover:bg-gray-800 border border-gray-800 transition-colors"
+                                                            >
+                                                                + {tok}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <textarea
+                                                    rows={9}
+                                                    value={campaignBody}
+                                                    onChange={e => setCampaignBody(e.target.value)}
+                                                    placeholder="Compose email content with {{first_name}}, {{client_name}}, and {{campus_name}}..."
+                                                    className="w-full bg-black/60 border border-gray-800 p-3 text-xs font-mono text-white placeholder-gray-600 rounded-lg focus:outline-none focus:border-rhive-pink resize-none leading-relaxed"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Right 6 cols: Live Branded HTML Email Preview */}
+                                        <div className="lg:col-span-6 bg-gray-950/80 border border-gray-800/80 rounded-lg p-4 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex items-center justify-between border-b border-gray-800 pb-2 mb-3">
+                                                    <label className="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                                                        <MailIcon className="w-4 h-4 text-rhive-pink" />
+                                                        Live Recipient Inbox Preview
+                                                    </label>
+                                                    <span className="text-[10px] font-mono text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/30">
+                                                        Previewing: {previewRecipient.name}
+                                                    </span>
+                                                </div>
+
+                                                {/* Branded Email Container Shell */}
+                                                <div className="bg-[#050505] border border-gray-800 rounded-lg p-4 font-sans text-xs text-gray-200 space-y-3.5 shadow-xl">
+                                                    {/* Header bar */}
+                                                    <div className="flex items-center justify-between border-b border-gray-800 pb-2.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-rhive-pink font-black tracking-widest text-sm">
+                                                                RHIVE
+                                                            </span>
+                                                            <span className="text-[10px] font-mono text-gray-400">
+                                                                CONSTRUCTION
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] font-mono text-gray-500">
+                                                            Official Client Notification
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Subject & Header info */}
+                                                    <div>
+                                                        <div className="text-[10px] font-mono text-gray-400 mb-1">
+                                                            To: <strong className="text-white">{previewRecipient.name}</strong> &lt;{previewRecipient.email}&gt;
+                                                        </div>
+                                                        <div className="text-xs font-bold text-white bg-gray-900/60 p-2 rounded border border-gray-800 font-sans">
+                                                            {previewSubject || 'No Subject'}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Body with merged tokens */}
+                                                    <div className="bg-black/40 border border-gray-900 p-3 rounded text-gray-300 font-sans leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto text-[11px]">
+                                                        {previewBody}
+                                                    </div>
+
+                                                    {/* Call to action button */}
+                                                    <div className="text-center pt-1">
+                                                        <span className="inline-block bg-rhive-pink text-white font-bold px-4 py-2 rounded text-xs tracking-wider uppercase shadow-pink-glow-sm">
+                                                            VIEW PROJECT PORTAL →
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Official Footer */}
+                                                    <div className="pt-2 border-t border-gray-900 text-[10px] font-mono text-gray-500 text-center leading-normal">
+                                                        RHIVE Construction • Official Communications • Salt Lake City, Utah<br/>
+                                                        Phone: (435) 417-6637 • Email: support@rhiveconstruction.com
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Dispatch Button Bar */}
+                                            <div className="pt-4 mt-4 border-t border-gray-800 flex items-center justify-between">
+                                                <div className="text-xs font-mono text-gray-400">
+                                                    Ready to deliver to <strong className="text-white">{activeSelectedRecipients.length}</strong> recipients
+                                                </div>
+
+                                                <Button
+                                                    type="button"
+                                                    variant="primary"
+                                                    size="md"
+                                                    disabled={isDispatching || activeSelectedRecipients.length === 0}
+                                                    onClick={handleDispatchCampaign}
+                                                    className="flex items-center gap-2 px-6 font-mono font-bold"
+                                                >
+                                                    <PaperAirplaneIcon className="w-4 h-4" />
+                                                    {isDispatching ? 'Sending...' : 'Send Campaign'}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* 4. PAST CAMPAIGNS LOG VIEW */
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between pb-2 border-b border-gray-800">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-white font-sans">
+                                                Dispatched Campaigns History
+                                            </h4>
+                                            <p className="text-xs text-gray-400 font-mono">
+                                                Audit trail of batch email operations, recipient metrics, and timestamps
+                                            </p>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => setCampaignSubView('compose')}
+                                            className="font-mono text-xs"
+                                        >
+                                            + Create New Campaign
+                                        </Button>
+                                    </div>
+
+                                    {pastCampaigns.length === 0 ? (
+                                        <div className="p-12 text-center text-gray-500 font-mono text-xs border border-gray-800 rounded-lg">
+                                            <MegaphoneIcon className="w-8 h-8 mx-auto mb-2 opacity-40 text-gray-600" />
+                                            No past campaigns recorded yet. Launch your first batch campaign above!
+                                        </div>
+                                    ) : (
+                                        <div className="border border-gray-800 rounded-lg divide-y divide-gray-800 bg-black/40 overflow-hidden">
+                                            {pastCampaigns.map(camp => (
+                                                <div key={camp.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs font-mono">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-sm font-bold text-white font-sans">
+                                                                {camp.title || 'Email Campaign'}
+                                                            </span>
+                                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/30">
+                                                                {camp.status || 'Completed'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-gray-400 line-clamp-1 mb-1">
+                                                            Subject: <strong className="text-gray-200">{camp.subject}</strong>
+                                                        </div>
+                                                        <div className="text-[11px] text-gray-500 flex items-center gap-3">
+                                                            <span>Sent by: <strong className="text-gray-300">{camp.sender_name || 'Kara'}</strong></span>
+                                                            <span>•</span>
+                                                            <span>Dispatched: {camp.sent_at ? new Date(camp.sent_at).toLocaleString() : 'Recent'}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3 shrink-0">
+                                                        <span className="px-3 py-1 rounded bg-rhive-pink/15 text-rhive-pink font-bold border border-rhive-pink/30 text-xs">
+                                                            {camp.recipient_count || 0} Recipients
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                if (camp.subject) setCampaignSubject(camp.subject);
+                                                                if (camp.body) setCampaignBody(camp.body);
+                                                                if (camp.title) setCampaignName(`Copy of ${camp.title}`);
+                                                                setCampaignSubView('compose');
+                                                            }}
+                                                            className="px-2.5 py-1 rounded bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-700 text-xs font-bold transition-all"
+                                                        >
+                                                            Reuse Copy
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <>
                     {/* 2. MIDDLE COLUMN: MESSAGE LIST WITH FILTERS ───────────────── */}
                     <div className="lg:col-span-4 bg-black/70 border border-gray-800 rounded-lg flex flex-col overflow-hidden">
                         
@@ -943,6 +1978,8 @@ export const InboxPage: React.FC = () => {
                             </div>
                         )}
                     </div>
+                    </>
+                    )}
                 </div>
             </div>
 
