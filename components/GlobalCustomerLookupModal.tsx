@@ -144,6 +144,18 @@ export const GlobalCustomerLookupModal: React.FC = () => {
         }
     }, [isOpen]);
 
+    // Close modal on Escape key press anywhere
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleGlobalKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setIsOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleGlobalKeyDown);
+        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    }, [isOpen]);
+
     const isApiReady = useGoogleMapsApi();
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<any>(null);
