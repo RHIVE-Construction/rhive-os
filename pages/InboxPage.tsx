@@ -460,6 +460,8 @@ export const InboxPage: React.FC = () => {
     const [targetStageFilter, setTargetStageFilter] = useState<string>('all');
     const [targetTierFilter, setTargetTierFilter] = useState<string>('all');
     const [audienceSearch, setAudienceSearch] = useState<string>('');
+    const [customRecipientName, setCustomRecipientName] = useState<string>('');
+    const [customRecipientEmail, setCustomRecipientEmail] = useState<string>('');
     const [recipients, setRecipients] = useState<CampaignRecipient[]>(SEED_CAMPAIGN_RECIPIENTS);
     const [selectedRecipientEmails, setSelectedRecipientEmails] = useState<Set<string>>(() => {
         return new Set(SEED_CAMPAIGN_RECIPIENTS.map(r => r.email));
@@ -653,6 +655,32 @@ export const InboxPage: React.FC = () => {
         }
     };
 
+    const handleAddCustomRecipient = () => {
+        const email = customRecipientEmail.trim().toLowerCase();
+        if (!email || !email.includes('@')) return;
+        const name = customRecipientName.trim() || email.split('@')[0];
+        const newRec: CampaignRecipient = {
+            id: `custom-${Date.now()}`,
+            name,
+            email,
+            client_name: name,
+            campus_name: 'Direct Recipient',
+            stage: targetStageFilter === 'all' ? 'Lead' : targetStageFilter,
+            tier: (targetTierFilter === 'all' ? 'Commercial' : targetTierFilter) as any
+        };
+        setRecipients(prev => {
+            if (prev.some(r => r.email.toLowerCase() === email)) return prev;
+            return [newRec, ...prev];
+        });
+        setSelectedRecipientEmails(prev => {
+            const next = new Set(prev);
+            next.add(email);
+            return next;
+        });
+        setCustomRecipientName('');
+        setCustomRecipientEmail('');
+    };
+
     // Dispatch Batch Campaign
     const handleDispatchCampaign = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -686,15 +714,26 @@ export const InboxPage: React.FC = () => {
                 senderEmail: currentUser?.email || 'kara@rhiveconstruction.com'
             });
 
+            if (res.sentMessages && res.sentMessages.length > 0) {
+                setMessages(prev => {
+                    const existingIds = new Set(prev.map(m => m.id));
+                    const fresh = res.sentMessages.filter((m: any) => !existingIds.has(m.id));
+                    return [...fresh, ...prev];
+                });
+            }
+            if (res.campaignLog) {
+                setPastCampaigns(prev => [res.campaignLog, ...prev]);
+            }
+
             if (res.success) {
                 setDispatchFeedback({
                     type: 'success',
-                    message: `Successfully launched "${campaignName}"! Queued ${res.count} personalized messages into mail_outbox and synced to Sent folder.`
+                    message: `Successfully launched "${campaignName}"! Queued ${res.queuedCount} personalized email(s) into mail_outbox and synced to the Sent folder.`
                 });
             } else {
                 setDispatchFeedback({
                     type: 'error',
-                    message: `Campaign dispatch error: ${res.error || 'Failed to queue campaign.'}`
+                    message: `Email delivery blocked: ${res.error || 'Could not write to mail_outbox.'} (Check Firestore rules / Cloud Functions deployment.)`
                 });
             }
         } catch (err: any) {
@@ -1305,16 +1344,47 @@ export const InboxPage: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {/* Search inside audience */}
-                                        <div className="relative">
-                                            <SearchIcon className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search recipients by contact name, company or email..."
-                                                value={audienceSearch}
-                                                onChange={e => setAudienceSearch(e.target.value)}
-                                                className="w-full bg-black/60 border border-gray-800 pl-9 pr-3 py-1.5 text-xs font-mono text-white placeholder-gray-600 rounded-lg focus:outline-none focus:border-rhive-pink"
-                                            />
+                                        {/* Search + Quick Add Custom / Test Recipient */}
+                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                                            <div className="md:col-span-5 relative">
+                                                <SearchIcon className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search recipients by name, company or email..."
+                                                    value={audienceSearch}
+                                                    onChange={e => setAudienceSearch(e.target.value)}
+                                                    className="w-full bg-black/60 border border-gray-800 pl-9 pr-3 py-1.5 text-xs font-mono text-white placeholder-gray-600 rounded-lg focus:outline-none focus:border-rhive-pink"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-7 flex items-center gap-1.5">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Name (optional)"
+                                                    value={customRecipientName}
+                                                    onChange={e => setCustomRecipientName(e.target.value)}
+                                                    className="w-32 bg-black/60 border border-gray-800 px-2.5 py-1.5 text-xs font-mono text-white placeholder-gray-600 rounded-lg focus:outline-none focus:border-rhive-pink"
+                                                />
+                                                <input
+                                                    type="email"
+                                                    placeholder="Add test / custom email (e.g. you@rhiveconstruction.com)..."
+                                                    value={customRecipientEmail}
+                                                    onChange={e => setCustomRecipientEmail(e.target.value)}
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleAddCustomRecipient();
+                                                        }
+                                                    }}
+                                                    className="flex-1 bg-black/60 border border-gray-800 px-2.5 py-1.5 text-xs font-mono text-white placeholder-gray-600 rounded-lg focus:outline-none focus:border-rhive-pink"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddCustomRecipient}
+                                                    className="px-3 py-1.5 rounded-lg bg-rhive-pink/20 border border-rhive-pink/40 text-rhive-pink hover:bg-rhive-pink hover:text-white text-xs font-mono font-bold transition-all shrink-0"
+                                                >
+                                                    + Add
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {/* Recipient Rows List (NO CHECKBOXES - Uses custom Switch Toggles) */}

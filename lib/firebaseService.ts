@@ -1762,12 +1762,22 @@ export const crmInboxService = {
         }>;
         senderName?: string;
         senderEmail?: string;
-    }): Promise<{ success: boolean; count: number; error?: string }> => {
+    }): Promise<{
+        success: boolean;
+        count: number;
+        queuedCount: number;
+        sentMessages: any[];
+        campaignLog?: any;
+        error?: string;
+    }> => {
         try {
             const campaignId = `CAMP-${Date.now()}`;
             const sName = opts.senderName || 'Kara';
             const sEmail = opts.senderEmail || 'kara@rhiveconstruction.com';
             const isHtml = Boolean(opts.isHtml);
+            const sentMessages: any[] = [];
+            let queuedCount = 0;
+            let firstQueueError: string | undefined;
 
             const stripHtmlToText = (html: string) =>
                 html
@@ -1784,7 +1794,8 @@ export const crmInboxService = {
                     .replace(/\n\s*\n+/g, '\n\n')
                     .trim();
 
-            for (const r of opts.recipients) {
+            for (let i = 0; i < opts.recipients.length; i++) {
+                const r = opts.recipients[i];
                 if (!r.email) continue;
                 const firstName = (r.name || 'Valued Client').split(' ')[0];
                 const clientName = r.client_name || r.name || 'Valued Client';
@@ -1823,6 +1834,7 @@ export const crmInboxService = {
                             </div>`;
 
                 // 1. Queue to mail_outbox
+                let queuedOk = false;
                 try {
                     await addDoc(collection(db, 'mail_outbox'), {
                         to: r.email,
@@ -1837,60 +1849,82 @@ export const crmInboxService = {
                         is_html: isHtml,
                         createdAt: new Date().toISOString()
                     });
-                } catch (queueErr) {
+                    queuedOk = true;
+                    queuedCount++;
+                } catch (queueErr: any) {
                     console.warn('[crmInboxService.sendBatchCampaign] queue error:', queueErr);
+                    if (!firstQueueError) firstQueueError = queueErr?.message || 'Firestore write rejected';
                 }
 
-                // 2. Mirror into inbox_messages under sent
+                // 2. Mirror into inbox_messages under sent (and return for immediate UI state)
+                const msgPayload = {
+                    channel: 'email' as const,
+                    direction: 'outbound' as const,
+                    folder: 'sent' as const,
+                    senderName: sName,
+                    senderEmail: sEmail,
+                    recipientName: r.name,
+                    recipientEmail: r.email,
+                    subject: personalizedSubject,
+                    body: textPayload || '[HTML Email Campaign]',
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    created_at: new Date().toISOString(),
+                    unread: false,
+                    client_id: r.client_id || undefined,
+                    client_name: r.client_name || r.name,
+                    campus_name: r.campus_name || undefined,
+                    assigned_to: sName,
+                    delivery_status: queuedOk ? 'queued_campaign' : 'failed_permissions',
+                    campaign_id: campaignId,
+                    is_html: isHtml
+                };
+
+                let msgId = `MSG-CAMP-${Date.now()}-${i}`;
                 try {
-                    await addDoc(collection(db, 'inbox_messages'), {
-                        channel: 'email',
-                        direction: 'outbound',
-                        folder: 'sent',
-                        senderName: sName,
-                        senderEmail: sEmail,
-                        recipientName: r.name,
-                        recipientEmail: r.email,
-                        subject: personalizedSubject,
-                        body: textPayload || '[HTML Email Campaign]',
-                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        created_at: new Date().toISOString(),
-                        unread: false,
-                        client_id: r.client_id || null,
-                        client_name: r.client_name || r.name,
-                        campus_name: r.campus_name || null,
-                        assigned_to: sName,
-                        delivery_status: 'queued_campaign',
-                        campaign_id: campaignId,
-                        is_html: isHtml
-                    });
+                    const msgRef = await addDoc(collection(db, 'inbox_messages'), msgPayload);
+                    msgId = msgRef.id;
                 } catch (msgErr) {
                     console.warn('[crmInboxService.sendBatchCampaign] message error:', msgErr);
                 }
+
+                sentMessages.push({ id: msgId, ...msgPayload });
             }
 
             // 3. Log campaign record
+            const campaignLog = {
+                id: campaignId,
+                title: opts.campaignName,
+                subject: opts.subject,
+                body: opts.body,
+                is_html: isHtml,
+                recipient_count: opts.recipients.length,
+                queued_count: queuedCount,
+                sender_name: sName,
+                status: queuedCount > 0 ? 'completed' : 'failed',
+                created_at: new Date().toISOString(),
+                sent_at: new Date().toISOString()
+            };
             try {
-                await addDoc(collection(db, 'campaign_logs'), {
-                    id: campaignId,
-                    title: opts.campaignName,
-                    subject: opts.subject,
-                    body: opts.body,
-                    is_html: isHtml,
-                    recipient_count: opts.recipients.length,
-                    sender_name: sName,
-                    status: 'completed',
-                    created_at: new Date().toISOString(),
-                    sent_at: new Date().toISOString()
-                });
+                await addDoc(collection(db, 'campaign_logs'), campaignLog);
             } catch (campErr) {
                 console.warn('[crmInboxService.sendBatchCampaign] camp error:', campErr);
             }
 
-            return { success: true, count: opts.recipients.length };
+            if (queuedCount === 0) {
+                return {
+                    success: false,
+                    count: opts.recipients.length,
+                    queuedCount: 0,
+                    sentMessages,
+                    campaignLog,
+                    error: firstQueueError || 'Emails could not be queued to Firestore mail_outbox.'
+                };
+            }
+
+            return { success: true, count: queuedCount, queuedCount, sentMessages, campaignLog };
         } catch (error: any) {
             console.error('[crmInboxService.sendBatchCampaign] Error:', error);
-            return { success: false, count: 0, error: error.message };
+            return { success: false, count: 0, queuedCount: 0, sentMessages: [], error: error.message };
         }
     },
 
