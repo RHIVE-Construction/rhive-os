@@ -27,6 +27,7 @@ import {
 import { cn } from '../lib/utils';
 import { crmInboxService, contactService } from '../lib/firebaseService';
 import type { CrmMessage, MessageChannel, InboxFolder, EmailCampaign } from '../types';
+import ConnectEmailCard from '../components/ConnectEmailCard';
 
 // Seed messages showcasing Email, SMS (Text), and Call logs linked to customers
 const SEED_MESSAGES: CrmMessage[] = [
@@ -386,6 +387,7 @@ export const InboxPage: React.FC = () => {
     const [isSending, setIsSending] = useState(false);
     const [isSyncingEmails, setIsSyncingEmails] = useState(false);
     const [syncStatusText, setSyncStatusText] = useState<string | null>(null);
+    const [isConnectEmailOpen, setIsConnectEmailOpen] = useState(false);
 
     const handleSyncEmails = async (silent = false) => {
         if (isSyncingEmails) return;
@@ -768,6 +770,11 @@ export const InboxPage: React.FC = () => {
     // Filtered Messages
     const filteredMessages = useMemo(() => {
         return messages.filter(m => {
+            // Respect per-user "Share your emails" setting
+            if ((m as any).is_shared === false && (m as any).owner_user_id && (m as any).owner_user_id !== currentUser?.id) {
+                return false;
+            }
+
             // Folder filter
             if (m.folder !== activeFolder) return false;
 
@@ -933,6 +940,15 @@ export const InboxPage: React.FC = () => {
                                 {syncStatusText}
                             </span>
                         )}
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setIsConnectEmailOpen(true)}
+                            className="flex items-center gap-1.5 text-xs font-mono"
+                        >
+                            <UserIcon className="w-4 h-4 text-rhive-gold" />
+                            Connect Email
+                        </Button>
                         <Button
                             variant="secondary"
                             size="sm"
@@ -2357,6 +2373,49 @@ export const InboxPage: React.FC = () => {
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── PER-USER CONNECT EMAIL MODAL ─────────────────────────────────── */}
+            {isConnectEmailOpen && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-gray-950 border border-gray-700 rounded-xl w-full max-w-xl p-5 shadow-2xl relative space-y-4">
+                        <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                            <div>
+                                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                                    <MailIcon className="w-5 h-5 text-rhive-pink" />
+                                    Email Connection Settings
+                                </h3>
+                                <p className="text-[11px] font-mono text-gray-400">
+                                    Account: {currentUser?.name || 'Admin'} ({currentUser?.email || 'Org User'})
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsConnectEmailOpen(false)}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                <XIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <ConnectEmailCard
+                            userId={currentUser?.id || 'U-ADMIN-DEFAULT'}
+                            userEmail={currentUser?.email}
+                            compact
+                        />
+
+                        <div className="flex justify-end pt-1">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => setIsConnectEmailOpen(false)}
+                            >
+                                Close
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}
