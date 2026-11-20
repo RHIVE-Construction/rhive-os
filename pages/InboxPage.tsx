@@ -1073,7 +1073,7 @@ export const InboxPage: React.FC = () => {
                                         "px-1.5 py-0.5 rounded text-[10px] font-bold",
                                         channelFilter === 'email' ? "bg-blue-500 text-white" : "bg-gray-900 text-gray-300"
                                     )}>
-                                        {messages.filter(m => m.channel === 'email').length}
+                                        {messages.filter(m => m.channel === 'email' && (activeFolder === 'campaigns' || m.folder === activeFolder)).length}
                                     </span>
                                 </button>
 
@@ -1095,7 +1095,7 @@ export const InboxPage: React.FC = () => {
                                         "px-1.5 py-0.5 rounded text-[10px] font-bold",
                                         channelFilter === 'text' ? "bg-green-500 text-white" : "bg-gray-900 text-gray-300"
                                     )}>
-                                        {messages.filter(m => m.channel === 'text').length}
+                                        {messages.filter(m => m.channel === 'text' && (activeFolder === 'campaigns' || m.folder === activeFolder)).length}
                                     </span>
                                 </button>
 
@@ -1117,7 +1117,7 @@ export const InboxPage: React.FC = () => {
                                         "px-1.5 py-0.5 rounded text-[10px] font-bold",
                                         channelFilter === 'call' ? "bg-amber-500 text-white" : "bg-gray-900 text-gray-300"
                                     )}>
-                                        {messages.filter(m => m.channel === 'call').length}
+                                        {messages.filter(m => m.channel === 'call' && (activeFolder === 'campaigns' || m.folder === activeFolder)).length}
                                     </span>
                                 </button>
                             </div>
@@ -1904,7 +1904,9 @@ export const InboxPage: React.FC = () => {
                                                     </span>
 
                                                     <span className="font-bold text-sm text-white truncate font-sans">
-                                                        {msg.senderName}
+                                                        {msg.folder === 'sent'
+                                                            ? `To: ${msg.recipientName || msg.recipientEmail || msg.senderName}`
+                                                            : msg.senderName}
                                                     </span>
                                                 </div>
 
@@ -1912,6 +1914,13 @@ export const InboxPage: React.FC = () => {
                                                     {msg.timestamp}
                                                 </span>
                                             </div>
+
+                                            {/* Recipient email when viewing Sent */}
+                                            {msg.folder === 'sent' && msg.recipientEmail && (
+                                                <div className="text-[10px] font-mono text-gray-400 truncate mb-0.5">
+                                                    ✉️ {msg.recipientEmail}
+                                                </div>
+                                            )}
 
                                             {/* Customer Tag */}
                                             {msg.client_name && (
