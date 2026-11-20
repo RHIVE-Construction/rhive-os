@@ -456,6 +456,7 @@ export const InboxPage: React.FC = () => {
     const [campaignName, setCampaignName] = useState<string>('Q1 2026 Commercial CapEx Outreach');
     const [campaignSubject, setCampaignSubject] = useState<string>(CAMPAIGN_TEMPLATES[0].subject);
     const [campaignBody, setCampaignBody] = useState<string>(CAMPAIGN_TEMPLATES[0].body);
+    const [campaignBodyMode, setCampaignBodyMode] = useState<'text' | 'html'>('text');
     const [targetStageFilter, setTargetStageFilter] = useState<string>('all');
     const [targetTierFilter, setTargetTierFilter] = useState<string>('all');
     const [audienceSearch, setAudienceSearch] = useState<string>('');
@@ -509,12 +510,61 @@ export const InboxPage: React.FC = () => {
         setSelectedTemplateId(tplId);
         const tpl = CAMPAIGN_TEMPLATES.find(t => t.id === tplId);
         if (tpl) {
+            setCampaignBodyMode('text');
             setCampaignSubject(tpl.subject);
             setCampaignBody(tpl.body);
             setCampaignName(`${tpl.title} - ${new Date().toLocaleDateString()}`);
             setTargetStageFilter(tpl.recommendedStage.toLowerCase() === 'all' ? 'all' : tpl.recommendedStage);
             setTargetTierFilter(tpl.recommendedTier.toLowerCase() === 'all' ? 'all' : (tpl.recommendedTier as any));
         }
+    };
+
+    // Auto-detect pasted full HTML document and switch to HTML mode seamlessly
+    const handleCampaignBodyChange = (val: string) => {
+        setCampaignBody(val);
+        if (
+            campaignBodyMode === 'text' &&
+            /^\s*(<!doctype\s+html|<html[\s>]|<table[\s>]|<div[\s>]|<body[\s>])/i.test(val)
+        ) {
+            setCampaignBodyMode('html');
+        }
+    };
+
+    const handleLoadSampleHtml = () => {
+        setCampaignBodyMode('html');
+        setCampaignBody(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="margin:0;padding:24px;background-color:#0a0a0a;font-family:Arial,Helvetica,sans-serif;color:#f3f4f6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#111827;border:1px solid #374151;border-radius:10px;overflow:hidden;">
+    <tr>
+      <td style="padding:24px 28px;background:#000000;border-bottom:2px solid #ec028b;">
+        <div style="font-size:20px;font-weight:900;letter-spacing:2px;color:#ec028b;">RHIVE CONSTRUCTION</div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:4px;">Utah Commercial &amp; Residential Roofing Engineering</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:28px;">
+        <h2 style="margin:0 0 14px;color:#ffffff;font-size:18px;">Hello {{first_name}},</h2>
+        <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#d1d5db;">
+          We have prepared a custom roof health overview for <strong>{{client_name}}</strong> at <strong>{{campus_name}}</strong>.
+        </p>
+        <div style="text-align:center;margin:26px 0;">
+          <a href="https://app.rhiveconstruction.com" style="display:inline-block;background:#ec028b;color:#ffffff;text-decoration:none;font-weight:bold;font-size:13px;padding:12px 24px;border-radius:6px;letter-spacing:1px;">
+            OPEN CLIENT PORTAL &rarr;
+          </a>
+        </div>
+        <p style="margin:0;font-size:12px;color:#9ca3af;">
+          Questions? Call our live dispatch line at <strong>(435) 417-6637</strong>.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`);
     };
 
     // Filtered recipients according to selected filters
@@ -623,6 +673,7 @@ export const InboxPage: React.FC = () => {
                 campaignName,
                 subject: campaignSubject,
                 body: campaignBody,
+                isHtml: campaignBodyMode === 'html',
                 recipients: activeSelectedRecipients.map(r => ({
                     name: r.name,
                     email: r.email,
@@ -1343,13 +1394,39 @@ export const InboxPage: React.FC = () => {
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                                         {/* Left 6 cols: Inputs */}
                                         <div className="lg:col-span-6 bg-gray-950/80 border border-gray-800/80 rounded-lg p-4 space-y-4">
-                                            <div className="flex items-center justify-between border-b border-gray-800 pb-2">
+                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-800 pb-2">
                                                 <label className="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider">
                                                     3. Campaign Message & Personalization
                                                 </label>
-                                                <span className="text-[11px] font-mono text-gray-500">
-                                                    Dynamic Merge Tags
-                                                </span>
+                                                {/* Plain Text vs Raw HTML Mode Toggle */}
+                                                <div className="flex items-center bg-black/70 border border-gray-800 rounded-lg p-0.5 font-mono text-[11px]">
+                                                    <button
+                                                        type="button"
+                                                        data-body-mode="text"
+                                                        onClick={() => setCampaignBodyMode('text')}
+                                                        className={cn(
+                                                            "px-2.5 py-1 rounded font-bold transition-all",
+                                                            campaignBodyMode === 'text'
+                                                                ? "bg-rhive-pink text-white shadow-sm"
+                                                                : "text-gray-400 hover:text-white"
+                                                        )}
+                                                    >
+                                                        Plain Text
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        data-body-mode="html"
+                                                        onClick={() => setCampaignBodyMode('html')}
+                                                        className={cn(
+                                                            "px-2.5 py-1 rounded font-bold transition-all",
+                                                            campaignBodyMode === 'html'
+                                                                ? "bg-rhive-pink text-white shadow-sm"
+                                                                : "text-gray-400 hover:text-white"
+                                                        )}
+                                                    >
+                                                        &lt;/&gt; Raw HTML
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             {/* Internal Campaign Name */}
@@ -1396,11 +1473,22 @@ export const InboxPage: React.FC = () => {
 
                                             {/* Email Body & Merge Tags */}
                                             <div>
-                                                <div className="flex items-center justify-between mb-1">
+                                                <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
                                                     <label className="text-[11px] font-mono text-gray-400">
-                                                        Email Body (Plain Text + Markdown)
+                                                        {campaignBodyMode === 'html'
+                                                            ? 'Raw HTML Email Source (Paste Full HTML)'
+                                                            : 'Email Body (Plain Text — or paste full HTML)'}
                                                     </label>
                                                     <div className="flex items-center gap-1">
+                                                        {campaignBodyMode === 'html' && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleLoadSampleHtml}
+                                                                className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-rhive-pink/15 text-rhive-pink hover:bg-rhive-pink/25 border border-rhive-pink/30 transition-colors"
+                                                            >
+                                                                Load Sample HTML
+                                                            </button>
+                                                        )}
                                                         {['{{first_name}}', '{{client_name}}', '{{campus_name}}'].map(tok => (
                                                             <button
                                                                 key={tok}
@@ -1414,12 +1502,22 @@ export const InboxPage: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <textarea
-                                                    rows={9}
+                                                    rows={campaignBodyMode === 'html' ? 12 : 9}
+                                                    spellCheck={campaignBodyMode !== 'html'}
                                                     value={campaignBody}
-                                                    onChange={e => setCampaignBody(e.target.value)}
-                                                    placeholder="Compose email content with {{first_name}}, {{client_name}}, and {{campus_name}}..."
+                                                    onChange={e => handleCampaignBodyChange(e.target.value)}
+                                                    placeholder={
+                                                        campaignBodyMode === 'html'
+                                                            ? 'Paste your complete HTML email code here (e.g. <!DOCTYPE html><html>...</html>). Merge tags like {{first_name}} still work!'
+                                                            : 'Compose email content with {{first_name}}, {{client_name}}, and {{campus_name}} — or paste full HTML directly...'
+                                                    }
                                                     className="w-full bg-black/60 border border-gray-800 p-3 text-xs font-mono text-white placeholder-gray-600 rounded-lg focus:outline-none focus:border-rhive-pink resize-none leading-relaxed"
                                                 />
+                                                {campaignBodyMode === 'html' && (
+                                                    <p className="mt-1.5 text-[10px] font-mono text-gray-500">
+                                                        Sent as your exact HTML (no wrapper added). Plain-text fallback is auto-generated for email clients.
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
 
@@ -1431,56 +1529,82 @@ export const InboxPage: React.FC = () => {
                                                         <MailIcon className="w-4 h-4 text-rhive-pink" />
                                                         Live Recipient Inbox Preview
                                                     </label>
-                                                    <span className="text-[10px] font-mono text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/30">
-                                                        Previewing: {previewRecipient.name}
-                                                    </span>
-                                                </div>
-
-                                                {/* Branded Email Container Shell */}
-                                                <div className="bg-[#050505] border border-gray-800 rounded-lg p-4 font-sans text-xs text-gray-200 space-y-3.5 shadow-xl">
-                                                    {/* Header bar */}
-                                                    <div className="flex items-center justify-between border-b border-gray-800 pb-2.5">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-rhive-pink font-black tracking-widest text-sm">
-                                                                RHIVE
+                                                    <div className="flex items-center gap-1.5">
+                                                        {campaignBodyMode === 'html' && (
+                                                            <span className="text-[10px] font-mono text-rhive-pink bg-rhive-pink/10 px-2 py-0.5 rounded border border-rhive-pink/30 font-bold">
+                                                                HTML Render
                                                             </span>
-                                                            <span className="text-[10px] font-mono text-gray-400">
-                                                                CONSTRUCTION
-                                                            </span>
-                                                        </div>
-                                                        <span className="text-[10px] font-mono text-gray-500">
-                                                            Official Client Notification
+                                                        )}
+                                                        <span className="text-[10px] font-mono text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/30">
+                                                            Previewing: {previewRecipient.name}
                                                         </span>
                                                     </div>
-
-                                                    {/* Subject & Header info */}
-                                                    <div>
-                                                        <div className="text-[10px] font-mono text-gray-400 mb-1">
-                                                            To: <strong className="text-white">{previewRecipient.name}</strong> &lt;{previewRecipient.email}&gt;
-                                                        </div>
-                                                        <div className="text-xs font-bold text-white bg-gray-900/60 p-2 rounded border border-gray-800 font-sans">
-                                                            {previewSubject || 'No Subject'}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Body with merged tokens */}
-                                                    <div className="bg-black/40 border border-gray-900 p-3 rounded text-gray-300 font-sans leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto text-[11px]">
-                                                        {previewBody}
-                                                    </div>
-
-                                                    {/* Call to action button */}
-                                                    <div className="text-center pt-1">
-                                                        <span className="inline-block bg-rhive-pink text-white font-bold px-4 py-2 rounded text-xs tracking-wider uppercase shadow-pink-glow-sm">
-                                                            VIEW PROJECT PORTAL →
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Official Footer */}
-                                                    <div className="pt-2 border-t border-gray-900 text-[10px] font-mono text-gray-500 text-center leading-normal">
-                                                        RHIVE Construction • Official Communications • Salt Lake City, Utah<br/>
-                                                        Phone: (435) 417-6637 • Email: support@rhiveconstruction.com
-                                                    </div>
                                                 </div>
+
+                                                {campaignBodyMode === 'html' ? (
+                                                    <div className="bg-[#050505] border border-gray-800 rounded-lg p-3 space-y-2.5 shadow-xl">
+                                                        <div className="space-y-1">
+                                                            <div className="text-[10px] font-mono text-gray-400">
+                                                                To: <strong className="text-white">{previewRecipient.name}</strong> &lt;{previewRecipient.email}&gt;
+                                                            </div>
+                                                            <div className="text-xs font-bold text-white bg-gray-900/60 px-2.5 py-1.5 rounded border border-gray-800 font-sans">
+                                                                {previewSubject || 'No Subject'}
+                                                            </div>
+                                                        </div>
+                                                        <iframe
+                                                            title="HTML Email Live Preview"
+                                                            sandbox=""
+                                                            srcDoc={previewBody}
+                                                            className="w-full h-[360px] bg-white rounded-md border border-gray-800"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    /* Branded Email Container Shell */
+                                                    <div className="bg-[#050505] border border-gray-800 rounded-lg p-4 font-sans text-xs text-gray-200 space-y-3.5 shadow-xl">
+                                                        {/* Header bar */}
+                                                        <div className="flex items-center justify-between border-b border-gray-800 pb-2.5">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-rhive-pink font-black tracking-widest text-sm">
+                                                                    RHIVE
+                                                                </span>
+                                                                <span className="text-[10px] font-mono text-gray-400">
+                                                                    CONSTRUCTION
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-[10px] font-mono text-gray-500">
+                                                                Official Client Notification
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Subject & Header info */}
+                                                        <div>
+                                                            <div className="text-[10px] font-mono text-gray-400 mb-1">
+                                                                To: <strong className="text-white">{previewRecipient.name}</strong> &lt;{previewRecipient.email}&gt;
+                                                            </div>
+                                                            <div className="text-xs font-bold text-white bg-gray-900/60 p-2 rounded border border-gray-800 font-sans">
+                                                                {previewSubject || 'No Subject'}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Body with merged tokens */}
+                                                        <div className="bg-black/40 border border-gray-900 p-3 rounded text-gray-300 font-sans leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto text-[11px]">
+                                                            {previewBody}
+                                                        </div>
+
+                                                        {/* Call to action button */}
+                                                        <div className="text-center pt-1">
+                                                            <span className="inline-block bg-rhive-pink text-white font-bold px-4 py-2 rounded text-xs tracking-wider uppercase shadow-pink-glow-sm">
+                                                                VIEW PROJECT PORTAL →
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Official Footer */}
+                                                        <div className="pt-2 border-t border-gray-900 text-[10px] font-mono text-gray-500 text-center leading-normal">
+                                                            RHIVE Construction • Official Communications • Salt Lake City, Utah<br/>
+                                                            Phone: (435) 417-6637 • Email: support@rhiveconstruction.com
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Dispatch Button Bar */}
@@ -1541,6 +1665,11 @@ export const InboxPage: React.FC = () => {
                                                             <span className="text-sm font-bold text-white font-sans">
                                                                 {camp.title || 'Email Campaign'}
                                                             </span>
+                                                            {camp.is_html && (
+                                                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rhive-pink/15 text-rhive-pink border border-rhive-pink/30">
+                                                                    HTML
+                                                                </span>
+                                                            )}
                                                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/30">
                                                                 {camp.status || 'Completed'}
                                                             </span>
@@ -1565,6 +1694,7 @@ export const InboxPage: React.FC = () => {
                                                                 if (camp.subject) setCampaignSubject(camp.subject);
                                                                 if (camp.body) setCampaignBody(camp.body);
                                                                 if (camp.title) setCampaignName(`Copy of ${camp.title}`);
+                                                                setCampaignBodyMode(camp.is_html ? 'html' : 'text');
                                                                 setCampaignSubView('compose');
                                                             }}
                                                             className="px-2.5 py-1 rounded bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white border border-gray-700 text-xs font-bold transition-all"

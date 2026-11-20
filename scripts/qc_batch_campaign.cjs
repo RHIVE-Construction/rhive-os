@@ -73,6 +73,22 @@ const path = require('path');
         await page.waitForTimeout(300);
         console.log('✅ 11. Clicked Select All Filtered');
 
+        // 5b. Test Raw HTML copy-paste auto-detection & live iframe preview
+        const bodyTextarea = page.locator('textarea').first();
+        await bodyTextarea.fill('<!DOCTYPE html><html><body style="background:#111;color:#fff;padding:20px;"><h1>Hello {{first_name}}!</h1><p>Welcome {{client_name}} at {{campus_name}}</p></body></html>');
+        await page.waitForTimeout(500);
+        const iframeCount = await page.locator('iframe[title="HTML Email Live Preview"]').count();
+        if (iframeCount !== 1) {
+            throw new Error(`Expected HTML Email Live Preview iframe after pasting HTML, found ${iframeCount}`);
+        }
+        const srcDoc = await page.locator('iframe[title="HTML Email Live Preview"]').getAttribute('srcdoc');
+        if (!srcDoc || !srcDoc.includes('<h1>Hello ') || srcDoc.includes('{{first_name}}')) {
+            throw new Error('HTML preview iframe srcDoc did not personalize merge tags properly');
+        }
+        console.log('✅ 11b. Pasted full HTML auto-switched to Raw HTML mode & rendered personalized iframe preview');
+        await page.screenshot({ path: path.join(artifactDir, 'qc_batch_campaign_html.png') });
+        console.log('📸 11c. Captured qc_batch_campaign_html.png');
+
         // 6. Test dispatching campaign
         const sendBtn = page.locator('button:has-text("Send Campaign")').first();
         await sendBtn.click();

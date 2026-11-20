@@ -1751,6 +1751,7 @@ export const crmInboxService = {
         campaignName: string;
         subject: string;
         body: string;
+        isHtml?: boolean;
         recipients: Array<{
             name: string;
             email: string;
@@ -1766,6 +1767,22 @@ export const crmInboxService = {
             const campaignId = `CAMP-${Date.now()}`;
             const sName = opts.senderName || 'Kara';
             const sEmail = opts.senderEmail || 'kara@rhiveconstruction.com';
+            const isHtml = Boolean(opts.isHtml);
+
+            const stripHtmlToText = (html: string) =>
+                html
+                    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+                    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+                    .replace(/<br\s*\/?>/gi, '\n')
+                    .replace(/<\/(p|div|tr|li|h[1-6])>/gi, '\n')
+                    .replace(/<[^>]+>/g, ' ')
+                    .replace(/&nbsp;/gi, ' ')
+                    .replace(/&amp;/gi, '&')
+                    .replace(/&lt;/gi, '<')
+                    .replace(/&gt;/gi, '>')
+                    .replace(/[ \t]+/g, ' ')
+                    .replace(/\n\s*\n+/g, '\n\n')
+                    .trim();
 
             for (const r of opts.recipients) {
                 if (!r.email) continue;
@@ -1784,16 +1801,10 @@ export const crmInboxService = {
                     .replace(/\{\{client_name\}\}/gi, clientName)
                     .replace(/\{\{campus_name\}\}/gi, campusName);
 
-                // 1. Queue to mail_outbox
-                try {
-                    await addDoc(collection(db, 'mail_outbox'), {
-                        to: r.email,
-                        from: `RHIVE Support <noreply@rhiveconstruction.com>`,
-                        replyTo: 'support@rhiveconstruction.com',
-                        message: {
-                            subject: personalizedSubject,
-                            text: personalizedBody,
-                            html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:28px;border-radius:8px;max-width:600px;margin:0 auto;border:1px solid #1f2937;">
+                const textPayload = isHtml ? stripHtmlToText(personalizedBody) : personalizedBody;
+                const htmlPayload = isHtml
+                    ? personalizedBody
+                    : `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:28px;border-radius:8px;max-width:600px;margin:0 auto;border:1px solid #1f2937;">
                                 <div style="display:flex;align-items:center;margin-bottom:20px;">
                                     <h2 style="color:#ec028b;margin:0;font-size:20px;letter-spacing:1px;font-weight:900;">RHIVE CONSTRUCTION</h2>
                                 </div>
@@ -1809,9 +1820,21 @@ export const crmInboxService = {
                                     RHIVE Construction • Official Communications • Salt Lake City, Utah<br/>
                                     Phone: (435) 417-6637 • Email: support@rhiveconstruction.com
                                 </p>
-                            </div>`
+                            </div>`;
+
+                // 1. Queue to mail_outbox
+                try {
+                    await addDoc(collection(db, 'mail_outbox'), {
+                        to: r.email,
+                        from: `RHIVE Support <noreply@rhiveconstruction.com>`,
+                        replyTo: 'support@rhiveconstruction.com',
+                        message: {
+                            subject: personalizedSubject,
+                            text: textPayload,
+                            html: htmlPayload
                         },
                         campaign_id: campaignId,
+                        is_html: isHtml,
                         createdAt: new Date().toISOString()
                     });
                 } catch (queueErr) {
@@ -1829,7 +1852,7 @@ export const crmInboxService = {
                         recipientName: r.name,
                         recipientEmail: r.email,
                         subject: personalizedSubject,
-                        body: personalizedBody,
+                        body: textPayload || '[HTML Email Campaign]',
                         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                         created_at: new Date().toISOString(),
                         unread: false,
@@ -1838,7 +1861,8 @@ export const crmInboxService = {
                         campus_name: r.campus_name || null,
                         assigned_to: sName,
                         delivery_status: 'queued_campaign',
-                        campaign_id: campaignId
+                        campaign_id: campaignId,
+                        is_html: isHtml
                     });
                 } catch (msgErr) {
                     console.warn('[crmInboxService.sendBatchCampaign] message error:', msgErr);
@@ -1852,6 +1876,7 @@ export const crmInboxService = {
                     title: opts.campaignName,
                     subject: opts.subject,
                     body: opts.body,
+                    is_html: isHtml,
                     recipient_count: opts.recipients.length,
                     sender_name: sName,
                     status: 'completed',
