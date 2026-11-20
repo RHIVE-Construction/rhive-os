@@ -1992,11 +1992,11 @@ exports.processMailQueue = functions
 
         const msg = data.message || {};
         const mailOptions = {
-            from: data.from || `RHIVE Support <${SMTP_USER}>`,
+            from: data.from || `RHIVE Office <Office@RhiveConstruction.com>`,
             to: Array.isArray(data.to) ? data.to.join(', ') : data.to,
             cc: data.cc,
             bcc: data.bcc,
-            replyTo: data.replyTo,
+            replyTo: data.replyTo || 'Office@RhiveConstruction.com',
             subject: msg.subject || '(No Subject)',
             text: msg.text,
             html: msg.html,
@@ -2431,8 +2431,8 @@ exports.sendCrmMessage = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUST
                 try {
                     await db.collection('mail_outbox').add({
                         to: recipientEmail,
-                        from: `RHIVE Support <noreply@rhiveconstruction.com>`,
-                        replyTo: 'support@rhiveconstruction.com',
+                        from: `RHIVE Office <Office@RhiveConstruction.com>`,
+                        replyTo: 'Office@RhiveConstruction.com',
                         message: {
                             subject: subject || 'Project Update from RHIVE Construction',
                             text: messageBody,
@@ -2452,17 +2452,17 @@ exports.sendCrmMessage = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUST
                 }
             }
 
-            // Save message to inbox_messages
+            // Save message to inbox_messages (no undefined values — Firestore rejects undefined)
             const msgDoc = {
                 channel,
                 direction: channel === 'call' ? 'inbound' : 'outbound',
                 folder: channel === 'call' ? 'inbox' : 'sent',
-                senderName: channel === 'call' ? (recipientName || 'Customer') : (senderName || 'Kara'),
+                senderName: channel === 'call' ? (recipientName || 'Customer') : (senderName || 'RHIVE Office'),
                 senderPhone: channel === 'call' ? (recipientPhone || '') : formattedFrom,
-                senderEmail: channel === 'call' ? recipientEmail : 'kara@rhiveconstruction.com',
-                recipientName: channel === 'call' ? (senderName || 'Kara') : (recipientName || 'Customer'),
+                senderEmail: channel === 'call' ? (recipientEmail || null) : 'Office@RhiveConstruction.com',
+                recipientName: channel === 'call' ? (senderName || 'RHIVE Office') : (recipientName || 'Customer'),
                 recipientPhone: channel === 'call' ? formattedFrom : (recipientPhone || null),
-                recipientEmail: channel === 'call' ? 'kara@rhiveconstruction.com' : (recipientEmail || null),
+                recipientEmail: channel === 'call' ? 'Office@RhiveConstruction.com' : (recipientEmail || null),
                 subject: subject || null,
                 body: messageBody || `Logged call: ${callOutcome || 'Completed'} (${callDuration || '0s'})`,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -2473,10 +2473,10 @@ exports.sendCrmMessage = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUST
                 campus_name: campusName || null,
                 assigned_to: assignedTo || senderName || 'Kara',
                 delivery_status: deliveryStatus,
-                delivery_error: deliveryError,
+                delivery_error: deliveryError || null,
                 external_id: externalId ? String(externalId) : null,
-                call_duration: callDuration || undefined,
-                call_outcome: callOutcome || undefined
+                call_duration: callDuration || null,
+                call_outcome: callOutcome || null
             };
 
             const docRef = await db.collection('inbox_messages').add(msgDoc);

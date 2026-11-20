@@ -1670,10 +1670,10 @@ export const crmInboxService = {
                 folder: isCall ? 'inbox' : 'sent',
                 senderName: isCall ? payload.recipientName : (payload.senderName || 'Kara'),
                 senderPhone: isCall ? (payload.recipientPhone || '') : '+14354176637',
-                senderEmail: isCall ? payload.recipientEmail : 'kara@rhiveconstruction.com',
-                recipientName: isCall ? (payload.senderName || 'Kara') : payload.recipientName,
+                senderEmail: isCall ? (payload.recipientEmail || null) : 'Office@RhiveConstruction.com',
+                recipientName: isCall ? (payload.senderName || 'RHIVE Office') : payload.recipientName,
                 recipientPhone: isCall ? '+14354176637' : (payload.recipientPhone || null),
-                recipientEmail: isCall ? 'kara@rhiveconstruction.com' : (payload.recipientEmail || null),
+                recipientEmail: isCall ? 'Office@RhiveConstruction.com' : (payload.recipientEmail || null),
                 subject: payload.subject || null,
                 body: payload.messageBody || (isCall ? `Logged Call: ${payload.callOutcome || 'Completed'} (${payload.callDuration || '0s'})` : ''),
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -1684,8 +1684,8 @@ export const crmInboxService = {
                 campus_name: payload.campusName || null,
                 assigned_to: payload.assignedTo || payload.senderName || 'Kara',
                 delivery_status: 'sent',
-                call_duration: payload.callDuration,
-                call_outcome: payload.callOutcome
+                call_duration: payload.callDuration || null,
+                call_outcome: payload.callOutcome || null
             };
 
             const ref = await addDoc(collection(db, 'inbox_messages'), fallbackDoc);
@@ -1695,8 +1695,8 @@ export const crmInboxService = {
                 try {
                     await addDoc(collection(db, 'mail_outbox'), {
                         to: payload.recipientEmail,
-                        from: 'RHIVE Support <noreply@rhiveconstruction.com>',
-                        replyTo: 'support@rhiveconstruction.com',
+                        from: 'RHIVE Office <Office@RhiveConstruction.com>',
+                        replyTo: 'Office@RhiveConstruction.com',
                         message: {
                             subject: payload.subject || 'Project Update from RHIVE Construction',
                             text: payload.messageBody,
@@ -1838,8 +1838,8 @@ export const crmInboxService = {
                 try {
                     await addDoc(collection(db, 'mail_outbox'), {
                         to: r.email,
-                        from: `RHIVE Construction <sheena.l@rhiveconstruction.com>`,
-                        replyTo: 'sheena.l@rhiveconstruction.com',
+                        from: `RHIVE Office <Office@RhiveConstruction.com>`,
+                        replyTo: 'Office@RhiveConstruction.com',
                         message: {
                             subject: personalizedSubject,
                             text: textPayload,
@@ -1870,9 +1870,9 @@ export const crmInboxService = {
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     created_at: new Date().toISOString(),
                     unread: false,
-                    client_id: r.client_id || undefined,
+                    client_id: r.client_id || null,
                     client_name: r.client_name || r.name,
-                    campus_name: r.campus_name || undefined,
+                    campus_name: r.campus_name || null,
                     assigned_to: sName,
                     delivery_status: queuedOk ? 'queued_campaign' : 'failed_permissions',
                     campaign_id: campaignId,

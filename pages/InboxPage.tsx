@@ -1139,7 +1139,7 @@ export const InboxPage: React.FC = () => {
                                                 RHIVE Email Campaigns & Batch Dispatch
                                             </h3>
                                             <p className="text-xs text-gray-400 font-mono">
-                                                Direct SMTP delivery via Google Workspace (sheena.l@rhiveconstruction.com) • Real-time CRM Sync
+                                                Direct SMTP delivery via Google Workspace (Office@RhiveConstruction.com) • Real-time CRM Sync
                                             </p>
                                         </div>
                                     </div>
