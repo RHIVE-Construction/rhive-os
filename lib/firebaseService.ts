@@ -1941,5 +1941,23 @@ export const crmInboxService = {
             console.warn('[crmInboxService] Could not establish campaigns listener:', e);
             return () => {};
         }
+    },
+
+    syncInboundEmails: async (limit = 20): Promise<{ success: boolean; importedCount: number; error?: string }> => {
+        try {
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/syncInboundEmails`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ limit })
+            });
+            const json = await res.json();
+            if (!res.ok) {
+                return { success: false, importedCount: 0, error: json.error || `HTTP ${res.status}` };
+            }
+            return { success: true, importedCount: json.importedCount || 0 };
+        } catch (err: any) {
+            console.warn('[crmInboxService.syncInboundEmails] Error:', err);
+            return { success: false, importedCount: 0, error: err.message };
+        }
     }
 };

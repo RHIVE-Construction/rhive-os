@@ -384,8 +384,29 @@ export const InboxPage: React.FC = () => {
     });
 
     const [isSending, setIsSending] = useState(false);
+    const [isSyncingEmails, setIsSyncingEmails] = useState(false);
+    const [syncStatusText, setSyncStatusText] = useState<string | null>(null);
 
-    // Real-time Firestore sync
+    const handleSyncEmails = async (silent = false) => {
+        if (isSyncingEmails) return;
+        setIsSyncingEmails(true);
+        if (!silent) setSyncStatusText(null);
+        try {
+            const res = await crmInboxService.syncInboundEmails(20);
+            if (!silent) {
+                if (res.success) {
+                    setSyncStatusText(res.importedCount > 0 ? `Synced ${res.importedCount} new email(s)` : 'Inbox up to date');
+                } else {
+                    setSyncStatusText(`Sync error: ${res.error || 'Failed'}`);
+                }
+                setTimeout(() => setSyncStatusText(null), 5000);
+            }
+        } finally {
+            setIsSyncingEmails(false);
+        }
+    };
+
+    // Real-time Firestore sync + silent inbound Gmail sync on open
     useEffect(() => {
         const unsubscribe = crmInboxService.subscribeToMessages((firestoreMsgs) => {
             if (firestoreMsgs && firestoreMsgs.length > 0) {
@@ -396,6 +417,7 @@ export const InboxPage: React.FC = () => {
                 });
             }
         });
+        handleSyncEmails(true);
         return () => {
             if (typeof unsubscribe === 'function') unsubscribe();
         };
@@ -905,7 +927,22 @@ export const InboxPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {syncStatusText && (
+                            <span className="text-[11px] font-mono text-green-400 bg-green-500/10 border border-green-500/30 px-2.5 py-1 rounded-lg">
+                                {syncStatusText}
+                            </span>
+                        )}
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            disabled={isSyncingEmails}
+                            onClick={() => handleSyncEmails(false)}
+                            className="flex items-center gap-1.5 text-xs font-mono"
+                        >
+                            <MailIcon className={cn("w-4 h-4 text-blue-400", isSyncingEmails && "animate-pulse")} />
+                            {isSyncingEmails ? 'Syncing...' : 'Sync Emails'}
+                        </Button>
                         <Button 
                             variant={activeFolder === 'campaigns' ? 'primary' : 'secondary'} 
                             size="sm"

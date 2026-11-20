@@ -2494,3 +2494,151 @@ exports.sendCrmMessage = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUST
     });
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// INBOUND EMAIL SYNC (Gmail IMAP -> Firestore `inbox_messages`)
+// Pulls recent incoming emails/replies from sheena.l@rhiveconstruction.com
+// (including replies sent to Office@RhiveConstruction.com) into `inbox_messages`.
+// Uses the same RHIVE_SMTP_PASSWORD Google App Password over IMAPS (port 993).
+// ─────────────────────────────────────────────────────────────────────────────
+async function syncGmailInboxToFirestore(limit = 20) {
+    const crypto = require('crypto');
+    const { ImapFlow } = require('imapflow');
+    const { simpleParser } = require('mailparser');
+    const db = admin.firestore();
+
+    const IMAP_USER = 'sheena.l@rhiveconstruction.com';
+    const IMAP_PASS = (process.env.RHIVE_SMTP_PASSWORD || '').replace(/\s+/g, '');
+
+    if (!IMAP_PASS) {
+        throw new Error('RHIVE_SMTP_PASSWORD secret not configured.');
+    }
+
+    const client = new ImapFlow({
+        host: 'imap.gmail.com',
+        port: 993,
+        secure: true,
+        auth: {
+            user: IMAP_USER,
+            pass: IMAP_PASS
+        },
+        logger: false
+    });
+
+    let importedCount = 0;
+    let skippedCount = 0;
+    const importedMessages = [];
+
+    await client.connect();
+    const lock = await client.getMailboxLock('INBOX');
+    try {
+        const total = client.mailbox.exists || 0;
+        if (total === 0) {
+            return { totalChecked: 0, importedCount: 0, skippedCount: 0, importedMessages: [] };
+        }
+
+        const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 50);
+        const startSeq = Math.max(1, total - safeLimit + 1);
+        const range = `${startSeq}:*`;
+
+        for await (const msg of client.fetch(range, { source: true, envelope: true, internalDate: true })) {
+            try {
+                const parsed = await simpleParser(msg.source);
+                const messageId = (parsed.messageId || msg.envelope?.messageId || `uid-${msg.uid}-${msg.internalDate || Date.now()}`).trim();
+                const docId = `inbound_${crypto.createHash('sha1').update(messageId).digest('hex').slice(0, 20)}`;
+
+                const docRef = db.collection('inbox_messages').doc(docId);
+                const existing = await docRef.get();
+                if (existing.exists) {
+                    skippedCount++;
+                    continue;
+                }
+
+                const fromObj = parsed.from?.value?.[0] || {};
+                const senderEmail = (fromObj.address || '').toLowerCase().trim();
+                const senderName = (fromObj.name || (senderEmail ? senderEmail.split('@')[0] : 'Unknown Sender')).trim();
+
+                // Skip automated bounce / mailer-daemon noise
+                if (senderEmail.includes('mailer-daemon') || senderEmail.includes('postmaster@')) {
+                    skippedCount++;
+                    continue;
+                }
+
+                const toObj = parsed.to?.value?.[0] || {};
+                const recipientEmail = (toObj.address || 'Office@RhiveConstruction.com').trim();
+                const msgDate = parsed.date ? new Date(parsed.date) : new Date();
+                const isToday = msgDate.toDateString() === new Date().toDateString();
+                const displayTime = isToday
+                    ? msgDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Denver' })
+                    : msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Denver' });
+
+                const rawText = (parsed.text || '').trim();
+                const cleanBody = (rawText || (parsed.html ? parsed.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '(Empty Email Body)')).slice(0, 4000);
+
+                const docPayload = {
+                    channel: 'email',
+                    direction: 'inbound',
+                    folder: 'inbox',
+                    senderName,
+                    senderEmail: senderEmail || null,
+                    senderPhone: null,
+                    recipientName: 'RHIVE Office',
+                    recipientEmail,
+                    subject: parsed.subject || '(No Subject)',
+                    body: cleanBody,
+                    timestamp: displayTime,
+                    created_at: msgDate.toISOString(),
+                    unread: true,
+                    client_id: null,
+                    client_name: senderName,
+                    campus_name: null,
+                    assigned_to: 'Kara',
+                    delivery_status: 'received',
+                    external_id: messageId,
+                    source: 'gmail_imap'
+                };
+
+                await docRef.set(docPayload);
+                importedCount++;
+                importedMessages.push({ id: docId, ...docPayload });
+            } catch (parseErr) {
+                console.warn('[syncGmailInboxToFirestore] Failed to parse message:', parseErr.message);
+            }
+        }
+
+        return { totalChecked: total - startSeq + 1, importedCount, skippedCount, importedMessages };
+    } finally {
+        lock.release();
+        await client.logout().catch(() => {});
+    }
+}
+
+exports.syncInboundEmails = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'], timeoutSeconds: 60, memory: '512MB' })
+    .https.onRequest((req, res) => {
+        cors(req, res, async () => {
+            try {
+                const limit = req.body?.limit || req.query?.limit || 20;
+                const result = await syncGmailInboxToFirestore(limit);
+                console.log(`[syncInboundEmails] Checked ${result.totalChecked}, imported ${result.importedCount}, skipped ${result.skippedCount}`);
+                return res.status(200).json({ success: true, ...result });
+            } catch (error) {
+                console.error('[syncInboundEmails] Error:', error);
+                return res.status(500).json({ success: false, error: error.message });
+            }
+        });
+    });
+
+exports.scheduledInboundEmailSync = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'], timeoutSeconds: 60, memory: '512MB' })
+    .pubsub.schedule('every 2 minutes')
+    .onRun(async () => {
+        try {
+            const result = await syncGmailInboxToFirestore(15);
+            console.log(`[scheduledInboundEmailSync] Checked ${result.totalChecked}, imported ${result.importedCount}, skipped ${result.skippedCount}`);
+        } catch (error) {
+            console.error('[scheduledInboundEmailSync] Error:', error.message);
+        }
+        return null;
+    });
+
+
