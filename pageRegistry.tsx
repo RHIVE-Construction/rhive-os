@@ -52,6 +52,7 @@ import AccountsListPage from './pages/AccountsListPage';
 import ContactVendorProfilePage from './pages/ContactVendorProfilePage'; // E-25
 import CustomersPortalPage from './pages/CustomersPortalPage'; // E-CUSTOMERS
 import InboxPage from './pages/InboxPage'; // E-INBOX
+import CrmCustomizePage from './pages/CrmCustomizePage'; // A-CUSTOMIZE
 import TasksPage from './pages/TasksPage'; // E-TASKS
 import CalendarPage from './pages/CalendarPage'; // E-04
 import CompanyPage from './pages/CompanyPage';
@@ -264,6 +265,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'A-04': EstimateBackendApiPage,
   'A-05': LineItemCatalogPage,
   'A-06': LineItemProfilePage,
+  'A-CUSTOMIZE': CrmCustomizePage,
 
   // Employee (Employee World Section 2)
   'E-01': EmployeeHomepage,
