@@ -360,13 +360,13 @@ const SEED_CAMPAIGN_RECIPIENTS: CampaignRecipient[] = [
     },
     {
         id: 'rec-11',
-        name: 'James Test Customer',
-        email: 'james@rhiveconstruction.com',
-        client_id: 'CLI-JAMES',
-        client_name: 'Gimena Residence',
-        campus_name: 'Bleecker St Property',
+        name: 'Sheena L (RHIVE Test)',
+        email: 'sheena.l@rhiveconstruction.com',
+        client_id: 'CLI-RHIVE-TEST',
+        client_name: 'RHIVE Internal Test',
+        campus_name: 'RHIVE HQ',
         stage: 'Lead',
-        tier: 'Residential'
+        tier: 'Commercial'
     }
 ];
 
@@ -1139,7 +1139,7 @@ export const InboxPage: React.FC = () => {
                                                 RHIVE Email Campaigns & Batch Dispatch
                                             </h3>
                                             <p className="text-xs text-gray-400 font-mono">
-                                                Direct SMTP delivery via Google Workspace (noreply@rhiveconstruction.com) • Real-time CRM Sync
+                                                Direct SMTP delivery via Google Workspace (sheena.l@rhiveconstruction.com) • Real-time CRM Sync
                                             </p>
                                         </div>
                                     </div>

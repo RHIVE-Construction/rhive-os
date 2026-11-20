@@ -1838,8 +1838,8 @@ export const crmInboxService = {
                 try {
                     await addDoc(collection(db, 'mail_outbox'), {
                         to: r.email,
-                        from: `RHIVE Support <noreply@rhiveconstruction.com>`,
-                        replyTo: 'support@rhiveconstruction.com',
+                        from: `RHIVE Construction <sheena.l@rhiveconstruction.com>`,
+                        replyTo: 'sheena.l@rhiveconstruction.com',
                         message: {
                             subject: personalizedSubject,
                             text: textPayload,

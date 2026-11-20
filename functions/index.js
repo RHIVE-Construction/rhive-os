@@ -1963,7 +1963,7 @@ exports.processMailQueue = functions
             return null;
         }
 
-        const SMTP_USER = 'noreply@rhiveconstruction.com';
+        const SMTP_USER = 'sheena.l@rhiveconstruction.com';
         const SMTP_PASS = process.env.RHIVE_SMTP_PASSWORD;
 
         if (!SMTP_PASS) {
