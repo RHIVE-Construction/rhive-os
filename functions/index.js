@@ -1964,7 +1964,7 @@ exports.processMailQueue = functions
         }
 
         const SMTP_USER = 'sheena.l@rhiveconstruction.com';
-        const SMTP_PASS = process.env.RHIVE_SMTP_PASSWORD;
+        const SMTP_PASS = (process.env.RHIVE_SMTP_PASSWORD || '').replace(/\s+/g, '');
 
         if (!SMTP_PASS) {
             console.error('[processMailQueue] RHIVE_SMTP_PASSWORD secret not available.');
