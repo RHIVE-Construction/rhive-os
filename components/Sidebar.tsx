@@ -1,4 +1,5 @@
 import React from 'react';
+import { SlidersHorizontal } from 'lucide-react';
 import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -60,7 +61,7 @@ const getIconForPage = (id: string) => {
     // ADMIN (A-Series)
     if (id === 'A-01') return <HomeIcon className="h-5 w-5" />;
     if (id === 'A-02') return <UserIcon className="h-5 w-5" />;
-    if (id === 'A-CUSTOMIZE') return <SparklesIcon className="h-5 w-5" />;
+    if (id === 'A-CUSTOMIZE') return <SlidersHorizontal className="h-5 w-5" />;
     if (id === 'A-LOGS') return <DocumentTextIcon className="h-5 w-5" />;
     if (id === 'A-03') return <CurrencyDollarIcon className="h-5 w-5" />;
     if (id === 'A-04') return <BoltIcon className="h-5 w-5" />;

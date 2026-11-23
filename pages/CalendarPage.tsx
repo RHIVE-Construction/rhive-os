@@ -21,6 +21,11 @@ import {
 } from '../components/icons';
 import { cn } from '../lib/utils';
 import type { CrmCalendarEvent, CalendarEventCategory, CrmTask } from '../types';
+import {
+    CrmCustomizationConfig,
+    loadCachedCrmCustomization,
+    subscribeToCrmCustomization,
+} from '../lib/crmCustomizationService';
 
 // Seed events demonstrating unified Inspections, Work/Installs, Tasks, and Calls
 const SEED_EVENTS: CrmCalendarEvent[] = [
@@ -178,8 +183,15 @@ export const CalendarPage: React.FC = () => {
         building_name: 'Building B',
         assigned_user: 'Kara',
         location: 'Salt Lake City, UT',
-        description: ''
+        description: '',
+        appointment_type: '',
+        appointment_stage: ''
     });
+
+    const [crmConfig, setCrmConfig] = useState<CrmCustomizationConfig>(() => loadCachedCrmCustomization());
+    useEffect(() => {
+        return subscribeToCrmCustomization(setCrmConfig);
+    }, []);
 
     // Toggle Category
     const toggleCategory = (cat: CalendarEventCategory) => {
@@ -828,6 +840,49 @@ export const CalendarPage: React.FC = () => {
                                     <option value="task">📋 Project Task Follow Up</option>
                                     <option value="call">📞 Client Call / Meeting</option>
                                 </select>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-gray-400 mb-1">Appointment Type (CRM Customize)</label>
+                                    <select
+                                        value={newEventForm.appointment_type}
+                                        onChange={e => {
+                                            const selected = crmConfig.appointmentTypes.find(a => a.name === e.target.value);
+                                            setNewEventForm({
+                                                ...newEventForm,
+                                                appointment_type: e.target.value,
+                                                appointment_stage: selected?.stages?.[0] || '',
+                                                title: newEventForm.title || e.target.value,
+                                            });
+                                        }}
+                                        className="w-full bg-black/60 border border-gray-800 px-3 py-2 text-white rounded"
+                                    >
+                                        <option value="">-- Select Appointment Type --</option>
+                                        {crmConfig.appointmentTypes.map(apt => (
+                                            <option key={apt.id} value={apt.name}>
+                                                {apt.name} ({apt.durationMinutes}m)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-gray-400 mb-1">Appointment Stage</label>
+                                    <select
+                                        value={newEventForm.appointment_stage}
+                                        onChange={e => setNewEventForm({ ...newEventForm, appointment_stage: e.target.value })}
+                                        className="w-full bg-black/60 border border-gray-800 px-3 py-2 text-white rounded"
+                                    >
+                                        <option value="">-- Select Stage --</option>
+                                        {(
+                                            crmConfig.appointmentTypes.find(a => a.name === newEventForm.appointment_type)?.stages ||
+                                            crmConfig.appointmentTypes[0]?.stages ||
+                                            ['Scheduled', 'Confirmed', 'Completed']
+                                        ).map(st => (
+                                            <option key={st} value={st}>{st}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             <div>

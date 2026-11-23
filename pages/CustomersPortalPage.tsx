@@ -37,6 +37,11 @@ import type {
     ProjectStage
 } from '../types';
 import { PROJECT_STAGES_ORDER } from '../types';
+import {
+    loadCachedCrmCustomization,
+    subscribeToCrmCustomization,
+    CrmCustomizationConfig,
+} from '../lib/crmCustomizationService';
 
 // ── Initial Relational Demonstration Records ────────────────────────────────────
 // Seed data showcasing the exact 5-tier architecture:
@@ -861,7 +866,12 @@ export const CustomerStageBadgeSwitcher: React.FC<{
                     )}
 
                     <div className="space-y-0.5">
-                        {PROJECT_STAGES_ORDER.map(st => {
+                        {Array.from(
+                            new Set([
+                                ...PROJECT_STAGES_ORDER,
+                                ...loadCachedCrmCustomization().customStages.filter(s => s.active).map(s => s.name as ProjectStage),
+                            ])
+                        ).map(st => {
                             const isSelected = normalizeProjectStage(currentStage) === st;
                             const stageColors = getStageBadgeColors(st);
                             return (
@@ -1905,8 +1915,13 @@ export const CustomersPortalPage: React.FC = () => {
                                     onChange={e => setSelectedStageFilter(e.target.value as any)}
                                     className="bg-transparent text-xs font-mono font-bold text-white focus:outline-none cursor-pointer max-w-[170px] truncate"
                                 >
-                                    <option value="All" className="bg-gray-950 text-white">All Stages (11)</option>
-                                    {PROJECT_STAGES_ORDER.map(st => (
+                                    <option value="All" className="bg-gray-950 text-white">All Stages</option>
+                                    {Array.from(
+                                        new Set([
+                                            ...PROJECT_STAGES_ORDER,
+                                            ...loadCachedCrmCustomization().customStages.filter(s => s.active).map(s => s.name as ProjectStage),
+                                        ])
+                                    ).map(st => (
                                         <option key={st} value={st} className="bg-gray-950 text-white">{st}</option>
                                     ))}
                                 </select>
