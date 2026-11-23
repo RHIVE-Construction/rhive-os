@@ -21,6 +21,7 @@ import {
     ShieldCheckIcon
 } from '../components/icons';
 import { cn } from '../lib/utils';
+import { accountService, propertyService, projectService } from '../lib/firebaseService';
 import type { CrmTask, TaskCategory, CustomerClient } from '../types';
 
 // Seed tasks demonstrating user tasks tied directly to Customer -> Campus -> Building
@@ -168,21 +169,195 @@ export const TasksPage: React.FC = () => {
 
     // Modal State for New Task
     const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+    const [activeSuggestField, setActiveSuggestField] = useState<'client' | 'campus' | 'building' | null>(null);
+
+    // Live Database Hierarchy Records (Firestore accounts, properties, projects)
+    const [dbAccounts, setDbAccounts] = useState<any[]>([]);
+    const [dbProperties, setDbProperties] = useState<any[]>([]);
+    const [dbProjects, setDbProjects] = useState<any[]>([]);
+
+    useEffect(() => {
+        let mounted = true;
+        Promise.all([
+            accountService.getAll().catch(() => ({ success: false, data: [] })),
+            propertyService.getAll().catch(() => ({ success: false, data: [] })),
+            projectService.getAll().catch(() => ({ success: false, data: [] })),
+        ]).then(([accRes, propRes, projRes]: any[]) => {
+            if (!mounted) return;
+            if (accRes?.success && Array.isArray(accRes.data)) setDbAccounts(accRes.data);
+            if (propRes?.success && Array.isArray(propRes.data)) setDbProperties(propRes.data);
+            if (projRes?.success && Array.isArray(projRes.data)) setDbProjects(projRes.data);
+        });
+        return () => { mounted = false; };
+    }, []);
+
     const [newTaskForm, setNewTaskForm] = useState({
         title: '',
         category: 'call' as TaskCategory,
-        client_name: 'UNPHC (Utah Non-Profit Housing Corp)',
-        campus_name: 'Smith Apartments Campus',
-        building_name: 'Building B',
-        contact_name: 'Dan Corkill',
-        contact_phone: '801-555-0192',
-        contact_email: 'dcorkill@unphc.org',
+        client_name: '',
+        campus_name: '',
+        building_name: '',
+        contact_name: '',
+        contact_phone: '',
+        contact_email: '',
         assigned_user: 'Kara',
         due_date: new Date().toISOString().split('T')[0],
         due_time: 'All day',
         priority: 'high' as 'low' | 'normal' | 'high',
         notes: ''
     });
+
+    // Build unified cascading suggestions from Firestore + Customers Portal + existing tasks
+    const hierarchyCatalog = useMemo(() => {
+        const clientsMap = new Map<string, { name: string; id?: string; contactName?: string; contactPhone?: string; contactEmail?: string }>();
+        const campusesList: Array<{ name: string; clientName?: string; address?: string }> = [];
+        const buildingsList: Array<{ name: string; campusName?: string; clientName?: string }> = [];
+
+        const addClient = (name?: string, extra?: { id?: string; contactName?: string; contactPhone?: string; contactEmail?: string }) => {
+            const clean = (name || '').trim();
+            if (!clean) return;
+            const key = clean.toLowerCase();
+            if (!clientsMap.has(key)) {
+                clientsMap.set(key, { name: clean, ...extra });
+            }
+        };
+
+        const addCampus = (name?: string, clientName?: string, address?: string) => {
+            const clean = (name || '').trim();
+            if (!clean) return;
+            if (!campusesList.some(c => c.name.toLowerCase() === clean.toLowerCase() && (c.clientName || '').toLowerCase() === (clientName || '').toLowerCase())) {
+                campusesList.push({ name: clean, clientName, address });
+            }
+        };
+
+        const addBuilding = (name?: string, campusName?: string, clientName?: string) => {
+            const clean = (name || '').trim();
+            if (!clean) return;
+            if (!buildingsList.some(b => b.name.toLowerCase() === clean.toLowerCase() && (b.campusName || '').toLowerCase() === (campusName || '').toLowerCase())) {
+                buildingsList.push({ name: clean, campusName, clientName });
+            }
+        };
+
+        // 1. Live Firestore Accounts
+        dbAccounts.forEach((acc: any) => {
+            const cName = acc.accountName || acc.name || acc.company || acc.business_name;
+            addClient(cName, {
+                id: acc.id,
+                contactName: acc.primary_contact?.name || acc.contactName || acc.primaryContactName,
+                contactPhone: acc.primary_contact?.phone || acc.phone || acc.contactPhone,
+                contactEmail: acc.primary_contact?.email || acc.email || acc.contactEmail,
+            });
+            if (Array.isArray(acc.campuses)) {
+                acc.campuses.forEach((camp: any) => {
+                    addCampus(camp.name || camp.address, cName, camp.address);
+                    if (Array.isArray(camp.phases)) {
+                        camp.phases.forEach((ph: any) => {
+                            if (Array.isArray(ph.buildings)) {
+                                ph.buildings.forEach((b: any) => addBuilding(b.name, camp.name, cName));
+                            }
+                        });
+                    }
+                    if (Array.isArray(camp.buildings)) {
+                        camp.buildings.forEach((b: any) => addBuilding(b.name, camp.name, cName));
+                    }
+                });
+            }
+        });
+
+        // 2. Live Firestore Properties
+        dbProperties.forEach((prop: any) => {
+            const pClient = prop.client_name || prop.accountName || prop.ownerName || '';
+            const pName = prop.campus_name || prop.name || prop.address_full || prop.address;
+            if (pClient) addClient(pClient);
+            addCampus(pName, pClient, prop.address_full || prop.address);
+            if (Array.isArray(prop.buildings)) {
+                prop.buildings.forEach((b: any) => addBuilding(typeof b === 'string' ? b : b.name, pName, pClient));
+            }
+        });
+
+        // 3. Live Firestore Projects
+        dbProjects.forEach((proj: any) => {
+            const cName = proj.client_name || proj.accountName || proj.customerName || '';
+            const campName = proj.campus_name || proj.propertyAddress || proj.address || '';
+            const bName = proj.building_name || proj.buildingName || proj.name || '';
+            if (cName) addClient(cName);
+            if (campName) addCampus(campName, cName);
+            if (bName) addBuilding(bName, campName, cName);
+        });
+
+        // 4. Cached Customers Portal 5-tier hierarchy (if present)
+        try {
+            const raw = localStorage.getItem('rhive_customers_portal_v1');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    parsed.forEach((cli: CustomerClient) => {
+                        addClient(cli.name, {
+                            id: cli.id,
+                            contactName: cli.primary_contact?.name,
+                            contactPhone: cli.primary_contact?.phone,
+                            contactEmail: cli.primary_contact?.email,
+                        });
+                        (cli.campuses || []).forEach(camp => {
+                            addCampus(camp.name, cli.name, camp.address);
+                            (camp.phases || []).forEach(ph => {
+                                (ph.buildings || []).forEach(b => addBuilding(b.name, camp.name, cli.name));
+                            });
+                        });
+                    });
+                }
+            }
+        } catch { /* ignore */ }
+
+        // 5. Existing Tasks
+        tasks.forEach(t => {
+            addClient(t.client_name, { contactName: t.contact_name, contactPhone: t.contact_phone, contactEmail: t.contact_email });
+            addCampus(t.campus_name, t.client_name);
+            addBuilding(t.building_name, t.campus_name, t.client_name);
+        });
+
+        return {
+            clients: Array.from(clientsMap.values()),
+            campuses: campusesList,
+            buildings: buildingsList,
+        };
+    }, [dbAccounts, dbProperties, dbProjects, tasks]);
+
+    const tier1Suggestions = useMemo(() => {
+        const q = newTaskForm.client_name.trim().toLowerCase();
+        return hierarchyCatalog.clients
+            .filter(c => !q || c.name.toLowerCase().includes(q))
+            .slice(0, 8);
+    }, [hierarchyCatalog.clients, newTaskForm.client_name]);
+
+    const tier2Suggestions = useMemo(() => {
+        const q = newTaskForm.campus_name.trim().toLowerCase();
+        const selectedClient = newTaskForm.client_name.trim().toLowerCase();
+        const matching = hierarchyCatalog.campuses.filter(c => !q || c.name.toLowerCase().includes(q) || (c.address || '').toLowerCase().includes(q));
+        // Prioritize campuses belonging to the selected Tier 1 client
+        const sorted = [...matching].sort((a, b) => {
+            const aMatch = selectedClient && (a.clientName || '').toLowerCase() === selectedClient ? 0 : 1;
+            const bMatch = selectedClient && (b.clientName || '').toLowerCase() === selectedClient ? 0 : 1;
+            return aMatch - bMatch;
+        });
+        return sorted.slice(0, 8);
+    }, [hierarchyCatalog.campuses, newTaskForm.campus_name, newTaskForm.client_name]);
+
+    const tier4Suggestions = useMemo(() => {
+        const q = newTaskForm.building_name.trim().toLowerCase();
+        const selectedCampus = newTaskForm.campus_name.trim().toLowerCase();
+        const selectedClient = newTaskForm.client_name.trim().toLowerCase();
+        const matching = hierarchyCatalog.buildings.filter(b => !q || b.name.toLowerCase().includes(q));
+        // Prioritize buildings belonging to selected campus or client
+        const sorted = [...matching].sort((a, b) => {
+            const aScore = (selectedCampus && (a.campusName || '').toLowerCase() === selectedCampus ? 0 : 2) +
+                (selectedClient && (a.clientName || '').toLowerCase() === selectedClient ? 0 : 1);
+            const bScore = (selectedCampus && (b.campusName || '').toLowerCase() === selectedCampus ? 0 : 2) +
+                (selectedClient && (b.clientName || '').toLowerCase() === selectedClient ? 0 : 1);
+            return aScore - bScore;
+        });
+        return sorted.slice(0, 8);
+    }, [hierarchyCatalog.buildings, newTaskForm.building_name, newTaskForm.campus_name, newTaskForm.client_name]);
 
     // Helper: Categorize date into Today, Overdue, or Future
     const todayStr = new Date().toISOString().split('T')[0];
@@ -696,46 +871,145 @@ export const TasksPage: React.FC = () => {
                                 />
                             </div>
 
-                            {/* RHIVE Multi-Tier Hierarchy Dropdowns */}
+                            {/* RHIVE Multi-Tier Hierarchy Autocomplete Inputs (Live Firestore Suggestions) */}
                             <div className="p-3 bg-gray-900/60 rounded border border-gray-800 space-y-2.5">
-                                <span className="text-[10px] font-mono uppercase tracking-wider text-rhive-pink font-bold block">
-                                    Property Hierarchy Placement
-                                </span>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-mono uppercase tracking-wider text-rhive-pink font-bold">
+                                        Property Hierarchy Placement
+                                    </span>
+                                    <span className="text-[10px] font-mono text-gray-500">
+                                        {hierarchyCatalog.clients.length} customers • {hierarchyCatalog.campuses.length} campuses
+                                    </span>
+                                </div>
 
                                 {/* Tier 1 Customer */}
-                                <div>
+                                <div className="relative">
                                     <label className="block text-[11px] font-mono text-gray-400 mb-0.5">Tier 1: Parent Customer / Company</label>
                                     <input 
                                         type="text"
                                         required
+                                        placeholder="Search or type customer / company..."
                                         value={newTaskForm.client_name}
-                                        onChange={e => setNewTaskForm({ ...newTaskForm, client_name: e.target.value })}
-                                        className="w-full bg-black/80 border border-gray-700 px-2.5 py-1.5 text-xs font-mono text-white rounded"
+                                        onFocus={() => setActiveSuggestField('client')}
+                                        onBlur={() => setTimeout(() => setActiveSuggestField(prev => prev === 'client' ? null : prev), 150)}
+                                        onChange={e => {
+                                            setNewTaskForm({ ...newTaskForm, client_name: e.target.value });
+                                            setActiveSuggestField('client');
+                                        }}
+                                        className="w-full bg-black/80 border border-gray-700 px-2.5 py-1.5 text-xs font-mono text-white rounded focus:outline-none focus:border-rhive-pink"
                                     />
+                                    {activeSuggestField === 'client' && tier1Suggestions.length > 0 && (
+                                        <div className="absolute left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-gray-950 border border-gray-700 rounded-lg shadow-2xl z-50 divide-y divide-gray-800/70">
+                                            {tier1Suggestions.map((item) => (
+                                                <button
+                                                    key={item.name}
+                                                    type="button"
+                                                    onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                        setNewTaskForm(prev => ({
+                                                            ...prev,
+                                                            client_name: item.name,
+                                                            contact_name: prev.contact_name || item.contactName || '',
+                                                            contact_phone: prev.contact_phone || item.contactPhone || '',
+                                                            contact_email: prev.contact_email || item.contactEmail || '',
+                                                        }));
+                                                        setActiveSuggestField(null);
+                                                    }}
+                                                    className="w-full px-3 py-2 text-left hover:bg-rhive-pink/15 transition-colors flex items-center justify-between gap-2"
+                                                >
+                                                    <span className="text-xs font-mono text-white font-bold truncate">🏢 {item.name}</span>
+                                                    {item.contactName && (
+                                                        <span className="text-[10px] font-mono text-gray-400 truncate shrink-0">{item.contactName}</span>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Tier 2 Campus */}
-                                <div>
+                                <div className="relative">
                                     <label className="block text-[11px] font-mono text-gray-400 mb-0.5">Tier 2: Property Campus</label>
                                     <input 
                                         type="text"
                                         value={newTaskForm.campus_name}
-                                        onChange={e => setNewTaskForm({ ...newTaskForm, campus_name: e.target.value })}
-                                        placeholder="e.g. Smith Apartments Campus"
-                                        className="w-full bg-black/80 border border-gray-700 px-2.5 py-1.5 text-xs font-mono text-white rounded"
+                                        onFocus={() => setActiveSuggestField('campus')}
+                                        onBlur={() => setTimeout(() => setActiveSuggestField(prev => prev === 'campus' ? null : prev), 150)}
+                                        onChange={e => {
+                                            setNewTaskForm({ ...newTaskForm, campus_name: e.target.value });
+                                            setActiveSuggestField('campus');
+                                        }}
+                                        placeholder="Search or type property campus..."
+                                        className="w-full bg-black/80 border border-gray-700 px-2.5 py-1.5 text-xs font-mono text-white rounded focus:outline-none focus:border-rhive-pink"
                                     />
+                                    {activeSuggestField === 'campus' && tier2Suggestions.length > 0 && (
+                                        <div className="absolute left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-gray-950 border border-gray-700 rounded-lg shadow-2xl z-50 divide-y divide-gray-800/70">
+                                            {tier2Suggestions.map((item, idx) => (
+                                                <button
+                                                    key={`${item.name}-${idx}`}
+                                                    type="button"
+                                                    onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                        setNewTaskForm(prev => ({
+                                                            ...prev,
+                                                            campus_name: item.name,
+                                                            client_name: prev.client_name || item.clientName || '',
+                                                        }));
+                                                        setActiveSuggestField(null);
+                                                    }}
+                                                    className="w-full px-3 py-2 text-left hover:bg-rhive-pink/15 transition-colors flex items-center justify-between gap-2"
+                                                >
+                                                    <span className="text-xs font-mono text-white font-bold truncate">📍 {item.name}</span>
+                                                    {item.clientName && (
+                                                        <span className="text-[10px] font-mono text-rhive-pink truncate shrink-0">{item.clientName}</span>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Tier 4 Building */}
-                                <div>
+                                <div className="relative">
                                     <label className="block text-[11px] font-mono text-gray-400 mb-0.5">Tier 4: Building Asset</label>
                                     <input 
                                         type="text"
                                         value={newTaskForm.building_name}
-                                        onChange={e => setNewTaskForm({ ...newTaskForm, building_name: e.target.value })}
-                                        placeholder="e.g. Building B"
-                                        className="w-full bg-black/80 border border-gray-700 px-2.5 py-1.5 text-xs font-mono text-white rounded"
+                                        onFocus={() => setActiveSuggestField('building')}
+                                        onBlur={() => setTimeout(() => setActiveSuggestField(prev => prev === 'building' ? null : prev), 150)}
+                                        onChange={e => {
+                                            setNewTaskForm({ ...newTaskForm, building_name: e.target.value });
+                                            setActiveSuggestField('building');
+                                        }}
+                                        placeholder="Search or type building asset..."
+                                        className="w-full bg-black/80 border border-gray-700 px-2.5 py-1.5 text-xs font-mono text-white rounded focus:outline-none focus:border-rhive-pink"
                                     />
+                                    {activeSuggestField === 'building' && tier4Suggestions.length > 0 && (
+                                        <div className="absolute left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-gray-950 border border-gray-700 rounded-lg shadow-2xl z-50 divide-y divide-gray-800/70">
+                                            {tier4Suggestions.map((item, idx) => (
+                                                <button
+                                                    key={`${item.name}-${idx}`}
+                                                    type="button"
+                                                    onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                        setNewTaskForm(prev => ({
+                                                            ...prev,
+                                                            building_name: item.name,
+                                                            campus_name: prev.campus_name || item.campusName || '',
+                                                            client_name: prev.client_name || item.clientName || '',
+                                                        }));
+                                                        setActiveSuggestField(null);
+                                                    }}
+                                                    className="w-full px-3 py-2 text-left hover:bg-rhive-pink/15 transition-colors flex items-center justify-between gap-2"
+                                                >
+                                                    <span className="text-xs font-mono text-white font-bold truncate">🏗️ {item.name}</span>
+                                                    {item.campusName && (
+                                                        <span className="text-[10px] font-mono text-gray-400 truncate shrink-0">{item.campusName}</span>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
