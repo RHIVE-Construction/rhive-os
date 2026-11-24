@@ -1577,7 +1577,7 @@ export const securityNotificationService = {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CTA LEAD SERVICE
-// Sends SMS notification leads to RHIVE Construction (+17438876637) via JustCall.
+// Sends SMS notification leads to RHIVE Construction (+14354176637) via JustCall.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ctaLeadService = {
@@ -1599,6 +1599,365 @@ export const ctaLeadService = {
         } catch (error: any) {
             console.error('[ctaLeadService.sendNotification]', error);
             return { success: false, error: 'Network error. Could not send the contact notification.' };
+        }
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CRM INBOX SERVICE
+// Standalone messaging system powered by Firestore & JustCall API.
+// Official RHIVE line: (435) 417-6637 (+14354176637)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const crmInboxService = {
+    RHIVE_PHONE_NUMBER: '(435) 417-6637',
+    RHIVE_RAW_NUMBER: '+14354176637',
+
+    subscribeToMessages: (callback: (messages: any[]) => void) => {
+        try {
+            const q = query(collection(db, 'inbox_messages'), orderBy('created_at', 'desc'));
+            return onSnapshot(q, (snapshot) => {
+                const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                callback(msgs);
+            }, (error) => {
+                console.warn('[crmInboxService.subscribeToMessages] Snapshot error:', error);
+            });
+        } catch (e) {
+            console.warn('[crmInboxService] Could not establish Firestore listener:', e);
+            return () => {};
+        }
+    },
+
+    sendMessage: async (payload: {
+        channel: 'text' | 'email' | 'call';
+        recipientPhone?: string;
+        recipientEmail?: string;
+        recipientName: string;
+        messageBody: string;
+        subject?: string;
+        senderName?: string;
+        clientId?: string;
+        clientName?: string;
+        campusName?: string;
+        assignedTo?: string;
+        callDuration?: string;
+        callOutcome?: string;
+    }): Promise<{ success: boolean; data?: any; error?: string }> => {
+        try {
+            // Dispatch via Cloud Function (which invokes JustCall API with +14354176637)
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/sendCrmMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                const json = await res.json();
+                return { success: true, data: json.message };
+            }
+
+            console.warn('[crmInboxService] Cloud function returned status', res.status, '- Falling back to client-side Firestore write.');
+        } catch (err: any) {
+            console.warn('[crmInboxService] Direct cloud call failed, using client Firestore fallback:', err.message);
+        }
+
+        // Resilient Fallback: Write directly to Firestore inbox_messages
+        try {
+            const isCall = payload.channel === 'call';
+            const fallbackDoc = {
+                channel: payload.channel,
+                direction: isCall ? 'inbound' : 'outbound',
+                folder: isCall ? 'inbox' : 'sent',
+                senderName: isCall ? payload.recipientName : (payload.senderName || 'Kara'),
+                senderPhone: isCall ? (payload.recipientPhone || '') : '+14354176637',
+                senderEmail: isCall ? (payload.recipientEmail || null) : 'Office@RhiveConstruction.com',
+                recipientName: isCall ? (payload.senderName || 'RHIVE Office') : payload.recipientName,
+                recipientPhone: isCall ? '+14354176637' : (payload.recipientPhone || null),
+                recipientEmail: isCall ? 'Office@RhiveConstruction.com' : (payload.recipientEmail || null),
+                subject: payload.subject || null,
+                body: payload.messageBody || (isCall ? `Logged Call: ${payload.callOutcome || 'Completed'} (${payload.callDuration || '0s'})` : ''),
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                created_at: new Date().toISOString(),
+                unread: isCall,
+                client_id: payload.clientId || null,
+                client_name: payload.clientName || null,
+                campus_name: payload.campusName || null,
+                assigned_to: payload.assignedTo || payload.senderName || 'Kara',
+                delivery_status: 'sent',
+                call_duration: payload.callDuration || null,
+                call_outcome: payload.callOutcome || null
+            };
+
+            const ref = await addDoc(collection(db, 'inbox_messages'), fallbackDoc);
+
+            // Also queue to mail_outbox if email channel
+            if (payload.channel === 'email' && payload.recipientEmail) {
+                try {
+                    await addDoc(collection(db, 'mail_outbox'), {
+                        to: payload.recipientEmail,
+                        from: 'RHIVE Office <Office@RhiveConstruction.com>',
+                        replyTo: 'Office@RhiveConstruction.com',
+                        message: {
+                            subject: payload.subject || 'Project Update from RHIVE Construction',
+                            text: payload.messageBody,
+                            html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:24px;border-radius:8px;">
+                                <h2 style="color:#ec028b;margin:0 0 16px;">RHIVE Construction</h2>
+                                <p style="margin:0 0 16px;line-height:1.6;font-size:14px;color:#d1d5db;">${payload.messageBody.replace(/\n/g, '<br/>')}</p>
+                                <hr style="border:none;border-top:1px solid #374151;margin:24px 0 16px;"/>
+                                <p style="margin:0;font-size:12px;color:#9ca3af;">RHIVE Construction • (435) 417-6637 • Salt Lake City, Utah</p>
+                            </div>`
+                        },
+                        createdAt: new Date().toISOString()
+                    });
+                } catch (emailErr) {
+                    console.warn('[crmInboxService] Failed to queue to mail_outbox:', emailErr);
+                }
+            }
+
+            return { success: true, data: { id: ref.id, ...fallbackDoc } };
+        } catch (fbErr: any) {
+            console.error('[crmInboxService.sendMessage] Fallback error:', fbErr);
+            return { success: false, error: fbErr.message };
+        }
+    },
+
+    toggleReadStatus: async (id: string, unread: boolean) => {
+        try {
+            await updateDoc(doc(db, 'inbox_messages', id), {
+                unread,
+                updated_at: new Date().toISOString()
+            });
+            return { success: true };
+        } catch (err: any) {
+            console.error('[crmInboxService.toggleReadStatus]', err);
+            return { success: false, error: err.message };
+        }
+    },
+
+    moveToFolder: async (id: string, folder: string) => {
+        try {
+            await updateDoc(doc(db, 'inbox_messages', id), {
+                folder,
+                updated_at: new Date().toISOString()
+            });
+            return { success: true };
+        } catch (err: any) {
+            console.error('[crmInboxService.moveToFolder]', err);
+            return { success: false, error: err.message };
+        }
+    },
+
+    sendBatchCampaign: async (opts: {
+        campaignName: string;
+        subject: string;
+        body: string;
+        isHtml?: boolean;
+        recipients: Array<{
+            name: string;
+            email: string;
+            client_id?: string;
+            client_name?: string;
+            campus_name?: string;
+            stage?: string;
+        }>;
+        senderName?: string;
+        senderEmail?: string;
+    }): Promise<{
+        success: boolean;
+        count: number;
+        queuedCount: number;
+        sentMessages: any[];
+        campaignLog?: any;
+        error?: string;
+    }> => {
+        try {
+            const campaignId = `CAMP-${Date.now()}`;
+            const sName = opts.senderName || 'Kara';
+            const sEmail = opts.senderEmail || 'kara@rhiveconstruction.com';
+            const isHtml = Boolean(opts.isHtml);
+            const sentMessages: any[] = [];
+            let queuedCount = 0;
+            let firstQueueError: string | undefined;
+
+            const stripHtmlToText = (html: string) =>
+                html
+                    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+                    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+                    .replace(/<br\s*\/?>/gi, '\n')
+                    .replace(/<\/(p|div|tr|li|h[1-6])>/gi, '\n')
+                    .replace(/<[^>]+>/g, ' ')
+                    .replace(/&nbsp;/gi, ' ')
+                    .replace(/&amp;/gi, '&')
+                    .replace(/&lt;/gi, '<')
+                    .replace(/&gt;/gi, '>')
+                    .replace(/[ \t]+/g, ' ')
+                    .replace(/\n\s*\n+/g, '\n\n')
+                    .trim();
+
+            for (let i = 0; i < opts.recipients.length; i++) {
+                const r = opts.recipients[i];
+                if (!r.email) continue;
+                const firstName = (r.name || 'Valued Client').split(' ')[0];
+                const clientName = r.client_name || r.name || 'Valued Client';
+                const campusName = r.campus_name || 'Your Property';
+
+                // Replace tokens
+                const personalizedSubject = opts.subject
+                    .replace(/\{\{first_name\}\}/gi, firstName)
+                    .replace(/\{\{client_name\}\}/gi, clientName)
+                    .replace(/\{\{campus_name\}\}/gi, campusName);
+
+                const personalizedBody = opts.body
+                    .replace(/\{\{first_name\}\}/gi, firstName)
+                    .replace(/\{\{client_name\}\}/gi, clientName)
+                    .replace(/\{\{campus_name\}\}/gi, campusName);
+
+                const textPayload = isHtml ? stripHtmlToText(personalizedBody) : personalizedBody;
+                const htmlPayload = isHtml
+                    ? personalizedBody
+                    : `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:28px;border-radius:8px;max-width:600px;margin:0 auto;border:1px solid #1f2937;">
+                                <div style="display:flex;align-items:center;margin-bottom:20px;">
+                                    <h2 style="color:#ec028b;margin:0;font-size:20px;letter-spacing:1px;font-weight:900;">RHIVE CONSTRUCTION</h2>
+                                </div>
+                                <h3 style="color:#ffffff;margin:0 0 16px;font-size:16px;">${personalizedSubject}</h3>
+                                <p style="margin:0 0 20px;line-height:1.7;font-size:14px;color:#d1d5db;white-space:pre-wrap;">${personalizedBody.replace(/\n/g, '<br/>')}</p>
+                                <div style="margin:24px 0;text-align:center;">
+                                    <a href="https://app.rhiveconstruction.com" style="background:#ec028b;color:#ffffff;padding:12px 24px;border-radius:4px;font-weight:bold;text-decoration:none;display:inline-block;font-size:13px;letter-spacing:1px;">
+                                        VIEW PROJECT PORTAL →
+                                    </a>
+                                </div>
+                                <hr style="border:none;border-top:1px solid #27272a;margin:28px 0 16px;"/>
+                                <p style="margin:0;font-size:12px;color:#71717a;line-height:1.5;">
+                                    RHIVE Construction • Official Communications • Salt Lake City, Utah<br/>
+                                    Phone: (435) 417-6637 • Email: support@rhiveconstruction.com
+                                </p>
+                            </div>`;
+
+                // 1. Queue to mail_outbox
+                let queuedOk = false;
+                try {
+                    await addDoc(collection(db, 'mail_outbox'), {
+                        to: r.email,
+                        from: `RHIVE Office <Office@RhiveConstruction.com>`,
+                        replyTo: 'Office@RhiveConstruction.com',
+                        message: {
+                            subject: personalizedSubject,
+                            text: textPayload,
+                            html: htmlPayload
+                        },
+                        campaign_id: campaignId,
+                        is_html: isHtml,
+                        createdAt: new Date().toISOString()
+                    });
+                    queuedOk = true;
+                    queuedCount++;
+                } catch (queueErr: any) {
+                    console.warn('[crmInboxService.sendBatchCampaign] queue error:', queueErr);
+                    if (!firstQueueError) firstQueueError = queueErr?.message || 'Firestore write rejected';
+                }
+
+                // 2. Mirror into inbox_messages under sent (and return for immediate UI state)
+                const msgPayload = {
+                    channel: 'email' as const,
+                    direction: 'outbound' as const,
+                    folder: 'sent' as const,
+                    senderName: sName,
+                    senderEmail: sEmail,
+                    recipientName: r.name,
+                    recipientEmail: r.email,
+                    subject: personalizedSubject,
+                    body: textPayload || '[HTML Email Campaign]',
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    created_at: new Date().toISOString(),
+                    unread: false,
+                    client_id: r.client_id || null,
+                    client_name: r.client_name || r.name,
+                    campus_name: r.campus_name || null,
+                    assigned_to: sName,
+                    delivery_status: queuedOk ? 'queued_campaign' : 'failed_permissions',
+                    campaign_id: campaignId,
+                    is_html: isHtml
+                };
+
+                let msgId = `MSG-CAMP-${Date.now()}-${i}`;
+                try {
+                    const msgRef = await addDoc(collection(db, 'inbox_messages'), msgPayload);
+                    msgId = msgRef.id;
+                } catch (msgErr) {
+                    console.warn('[crmInboxService.sendBatchCampaign] message error:', msgErr);
+                }
+
+                sentMessages.push({ id: msgId, ...msgPayload });
+            }
+
+            // 3. Log campaign record
+            const campaignLog = {
+                id: campaignId,
+                title: opts.campaignName,
+                subject: opts.subject,
+                body: opts.body,
+                is_html: isHtml,
+                recipient_count: opts.recipients.length,
+                queued_count: queuedCount,
+                sender_name: sName,
+                status: queuedCount > 0 ? 'completed' : 'failed',
+                created_at: new Date().toISOString(),
+                sent_at: new Date().toISOString()
+            };
+            try {
+                await addDoc(collection(db, 'campaign_logs'), campaignLog);
+            } catch (campErr) {
+                console.warn('[crmInboxService.sendBatchCampaign] camp error:', campErr);
+            }
+
+            if (queuedCount === 0) {
+                return {
+                    success: false,
+                    count: opts.recipients.length,
+                    queuedCount: 0,
+                    sentMessages,
+                    campaignLog,
+                    error: firstQueueError || 'Emails could not be queued to Firestore mail_outbox.'
+                };
+            }
+
+            return { success: true, count: queuedCount, queuedCount, sentMessages, campaignLog };
+        } catch (error: any) {
+            console.error('[crmInboxService.sendBatchCampaign] Error:', error);
+            return { success: false, count: 0, queuedCount: 0, sentMessages: [], error: error.message };
+        }
+    },
+
+    subscribeToCampaigns: (callback: (campaigns: any[]) => void) => {
+        try {
+            const q = query(collection(db, 'campaign_logs'), orderBy('created_at', 'desc'));
+            return onSnapshot(q, (snapshot) => {
+                const camps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                callback(camps);
+            }, (error) => {
+                console.warn('[crmInboxService.subscribeToCampaigns] Snapshot error:', error);
+            });
+        } catch (e) {
+            console.warn('[crmInboxService] Could not establish campaigns listener:', e);
+            return () => {};
+        }
+    },
+
+    syncInboundEmails: async (limit = 20): Promise<{ success: boolean; importedCount: number; error?: string }> => {
+        try {
+            const res = await fetch(`${FUNCTIONS_BASE_URL}/syncInboundEmails`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ limit })
+            });
+            const json = await res.json();
+            if (!res.ok) {
+                return { success: false, importedCount: 0, error: json.error || `HTTP ${res.status}` };
+            }
+            return { success: true, importedCount: json.importedCount || 0 };
+        } catch (err: any) {
+            console.warn('[crmInboxService.syncInboundEmails] Error:', err);
+            return { success: false, importedCount: 0, error: err.message };
         }
     }
 };

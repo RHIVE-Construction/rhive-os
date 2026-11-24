@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Switch } from '../components/ui/switch';
 import { createPortal } from 'react-dom';
 import PageContainer from '../components/PageContainer';
 import Card from '../components/Card';
@@ -268,39 +269,11 @@ const StormAlertWidget: React.FC = () => {
                                     cursor: 'pointer', userSelect: 'none',
                                 }}
                             >
-                                <div
-                                    style={{
-                                        position: 'relative',
-                                        width: 36, height: 20,
-                                    }}
-                                >
-                                    <input
-                                        id="storm-alert-toggle"
-                                        type="checkbox"
-                                        checked={alertEnabled}
-                                        onChange={e => setAlertEnabled(e.target.checked)}
-                                        style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
-                                    />
-                                    {/* Custom toggle track */}
-                                    <div style={{
-                                        position: 'absolute', inset: 0, borderRadius: 10,
-                                        background: alertEnabled
-                                            ? (isActive ? 'rgba(251,146,60,0.7)' : 'rgba(236,2,139,0.6)')
-                                            : 'rgba(255,255,255,0.12)',
-                                        transition: 'background 0.25s',
-                                        border: alertEnabled
-                                            ? (isActive ? '1px solid rgba(251,146,60,0.9)' : '1px solid rgba(236,2,139,0.9)')
-                                            : '1px solid rgba(255,255,255,0.18)',
-                                    }} />
-                                    {/* Thumb */}
-                                    <div style={{
-                                        position: 'absolute', top: 2, width: 16, height: 16,
-                                        borderRadius: '50%', background: '#fff',
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
-                                        transition: 'left 0.25s cubic-bezier(0.34,1.56,0.64,1)',
-                                        left: alertEnabled ? 18 : 2,
-                                    }} />
-                                </div>
+                                <Switch
+                                    id="storm-alert-toggle"
+                                    checked={alertEnabled}
+                                    onCheckedChange={setAlertEnabled}
+                                />
                                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>
                                     Storm alerts {alertEnabled ? 'ON' : 'OFF'}
                                 </span>

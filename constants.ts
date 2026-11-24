@@ -64,7 +64,8 @@ export const PAGE_GROUPS: PageGroup[] = [
             { id: 'E-01', name: 'Dashboard', userType: 'Employee' },
             { id: 'E-02a', name: 'New Project', userType: 'Employee' },
             { id: 'E-CUSTOMERS', name: 'Customers', userType: 'Employee' },
-            { id: 'E-03', name: 'AI Assistant', userType: 'Employee' },
+            { id: 'E-INBOX', name: 'Inbox', userType: 'Employee' },
+            { id: 'E-TASKS', name: 'Tasks', userType: 'Employee' },
             { id: 'E-04', name: 'Calendar', userType: 'Employee' },
         ]
     },
@@ -148,6 +149,7 @@ export const PAGE_GROUPS: PageGroup[] = [
         pages: [
             { id: 'A-01', name: 'Admin Dashboard', userType: 'Admin' },
             { id: 'A-02', name: 'User Management', userType: 'Admin' },
+            { id: 'A-CUSTOMIZE', name: 'CRM Customize', userType: 'Admin' },
             { id: 'E-TRASH', name: 'Trash Bin', userType: 'Admin' },
             { id: 'A-03', name: 'Estimate Pricing', userType: 'Admin' },
             { id: 'A-05', name: 'Line Item Master', userType: 'Admin' },

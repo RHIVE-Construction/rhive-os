@@ -27,6 +27,18 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Preserve interviews app rules (authenticated users / admin)
+    match /interviews/{interviewId} {
+      allow create: if request.auth != null &&
+                    request.resource.data.timestamp is timestamp &&
+                    request.resource.data.userEmail is string &&
+                    request.resource.data.transcripts is list &&
+                    request.resource.data.report is map;
+      allow read, list: if request.auth != null &&
+                        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+                         (request.auth.token.email == "sheena.l@rhiveconstruction.com" && request.auth.token.email_verified == true));
+    }
+
     // User Activity Logs — app-layer controlled
     // Write: open to the app (session-validated at app layer)
     // Read: open to the app (role-based filtering applied in application code)
@@ -35,7 +47,8 @@ service cloud.firestore {
       allow write: if true;
     }
 
-    // Existing open catch-all (maintained for app-layer auth compatibility)
+    // Existing open catch-all (maintained for RHIVE OS app-layer auth compatibility,
+    // including mail_outbox, inbox_messages, campaign_logs, accounts, contacts, projects)
     match /{document=**} {
       allow read: if true;
       allow write: if true;

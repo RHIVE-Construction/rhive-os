@@ -49,7 +49,7 @@ import { Card, CardContent } from '../components/ui/card';
 import type { User, BuildingData, CalculationResult, SurveyState, Contact, Property, EaveOverhang, ProjectStage } from '../types';
 import { createProject as createProjectApi } from '../lib/api';
 import { getMapsApiKey } from '../lib/mapsConfig';
-import { firestoreService, userLogService } from '../lib/firebaseService';
+import { firestoreService, userLogService, accountService } from '../lib/firebaseService';
 import { analyzeLidar, type LidarResult } from '../services/lidarService';
 
 // Mock Data for Utah Companies
@@ -1570,8 +1570,9 @@ const AddressSection: React.FC<{
 const CompanyLookup: React.FC<{ 
     onSelect: (company: typeof MOCK_UTAH_COMPANIES[0]) => void, 
     value: string, 
-    placeholder?: string 
-}> = ({ onSelect, value, placeholder = "Search Companies..." }) => {
+    placeholder?: string,
+    companies?: typeof MOCK_UTAH_COMPANIES
+}> = ({ onSelect, value, placeholder = "Search Companies...", companies = MOCK_UTAH_COMPANIES }) => {
     const [searchTerm, setSearchTerm] = useState(value);
     const [showDropdown, setShowDropdown] = useState(false);
 
@@ -1579,7 +1580,7 @@ const CompanyLookup: React.FC<{
         setSearchTerm(value);
     }, [value]);
 
-    const filteredCompanies = MOCK_UTAH_COMPANIES.filter(c => 
+    const filteredCompanies = (companies || MOCK_UTAH_COMPANIES).filter(c => 
         c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -1592,8 +1593,10 @@ const CompanyLookup: React.FC<{
                     placeholder={placeholder}
                     value={searchTerm}
                     onChange={(e) => {
-                        setSearchTerm(e.target.value);
+                        const val = e.target.value;
+                        setSearchTerm(val);
                         setShowDropdown(true);
+                        onSelect({ name: val, address: '', city: 'Salt Lake City', state: 'UT', zip: '' });
                     }}
                     onFocus={() => setShowDropdown(true)}
                     onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
@@ -2074,8 +2077,61 @@ const CustomerInputPage: React.FC = () => {
     }, []);
 
     // Session Restore from sessionStorage telemetry states on mount
+    const [knownCompanies, setKnownCompanies] = useState<typeof MOCK_UTAH_COMPANIES>(MOCK_UTAH_COMPANIES);
+
+    useEffect(() => {
+        const pool = new Map<string, typeof MOCK_UTAH_COMPANIES[0]>();
+        MOCK_UTAH_COMPANIES.forEach(c => pool.set(c.name.toLowerCase().trim(), c));
+
+        users.forEach(u => {
+            if (u.name && !pool.has(u.name.toLowerCase().trim())) {
+                pool.set(u.name.toLowerCase().trim(), {
+                    name: u.name,
+                    address: '',
+                    city: 'Salt Lake City',
+                    state: 'UT',
+                    zip: ''
+                });
+            }
+        });
+
+        try {
+            const savedClients = localStorage.getItem('rhive_customer_clients');
+            if (savedClients) {
+                const parsed = JSON.parse(savedClients);
+                parsed.forEach((c: any) => {
+                    if (c.name && !pool.has(c.name.toLowerCase().trim())) {
+                        pool.set(c.name.toLowerCase().trim(), {
+                            name: c.name,
+                            address: c.billing_address || '',
+                            city: 'Salt Lake City',
+                            state: 'UT',
+                            zip: ''
+                        });
+                    }
+                });
+            }
+        } catch { /* ignore */ }
+
+        setKnownCompanies(Array.from(pool.values()));
+    }, [users]);
+
     useEffect(() => {
         const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const intakeParentCompany = sessionStorage.getItem('intakeParentCompany');
+        const intakePropertyName = sessionStorage.getItem('intakePropertyName');
+        if (intakeParentCompany || intakePropertyName) {
+            setCompanyData(prev => ({
+                parentCompany: intakeParentCompany || prev.parentCompany,
+                propertyName: intakePropertyName || prev.propertyName
+            }));
+            if (intakeParentCompany) {
+                setProjectCategory('Commercial');
+            }
+            sessionStorage.removeItem('intakeParentCompany');
+            sessionStorage.removeItem('intakePropertyName');
+        }
+
         const intakeCategory = sessionStorage.getItem('intakeCategory') || urlParams?.get('category');
         if (intakeCategory === 'Commercial' || intakeCategory === 'Residential' || intakeCategory === 'Government') {
             setProjectCategory(intakeCategory);
@@ -2385,8 +2441,9 @@ const CustomerInputPage: React.FC = () => {
         // 2. Resolve Company (if commercial / government)
         let resolvedCompanyId = '';
         if (requiresOrganization && companyData.parentCompany) {
+            const compName = companyData.parentCompany.trim();
             const companyMatch = users.find(u => 
-                u.name.toLowerCase().trim() === companyData.parentCompany.toLowerCase().trim()
+                u.name.toLowerCase().trim() === compName.toLowerCase()
             );
             if (companyMatch) {
                 resolvedCompanyId = companyMatch.id;
@@ -2394,12 +2451,26 @@ const CustomerInputPage: React.FC = () => {
                 resolvedCompanyId = `U-COMP-${Date.now()}`;
                 addUser({
                     id: resolvedCompanyId,
-                    name: companyData.parentCompany,
+                    name: compName,
                     role: 'Customer',
                     email: '',
                     phone: ''
                 });
             }
+
+            // Consolidate in Firestore accounts collection so it shows in Customers & Accounts directory
+            accountService.create({
+                name: compName,
+                accountName: compName,
+                company: compName,
+                customer_type: projectCategory,
+                propertyName: companyData.propertyName || propertyData.address,
+                projectAddress: propertyData.address,
+                city: propertyData.city || 'Salt Lake City',
+                state: propertyData.state || 'UT',
+                zip: propertyData.zip || '',
+                created_at: new Date().toISOString()
+            }).catch(e => console.warn('[intake] accountService.create non-blocking note:', e?.message));
         }
 
         // Determine owner ID for property/project
@@ -2587,7 +2658,20 @@ const CustomerInputPage: React.FC = () => {
             }
 
             // Create new project at the correct stage
-            const newProjId = createProject(projectName, projectCategory, targetPropertyId, ownerId, initialStage);
+            const newProjId = createProject(
+                projectName, 
+                projectCategory, 
+                targetPropertyId, 
+                ownerId, 
+                initialStage,
+                {
+                    parent_company: companyData.parentCompany?.trim() || undefined,
+                    company: companyData.parentCompany?.trim() || undefined,
+                    property_name: companyData.propertyName?.trim() || propertyData.address,
+                    propertyName: companyData.propertyName?.trim() || propertyData.address,
+                    address: propertyData.address
+                }
+            );
 
             // Log the new lead/project creation
             userLogService.logAction(
@@ -2982,7 +3066,7 @@ const CustomerInputPage: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
                                             <QuestionLabel>Parent Company / Owner</QuestionLabel>
-                                            <CompanyLookup onSelect={handleCompanySelect} value={companyData.parentCompany} />
+                                            <CompanyLookup onSelect={handleCompanySelect} value={companyData.parentCompany} companies={knownCompanies} />
                                             <HelperText>Search existing accounts or type new.</HelperText>
                                         </div>
                                         <div>
@@ -3096,6 +3180,7 @@ const CustomerInputPage: React.FC = () => {
                                         }}
                                         value={billToName}
                                         placeholder="Search Utah License / Business Name..."
+                                        companies={knownCompanies}
                                     />
                                     <HelperText>Auto-populates address if found in License DB.</HelperText>
                                 </div>

@@ -222,6 +222,11 @@ export interface Project {
   status: string;
   last_updated?: string;
   assigned_contractor_id?: string;
+  parent_company?: string;
+  company?: string;
+  property_name?: string;
+  propertyName?: string;
+  address?: string;
   quote?: {
     total: number;
     status: 'Draft' | 'Sent' | 'Approved' | 'Rejected';
@@ -232,6 +237,7 @@ export interface Project {
     wage_determination: string;
     certified_payroll_status: boolean;
   };
+  [key: string]: any;
 }
 
 export interface Property {
@@ -451,6 +457,8 @@ export interface CustomerClient {
     customer_type: CustomerType;
     account_code?: string;
     billing_address?: string;
+    stage?: ProjectStage | string;
+    current_stage?: ProjectStage | string;
     primary_contact?: {
         name: string;
         email: string;
@@ -462,4 +470,99 @@ export interface CustomerClient {
     updated_at: string;
     campuses: PropertyCampus[];
 }
+
+// ─── CRM MODULES (Inbox, Tasks, Unified Calendar) ────────────────────────────
+
+export type MessageChannel = 'email' | 'text' | 'call';
+export type InboxFolder = 'inbox' | 'assigned' | 'drafts' | 'sent' | 'closed' | 'campaigns';
+
+export interface EmailCampaign {
+    id: string;
+    title: string;
+    subject: string;
+    body: string;
+    senderName: string;
+    senderEmail: string;
+    targetStages: string[];
+    targetTiers: string[];
+    recipientCount: number;
+    recipients: Array<{
+        name: string;
+        email: string;
+        client_name?: string;
+        stage?: string;
+    }>;
+    status: 'draft' | 'sending' | 'completed';
+    created_at: string;
+    sent_at?: string;
+}
+
+export interface CrmMessage {
+    id: string;
+    channel: MessageChannel;
+    folder: InboxFolder;
+    senderName: string;
+    senderEmail?: string;
+    senderPhone?: string;
+    recipientName: string;
+    subject?: string;
+    body: string;
+    timestamp: string;
+    unread: boolean;
+    client_id?: string;
+    client_name?: string;
+    campus_id?: string;
+    campus_name?: string;
+    project_id?: string;
+    assigned_to?: string;
+    call_duration?: string;
+    call_outcome?: string;
+}
+
+export type TaskCategory = 'call' | 'labor' | 'supplier' | 'inspection' | 'quote' | 'other';
+
+export interface CrmTask {
+    id: string;
+    title: string;
+    category: TaskCategory;
+    client_id?: string;
+    client_name: string;
+    campus_id?: string;
+    campus_name?: string;
+    building_id?: string;
+    building_name?: string;
+    contact_name: string;
+    contact_phone?: string;
+    contact_email?: string;
+    assigned_user: string; // e.g. "Kara", "Chad Evenhuis", "Victor", "Me"
+    due_date: string; // YYYY-MM-DD
+    due_time?: string; // "All day" or "10:00 AM"
+    completed: boolean;
+    priority: 'low' | 'normal' | 'high';
+    notes?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export type CalendarEventCategory = 'inspection' | 'work' | 'task' | 'call';
+
+export interface CrmCalendarEvent {
+    id: string;
+    title: string;
+    category: CalendarEventCategory;
+    date: string; // YYYY-MM-DD
+    startTime?: string; // HH:mm or "All day"
+    endTime?: string;
+    isAllDay: boolean;
+    client_id?: string;
+    client_name?: string;
+    campus_name?: string;
+    building_name?: string;
+    assigned_user: string;
+    location?: string;
+    description?: string;
+    task_id?: string;
+    project_id?: string;
+}
+
 

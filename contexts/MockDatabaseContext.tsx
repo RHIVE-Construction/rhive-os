@@ -45,7 +45,7 @@ interface MockDatabaseContextType {
     logout: () => void;
 
     // Actions
-    createProject: (name: string, type: any, propertyId: string, accountId: string, initialStage?: string) => string;
+    createProject: (name: string, type: any, propertyId: string, accountId: string, initialStage?: string, extra?: Record<string, any>) => string;
     addUser: (user: Partial<User>) => void;
     addProperty: (property: Partial<Property>) => string;
     updateProperty: (propertyId: string, updates: Partial<Property>) => void;
@@ -520,7 +520,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
         userLogService.logAction('ADD_COMMUNICATION', `Communication logged to ${targetId} (${type})`, { type, targetId, content });
     };
 
-    const createProject = (name: string, type: any, propertyId: string, accountId: string, initialStage: string = 'Lead') => {
+    const createProject = (name: string, type: any, propertyId: string, accountId: string, initialStage: string = 'Lead', extra?: Record<string, any>) => {
         // Build a document that the Firestore-backed pipeline (projectService.subscribe) can read
         const projectDoc: Record<string, any> = {
             name,
@@ -531,6 +531,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             status: 'Active',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
+            ...(extra || {})
         };
 
         // Persist to Firestore so the real-time pipeline subscription sees it immediately
@@ -544,7 +545,7 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             userLogService.logAction(
                 'CREATE_PROJECT',
                 `Project "${name}" created and added to ${initialStage} pipeline`,
-                { projectId: result.id || resolvedId, name, type, propertyId, accountId, stage: initialStage, newStage: initialStage }
+                { projectId: result.id || resolvedId, name, type, propertyId, accountId, stage: initialStage, newStage: initialStage, ...(extra || {}) }
             );
         }).catch((err) => {
             console.warn('[MockDB] Firestore createProject error, falling back to local state:', err);
@@ -559,7 +560,8 @@ export const MockDatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ 
             account_id: accountId,
             current_stage: initialStage as any,
             status: 'Active',
-            last_updated: new Date().toISOString()
+            last_updated: new Date().toISOString(),
+            ...(extra || {})
         };
         setProjects(prev => [...prev, newProject]);
 
