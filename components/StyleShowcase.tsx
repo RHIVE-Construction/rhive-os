@@ -1186,13 +1186,13 @@ const EstimationPreview = () => {
     // Google Places Autocomplete Implementation
     useEffect(() => {
         const loadScript = (url: string, callback: () => void) => {
-            const existingScript = document.querySelector(`script[src="${url}"]`);
+            if ((window as any).google && (window as any).google.maps) {
+                callback();
+                return;
+            }
+            const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
             if (existingScript) {
-                if ((window as any).google && (window as any).google.maps) {
-                    callback();
-                } else {
-                    existingScript.addEventListener('load', callback);
-                }
+                existingScript.addEventListener('load', callback);
                 return;
             }
             const script = document.createElement("script");

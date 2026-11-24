@@ -46,9 +46,15 @@ import EstimateBackendApiPage from './pages/EstimateBackendApiPage'; // A-04
 import QuoteBuilderToolPage from './pages/QuoteBuilderToolPage'; // E-23
 import LineItemCatalogPage from './pages/LineItemCatalogPage'; // A-05 / E-19
 import LineItemProfilePage from './pages/LineItemProfilePage'; // A-06 / E-20
-import ContactsVendorsPage from './pages/ContactsVendorsPage'; // E-24
+import ContactsVendorsPage from './pages/ContactsVendorsPage'; // E-24 (legacy placeholder)
+import ContactsListPage from './pages/ContactsListPage';
+import AccountsListPage from './pages/AccountsListPage';
 import ContactVendorProfilePage from './pages/ContactVendorProfilePage'; // E-25
 import CustomersPortalPage from './pages/CustomersPortalPage'; // E-CUSTOMERS
+import InboxPage from './pages/InboxPage'; // E-INBOX
+import CrmCustomizePage from './pages/CrmCustomizePage'; // A-CUSTOMIZE
+import TasksPage from './pages/TasksPage'; // E-TASKS
+import CalendarPage from './pages/CalendarPage'; // E-04
 import CompanyPage from './pages/CompanyPage';
 import PropertyProfilePage from './pages/PropertyProfilePage'; // E-12 Property Profile
 import PropertyPage from './pages/PropertyPage'; // E-12 Fallback List
@@ -259,21 +265,24 @@ export const pageComponentMap: Record<string, React.FC> = {
   'A-04': EstimateBackendApiPage,
   'A-05': LineItemCatalogPage,
   'A-06': LineItemProfilePage,
+  'A-CUSTOMIZE': CrmCustomizePage,
 
   // Employee (Employee World Section 2)
   'E-01': EmployeeHomepage,
   'E-02a': CustomerInputPage,
   'E-CUSTOMERS': CustomersPortalPage,
+  'E-INBOX': InboxPage,
+  'E-TASKS': TasksPage,
   'E-TEMP': PreConversionRecordPage,
   'E-03': () => <Placeholder name="AI ASSISTANT (GLOBAL)" />,
-  'E-04': EmployeeTimeoffPage,
+  'E-04': CalendarPage,
   'E-05': EmployeePipelinePage,
   'E-06': CustomerProjectMapPage,
-  'E-07': () => <Placeholder name="MY ACCOUNTS (CRM)" />,
+  'E-07': AccountsListPage,
   'E-08': CompanyPage,
   'E-09': () => <Placeholder name="MY CONTACTS (CRM)" />,
   'E-10': ContactVendorProfilePage,
-  'E-11': () => <Placeholder name="MY PROPERTIES (CRM)" />,
+  'E-11': PropertyPage,
   'E-12': PropertyProfilePage,
   'E-14': () => <Placeholder name="PROJECT HUB" />,
   'E-15': ProjectProfilePage,
@@ -286,7 +295,7 @@ export const pageComponentMap: Record<string, React.FC> = {
   'E-22': EmployeeTimeoffPage,
   'E-21a': () => <Placeholder name="EMPLOYEE PROFILE" />, // Added a missing slot
   'E-23': QuoteBuilderToolPage,
-  'E-24': ContactsVendorsPage,
+  'E-24': ContactsListPage,
   'E-25': ContactVendorProfilePage,
   'E-26': LeadPage,
   'E-27': EstimateToolPage,  // Sidebar entry (employee route — aliases to estimate-tool)

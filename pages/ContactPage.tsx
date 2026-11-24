@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import PageContainer from '../components/PageContainer';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Switch } from '../components/ui/switch';
 import { Input } from '../components/ui/input';
 import { MapPinIcon, UserIcon, RhiveLogo, ShareIcon } from '../components/icons';
 import { getMapsApiKey } from '../lib/mapsConfig';
@@ -55,13 +56,10 @@ const ContactPage: React.FC = () => {
                         </div>
 
                         {/* TCR 10DLC Compliance SMS Consent */}
-                        <div className="flex items-start gap-2.5 p-3 bg-black/60 border border-gray-800 rounded-xl text-left">
-                            <input 
-                                type="checkbox" 
-                                id="contactPageSmsConsent" 
-                                defaultChecked={true}
-                                className="mt-0.5 h-4 w-4 rounded accent-[#ec028b] cursor-pointer shrink-0" 
-                            />
+                        <div className="flex items-start gap-3 p-3 bg-black/60 border border-gray-800 rounded-xl text-left">
+                            <div className="mt-0.5 shrink-0">
+                                <Switch id="contactPageSmsConsent" defaultChecked={true} />
+                            </div>
                             <label htmlFor="contactPageSmsConsent" className="text-xs text-gray-400 leading-normal cursor-pointer select-none">
                                 By providing your phone number, you agree to receive SMS communications from RHIVE Construction regarding your project quote, scheduling, and service updates. Message frequency varies. Msg & data rates may apply. Reply STOP to cancel, HELP for help. View our <a href="/privacy" className="text-[#ec028b] underline hover:text-white">Privacy Policy</a> & <a href="/privacy" className="text-[#ec028b] underline hover:text-white">Terms of Service</a>. Mobile information will not be shared with third parties for marketing purposes.
                             </label>

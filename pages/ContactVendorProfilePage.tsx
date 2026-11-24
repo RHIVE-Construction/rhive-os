@@ -15,6 +15,12 @@ import ContactsListPage from './ContactsListPage';
 import { getMapsApiKey } from '../lib/mapsConfig';
 import { AddressInput } from '../components/AddressInput';
 import { useGoogleMapsApi } from '../hooks/useGoogleMapsApi';
+import {
+    CrmCustomizationConfig,
+    loadCachedCrmCustomization,
+    subscribeToCrmCustomization,
+    TAG_COLOR_CLASSES,
+} from '../lib/crmCustomizationService';
 
 const ContactVendorProfilePage: React.FC = () => {
     const page = PAGE_GROUPS.flatMap(g => g.pages).find(p => p.id === 'E-10');
@@ -32,6 +38,60 @@ const ContactVendorProfilePage: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Live CRM Customization (Custom Fields, Tags, Custom Stages)
+    const [crmConfig, setCrmConfig] = useState<CrmCustomizationConfig>(() => loadCachedCrmCustomization());
+    const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+    const [contactTags, setContactTags] = useState<string[]>([]);
+    const [contactStage, setContactStage] = useState<string>('');
+    const [savingCustom, setSavingCustom] = useState(false);
+    const [customSavedToast, setCustomSavedToast] = useState<string | null>(null);
+
+    useEffect(() => {
+        return subscribeToCrmCustomization(setCrmConfig);
+    }, []);
+
+    useEffect(() => {
+        if (contactData) {
+            setCustomFieldValues(contactData.custom_fields || {});
+            setContactTags(Array.isArray(contactData.tags) ? contactData.tags : []);
+            setContactStage(contactData.stage || '');
+        }
+    }, [contactData]);
+
+    const handleSaveCustomFields = async () => {
+        if (!selectedContactId) return;
+        setSavingCustom(true);
+        try {
+            await updateDoc(doc(db, 'contacts', selectedContactId), {
+                custom_fields: customFieldValues,
+                stage: contactStage || null,
+                updated_at: new Date().toISOString(),
+            });
+            setCustomSavedToast('Saved to Firestore');
+            setTimeout(() => setCustomSavedToast(null), 2500);
+        } catch (err) {
+            console.error('Failed to save custom fields:', err);
+        } finally {
+            setSavingCustom(false);
+        }
+    };
+
+    const handleToggleContactTag = async (tagName: string) => {
+        if (!selectedContactId) return;
+        const nextTags = contactTags.includes(tagName)
+            ? contactTags.filter(t => t !== tagName)
+            : [...contactTags, tagName];
+        setContactTags(nextTags);
+        try {
+            await updateDoc(doc(db, 'contacts', selectedContactId), {
+                tags: nextTags,
+                updated_at: new Date().toISOString(),
+            });
+        } catch (err) {
+            console.error('Failed to update contact tags:', err);
+        }
+    };
 
     const handleDeleteContact = async () => {
         if (!selectedContactId) return;
@@ -461,6 +521,105 @@ const ContactVendorProfilePage: React.FC = () => {
                                     <p className="absolute text-gray-500 text-sm">No address on file</p>
                                 </div>
                             )}
+                        </div>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Live CRM Custom Fields, Workflow Stage & Tags (driven by CRM Customize) */}
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-7">
+                    <Card title="Custom Fields & Workflow Stage">
+                        <div className="space-y-4">
+                            {/* Live Custom Stages selector */}
+                            <div>
+                                <label className="block text-[10px] font-mono uppercase text-gray-400 mb-1">
+                                    Workflow Stage
+                                </label>
+                                <select
+                                    value={contactStage}
+                                    onChange={(e) => setContactStage(e.target.value)}
+                                    className="w-full bg-black/70 border border-gray-800 px-3 py-2 text-xs font-mono text-white rounded-lg focus:outline-none focus:border-[#ec028b]"
+                                >
+                                    <option value="">-- Select Stage --</option>
+                                    {crmConfig.customStages.filter(s => s.active).map(stg => (
+                                        <option key={stg.id} value={stg.name}>{stg.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Live Custom Fields from CRM Customize */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {crmConfig.customFields.filter(f => f.visibleOnContacts).map(field => (
+                                    <div key={field.id}>
+                                        <label className="block text-[10px] font-mono uppercase text-gray-400 mb-1">
+                                            {field.label} {field.required && <span className="text-[#ec028b]">*</span>}
+                                        </label>
+                                        {field.type === 'Dropdown' && field.options?.length ? (
+                                            <select
+                                                value={customFieldValues[field.id] || ''}
+                                                onChange={(e) => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                                className="w-full bg-black/70 border border-gray-800 px-3 py-1.5 text-xs font-mono text-white rounded-lg focus:outline-none focus:border-[#ec028b]"
+                                            >
+                                                <option value="">Select...</option>
+                                                {field.options.map(opt => (
+                                                    <option key={opt} value={opt}>{opt}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type={field.type === 'Number' ? 'number' : field.type === 'Date' ? 'date' : field.type === 'Phone' ? 'tel' : field.type === 'URL' ? 'url' : 'text'}
+                                                value={customFieldValues[field.id] || ''}
+                                                onChange={(e) => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                                                placeholder={`Enter ${field.label.toLowerCase()}...`}
+                                                className="w-full bg-black/70 border border-gray-800 px-3 py-1.5 text-xs font-mono text-white rounded-lg focus:outline-none focus:border-[#ec028b]"
+                                            />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+                                <span className="text-[11px] font-mono text-green-400">
+                                    {customSavedToast || ''}
+                                </span>
+                                <Button
+                                    type="button"
+                                    variant="primary"
+                                    size="sm"
+                                    disabled={savingCustom}
+                                    onClick={handleSaveCustomFields}
+                                >
+                                    {savingCustom ? 'Saving...' : 'Save'}
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                <div className="lg:col-span-5">
+                    <Card title="Contact Tags">
+                        <p className="text-[11px] font-mono text-gray-400 mb-3">
+                            Click tags to assign or remove them from this contact (synced live with Firestore).
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            {crmConfig.tags.map(tag => {
+                                const active = contactTags.includes(tag.name);
+                                return (
+                                    <button
+                                        key={tag.id}
+                                        type="button"
+                                        onClick={() => handleToggleContactTag(tag.name)}
+                                        className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition-all ${
+                                            active
+                                                ? TAG_COLOR_CLASSES[tag.color]
+                                                : 'bg-black/40 border-gray-800 text-gray-500 hover:text-white hover:border-gray-600'
+                                        }`}
+                                    >
+                                        {active ? '✓ ' : '+ '}#{tag.name}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </Card>
                 </div>

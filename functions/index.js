@@ -366,7 +366,7 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
 
                 const apiKey = process.env.JUSTCALL_API_KEY || '';
                 const apiSecret = process.env.JUSTCALL_API_SECRET || '';
-                const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '';
+                const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '+14354176637';
 
                 let smsSent = false;
                 let smsError = '';
@@ -376,11 +376,12 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
                     if (!formattedFrom.startsWith('+')) {
                         if (formattedFrom.length === 11 && formattedFrom.startsWith('1')) formattedFrom = `+${formattedFrom}`;
                         else if (formattedFrom.length === 10) formattedFrom = `+1${formattedFrom}`;
+                        else formattedFrom = '+14354176637';
                     }
 
                     const payload = {
                         justcall_number: formattedFrom,
-                        contact_number: '+17438876637',
+                        contact_number: '+14354176637',
                         body: smsMessage
                     };
 
@@ -401,7 +402,7 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
                     }
                 } else {
                     console.log(`\n==================================================`);
-                    console.log(`[SMS SIMULATION] To: +17438876637`);
+                    console.log(`[SMS SIMULATION] To: +14354176637`);
                     console.log(`[SMS SIMULATION] Message:\n${smsMessage}`);
                     console.log(`==================================================\n`);
                     smsSent = true;
@@ -471,6 +472,50 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
                     callData.timestamp = admin.firestore.FieldValue.serverTimestamp();
                     await db.collection('call_logs').add(callData);
                 }
+
+                // Sync to RHIVE Unified Inbox (inbox_messages)
+                try {
+                    const phoneVars = getPhoneVariations(callData.contact_number);
+                    let matchedName = callData.contact_name;
+                    let matchedClientId = null;
+                    let matchedClientName = null;
+                    let matchedCampusName = null;
+                    if (phoneVars.length > 0) {
+                        const cSnap = await db.collection('contacts').where('phone', 'in', phoneVars).limit(1).get();
+                        if (!cSnap.empty) {
+                            const cData = cSnap.docs[0].data();
+                            matchedName = cData.name || matchedName;
+                            matchedClientId = cData.client_id || cData.company_id || null;
+                            matchedClientName = cData.company_name || cData.company || null;
+                            matchedCampusName = cData.campus_name || null;
+                        }
+                    }
+
+                    await db.collection('inbox_messages').doc(`CALL-${d.id || Date.now()}`).set({
+                        channel: 'call',
+                        direction: callData.direction === 'outbound' ? 'outbound' : 'inbound',
+                        folder: 'inbox',
+                        senderName: matchedName || callData.contact_number || 'Caller',
+                        senderPhone: callData.contact_number || '',
+                        recipientName: callData.agent_name || 'Kara',
+                        recipientPhone: callData.justcall_number || '+14354176637',
+                        subject: `${callData.direction === 'outbound' ? 'Outbound Call' : 'Inbound Call'} - ${callData.call_type || 'VoIP'}`,
+                        body: callData.transcript ? `Call Transcript: ${callData.transcript}` : `Call recorded with duration ${callData.duration || '0s'}. Outcome: ${callData.call_type || 'Completed'}.`,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        created_at: new Date().toISOString(),
+                        unread: true,
+                        client_id: matchedClientId,
+                        client_name: matchedClientName || matchedName,
+                        campus_name: matchedCampusName,
+                        assigned_to: callData.agent_name || 'Kara',
+                        call_duration: callData.duration ? `${callData.duration}s` : undefined,
+                        call_outcome: callData.call_type || 'Completed',
+                        recording_url: callData.recording_url || undefined
+                    }, { merge: true });
+                } catch (inboxErr) {
+                    console.error('Error mirroring call to inbox_messages:', inboxErr.message);
+                }
+
                 console.log(`Call event '${eventType}' logged/updated to Firestore.`);
                 return res.status(200).json({ success: true, message: 'Call logged/updated.' });
             }
@@ -500,6 +545,47 @@ exports.justCallWebhook = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUS
                     smsData.timestamp = admin.firestore.FieldValue.serverTimestamp();
                     await db.collection('sms_logs').add(smsData);
                 }
+
+                // Sync to RHIVE Unified Inbox (inbox_messages)
+                try {
+                    const phoneVars = getPhoneVariations(smsData.contact_number);
+                    let matchedName = smsData.contact_name;
+                    let matchedClientId = null;
+                    let matchedClientName = null;
+                    let matchedCampusName = null;
+                    if (phoneVars.length > 0) {
+                        const cSnap = await db.collection('contacts').where('phone', 'in', phoneVars).limit(1).get();
+                        if (!cSnap.empty) {
+                            const cData = cSnap.docs[0].data();
+                            matchedName = cData.name || matchedName;
+                            matchedClientId = cData.client_id || cData.company_id || null;
+                            matchedClientName = cData.company_name || cData.company || null;
+                            matchedCampusName = cData.campus_name || null;
+                        }
+                    }
+
+                    const isOutbound = d.direction === 'outbound';
+                    await db.collection('inbox_messages').doc(`SMS-${docId || Date.now()}`).set({
+                        channel: 'text',
+                        direction: isOutbound ? 'outbound' : 'inbound',
+                        folder: isOutbound ? 'sent' : 'inbox',
+                        senderName: isOutbound ? (smsData.agent_name || 'Kara') : (matchedName || smsData.contact_number || 'Customer'),
+                        senderPhone: isOutbound ? (smsData.justcall_number || '+14354176637') : smsData.contact_number,
+                        recipientName: isOutbound ? (matchedName || smsData.contact_number || 'Customer') : (smsData.agent_name || 'Kara'),
+                        recipientPhone: isOutbound ? smsData.contact_number : (smsData.justcall_number || '+14354176637'),
+                        body: smsData.message,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        created_at: new Date().toISOString(),
+                        unread: !isOutbound,
+                        client_id: matchedClientId,
+                        client_name: matchedClientName || matchedName,
+                        campus_name: matchedCampusName,
+                        assigned_to: smsData.agent_name || 'Kara'
+                    }, { merge: true });
+                } catch (inboxErr) {
+                    console.error('Error mirroring sms to inbox_messages:', inboxErr.message);
+                }
+
                 console.log(`SMS event '${eventType}' logged/updated to Firestore.`);
                 return res.status(200).json({ success: true, message: 'SMS logged/updated.' });
             }
@@ -959,13 +1045,16 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
             await rateLimitRef.set({ timestamps });
 
             // ?????? Verify user exists in Firestore users collection ???????????????????????????????????????
-            const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
-            if (usersSnap.empty) {
-                // Also try without normalizing (stored formats may vary)
-                const usersSnap2 = await db.collection('users').where('phone', '==', phone.trim()).limit(1).get();
-                if (usersSnap2.empty) {
-                    return res.status(404).json({ error: 'No account found with this phone number.' });
+            const variations = getPhoneVariations(phone || normalizedPhone);
+            let userDoc = null;
+            if (variations.length > 0) {
+                const usersSnap = await db.collection('users').where('phone', 'in', variations).limit(1).get();
+                if (!usersSnap.empty) {
+                    userDoc = usersSnap.docs[0];
                 }
+            }
+            if (!userDoc) {
+                return res.status(404).json({ error: 'No account found with this phone number.' });
             }
 
             // ?????? Generate 6-digit OTP ???????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
@@ -986,7 +1075,7 @@ exports.sendSmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL
             // Read inline at call time so runtime env vars are picked up
             const apiKey = process.env.JUSTCALL_API_KEY || '';
             const apiSecret = process.env.JUSTCALL_API_SECRET || '';
-            const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '';
+            const fromNumber = process.env.JUSTCALL_FROM_NUMBER || '+14354176637';
             let smsSent = false;
             let smsError = '';
 
@@ -1100,13 +1189,16 @@ exports.verifySmsOtp = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCA
             await otpRef.delete();
 
             // Find user email by phone to pass to password reset service
-            const usersSnap = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
+            const variations = getPhoneVariations(phone || normalizedPhone);
             let userEmail = null;
             let userId = null;
-            if (!usersSnap.empty) {
-                const userData = usersSnap.docs[0].data();
-                userEmail = userData.email || null;
-                userId = usersSnap.docs[0].id;
+            if (variations.length > 0) {
+                const usersSnap = await db.collection('users').where('phone', 'in', variations).limit(1).get();
+                if (!usersSnap.empty) {
+                    const userData = usersSnap.docs[0].data();
+                    userEmail = userData.email || null;
+                    userId = usersSnap.docs[0].id;
+                }
             }
 
             // Issue a short-lived reset JWT (10 minutes)
@@ -1500,8 +1592,12 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
             }
 
             // 4. Update password in Firebase Auth
-            await admin.auth().updateUser(firebaseUid, { password: newPassword });
-            console.log(`[completePasswordReset] Password updated in Firebase Auth for UID: ${firebaseUid} (email: ${email})`);
+            try {
+                await admin.auth().updateUser(firebaseUid, { password: newPassword });
+                console.log(`[completePasswordReset] Password updated in Firebase Auth for UID: ${firebaseUid} (email: ${email})`);
+            } catch (authErr) {
+                console.warn(`[completePasswordReset] Firebase Auth updateUser warning: ${authErr.message}`);
+            }
 
             // 5. Also update password_hash in Firestore user doc
             //    (The app login checks Firestore password_hash via SHA-256, NOT Firebase Auth)
@@ -1526,7 +1622,10 @@ exports.completePasswordReset = functions.runWith({ secrets: ['JUSTCALL_API_KEY'
                         userQuery = await db.collection('users').where('email', '==', email).limit(1).get();
                     }
                     if ((!userQuery || userQuery.empty) && phone) {
-                        userQuery = await db.collection('users').where('phone', '==', phone).limit(1).get();
+                        const variations = getPhoneVariations(phone);
+                        if (variations.length > 0) {
+                            userQuery = await db.collection('users').where('phone', 'in', variations).limit(1).get();
+                        }
                     }
                     if (userQuery && !userQuery.empty) {
                         await userQuery.docs[0].ref.update({
@@ -1864,12 +1963,12 @@ exports.processMailQueue = functions
             return null;
         }
 
-        const SMTP_USER = 'noreply@rhiveconstruction.com';
-        const SMTP_PASS = process.env.RHIVE_SMTP_PASSWORD;
+        const SMTP_USER = 'sheena.l@rhiveconstruction.com';
+        const SMTP_PASS = (process.env.RHIVE_SMTP_PASSWORD || '').replace(/\s+/g, '');
 
         if (!SMTP_PASS) {
             console.error('[processMailQueue] RHIVE_SMTP_PASSWORD secret not available.');
-            await db.collection('mail').doc(docId).update({
+            await db.collection('mail_outbox').doc(docId).update({
                 delivery: {
                     state: 'ERROR',
                     error: 'SMTP password secret not configured.',
@@ -1893,11 +1992,11 @@ exports.processMailQueue = functions
 
         const msg = data.message || {};
         const mailOptions = {
-            from: data.from || `RHIVE Support <${SMTP_USER}>`,
+            from: data.from || `RHIVE Office <Office@RhiveConstruction.com>`,
             to: Array.isArray(data.to) ? data.to.join(', ') : data.to,
             cc: data.cc,
             bcc: data.bcc,
-            replyTo: data.replyTo,
+            replyTo: data.replyTo || 'Office@RhiveConstruction.com',
             subject: msg.subject || '(No Subject)',
             text: msg.text,
             html: msg.html,
@@ -1944,7 +2043,9 @@ exports.processMailQueue = functions
  * Uses the Firestore 'mail' collection (Firebase Trigger Email extension) -
  * same mechanism as password-change notifications. Always queues if customerEmail provided.
  */
-exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
+exports.sendSignVerifyEmail = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'] })
+    .https.onRequest((req, res) => {
     return cors(req, res, async () => {
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
         const { projectId, customerEmail, customerName, projectName, link } = req.body || {};
@@ -2050,9 +2151,9 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
 
                 // Send directly via Nodemailer (Gmail SMTP + App Password)
                 const nodemailer = require('nodemailer');
-                const smtpPass = process.env.SMTP_PASSWORD;
+                const smtpPass = process.env.RHIVE_SMTP_PASSWORD || process.env.SMTP_PASSWORD;
                 if (!smtpPass) {
-                    console.error('[sendSignVerifyEmail] SMTP_PASSWORD env var not set');
+                    console.error('[sendSignVerifyEmail] RHIVE_SMTP_PASSWORD / SMTP_PASSWORD env var not set');
                     return res.status(500).json({ error: 'SMTP credentials not configured' });
                 }
 
@@ -2067,16 +2168,29 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
                     },
                 });
 
-                await transporter.sendMail({
-                    from: '"RHIVE Construction" <noreply@rhiveconstruction.com>',
-                    to: customerEmail,
-                    subject: `Action Required: Complete Your Sign & Verify - ${proj}`,
-                    text: plainText,
-                    html: htmlParts.join(''),
-                });
-
-                console.log(`[sendSignVerifyEmail] Email sent directly via SMTP to: ${customerEmail}`);
-                return res.status(200).json({ success: true, emailSent: true, link });
+                try {
+                    await transporter.sendMail({
+                        from: '"RHIVE Construction" <noreply@rhiveconstruction.com>',
+                        to: customerEmail,
+                        subject: `Action Required: Complete Your Sign & Verify - ${proj}`,
+                        text: plainText,
+                        html: htmlParts.join(''),
+                    });
+                    console.log(`[sendSignVerifyEmail] Email sent directly via SMTP to: ${customerEmail}`);
+                    return res.status(200).json({ success: true, emailSent: true, link });
+                } catch (smtpErr) {
+                    console.warn(`[sendSignVerifyEmail] Direct SMTP delivery failed (${smtpErr.message}). Queuing to mail collection fallback.`);
+                    await db.collection('mail').add({
+                        to: customerEmail,
+                        message: {
+                            subject: `Action Required: Complete Your Sign & Verify - ${proj}`,
+                            text: plainText,
+                            html: htmlParts.join(''),
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                    return res.status(200).json({ success: true, emailSent: false, queued: true, link, warning: smtpErr.message });
+                }
             }
 
             return res.status(200).json({ success: true, emailSent: false, link, message: 'No customer email provided. Link saved to Firestore.' });
@@ -2086,3 +2200,445 @@ exports.sendSignVerifyEmail = functions.https.onRequest((req, res) => {
         }
     });
 });
+
+/**
+ * sendPasswordChangeNotification - sends security alert when a password is changed.
+ * Body: { email, userName }
+ */
+exports.sendPasswordChangeNotification = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'] })
+    .https.onRequest((req, res) => {
+        return cors(req, res, async () => {
+            if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+            const { email, userName } = req.body || {};
+            if (!email) return res.status(400).json({ error: 'Email is required' });
+
+            const smtpPass = process.env.RHIVE_SMTP_PASSWORD || process.env.SMTP_PASSWORD;
+            if (!smtpPass) {
+                console.error('[sendPasswordChangeNotification] SMTP password not configured.');
+                return res.status(500).json({ error: 'SMTP credentials not configured' });
+            }
+
+            try {
+                const nodemailer = require('nodemailer');
+                const transporter = nodemailer.createTransport({
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    secure: true,
+                    auth: {
+                        user: 'noreply@rhiveconstruction.com',
+                        pass: smtpPass,
+                    },
+                });
+
+                const greeting = userName || 'Valued User';
+                try {
+                    await transporter.sendMail({
+                        from: '"RHIVE Security" <noreply@rhiveconstruction.com>',
+                        to: email,
+                        subject: 'Security Alert: Password Changed for your RHIVE Account',
+                        text: `Hello ${greeting},\n\nYour RHIVE Construction account password was successfully updated.\n\nIf you did not perform this action, please contact support@rhiveconstruction.com immediately.\n\n- RHIVE Construction Security Team`,
+                        html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:24px;">
+                            <h2 style="color:#ec028b;margin:0 0 12px;">RHIVE Security Alert</h2>
+                            <p style="margin:0 0 12px;">Hello <strong>${greeting}</strong>,</p>
+                            <p style="margin:0 0 16px;color:#d1d5db;">Your RHIVE Construction account password was successfully updated.</p>
+                            <p style="margin:0 0 24px;color:#9ca3af;font-size:13px;">If you did not make this change, please reach out to <a href="mailto:support@rhiveconstruction.com" style="color:#ec028b;">support@rhiveconstruction.com</a> immediately.</p>
+                            <p style="margin:0;font-size:11px;color:#6b7280;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia</p>
+                        </div>`,
+                    });
+                    return res.status(200).json({ success: true });
+                } catch (smtpErr) {
+                    console.warn(`[sendPasswordChangeNotification] SMTP failed (${smtpErr.message}). Writing to mail collection.`);
+                    const db = admin.firestore();
+                    await db.collection('mail').add({
+                        to: email,
+                        message: {
+                            subject: 'Security Alert: Password Changed for your RHIVE Account',
+                            text: `Hello ${greeting},\n\nYour RHIVE Construction account password was successfully updated.`,
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                    return res.status(200).json({ success: true, queued: true, warning: smtpErr.message });
+                }
+            } catch (err) {
+                console.error('[sendPasswordChangeNotification]', err);
+                return res.status(500).json({ error: err.message });
+            }
+        });
+    });
+
+/**
+ * sendEmailChangeNotification - sends security alert when an account email is changed.
+ * Body: { oldEmail, newEmail, userName }
+ */
+exports.sendEmailChangeNotification = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'] })
+    .https.onRequest((req, res) => {
+        return cors(req, res, async () => {
+            if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+            const { oldEmail, newEmail, userName } = req.body || {};
+            const recipients = [oldEmail, newEmail].filter(Boolean);
+            if (recipients.length === 0) return res.status(400).json({ error: 'At least one recipient email required' });
+
+            const smtpPass = process.env.RHIVE_SMTP_PASSWORD || process.env.SMTP_PASSWORD;
+            if (!smtpPass) {
+                console.error('[sendEmailChangeNotification] SMTP password not configured.');
+                return res.status(500).json({ error: 'SMTP credentials not configured' });
+            }
+
+            try {
+                const nodemailer = require('nodemailer');
+                const transporter = nodemailer.createTransport({
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    secure: true,
+                    auth: {
+                        user: 'noreply@rhiveconstruction.com',
+                        pass: smtpPass,
+                    },
+                });
+
+                const greeting = userName || 'Valued User';
+                await transporter.sendMail({
+                    from: '"RHIVE Security" <noreply@rhiveconstruction.com>',
+                    to: recipients.join(', '),
+                    subject: 'Security Alert: Account Email Address Changed',
+                    text: `Hello ${greeting},\n\nYour RHIVE Construction account email was updated (Old: ${oldEmail || 'None'}, New: ${newEmail || 'None'}).\n\nIf you did not make this change, please contact support@rhiveconstruction.com immediately.\n\n- RHIVE Construction Security Team`,
+                    html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:24px;">
+                        <h2 style="color:#ec028b;margin:0 0 12px;">RHIVE Security Alert</h2>
+                        <p style="margin:0 0 12px;">Hello <strong>${greeting}</strong>,</p>
+                        <p style="margin:0 0 16px;color:#d1d5db;">Your RHIVE Construction account email address was updated.</p>
+                        <ul style="color:#9ca3af;font-size:13px;line-height:1.6;">
+                            <li><strong>Previous email:</strong> ${oldEmail || '—'}</li>
+                            <li><strong>New email:</strong> ${newEmail || '—'}</li>
+                        </ul>
+                        <p style="margin:0 0 24px;color:#9ca3af;font-size:13px;">If you did not authorize this change, contact <a href="mailto:support@rhiveconstruction.com" style="color:#ec028b;">support@rhiveconstruction.com</a> immediately.</p>
+                        <p style="margin:0;font-size:11px;color:#6b7280;">RHIVE Construction &middot; Brisbane, QLD &middot; Australia</p>
+                    </div>`,
+                });
+
+                return res.status(200).json({ success: true });
+            } catch (err) {
+                console.error('[sendEmailChangeNotification]', err);
+                return res.status(500).json({ error: err.message });
+            }
+        });
+    });
+
+/**
+ * Standalone RHIVE CRM Message Dispatcher
+ * Sends outbound SMS via JustCall v2.1 API using RHIVE's official line (435) 417-6637,
+ * and saves the message directly to our 'inbox_messages' Firestore collection.
+ */
+exports.sendCrmMessage = functions.runWith({ secrets: ['JUSTCALL_API_KEY', 'JUSTCALL_API_SECRET', 'JUSTCALL_FROM_NUMBER'] }).https.onRequest((req, res) => {
+    return cors(req, res, async () => {
+        if (req.method === 'OPTIONS') {
+            res.set('Access-Control-Allow-Origin', '*');
+            res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            return res.status(204).send('');
+        }
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method Not Allowed' });
+        }
+
+        try {
+            const { 
+                channel = 'text', 
+                recipientPhone, 
+                recipientEmail, 
+                recipientName, 
+                messageBody, 
+                subject, 
+                senderName,
+                clientId, 
+                clientName, 
+                campusName, 
+                assignedTo,
+                callDuration,
+                callOutcome
+            } = req.body;
+
+            if (!messageBody && channel !== 'call') {
+                return res.status(400).json({ error: 'Message body is required' });
+            }
+
+            const db = admin.firestore();
+            const apiKey = process.env.JUSTCALL_API_KEY || '';
+            const apiSecret = process.env.JUSTCALL_API_SECRET || '';
+            const rawFromNumber = process.env.JUSTCALL_FROM_NUMBER || '+14354176637';
+
+            let formattedFrom = rawFromNumber.trim();
+            if (!formattedFrom.startsWith('+')) {
+                if (formattedFrom.length === 11 && formattedFrom.startsWith('1')) formattedFrom = `+${formattedFrom}`;
+                else if (formattedFrom.length === 10) formattedFrom = `+1${formattedFrom}`;
+                else formattedFrom = '+14354176637';
+            }
+
+            let deliveryStatus = 'sent';
+            let externalId = null;
+            let deliveryError = null;
+
+            if (channel === 'text') {
+                if (!recipientPhone) {
+                    return res.status(400).json({ error: 'Recipient phone number is required for SMS' });
+                }
+
+                // Format destination phone
+                let cleanDigits = String(recipientPhone).trim().replace(/\D/g, '');
+                let targetPhone = cleanDigits;
+                if (cleanDigits.length === 10) targetPhone = `+1${cleanDigits}`;
+                else if (cleanDigits.length === 11 && cleanDigits.startsWith('1')) targetPhone = `+${cleanDigits}`;
+                else if (!cleanDigits.startsWith('+')) targetPhone = `+${cleanDigits}`;
+
+                if (apiKey && apiSecret) {
+                    try {
+                        const payload = {
+                            justcall_number: formattedFrom,
+                            contact_number: targetPhone,
+                            body: String(messageBody).trim()
+                        };
+
+                        const response = await axios.post('https://api.justcall.io/v2.1/texts/new', payload, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `${apiKey}:${apiSecret}`
+                            },
+                            timeout: 10000
+                        });
+
+                        if (response.status >= 200 && response.status < 300) {
+                            externalId = response.data?.id || response.data?.data?.id || null;
+                            deliveryStatus = 'delivered';
+                            console.log(`[sendCrmMessage] JustCall SMS successfully delivered to ${targetPhone} from ${formattedFrom}`);
+                        } else {
+                            deliveryError = response.data?.message || JSON.stringify(response.data);
+                            deliveryStatus = 'failed';
+                        }
+                    } catch (err) {
+                        console.error('[sendCrmMessage] JustCall SMS error:', err.response?.data || err.message);
+                        deliveryError = err.response?.data?.message || err.message;
+                        deliveryStatus = 'failed';
+                    }
+                } else {
+                    console.log(`[sendCrmMessage Simulation] From ${formattedFrom} To ${targetPhone}: ${messageBody}`);
+                    deliveryStatus = 'simulated';
+                }
+            }
+
+            // Queue email delivery via Google Workspace SMTP (mail_outbox)
+            if (channel === 'email' && recipientEmail) {
+                try {
+                    await db.collection('mail_outbox').add({
+                        to: recipientEmail,
+                        from: `RHIVE Office <Office@RhiveConstruction.com>`,
+                        replyTo: 'Office@RhiveConstruction.com',
+                        message: {
+                            subject: subject || 'Project Update from RHIVE Construction',
+                            text: messageBody,
+                            html: `<div style="font-family:sans-serif;background:#050505;color:#f3f4f6;padding:24px;border-radius:8px;">
+                                <h2 style="color:#ec028b;margin:0 0 16px;">RHIVE Construction</h2>
+                                <p style="margin:0 0 16px;line-height:1.6;font-size:14px;color:#d1d5db;">${messageBody.replace(/\n/g, '<br/>')}</p>
+                                <hr style="border:none;border-top:1px solid #374151;margin:24px 0 16px;"/>
+                                <p style="margin:0;font-size:12px;color:#9ca3af;">RHIVE Construction • (435) 417-6637 • Salt Lake City, Utah</p>
+                            </div>`
+                        },
+                        createdAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                    deliveryStatus = 'queued_smtp';
+                    console.log(`[sendCrmMessage] Queued email to mail_outbox for ${recipientEmail}`);
+                } catch (emailErr) {
+                    console.error('[sendCrmMessage] Error queueing email to mail_outbox:', emailErr);
+                }
+            }
+
+            // Save message to inbox_messages (no undefined values — Firestore rejects undefined)
+            const msgDoc = {
+                channel,
+                direction: channel === 'call' ? 'inbound' : 'outbound',
+                folder: channel === 'call' ? 'inbox' : 'sent',
+                senderName: channel === 'call' ? (recipientName || 'Customer') : (senderName || 'RHIVE Office'),
+                senderPhone: channel === 'call' ? (recipientPhone || '') : formattedFrom,
+                senderEmail: channel === 'call' ? (recipientEmail || null) : 'Office@RhiveConstruction.com',
+                recipientName: channel === 'call' ? (senderName || 'RHIVE Office') : (recipientName || 'Customer'),
+                recipientPhone: channel === 'call' ? formattedFrom : (recipientPhone || null),
+                recipientEmail: channel === 'call' ? 'Office@RhiveConstruction.com' : (recipientEmail || null),
+                subject: subject || null,
+                body: messageBody || `Logged call: ${callOutcome || 'Completed'} (${callDuration || '0s'})`,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                created_at: new Date().toISOString(),
+                unread: channel === 'call',
+                client_id: clientId || null,
+                client_name: clientName || null,
+                campus_name: campusName || null,
+                assigned_to: assignedTo || senderName || 'Kara',
+                delivery_status: deliveryStatus,
+                delivery_error: deliveryError || null,
+                external_id: externalId ? String(externalId) : null,
+                call_duration: callDuration || null,
+                call_outcome: callOutcome || null
+            };
+
+            const docRef = await db.collection('inbox_messages').add(msgDoc);
+
+            return res.status(200).json({
+                success: deliveryStatus !== 'failed',
+                id: docRef.id,
+                message: { id: docRef.id, ...msgDoc },
+                error: deliveryError
+            });
+        } catch (error) {
+            console.error('[sendCrmMessage] Error:', error);
+            return res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INBOUND EMAIL SYNC (Gmail IMAP -> Firestore `inbox_messages`)
+// Pulls recent incoming emails/replies from sheena.l@rhiveconstruction.com
+// (including replies sent to Office@RhiveConstruction.com) into `inbox_messages`.
+// Uses the same RHIVE_SMTP_PASSWORD Google App Password over IMAPS (port 993).
+// ─────────────────────────────────────────────────────────────────────────────
+async function syncGmailInboxToFirestore(limit = 20) {
+    const crypto = require('crypto');
+    const { ImapFlow } = require('imapflow');
+    const { simpleParser } = require('mailparser');
+    const db = admin.firestore();
+
+    const IMAP_USER = 'sheena.l@rhiveconstruction.com';
+    const IMAP_PASS = (process.env.RHIVE_SMTP_PASSWORD || '').replace(/\s+/g, '');
+
+    if (!IMAP_PASS) {
+        throw new Error('RHIVE_SMTP_PASSWORD secret not configured.');
+    }
+
+    const client = new ImapFlow({
+        host: 'imap.gmail.com',
+        port: 993,
+        secure: true,
+        auth: {
+            user: IMAP_USER,
+            pass: IMAP_PASS
+        },
+        logger: false
+    });
+
+    let importedCount = 0;
+    let skippedCount = 0;
+    const importedMessages = [];
+
+    await client.connect();
+    const lock = await client.getMailboxLock('INBOX');
+    try {
+        const total = client.mailbox.exists || 0;
+        if (total === 0) {
+            return { totalChecked: 0, importedCount: 0, skippedCount: 0, importedMessages: [] };
+        }
+
+        const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 50);
+        const startSeq = Math.max(1, total - safeLimit + 1);
+        const range = `${startSeq}:*`;
+
+        for await (const msg of client.fetch(range, { source: true, envelope: true, internalDate: true })) {
+            try {
+                const parsed = await simpleParser(msg.source);
+                const messageId = (parsed.messageId || msg.envelope?.messageId || `uid-${msg.uid}-${msg.internalDate || Date.now()}`).trim();
+                const docId = `inbound_${crypto.createHash('sha1').update(messageId).digest('hex').slice(0, 20)}`;
+
+                const docRef = db.collection('inbox_messages').doc(docId);
+                const existing = await docRef.get();
+                if (existing.exists) {
+                    skippedCount++;
+                    continue;
+                }
+
+                const fromObj = parsed.from?.value?.[0] || {};
+                const senderEmail = (fromObj.address || '').toLowerCase().trim();
+                const senderName = (fromObj.name || (senderEmail ? senderEmail.split('@')[0] : 'Unknown Sender')).trim();
+
+                // Skip automated bounce / mailer-daemon noise
+                if (senderEmail.includes('mailer-daemon') || senderEmail.includes('postmaster@')) {
+                    skippedCount++;
+                    continue;
+                }
+
+                const toObj = parsed.to?.value?.[0] || {};
+                const recipientEmail = (toObj.address || 'Office@RhiveConstruction.com').trim();
+                const msgDate = parsed.date ? new Date(parsed.date) : new Date();
+                const isToday = msgDate.toDateString() === new Date().toDateString();
+                const displayTime = isToday
+                    ? msgDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Denver' })
+                    : msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Denver' });
+
+                const rawText = (parsed.text || '').trim();
+                const cleanBody = (rawText || (parsed.html ? parsed.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '(Empty Email Body)')).slice(0, 4000);
+
+                const docPayload = {
+                    channel: 'email',
+                    direction: 'inbound',
+                    folder: 'inbox',
+                    senderName,
+                    senderEmail: senderEmail || null,
+                    senderPhone: null,
+                    recipientName: 'RHIVE Office',
+                    recipientEmail,
+                    subject: parsed.subject || '(No Subject)',
+                    body: cleanBody,
+                    timestamp: displayTime,
+                    created_at: msgDate.toISOString(),
+                    unread: true,
+                    client_id: null,
+                    client_name: senderName,
+                    campus_name: null,
+                    assigned_to: 'Kara',
+                    delivery_status: 'received',
+                    external_id: messageId,
+                    source: 'gmail_imap'
+                };
+
+                await docRef.set(docPayload);
+                importedCount++;
+                importedMessages.push({ id: docId, ...docPayload });
+            } catch (parseErr) {
+                console.warn('[syncGmailInboxToFirestore] Failed to parse message:', parseErr.message);
+            }
+        }
+
+        return { totalChecked: total - startSeq + 1, importedCount, skippedCount, importedMessages };
+    } finally {
+        lock.release();
+        await client.logout().catch(() => {});
+    }
+}
+
+exports.syncInboundEmails = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'], timeoutSeconds: 60, memory: '512MB' })
+    .https.onRequest((req, res) => {
+        cors(req, res, async () => {
+            try {
+                const limit = req.body?.limit || req.query?.limit || 20;
+                const result = await syncGmailInboxToFirestore(limit);
+                console.log(`[syncInboundEmails] Checked ${result.totalChecked}, imported ${result.importedCount}, skipped ${result.skippedCount}`);
+                return res.status(200).json({ success: true, ...result });
+            } catch (error) {
+                console.error('[syncInboundEmails] Error:', error);
+                return res.status(500).json({ success: false, error: error.message });
+            }
+        });
+    });
+
+exports.scheduledInboundEmailSync = functions
+    .runWith({ secrets: ['RHIVE_SMTP_PASSWORD'], timeoutSeconds: 60, memory: '512MB' })
+    .pubsub.schedule('every 2 minutes')
+    .onRun(async () => {
+        try {
+            const result = await syncGmailInboxToFirestore(15);
+            console.log(`[scheduledInboundEmailSync] Checked ${result.totalChecked}, imported ${result.importedCount}, skipped ${result.skippedCount}`);
+        } catch (error) {
+            console.error('[scheduledInboundEmailSync] Error:', error.message);
+        }
+        return null;
+    });
+
+

@@ -27,6 +27,7 @@ import { useMockDB } from '../contexts/MockDatabaseContext';
 import { useNavigation } from '../contexts/NavigationContext';
 import { User, UserType } from '../types';
 import { cn } from '../lib/utils';
+import ConnectEmailCard from '../components/ConnectEmailCard';
 
 // Only these roles may edit any profile
 const EDIT_ALLOWED_ROLES: UserType[] = ['Super Admin', 'Admin'];
@@ -881,6 +882,14 @@ const UserProfilePage: React.FC = () => {
                                 />
                             </div>
                         </div>
+
+                        {/* ── Per-User Email Connection & Sharing (Org Users) ──── */}
+                        {INTERNAL_ROLES.includes(user.role) && (
+                            <ConnectEmailCard
+                                userId={user.id}
+                                userEmail={user.email}
+                            />
+                        )}
 
                         {/* ── Audit Trail Strip ─────────────────────────────────── */}
                         {user.updated_by && (

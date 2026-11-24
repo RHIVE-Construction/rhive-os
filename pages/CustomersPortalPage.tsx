@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import PageContainer from '../components/PageContainer';
 import Button from '../components/Button';
 import CircuitryCard from '../components/CircuitryCard';
 import { useNavigation } from '../contexts/NavigationContext';
 import { useMockDB } from '../contexts/MockDatabaseContext';
-import { accountService, propertyService, projectService, userLogService } from '../lib/firebaseService';
+import { accountService, propertyService, projectService, firestoreService, userLogService } from '../lib/firebaseService';
 import { 
     UserIcon, 
     UsersIcon, 
@@ -18,6 +18,7 @@ import {
     CurrencyDollarIcon, 
     ClockIcon, 
     ArrowRightIcon, 
+    ArrowLeftIcon,
     XIcon, 
     ShieldCheckIcon,
     Check,
@@ -32,8 +33,15 @@ import type {
     SubPropertyPhase, 
     BuildingAsset, 
     ProjectJob, 
-    CustomerType 
+    CustomerType,
+    ProjectStage
 } from '../types';
+import { PROJECT_STAGES_ORDER } from '../types';
+import {
+    loadCachedCrmCustomization,
+    subscribeToCrmCustomization,
+    CrmCustomizationConfig,
+} from '../lib/crmCustomizationService';
 
 // ── Initial Relational Demonstration Records ────────────────────────────────────
 // Seed data showcasing the exact 5-tier architecture:
@@ -41,7 +49,7 @@ import type {
 const SEED_CLIENTS: CustomerClient[] = [
     {
         id: 'CLI-UNPHC',
-        name: 'UNPHC (United Property Management)',
+        name: 'UNPHC (Utah Non-Profit Housing Corp)',
         customer_type: 'Commercial',
         account_code: 'UNPHC-CORP',
         billing_address: '123 Corporate Blvd, Salt Lake City, UT 84101',
@@ -398,17 +406,519 @@ export const computeClientRollup = (client: CustomerClient) => {
     };
 };
 
+// Canonical Parent Company resolver to consolidate imported account aliases, emails, and typos
+export const getCanonicalParentCompany = (rawName: string, rawEmail?: string): { canonicalName: string, isConsolidated: boolean, siteName?: string } => {
+    const trimmed = (rawName || '').trim();
+    const email = (rawEmail || '').trim().toLowerCase();
+
+    // 1. Check for email used as account name (e.g. smithapts@unphc.org)
+    const emailCandidate = trimmed.includes('@') ? trimmed : email;
+    if (emailCandidate && emailCandidate.includes('@')) {
+        const [userPart, domainPart] = emailCandidate.toLowerCase().split('@');
+        if (domainPart && (domainPart.includes('unphc') || domainPart.includes('unitedproperty'))) {
+            let formattedSite = userPart ? userPart.replace(/apts?|apartments?/i, ' Apartments').trim() : 'Smith Apartments';
+            formattedSite = formattedSite.charAt(0).toUpperCase() + formattedSite.slice(1);
+            if (!formattedSite.toLowerCase().includes('apartment') && !formattedSite.toLowerCase().includes('site')) {
+                formattedSite = `${formattedSite} Apartments`;
+            }
+            return {
+                canonicalName: 'UNPHC (Utah Non-Profit Housing Corp)',
+                isConsolidated: true,
+                siteName: formattedSite
+            };
+        }
+    }
+
+    // 2. Clean test / temporary prefixes
+    const cleanName = trimmed.replace(/^\[TEST\]\s*/i, '').trim();
+
+    // 3. UNPHC variations
+    if (
+        /^unphc\b/i.test(cleanName) || 
+        /utah non-profit housing/i.test(cleanName) || 
+        /united property management/i.test(cleanName)
+    ) {
+        let siteName: string | undefined = undefined;
+        if (/multifamily/i.test(cleanName)) {
+            siteName = 'Multifamily Portfolio Site';
+        } else if (/smith/i.test(cleanName)) {
+            siteName = 'Smith Apartments';
+        } else if (/willow/i.test(cleanName)) {
+            siteName = 'Willow Park Site';
+        }
+        return {
+            canonicalName: 'UNPHC (Utah Non-Profit Housing Corp)',
+            isConsolidated: true,
+            siteName
+        };
+    }
+
+    // 4. Larry H Miller variations
+    if (/^larry h\.?\s*miller/i.test(cleanName) || /^lhm\b/i.test(cleanName)) {
+        return {
+            canonicalName: 'Larry H Miller Group',
+            isConsolidated: true
+        };
+    }
+
+    // 5. Greystar variations
+    if (/^greystar/i.test(cleanName)) {
+        return {
+            canonicalName: 'Greystar Real Estate',
+            isConsolidated: true
+        };
+    }
+
+    // 6. Willow Park variations
+    if (/^willow park/i.test(cleanName)) {
+        return {
+            canonicalName: 'Willow Park HOA',
+            isConsolidated: true
+        };
+    }
+
+    // 7. IHC variations
+    if (/^ihc\b/i.test(cleanName) || /intermountain health/i.test(cleanName)) {
+        return {
+            canonicalName: 'Intermountain Health (IHC)',
+            isConsolidated: true
+        };
+    }
+
+    return {
+        canonicalName: cleanName,
+        isConsolidated: false
+    };
+};
+
+export const consolidateClients = (rawClients: CustomerClient[]): CustomerClient[] => {
+    const canonicalMap = new Map<string, CustomerClient>();
+
+    rawClients.forEach(client => {
+        const canonical = getCanonicalParentCompany(client.name, client.primary_contact?.email);
+        const key = canonical.canonicalName.toLowerCase().trim();
+
+        if (canonicalMap.has(key)) {
+            const existing = canonicalMap.get(key)!;
+            const existingCampusNames = new Set(existing.campuses.map(cp => cp.name.toLowerCase().trim()));
+
+            client.campuses.forEach(campus => {
+                const cName = campus.name.toLowerCase().trim();
+                if (!existingCampusNames.has(cName)) {
+                    existing.campuses.push({
+                        ...campus,
+                        client_id: existing.id
+                    });
+                    existingCampusNames.add(cName);
+                }
+            });
+
+            if (canonical.siteName && !existingCampusNames.has(canonical.siteName.toLowerCase().trim())) {
+                existing.campuses.push({
+                    id: `CAMP-SITE-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                    client_id: existing.id,
+                    name: canonical.siteName,
+                    address: client.billing_address || 'Address pending verification',
+                    city: 'Salt Lake City',
+                    state: 'UT',
+                    zip: '',
+                    phases: []
+                });
+                existingCampusNames.add(canonical.siteName.toLowerCase().trim());
+            }
+
+            // Enrich primary contact if existing was blank or placeholder
+            if (client.primary_contact?.phone && (!existing.primary_contact?.phone || existing.primary_contact?.name === 'Primary Contact')) {
+                existing.primary_contact = client.primary_contact;
+            }
+        } else {
+            const newClient: CustomerClient = {
+                ...client,
+                name: canonical.canonicalName,
+                campuses: [...client.campuses]
+            };
+            if (canonical.siteName) {
+                const hasSite = newClient.campuses.some(cp => cp.name.toLowerCase().trim() === canonical.siteName!.toLowerCase().trim());
+                if (!hasSite) {
+                    newClient.campuses.push({
+                        id: `CAMP-SITE-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                        client_id: newClient.id,
+                        name: canonical.siteName,
+                        address: client.billing_address || 'Address pending verification',
+                        city: 'Salt Lake City',
+                        state: 'UT',
+                        zip: '',
+                        phases: []
+                    });
+                }
+            }
+            canonicalMap.set(key, newClient);
+        }
+    });
+
+    return Array.from(canonicalMap.values());
+};
+
+export const CustomerTypeBadgeSwitcher: React.FC<{
+    clientId: string;
+    currentType: CustomerType;
+    onUpdateType: (clientId: string, newType: CustomerType) => void;
+    showTierPrefix?: boolean;
+    className?: string;
+}> = ({ clientId, currentType, onUpdateType, showTierPrefix = true, className = '' }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    const types: CustomerType[] = ['Commercial', 'Government', 'Residential'];
+
+    return (
+        <div className="relative inline-block" ref={dropdownRef} onClick={e => e.stopPropagation()}>
+            <button
+                type="button"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(!isOpen);
+                }}
+                title="Click to edit customer type (Commercial, Government, Residential)"
+                className={cn(
+                    "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border flex items-center gap-1 transition-all group/badge cursor-pointer",
+                    currentType === 'Commercial' && "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:border-blue-400 hover:bg-blue-500/20 shadow-[0_0_8px_rgba(59,130,246,0.15)]",
+                    currentType === 'Government' && "bg-amber-500/10 text-amber-400 border-amber-500/30 hover:border-amber-400 hover:bg-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.15)]",
+                    currentType === 'Residential' && "bg-green-500/10 text-green-400 border-green-500/30 hover:border-green-400 hover:bg-green-500/20 shadow-[0_0_8px_rgba(34,197,94,0.15)]",
+                    className
+                )}
+            >
+                <span>{showTierPrefix ? `Tier 1 • ${currentType}` : currentType}</span>
+                <ChevronDownIcon className={cn("w-3 h-3 transition-transform opacity-70 group-hover/badge:opacity-100", isOpen && "rotate-180")} />
+            </button>
+
+            {isOpen && (
+                <div 
+                    className="absolute left-0 mt-1 w-44 bg-gray-950/95 border border-gray-700 rounded-lg shadow-2xl z-50 p-1.5 backdrop-blur-xl animate-fade-in text-left"
+                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                >
+                    <div className="px-2 py-1 text-[9px] font-mono uppercase tracking-wider text-gray-500 border-b border-gray-800 mb-1 flex items-center justify-between">
+                        <span>Edit Customer Type</span>
+                        <span className="text-[8px] text-rhive-pink font-bold">Tier 1</span>
+                    </div>
+                    {types.map(t => (
+                        <button
+                            key={t}
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onUpdateType(clientId, t);
+                                setIsOpen(false);
+                            }}
+                            className={cn(
+                                "w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono transition-colors text-left",
+                                currentType === t ? "bg-gray-800/90 text-white font-bold" : "text-gray-300 hover:bg-gray-900 hover:text-white"
+                            )}
+                        >
+                            <span className="flex items-center gap-2">
+                                <span className={cn(
+                                    "w-2 h-2 rounded-full",
+                                    t === 'Commercial' && "bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.8)]",
+                                    t === 'Government' && "bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]",
+                                    t === 'Residential' && "bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]"
+                                )} />
+                                {t}
+                            </span>
+                            {currentType === t && <Check className="w-3.5 h-3.5 text-rhive-pink" />}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+export const normalizeProjectStage = (rawStage?: string): ProjectStage => {
+    if (!rawStage) return 'Stage 1: LEAD (Intake)';
+    const s = rawStage.toLowerCase().trim();
+    if (s.includes('lead')) return 'Stage 1: LEAD (Intake)';
+    if (s.includes('estimate') || s.includes('prop')) return 'Stage 2: ESTIMATE (Property Data)';
+    if (s.includes('quote') || s.includes('pricing')) return 'Stage 3: QUOTE (Pricing Options)';
+    if (s.includes('sign') || s.includes('verify') || s.includes('agreement')) return 'Stage 4: SIGN & VERIFY (Agreement)';
+    if (s.includes('schedule') || s.includes('queue')) return 'Stage 5: SCHEDULE (Queue)';
+    if (s.includes('pre-install') || s.includes('prep')) return 'Stage 6: PRE-INSTALLATION (Prep)';
+    if (s.includes('install') || s.includes('in prog')) return 'Stage 7: INSTALL (In Progress)';
+    if (s.includes('punch') || s.includes('quality') || s.includes('qc')) return 'Stage 8: PUNCH LIST (Quality Control)';
+    if (s.includes('invoic') || s.includes('balance') || s.includes('bill')) return 'Stage 9: INVOICING (Balance Due)';
+    if (s.includes('complet') || s.includes('paid')) return 'Stage 10: COMPLETED (Paid)';
+    if (s.includes('past') || s.includes('referral')) return 'Stage 11: PAST CUSTOMER (Referral System)';
+    return 'Stage 1: LEAD (Intake)';
+};
+
+export const getStageShortLabel = (stage: string): string => {
+    const s = stage.toLowerCase();
+    if (s.includes('lead')) return 'Stage 1: LEAD';
+    if (s.includes('estimate')) return 'Stage 2: ESTIMATE';
+    if (s.includes('quote')) return 'Stage 3: QUOTE';
+    if (s.includes('sign')) return 'Stage 4: SIGN';
+    if (s.includes('schedule')) return 'Stage 5: SCHEDULE';
+    if (s.includes('pre-install')) return 'Stage 6: PRE-INSTALL';
+    if (s.includes('install')) return 'Stage 7: INSTALL';
+    if (s.includes('punch')) return 'Stage 8: PUNCH LIST';
+    if (s.includes('invoic')) return 'Stage 9: INVOICING';
+    if (s.includes('complet')) return 'Stage 10: COMPLETED';
+    if (s.includes('past')) return 'Stage 11: PAST CUSTOMER';
+    return stage;
+};
+
+export const getStageBadgeColors = (stage: string) => {
+    const s = stage.toLowerCase();
+    if (s.includes('lead')) {
+        return {
+            bg: 'bg-yellow-500/10',
+            text: 'text-yellow-400',
+            border: 'border-yellow-500/30 hover:border-yellow-400',
+            dot: 'bg-yellow-400',
+            glow: 'shadow-[0_0_8px_rgba(234,179,8,0.2)]'
+        };
+    }
+    if (s.includes('estimate')) {
+        return {
+            bg: 'bg-blue-500/10',
+            text: 'text-blue-400',
+            border: 'border-blue-500/30 hover:border-blue-400',
+            dot: 'bg-blue-400',
+            glow: 'shadow-[0_0_8px_rgba(59,130,246,0.2)]'
+        };
+    }
+    if (s.includes('quote')) {
+        return {
+            bg: 'bg-indigo-500/10',
+            text: 'text-indigo-400',
+            border: 'border-indigo-500/30 hover:border-indigo-400',
+            dot: 'bg-indigo-400',
+            glow: 'shadow-[0_0_8px_rgba(99,102,241,0.2)]'
+        };
+    }
+    if (s.includes('sign')) {
+        return {
+            bg: 'bg-purple-500/10',
+            text: 'text-purple-400',
+            border: 'border-purple-500/30 hover:border-purple-400',
+            dot: 'bg-purple-400',
+            glow: 'shadow-[0_0_8px_rgba(168,85,247,0.2)]'
+        };
+    }
+    if (s.includes('schedule')) {
+        return {
+            bg: 'bg-cyan-500/10',
+            text: 'text-cyan-400',
+            border: 'border-cyan-500/30 hover:border-cyan-400',
+            dot: 'bg-cyan-400',
+            glow: 'shadow-[0_0_8px_rgba(6,182,212,0.2)]'
+        };
+    }
+    if (s.includes('pre-install')) {
+        return {
+            bg: 'bg-sky-500/10',
+            text: 'text-sky-400',
+            border: 'border-sky-500/30 hover:border-sky-400',
+            dot: 'bg-sky-400',
+            glow: 'shadow-[0_0_8px_rgba(14,165,233,0.2)]'
+        };
+    }
+    if (s.includes('install')) {
+        return {
+            bg: 'bg-orange-500/10',
+            text: 'text-orange-400',
+            border: 'border-orange-500/30 hover:border-orange-400',
+            dot: 'bg-orange-400',
+            glow: 'shadow-[0_0_8px_rgba(249,115,22,0.2)]'
+        };
+    }
+    if (s.includes('punch')) {
+        return {
+            bg: 'bg-amber-500/10',
+            text: 'text-amber-400',
+            border: 'border-amber-500/30 hover:border-amber-400',
+            dot: 'bg-amber-400',
+            glow: 'shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+        };
+    }
+    if (s.includes('invoic')) {
+        return {
+            bg: 'bg-emerald-500/10',
+            text: 'text-emerald-400',
+            border: 'border-emerald-500/30 hover:border-emerald-400',
+            dot: 'bg-emerald-400',
+            glow: 'shadow-[0_0_8px_rgba(16,185,129,0.2)]'
+        };
+    }
+    if (s.includes('complet')) {
+        return {
+            bg: 'bg-green-500/10',
+            text: 'text-green-400',
+            border: 'border-green-500/30 hover:border-green-400',
+            dot: 'bg-green-400',
+            glow: 'shadow-[0_0_8px_rgba(34,197,94,0.2)]'
+        };
+    }
+    if (s.includes('past')) {
+        return {
+            bg: 'bg-teal-500/10',
+            text: 'text-teal-400',
+            border: 'border-teal-500/30 hover:border-teal-400',
+            dot: 'bg-teal-400',
+            glow: 'shadow-[0_0_8px_rgba(20,184,166,0.2)]'
+        };
+    }
+    return {
+        bg: 'bg-gray-800/80',
+        text: 'text-gray-300',
+        border: 'border-gray-700 hover:border-gray-600',
+        dot: 'bg-gray-400',
+        glow: ''
+    };
+};
+
+export const CustomerStageBadgeSwitcher: React.FC<{
+    clientId: string;
+    currentStage: string;
+    onUpdateStage: (clientId: string, newStage: ProjectStage) => void;
+    onNavigateToStage?: (stage: string) => void;
+    compact?: boolean;
+    className?: string;
+}> = ({ clientId, currentStage, onUpdateStage, onNavigateToStage, compact = false, className = '' }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    const colors = getStageBadgeColors(currentStage);
+    const shortLabel = getStageShortLabel(currentStage);
+
+    return (
+        <div className="relative inline-block" ref={dropdownRef} onClick={e => e.stopPropagation()}>
+            <button
+                type="button"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(!isOpen);
+                }}
+                title={`Pipeline Stage: ${currentStage}. Click to change stage or jump to pipeline.`}
+                className={cn(
+                    "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border flex items-center gap-1.5 transition-all group/stage cursor-pointer",
+                    colors.bg,
+                    colors.text,
+                    colors.border,
+                    colors.glow,
+                    className
+                )}
+            >
+                <span className={cn("w-1.5 h-1.5 rounded-full", colors.dot)} />
+                <span className="truncate max-w-[140px]">{shortLabel}</span>
+                <ChevronDownIcon className={cn("w-3 h-3 transition-transform opacity-70 group-hover/stage:opacity-100", isOpen && "rotate-180")} />
+            </button>
+
+            {isOpen && (
+                <div 
+                    data-testid="stage-dropdown-menu"
+                    className="absolute left-0 mt-1 w-64 bg-gray-950/95 border border-gray-700 rounded-lg shadow-2xl z-50 p-1.5 backdrop-blur-xl animate-fade-in text-left max-h-80 overflow-y-auto"
+                    style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+                >
+                    <div className="px-2 py-1 text-[9px] font-mono uppercase tracking-wider text-gray-400 border-b border-gray-800 mb-1 flex items-center justify-between">
+                        <span>Pipeline Stage</span>
+                        <span className="text-[8px] text-rhive-pink font-bold">11 Stages</span>
+                    </div>
+
+                    {onNavigateToStage && (
+                        <button
+                            type="button"
+                            data-testid="stage-navigate-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsOpen(false);
+                                onNavigateToStage(currentStage);
+                            }}
+                            className="w-full mb-1 flex items-center justify-between px-2 py-1 bg-rhive-pink/10 hover:bg-rhive-pink/20 text-rhive-pink border border-rhive-pink/30 rounded text-[10px] font-mono font-bold transition-colors cursor-pointer"
+                        >
+                            <span>Open Stage Page</span>
+                            <span className="text-[10px]">↗</span>
+                        </button>
+                    )}
+
+                    <div className="space-y-0.5">
+                        {Array.from(
+                            new Set([
+                                ...PROJECT_STAGES_ORDER,
+                                ...loadCachedCrmCustomization().customStages.filter(s => s.active).map(s => s.name as ProjectStage),
+                            ])
+                        ).map(st => {
+                            const isSelected = normalizeProjectStage(currentStage) === st;
+                            const stageColors = getStageBadgeColors(st);
+                            return (
+                                <button
+                                    key={st}
+                                    type="button"
+                                    data-testid="stage-option"
+                                    data-stage={st}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onUpdateStage(clientId, st);
+                                        setIsOpen(false);
+                                    }}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-2 py-1.5 rounded text-[11px] font-mono transition-colors text-left cursor-pointer",
+                                        isSelected ? "bg-gray-800 text-white font-bold" : "text-gray-300 hover:bg-gray-900 hover:text-white"
+                                    )}
+                                >
+                                    <span className="flex items-center gap-2 truncate">
+                                        <span className={cn("w-2 h-2 rounded-full shrink-0", stageColors.dot)} />
+                                        <span className="truncate">{st}</span>
+                                    </span>
+                                    {isSelected && <Check className="w-3.5 h-3.5 text-rhive-pink shrink-0" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 export const CustomersPortalPage: React.FC = () => {
     const { setActivePageId, setSelectedAccountId, setSelectedProjectId } = useNavigation();
-    const { currentUser } = useMockDB();
+    const { currentUser, projects = [], properties = [], users = [], updateProjectStage } = useMockDB();
 
-    // Clients state: loaded from localStorage with SEED_CLIENTS fallback
+    // Clients state: loaded from localStorage with SEED_CLIENTS fallback and canonical consolidation
     const [clients, setClients] = useState<CustomerClient[]>(() => {
         try {
             const saved = localStorage.getItem('rhive_customer_clients');
-            if (saved) return JSON.parse(saved);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return consolidateClients(parsed);
+            }
         } catch { /* ignore */ }
-        return SEED_CLIENTS;
+        return consolidateClients(SEED_CLIENTS);
     });
 
     // Save to localStorage whenever clients change
@@ -418,64 +928,232 @@ export const CustomersPortalPage: React.FC = () => {
         } catch { /* ignore */ }
     }, [clients]);
 
+    // Consolidate live projects into Tier 1 Parent Company clients
+    useEffect(() => {
+        if (!projects || projects.length === 0) return;
+
+        setClients(prevClients => {
+            let updated = false;
+
+            // 1. Gather all existing client names
+            const clientNameMap = new Map<string, CustomerClient>();
+            prevClients.forEach(c => clientNameMap.set(c.name.toLowerCase().trim(), c));
+
+            const workingClients = [...prevClients];
+
+            // 2. Discover any projects that have a parent company that is NOT yet in workingClients
+            projects.forEach(p => {
+                const pComp = ((p as any).parent_company || (p as any).company || (p as any).parentCompany || '').trim();
+                let resolvedCompName = pComp;
+                if (!resolvedCompName && p.account_id) {
+                    const matchedUser = users.find(u => u.id === p.account_id);
+                    if (matchedUser && matchedUser.name) {
+                        resolvedCompName = matchedUser.name.trim();
+                    }
+                }
+
+                if (!resolvedCompName) return;
+
+                const compKey = resolvedCompName.toLowerCase().trim();
+                if (!clientNameMap.has(compKey)) {
+                    // Create new Tier 1 client
+                    const newTier1: CustomerClient = {
+                        id: `CLI-CORP-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                        name: resolvedCompName,
+                        customer_type: (p.project_type as any) || 'Commercial',
+                        notes: 'Consolidated corporate client account automatically grouped from projects.',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        campuses: []
+                    };
+                    workingClients.push(newTier1);
+                    clientNameMap.set(compKey, newTier1);
+                    updated = true;
+                }
+            });
+
+            // 3. Consolidate matching projects into the corresponding Tier 1 client's campuses
+            const consolidatedClients = workingClients.map(client => {
+                const clientNameLower = client.name.toLowerCase().trim();
+
+                // Find all projects that belong to this client
+                const matchedProjects = projects.filter(p => {
+                    const pComp = ((p as any).parent_company || (p as any).company || (p as any).parentCompany || '').toLowerCase().trim();
+                    const pAccId = p.account_id || (p as any).accountId || '';
+                    const matchedUser = users.find(u => u.id === pAccId);
+                    const uName = matchedUser ? matchedUser.name.toLowerCase().trim() : '';
+
+                    return pComp === clientNameLower || pAccId === client.id || (uName && uName === clientNameLower);
+                });
+
+                if (matchedProjects.length === 0) return client;
+
+                const existingCampusNames = new Set(client.campuses.map(cp => cp.name.toLowerCase().trim()));
+                const newCampuses = [...client.campuses];
+
+                matchedProjects.forEach(proj => {
+                    const campusName = (proj as any).property_name || (proj as any).propertyName || proj.name;
+                    if (existingCampusNames.has(campusName.toLowerCase().trim())) return;
+
+                    const matchedProp = properties.find(prop => prop._id === proj.property_id);
+                    const newCampus: PropertyCampus = {
+                        id: `CAMP-PROJ-${proj._id}`,
+                        client_id: client.id,
+                        name: campusName,
+                        address: matchedProp?.address_full || (proj as any).address || 'Address verified on project record',
+                        city: 'Salt Lake City',
+                        state: 'UT',
+                        zip: '',
+                        phases: [
+                            {
+                                id: `PHASE-${proj._id}`,
+                                campus_id: `CAMP-PROJ-${proj._id}`,
+                                name: `Phase 1`,
+                                buildings: [
+                                    {
+                                        id: `BLDG-${proj._id}`,
+                                        phase_id: `PHASE-${proj._id}`,
+                                        name: 'Main Structure',
+                                        roof_type: 'Commercial Grade Membrane / Shingle',
+                                        roof_sqft: 8500,
+                                        stories: 1,
+                                        pitch: 'Low Slope',
+                                        condition: 'Under Replacement',
+                                        jobs: [
+                                            {
+                                                id: `JOB-${proj._id}`,
+                                                building_id: `BLDG-${proj._id}`,
+                                                title: proj.name,
+                                                job_number: `RC-${proj._id.slice(-6).toUpperCase()}`,
+                                                scope_type: proj.project_type || 'Commercial Roofing',
+                                                current_stage: proj.current_stage || (proj as any).stage || 'Stage 1: LEAD (Intake)',
+                                                contract_value: proj.quote?.total || 35000,
+                                                status: 'Active',
+                                                assigned_contractor: 'Apex Commercial Roofing',
+                                                target_completion: '2026-12-01',
+                                                created_at: proj.last_updated || new Date().toISOString(),
+                                                updated_at: new Date().toISOString()
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    };
+
+                    newCampuses.push(newCampus);
+                    existingCampusNames.add(campusName.toLowerCase().trim());
+                    updated = true;
+                });
+
+                if (newCampuses.length !== client.campuses.length) {
+                    return { ...client, campuses: newCampuses };
+                }
+                return client;
+            });
+
+            return updated ? consolidatedClients : prevClients;
+        });
+    }, [projects, properties, users]);
+
     // Integrate with Firestore accounts in real-time
     useEffect(() => {
         const unsub = accountService.subscribe((firestoreAccounts: any[]) => {
             if (!firestoreAccounts || firestoreAccounts.length === 0) return;
 
             setClients(prevClients => {
-                const existingNames = new Set(prevClients.map(c => c.name.toLowerCase().trim()));
-                const newClientsToAdd: CustomerClient[] = [];
+                const workingClients = [...prevClients];
+                let hasChanges = false;
 
                 firestoreAccounts.forEach(fa => {
                     const accName = (fa.accountName || fa.name || fa.company || '').trim();
-                    if (!accName || existingNames.has(accName.toLowerCase())) return;
+                    if (!accName) return;
 
-                    // Determine customer_type
-                    let cType: CustomerType = 'Commercial';
-                    const rawType = (fa.accountType || fa.type || fa.customer_type || '').toLowerCase();
-                    if (rawType.includes('gov') || rawType.includes('city') || rawType.includes('state')) {
-                        cType = 'Government';
-                    } else if (rawType.includes('res') || rawType.includes('home') || rawType.includes('individual')) {
-                        cType = 'Residential';
-                    }
+                    const canonical = getCanonicalParentCompany(accName, fa.email || fa.email_1);
+                    const canonKey = canonical.canonicalName.toLowerCase().trim();
 
-                    const newClient: CustomerClient = {
-                        id: fa.id || `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                        name: accName,
-                        customer_type: cType,
-                        account_code: fa.accountId || undefined,
-                        billing_address: fa.billingAddress || fa.address || fa.projectAddress || undefined,
-                        primary_contact: {
-                            name: fa.contactName || `${fa.firstName || ''} ${fa.lastName || ''}`.trim() || 'Primary Contact',
-                            email: fa.email || fa.email_1 || '',
-                            phone: fa.phone || fa.phone_1 || '',
-                            role: fa.role || 'Account Representative'
-                        },
-                        notes: fa.notes || 'Synced from RHIVE account repository.',
-                        created_at: fa.created_at || new Date().toISOString(),
-                        updated_at: fa.updated_at || new Date().toISOString(),
-                        campuses: [
-                            {
-                                id: `CAMP-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                                client_id: fa.id || '',
-                                name: fa.propertyName || `${accName} Site`,
-                                address: fa.projectAddress || fa.address || 'Address pending verification',
+                    // Check if we already have this canonical client
+                    const existingIndex = workingClients.findIndex(c => 
+                        c.name.toLowerCase().trim() === canonKey || 
+                        getCanonicalParentCompany(c.name).canonicalName.toLowerCase().trim() === canonKey
+                    );
+
+                    const campusName = canonical.siteName || fa.propertyName || (canonical.isConsolidated ? `${canonical.canonicalName} Site` : `${accName} Site`);
+                    const campusAddress = fa.projectAddress || fa.address || fa.billingAddress || 'Address pending verification';
+
+                    if (existingIndex >= 0) {
+                        const existingClient = workingClients[existingIndex];
+                        const existingCampusNames = new Set(existingClient.campuses.map(cp => cp.name.toLowerCase().trim()));
+
+                        if (!existingCampusNames.has(campusName.toLowerCase().trim())) {
+                            existingClient.campuses.push({
+                                id: `CAMP-ACC-${fa.id || Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                                client_id: existingClient.id,
+                                name: campusName,
+                                address: campusAddress,
                                 city: fa.city || 'Salt Lake City',
                                 state: fa.state || 'UT',
                                 zip: fa.zipCode || fa.zip || '',
                                 phases: []
-                            }
-                        ]
-                    };
-                    newClientsToAdd.push(newClient);
-                    existingNames.add(accName.toLowerCase());
+                            });
+                            hasChanges = true;
+                        }
+
+                        // Also enrich primary contact if existing was blank/placeholder
+                        if ((fa.phone || fa.email) && (!existingClient.primary_contact?.phone || existingClient.primary_contact?.name === 'Primary Contact')) {
+                            existingClient.primary_contact = {
+                                name: fa.contactName || `${fa.firstName || ''} ${fa.lastName || ''}`.trim() || existingClient.primary_contact?.name || 'Primary Contact',
+                                email: fa.email || fa.email_1 || existingClient.primary_contact?.email || '',
+                                phone: fa.phone || fa.phone_1 || existingClient.primary_contact?.phone || '',
+                                role: fa.role || existingClient.primary_contact?.role || 'Account Representative'
+                            };
+                            hasChanges = true;
+                        }
+                    } else {
+                        // Create brand new canonical client
+                        let cType: CustomerType = 'Commercial';
+                        const rawType = (fa.accountType || fa.type || fa.customer_type || '').toLowerCase();
+                        if (rawType.includes('gov') || rawType.includes('city') || rawType.includes('state')) {
+                            cType = 'Government';
+                        } else if (rawType.includes('res') || rawType.includes('home') || rawType.includes('individual')) {
+                            cType = 'Residential';
+                        }
+
+                        const newClient: CustomerClient = {
+                            id: fa.id || `CLI-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                            name: canonical.canonicalName,
+                            customer_type: cType,
+                            account_code: fa.accountId || undefined,
+                            billing_address: fa.billingAddress || fa.address || fa.projectAddress || undefined,
+                            primary_contact: {
+                                name: fa.contactName || `${fa.firstName || ''} ${fa.lastName || ''}`.trim() || 'Primary Contact',
+                                email: fa.email || fa.email_1 || '',
+                                phone: fa.phone || fa.phone_1 || '',
+                                role: fa.role || 'Account Representative'
+                            },
+                            notes: fa.notes || 'Synced from RHIVE account repository.',
+                            created_at: fa.created_at || new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                            campuses: [
+                                {
+                                    id: `CAMP-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                                    client_id: '',
+                                    name: campusName,
+                                    address: campusAddress,
+                                    city: fa.city || 'Salt Lake City',
+                                    state: fa.state || 'UT',
+                                    zip: fa.zipCode || fa.zip || '',
+                                    phases: []
+                                }
+                            ]
+                        };
+                        newClient.campuses[0].client_id = newClient.id;
+                        workingClients.push(newClient);
+                        hasChanges = true;
+                    }
                 });
 
-                if (newClientsToAdd.length > 0) {
-                    return [...prevClients, ...newClientsToAdd];
-                }
-                return prevClients;
+                return hasChanges ? consolidateClients(workingClients) : prevClients;
             });
         });
 
@@ -483,7 +1161,107 @@ export const CustomersPortalPage: React.FC = () => {
     }, []);
 
     // Filter and Search States
+        // Active Pipeline Stage Resolver for Customer Clients
+    const getClientActiveStage = (client: CustomerClient): ProjectStage => {
+        if (client.current_stage || client.stage) {
+            return normalizeProjectStage(client.current_stage || client.stage);
+        }
+        const clientNameLower = client.name.toLowerCase().trim();
+        const matchedProj = projects.find(p => {
+            const pComp = ((p as any).parent_company || (p as any).company || '').toLowerCase().trim();
+            const pAccId = p.account_id || '';
+            return pAccId === client.id || pComp === clientNameLower || (p.name && p.name.toLowerCase().includes(clientNameLower));
+        });
+        if (matchedProj?.current_stage) {
+            return normalizeProjectStage(matchedProj.current_stage);
+        }
+        for (const camp of client.campuses || []) {
+            for (const ph of camp.phases || []) {
+                for (const b of ph.buildings || []) {
+                    for (const j of b.jobs || []) {
+                        if (j.current_stage) {
+                            return normalizeProjectStage(j.current_stage);
+                        }
+                    }
+                }
+            }
+        }
+        return 'Stage 1: LEAD (Intake)';
+    };
+
+    // Stage update handler: updates customer, child jobs, mockDB projects, and Firestore
+    const handleUpdateCustomerStage = (clientId: string, newStage: ProjectStage) => {
+        setClients(prev => prev.map(c => {
+            if (c.id !== clientId) return c;
+            const updatedCampuses = c.campuses.map(cp => ({
+                ...cp,
+                phases: cp.phases.map(ph => ({
+                    ...ph,
+                    buildings: ph.buildings.map(b => ({
+                        ...b,
+                        jobs: b.jobs.map(j => ({
+                            ...j,
+                            current_stage: newStage,
+                            updated_at: new Date().toISOString()
+                        }))
+                    }))
+                }))
+            }));
+            return {
+                ...c,
+                current_stage: newStage,
+                stage: newStage,
+                updated_at: new Date().toISOString(),
+                campuses: updatedCampuses
+            };
+        }));
+
+        const targetClient = clients.find(c => c.id === clientId);
+        if (targetClient) {
+            const clientNameLower = targetClient.name.toLowerCase().trim();
+            const matchedProjects = projects.filter(p => {
+                const pComp = ((p as any).parent_company || (p as any).company || '').toLowerCase().trim();
+                const pAccId = p.account_id || '';
+                return pAccId === clientId || pComp === clientNameLower || (p.name && p.name.toLowerCase().includes(clientNameLower));
+            });
+
+            matchedProjects.forEach(p => {
+                try {
+                    if (updateProjectStage) {
+                        updateProjectStage(p._id, newStage);
+                    }
+                } catch (err) {
+                    console.warn('[CustomersPortal] Error updating project stage in mockDB:', err);
+                }
+                try {
+                    firestoreService.updateDocument('projects', p._id, {
+                        current_stage: newStage,
+                        last_updated: new Date().toISOString()
+                    });
+                } catch (err) {
+                    console.warn('[CustomersPortal] Error updating Firestore project stage:', err);
+                }
+            });
+
+            accountService.update(clientId, {
+                current_stage: newStage,
+                stage: newStage,
+                updated_at: new Date().toISOString()
+            }).catch(err => {
+                console.warn('[CustomersPortal] accountService.update note:', err?.message);
+            });
+
+            userLogService.logAction(
+                'UPDATE_CUSTOMER_STAGE',
+                `Changed pipeline stage of customer "${targetClient.name}" (ID: ${clientId}) to ${newStage}`,
+                { clientId, clientName: targetClient.name, newStage, timestamp: new Date().toISOString() }
+            );
+        }
+    };
+
+    // Filter and Search States
     const [selectedTypeFilter, setSelectedTypeFilter] = useState<'All' | CustomerType>('All');
+    const [selectedStageFilter, setSelectedStageFilter] = useState<'All' | ProjectStage>('All');
     const [searchQuery, setSearchQuery] = useState('');
 
     // Display & Sort states (persisted in localStorage)
@@ -522,6 +1300,59 @@ export const CustomersPortalPage: React.FC = () => {
     const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
     const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
     const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+
+    // Hierarchical Navigation Handlers
+    const handleBack = () => {
+        if (selectedJobId) {
+            setSelectedJobId(null);
+        } else if (selectedBuildingId) {
+            setSelectedBuildingId(null);
+        } else if (selectedPhaseId) {
+            setSelectedPhaseId(null);
+        } else if (selectedCampusId) {
+            setSelectedCampusId(null);
+        } else {
+            setSelectedClientId(null);
+        }
+    };
+
+    const handleBackToAllCustomers = () => {
+        setSelectedClientId(null);
+        setSelectedCampusId(null);
+        setSelectedPhaseId(null);
+        setSelectedBuildingId(null);
+        setSelectedJobId(null);
+    };
+
+    // Customer Type Switcher (Commercial, Government, Residential)
+    const handleUpdateCustomerType = (clientId: string, newType: CustomerType) => {
+        setClients(prev => prev.map(c => {
+            if (c.id === clientId) {
+                return {
+                    ...c,
+                    customer_type: newType,
+                    updated_at: new Date().toISOString()
+                };
+            }
+            return c;
+        }));
+
+        // Persist to Firestore accounts
+        accountService.update(clientId, {
+            customer_type: newType,
+            accountType: newType,
+            type: newType,
+            updated_at: new Date().toISOString()
+        }).catch(err => {
+            console.warn('[CustomersPortal] accountService.update note:', err?.message);
+        });
+
+        userLogService.logAction(
+            'UPDATE_CUSTOMER_TYPE',
+            `Changed customer type of account (ID: ${clientId}) to ${newType}`,
+            { clientId, newType, timestamp: new Date().toISOString() }
+        );
+    };
 
     // Modal State
     const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
@@ -608,6 +1439,12 @@ export const CustomersPortalPage: React.FC = () => {
             if (selectedTypeFilter !== 'All' && c.customer_type !== selectedTypeFilter) {
                 return false;
             }
+            if (selectedStageFilter !== 'All') {
+                const activeStage = getClientActiveStage(c);
+                if (normalizeProjectStage(activeStage) !== selectedStageFilter) {
+                    return false;
+                }
+            }
             if (!searchQuery) return true;
             const q = searchQuery.toLowerCase();
             const matchesName = c.name.toLowerCase().includes(q);
@@ -627,7 +1464,7 @@ export const CustomersPortalPage: React.FC = () => {
             );
             return matchesName || matchesContact || matchesCampus;
         });
-    }, [clients, selectedTypeFilter, searchQuery]);
+    }, [clients, selectedTypeFilter, selectedStageFilter, searchQuery, projects]);
 
     // Sorted and Filtered clients based on user sort preference (recent, az, za)
     const sortedAndFilteredClients = useMemo(() => {
@@ -702,6 +1539,20 @@ export const CustomersPortalPage: React.FC = () => {
         setClients(prev => [newClient, ...prev]);
         setSelectedClientId(newClient.id);
         setIsAddClientModalOpen(false);
+
+        // Also persist to Firestore accounts
+        accountService.create({
+            id: newClient.id,
+            name: newClient.name,
+            accountName: newClient.name,
+            company: newClient.name,
+            customer_type: newClient.customer_type,
+            billingAddress: newClient.billing_address,
+            contactName: newClient.primary_contact?.name,
+            email: newClient.primary_contact?.email,
+            phone: newClient.primary_contact?.phone,
+            created_at: newClient.created_at
+        }).catch(err => console.warn('[CustomersPortal] accountService.create error:', err?.message));
         setNewClientForm({
             name: '',
             customer_type: 'Commercial',
@@ -1038,20 +1889,53 @@ export const CustomersPortalPage: React.FC = () => {
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         {/* Filter Pills */}
                         <div className="flex flex-wrap items-center gap-2">
-                            {(['All', 'Commercial', 'Government', 'Residential'] as const).map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setSelectedTypeFilter(tab)}
-                                    className={cn(
-                                        "px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
-                                        selectedTypeFilter === tab
-                                            ? "bg-rhive-pink text-white shadow-[0_0_10px_rgba(236,2,139,0.4)]"
-                                            : "bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800"
-                                    )}
+                            <div className="flex items-center gap-1.5 bg-black/60 border border-gray-800 p-0.5 rounded-full">
+                                {(['All', 'Commercial', 'Government', 'Residential'] as const).map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setSelectedTypeFilter(tab)}
+                                        className={cn(
+                                            "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer",
+                                            selectedTypeFilter === tab
+                                                ? "bg-rhive-pink text-white shadow-[0_0_8px_rgba(236,2,139,0.4)]"
+                                                : "text-gray-400 hover:text-white"
+                                        )}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Stage Filter Dropdown */}
+                            <div className="flex items-center gap-1.5 bg-black/60 border border-gray-800 px-3 py-1 rounded-full text-xs font-mono">
+                                <ClockIcon className="w-3.5 h-3.5 text-rhive-pink shrink-0" />
+                                <span className="text-gray-400 font-bold uppercase text-[10px]">Stage:</span>
+                                <select
+                                    value={selectedStageFilter}
+                                    onChange={e => setSelectedStageFilter(e.target.value as any)}
+                                    className="bg-transparent text-xs font-mono font-bold text-white focus:outline-none cursor-pointer max-w-[170px] truncate"
                                 >
-                                    {tab}
-                                </button>
-                            ))}
+                                    <option value="All" className="bg-gray-950 text-white">All Stages</option>
+                                    {Array.from(
+                                        new Set([
+                                            ...PROJECT_STAGES_ORDER,
+                                            ...loadCachedCrmCustomization().customStages.filter(s => s.active).map(s => s.name as ProjectStage),
+                                        ])
+                                    ).map(st => (
+                                        <option key={st} value={st} className="bg-gray-950 text-white">{st}</option>
+                                    ))}
+                                </select>
+                                {selectedStageFilter !== 'All' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedStageFilter('All')}
+                                        className="text-gray-500 hover:text-white text-xs ml-1"
+                                        title="Clear stage filter"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         {/* Search & Add Action */}
@@ -1160,40 +2044,44 @@ export const CustomersPortalPage: React.FC = () => {
 
                 {/* ── BREADCRUMB NAVIGATION BAR ─────────────────────────────────── */}
                 {selectedClientId && (
-                    <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-900/40 border border-gray-800/80 rounded-lg text-xs font-mono">
+                    <div className="flex flex-wrap items-center gap-2 p-3 bg-gray-900/60 border border-gray-800 rounded-lg text-xs font-mono">
+                        <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            onClick={handleBack}
+                            className="flex items-center gap-1.5 font-bold text-xs py-1.5 px-3 border-gray-700 hover:border-rhive-pink text-white shadow-sm"
+                        >
+                            <ArrowLeftIcon className="w-3.5 h-3.5 text-rhive-pink" />
+                            Back
+                        </Button>
+
                         <button 
-                            onClick={() => {
-                                setSelectedClientId(null);
-                                setSelectedCampusId(null);
-                                setSelectedPhaseId(null);
-                                setSelectedBuildingId(null);
-                                setSelectedJobId(null);
-                            }}
-                            className="text-gray-400 hover:text-white hover:underline flex items-center gap-1 font-bold"
+                            onClick={handleBackToAllCustomers}
+                            className="text-gray-300 hover:text-white hover:underline flex items-center gap-1.5 font-bold ml-1 px-2.5 py-1 rounded hover:bg-gray-800 transition-colors"
                         >
                             <UsersIcon className="w-3.5 h-3.5 text-rhive-pink" />
-                            All Clients
+                            All Customers
                         </button>
 
-                        {activeClient && (
-                            <>
-                                <ChevronRightIcon className="w-3 h-3 text-gray-600" />
-                                <button 
-                                    onClick={() => {
-                                        setSelectedCampusId(null);
-                                        setSelectedPhaseId(null);
-                                        setSelectedBuildingId(null);
-                                        setSelectedJobId(null);
-                                    }}
-                                    className={cn(
-                                        "font-bold transition-colors",
-                                        !selectedCampusId ? "text-rhive-pink" : "text-gray-400 hover:text-white"
-                                    )}
-                                >
-                                    Tier 1: {activeClient.name}
-                                </button>
-                            </>
-                        )}
+                            {activeClient && (
+                                <>
+                                    <ChevronRightIcon className="w-3 h-3 text-gray-600" />
+                                    <button 
+                                        onClick={() => {
+                                            setSelectedCampusId(null);
+                                            setSelectedPhaseId(null);
+                                            setSelectedBuildingId(null);
+                                            setSelectedJobId(null);
+                                        }}
+                                        className={cn(
+                                            "font-bold transition-colors truncate max-w-[200px] md:max-w-[300px]",
+                                            !selectedCampusId ? "text-rhive-pink" : "text-gray-400 hover:text-white"
+                                        )}
+                                    >
+                                        Tier 1: {activeClient.name}
+                                    </button>
+                                </>
+                            )}
 
                         {activeCampus && (
                             <>
@@ -1269,6 +2157,7 @@ export const CustomersPortalPage: React.FC = () => {
                                         <tr className="border-b border-gray-800 bg-gray-900/60 text-[10px] font-mono font-black uppercase tracking-wider text-gray-400">
                                             <th className="py-3.5 px-4">Client / Company</th>
                                             <th className="py-3.5 px-4">Type</th>
+                                            <th className="py-3.5 px-4">Pipeline Stage</th>
                                             <th className="py-3.5 px-4">Primary Contact</th>
                                             <th className="py-3.5 px-4 text-center">Campuses</th>
                                             <th className="py-3.5 px-4 text-center">Buildings</th>
@@ -1297,14 +2186,25 @@ export const CustomersPortalPage: React.FC = () => {
                                                         )}
                                                     </td>
                                                     <td className="py-3.5 px-4 whitespace-nowrap">
-                                                        <span className={cn(
-                                                            "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                                                            client.customer_type === 'Commercial' && "bg-blue-500/10 text-blue-400 border-blue-500/30",
-                                                            client.customer_type === 'Government' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
-                                                            client.customer_type === 'Residential' && "bg-green-500/10 text-green-400 border-green-500/30"
-                                                        )}>
-                                                            {client.customer_type}
-                                                        </span>
+                                                        <CustomerTypeBadgeSwitcher
+                                                            clientId={client.id}
+                                                            currentType={client.customer_type}
+                                                            onUpdateType={handleUpdateCustomerType}
+                                                            showTierPrefix={false}
+                                                        />
+                                                    </td>
+                                                    <td className="py-3.5 px-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                                                        <CustomerStageBadgeSwitcher
+                                                            clientId={client.id}
+                                                            currentStage={getClientActiveStage(client)}
+                                                            onUpdateStage={handleUpdateCustomerStage}
+                                                            onNavigateToStage={(stage) => {
+                                                                const matchedProj = projects.find(p => p.account_id === client.id || (p as any).parent_company?.toLowerCase() === client.name.toLowerCase());
+                                                                if (matchedProj) setSelectedProjectId(matchedProj._id);
+                                                                setSelectedAccountId(client.id);
+                                                                setActivePageId(getStagePageId(stage));
+                                                            }}
+                                                        />
                                                     </td>
                                                     <td className="py-3.5 px-4">
                                                         {client.primary_contact ? (
@@ -1406,18 +2306,29 @@ export const CustomersPortalPage: React.FC = () => {
                                             style={{ clipPath: 'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)' }}
                                         >
                                             <div>
-                                                {/* Type Badge & Code */}
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <span className={cn(
-                                                        "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                                                        client.customer_type === 'Commercial' && "bg-blue-500/10 text-blue-400 border-blue-500/30",
-                                                        client.customer_type === 'Government' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
-                                                        client.customer_type === 'Residential' && "bg-green-500/10 text-green-400 border-green-500/30"
-                                                    )}>
-                                                        Tier 1 • {client.customer_type}
-                                                    </span>
+                                                {/* Type Badge, Stage Badge & Code */}
+                                                <div className="flex items-center justify-between gap-2 mb-3">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <CustomerTypeBadgeSwitcher
+                                                            clientId={client.id}
+                                                            currentType={client.customer_type}
+                                                            onUpdateType={handleUpdateCustomerType}
+                                                            showTierPrefix={true}
+                                                        />
+                                                        <CustomerStageBadgeSwitcher
+                                                            clientId={client.id}
+                                                            currentStage={getClientActiveStage(client)}
+                                                            onUpdateStage={handleUpdateCustomerStage}
+                                                            onNavigateToStage={(stage) => {
+                                                                const matchedProj = projects.find(p => p.account_id === client.id || (p as any).parent_company?.toLowerCase() === client.name.toLowerCase());
+                                                                if (matchedProj) setSelectedProjectId(matchedProj._id);
+                                                                setSelectedAccountId(client.id);
+                                                                setActivePageId(getStagePageId(stage));
+                                                            }}
+                                                        />
+                                                    </div>
 
-                                                    <span className="text-[10px] font-mono text-gray-500">
+                                                    <span className="text-[10px] font-mono text-gray-500 shrink-0">
                                                         {client.account_code || 'Account'}
                                                     </span>
                                                 </div>
@@ -1490,15 +2401,24 @@ export const CustomersPortalPage: React.FC = () => {
                             <div className="p-6 bg-black/70 border border-gray-800 rounded-lg relative overflow-hidden">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div>
-                                        <div className="flex items-center gap-2 mb-1.5">
-                                            <span className={cn(
-                                                "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                                                activeClient.customer_type === 'Commercial' && "bg-blue-500/10 text-blue-400 border-blue-500/30",
-                                                activeClient.customer_type === 'Government' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
-                                                activeClient.customer_type === 'Residential' && "bg-green-500/10 text-green-400 border-green-500/30"
-                                            )}>
-                                                Tier 1 Client • {activeClient.customer_type}
-                                            </span>
+                                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                            <CustomerTypeBadgeSwitcher
+                                                clientId={activeClient.id}
+                                                currentType={activeClient.customer_type}
+                                                onUpdateType={handleUpdateCustomerType}
+                                                showTierPrefix={true}
+                                            />
+                                            <CustomerStageBadgeSwitcher
+                                                clientId={activeClient.id}
+                                                currentStage={getClientActiveStage(activeClient)}
+                                                onUpdateStage={handleUpdateCustomerStage}
+                                                onNavigateToStage={(stage) => {
+                                                    const matchedProj = projects.find(p => p.account_id === activeClient.id || (p as any).parent_company?.toLowerCase() === activeClient.name.toLowerCase());
+                                                    if (matchedProj) setSelectedProjectId(matchedProj._id);
+                                                    setSelectedAccountId(activeClient.id);
+                                                    setActivePageId(getStagePageId(stage));
+                                                }}
+                                            />
                                             {activeClient.account_code && (
                                                 <span className="text-xs text-gray-500 font-mono">
                                                     [{activeClient.account_code}]
@@ -1522,6 +2442,15 @@ export const CustomersPortalPage: React.FC = () => {
 
                                     {/* Action buttons */}
                                     <div className="flex flex-wrap items-center gap-2">
+                                        <Button 
+                                            variant="secondary" 
+                                            size="sm"
+                                            onClick={handleBackToAllCustomers}
+                                            className="font-mono text-xs border-gray-700 hover:border-rhive-pink text-gray-300 hover:text-white"
+                                        >
+                                            <ArrowLeftIcon className="w-4 h-4 mr-1.5 text-rhive-pink" />
+                                            Back
+                                        </Button>
                                         <Button 
                                             variant="secondary" 
                                             size="sm"

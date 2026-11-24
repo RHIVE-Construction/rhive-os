@@ -54,6 +54,15 @@ export const GoogleTestimonials = () => {
                     resolve(true);
                     return;
                 }
+                const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+                if (existingScript) {
+                    if (window.google && window.google.maps) {
+                        resolve(true);
+                    } else {
+                        existingScript.addEventListener('load', () => resolve(true));
+                    }
+                    return;
+                }
                 const script = document.createElement('script');
                 script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
                 script.async = true;
