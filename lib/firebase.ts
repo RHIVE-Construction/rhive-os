@@ -14,36 +14,25 @@ const FIREBASE_MESSAGING_ID    = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_
 const FIREBASE_APP_ID          = import.meta.env.VITE_FIREBASE_APP_ID          as string | undefined;
 const FIREBASE_MEASUREMENT_ID  = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID  as string | undefined;
 
-// True when all required Firebase identifiers are present (i.e. real production build).
-// When false, the app is running on localhost without env vars — mock database is active.
-const isRealFirebaseConfig =
-    !!FIREBASE_API_KEY &&
-    FIREBASE_API_KEY !== "mock-api-key-for-local-testing-only" &&
-    !!FIREBASE_PROJECT_ID &&
-    !!FIREBASE_APP_ID;
-
-if (!isRealFirebaseConfig) {
-    console.warn(
-        "⚠️ [RHIVE QOS] Firebase env vars not found — using offline mock credentials.\n" +
-        "Live database sync is disabled. The local mock database is active and fully functional."
-    );
-}
-
-// Firebase Configuration — falls back to safe mock values only on localhost.
-// On production (Firebase App Hosting), all VITE_* vars are injected at build time
-// via apphosting.yaml so the fallbacks here are never reached in production.
+// Firebase Web SDK config values are public browser identifiers (same values as apphosting.yaml).
+// Env vars still take precedence when injected at build time, with the live `rhive-os`
+// public config as fallback so Google Sign-In / Connect Email never fails with
+// `auth/api-key-not-valid` when `.env` is absent (e.g. fresh clones or CI/preview builds).
 const firebaseConfig = {
-    apiKey:            FIREBASE_API_KEY           || "mock-api-key-for-local-testing-only",
-    authDomain:        FIREBASE_AUTH_DOMAIN        || "rhive-os-mock.firebaseapp.com",
+    apiKey:            FIREBASE_API_KEY           || "AIzaSyBI7Ae41_JcMtHLuAzit3ajoTRHjETtCt8",
+    authDomain:        FIREBASE_AUTH_DOMAIN        || "rhive-os.firebaseapp.com",
     projectId:         FIREBASE_PROJECT_ID         || "rhive-os",
-    storageBucket:     FIREBASE_STORAGE_BUCKET     || "rhive-os-mock.appspot.com",
-    messagingSenderId: FIREBASE_MESSAGING_ID       || "000000000000",
-    appId:             FIREBASE_APP_ID             || "1:000000000000:web:0000000000000000000000",
-    // Only pass measurementId when it is real — prevents Analytics from
-    // making a dynamic config-fetch call with an invalid/mock ID, which
-    // causes the "[Analytics: Dynamic config fetch failed: [400] API key not valid]" error.
+    storageBucket:     FIREBASE_STORAGE_BUCKET     || "rhive-os.firebasestorage.app",
+    messagingSenderId: FIREBASE_MESSAGING_ID       || "672274474306",
+    appId:             FIREBASE_APP_ID             || "1:672274474306:web:542a4f84bad36a114e14db",
     ...(FIREBASE_MEASUREMENT_ID ? { measurementId: FIREBASE_MEASUREMENT_ID } : {}),
 };
+
+const isRealFirebaseConfig =
+    !!firebaseConfig.apiKey &&
+    firebaseConfig.apiKey !== "mock-api-key-for-local-testing-only" &&
+    !!firebaseConfig.projectId &&
+    !!firebaseConfig.appId;
 
 // Initialize Firebase
 const app: FirebaseApp = initializeApp(firebaseConfig);
